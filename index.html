@@ -196,6 +196,7 @@ nav::-webkit-scrollbar{display:none}
   text-shadow:0 0 8px #7c61ff;animation:syspulse 2s ease-in-out infinite}
 @keyframes syspulse{0%,100%{box-shadow:0 0 6px rgba(124,97,255,.5)}50%{box-shadow:0 0 16px rgba(124,97,255,.9)}}
 .tag-link{color:#f0abfc;border-color:rgba(240,171,252,.5);background:rgba(240,171,252,.06)}
+.tag-target{color:#5eead4;border-color:rgba(94,234,212,.5);background:rgba(94,234,212,.06)}
 .streak-pill{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;color:#fb923c;
   border:1px solid rgba(251,146,60,.5);background:rgba(251,146,60,.08);border-radius:12px;padding:2px 9px}
 .dots{display:flex;gap:4px;margin-top:8px}
@@ -510,7 +511,10 @@ nav::-webkit-scrollbar{display:none}
         <div class="panel-title">DAILY QUEST — SYSTEM MANDATE</div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <span class="pkg-timer">&#9203; RESETS IN <b id="pkgTimer">--:--:--</b></span>
-          <span class="streak-pill" id="pkgStreak" style="display:none"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px">
+            <span class="streak-pill" id="pkgStreak" style="display:none"></span>
+            <button class="mini-btn" id="pkgEditBtn" title="Edit the daily quest package">✎ EDIT</button>
+          </span>
         </div>
         <div id="pkgList"></div>
         <div class="col-bar-wrap">
@@ -572,9 +576,9 @@ nav::-webkit-scrollbar{display:none}
     <!-- ============ REWARDS ============ -->
     <section id="page-rewards" style="display:none">
       <div class="panel">
-        <div class="panel-title">GACHA ROLLS</div>
+        <div class="panel-title">STORAGE — EARNED ROLLS</div>
         <div class="rolls-bar" id="rollsBar"></div>
-        <div class="empty-note">Complete unlinked quests to earn rolls of that tier. Linked quests drop guaranteed pieces.</div>
+        <div class="empty-note">Fully complete a quest (hit its completion target) to earn a roll. Linked quests give a roll for their crate; unlinked quests give a roll usable on any crate of that tier. Rolls wait here until you USE them — then a random prize from the crate is revealed.</div>
       </div>
       <div class="panel">
         <div class="panel-title">REWARD COLLECTIONS</div>
@@ -716,6 +720,8 @@ nav::-webkit-scrollbar{display:none}
     <div class="seg" id="qmStat"></div>
     <label class="form-lbl">Link to Reward Collection</label>
     <select class="sel" id="qmLink"></select>
+    <label class="form-lbl">Completions to Fully Complete (earns 1 roll)</label>
+    <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
     <div class="modal-actions">
       <button class="btn" id="qmCancel">CANCEL</button>
       <button class="btn primary" id="qmSave">SAVE QUEST</button>
@@ -826,6 +832,7 @@ function defaultState(){
     stats:{INT:5,STR:5,VIT:5,WIS:5,END:5},
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
+    storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -862,6 +869,7 @@ function adoptState(obj){
   state = obj;
   var d = defaultState();
   for(var k in d){ if(state[k] === undefined) state[k] = d[k]; }
+  migrateState();
 }
 
 /* ---------------- IndexedDB vault (redundant storage + snapshots) ---------------- */
@@ -921,6 +929,9 @@ function load(){
   }
   var d = defaultState();
   for(var k in d){ if(state[k] === undefined) state[k] = d[k]; }
+  migrateState();
+}
+function migrateState(){
   /* migrate old collections (identical pieces) to prize crates */
   for(var i=0;i<state.collections.length;i++){
     var c = state.collections[i];
@@ -932,6 +943,24 @@ function load(){
       }
     }
   }
+  /* quests: completion target + progress counter */
+  for(var q=0;q<state.quests.length;q++){
+    var qq = state.quests[q];
+    if(qq.target === undefined) qq.target = qq.freq === "longterm" ? 1 : 7;
+    if(qq.progress === undefined) qq.progress = qq.done ? qq.target : 0;
+  }
+  /* old per-tier roll counts become stored roll tickets */
+  if(!state.storage) state.storage = [];
+  if(state.rolls){
+    for(var t=0;t<TIERS.length;t++){
+      var n = state.rolls[TIERS[t]] || 0;
+      while(n > 0){ state.storage.push(makeRollTicket(TIERS[t], "", "migrated")); n--; }
+      state.rolls[TIERS[t]] = 0;
+    }
+  }
+}
+function makeRollTicket(tier, colId, from){
+  return {id: uid(), tier:tier, colId:colId || "", earnedAt:todayStr(), from:from || ""};
 }
 function uid(){ state.nextId++; return "id" + state.nextId; }
 function colOwned(c){
@@ -1167,11 +1196,13 @@ function recordStreakSnapshot(q){
 }
 
 /* ---------------- quests ---------------- */
-function makeQuest(icon, name, desc, freq, days, tier, stat, link, isSystem){
+function makeQuest(icon, name, desc, freq, days, tier, stat, link, isSystem, target){
   return {
     id: uid(), icon:icon, name:name, desc:desc,
     freq:freq, days:days || [], tier:tier, stat:stat,
     link:link || "", system:!!isSystem,
+    target: Math.max(1, +target || (freq === "longterm" ? 1 : 7)),
+    progress:0,
     streak:0, bestStreak:0, lastCompleted:"", lastWeek:"",
     completions:[], done:false, created:todayStr()
   };
@@ -1259,7 +1290,7 @@ function completeQuest(id){
   var t = todayStr();
   q.lastCompleted = t;
   q.completions.push(t);
-  if(q.freq === "longterm") q.done = true;
+  q.progress = (q.progress || 0) + 1;
   state.totalCompleted++;
   updateStreakOnComplete(q);
   recordHistory(0, 1);
@@ -1268,14 +1299,23 @@ function completeQuest(id){
     state.stats[q.stat]++;
     sysToast("+1 " + q.stat + " (" + STAT_NAME[q.stat] + ")");
   }
-  /* reward: linked = guaranteed piece, unlinked = roll of tier */
-  var col = q.link ? colById(q.link) : null;
-  if(col && colOwned(col) < colTotal(col)){
-    toast("Quest complete! +" + TIER_XP[q.tier] + " XP", "gold", "QUEST CLEARED");
-    runGacha(q.tier, col, true);
+  /* progress toward full completion; roll is granted only when target is reached */
+  var target = q.target || 1;
+  if(q.progress >= target){
+    if(q.freq === "longterm") q.done = true;
+    else q.progress = 0; /* recurring quests start a new cycle */
+    var col = q.link ? colById(q.link) : null;
+    var ticket = makeRollTicket(q.tier, col ? col.id : "", q.name);
+    state.storage.push(ticket);
+    var rollDesc = col
+      ? TIER_LABEL[q.tier] + " roll for crate [" + col.emoji + " " + col.name + "]"
+      : TIER_LABEL[q.tier] + " roll (any " + TIER_LABEL[q.tier] + " crate)";
+    announce("🎟 QUEST FULLY COMPLETED 🎟",
+      "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE.\nOpen REWARDS and use it whenever you wish, Hunter.",
+      "🎟", "STORE IT");
+    toast("+" + TIER_XP[q.tier] + " XP • roll stored", "gold", "FULL CLEAR");
   } else {
-    state.rolls[q.tier]++;
-    toast("Quest complete! +" + TIER_XP[q.tier] + " XP • +1 " + TIER_LABEL[q.tier] + " roll", "gold", "QUEST CLEARED");
+    toast("Quest complete! +" + TIER_XP[q.tier] + " XP • progress " + q.progress + " / " + target, "gold", "QUEST CLEARED");
   }
   gainXP(TIER_XP[q.tier]);
   checkAchievements();
@@ -1317,6 +1357,7 @@ function checkRankQuestConditions(){
     }
     if(ok){
       q.done = true;
+      q.progress = q.target || 1;
       q.lastCompleted = t;
       q.completions.push(t);
       state.totalCompleted++;
@@ -1380,14 +1421,28 @@ function makeCollection(name, emoji, tier, items, reward, title){
 function incompleteColsOfTier(tier){
   return state.collections.filter(function(c){ return c.tier===tier && colOwned(c) < colTotal(c); });
 }
-function useRoll(tier){
-  if(state.rolls[tier] <= 0){ toast("No " + TIER_LABEL[tier] + " rolls available.", "err"); return; }
-  var pool = incompleteColsOfTier(tier);
-  if(pool.length === 0){ toast("No incomplete " + TIER_LABEL[tier] + " collections. Create one first!", "err"); return; }
-  state.rolls[tier]--;
-  var col = pool[Math.floor(Math.random()*pool.length)];
+function ticketById(id){
+  for(var i=0;i<state.storage.length;i++) if(state.storage[i].id === id) return state.storage[i];
+  return null;
+}
+function useStorageRoll(ticketId){
+  var tk = ticketById(ticketId);
+  if(!tk){ toast("That roll is no longer in storage.", "err"); return; }
+  var col = tk.colId ? colById(tk.colId) : null;
+  if(tk.colId && !col){
+    /* linked crate was deleted — fall back to any crate of this tier */
+    tk.colId = "";
+  }
+  if(!col){
+    var pool = incompleteColsOfTier(tk.tier);
+    if(pool.length === 0) pool = state.collections.filter(function(c){ return c.tier === tk.tier; });
+    if(pool.length === 0){ toast("No " + TIER_LABEL[tk.tier] + " collections exist. Create one first — the roll stays stored.", "err"); return; }
+    col = pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(colTotal(col) === 0){ toast("Crate [" + col.name + "] has no prizes configured.", "err"); return; }
+  state.storage = state.storage.filter(function(s){ return s.id !== ticketId; });
   save();
-  runGacha(tier, col, false);
+  runGacha(tk.tier, col, false);
 }
 var gachaTimer = null;
 function runGacha(tier, col, guaranteed){
@@ -1410,9 +1465,11 @@ function runGacha(tier, col, guaranteed){
   result.style.color = color;
   okBtn.style.display = "none";
   ov.classList.add("show");
-  /* pick the random prize NOW (Call of Duty crate style: random among prizes not yet won) */
+  /* pick the random prize NOW (Call of Duty crate style: random among prizes not yet won;
+     if the crate is already complete, any prize can drop again as a repeat reward) */
   var pool = [];
   for(var pi=0;pi<col.items.length;pi++) if(!col.items[pi].owned) pool.push(pi);
+  if(pool.length === 0){ for(var pa=0;pa<col.items.length;pa++) pool.push(pa); }
   if(pool.length === 0){ ov.classList.remove("show"); return; }
   var prizeIdx = pool[Math.floor(Math.random()*pool.length)];
   var prize = col.items[prizeIdx];
@@ -1650,6 +1707,8 @@ function questCard(q){
   h += '<span class="tag tag-freq">' + freqTxt + '</span>';
   if(q.stat) h += '<span class="tag tag-stat">+' + q.stat + '</span>';
   if(col) h += '<span class="tag tag-link">🔗 ' + esc(col.name) + '</span>';
+  var tgt = q.target || 1;
+  h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
   if((q.freq==="daily"||q.freq==="weekly"||q.freq==="custom") && q.streak > 0){
     h += '<span class="streak-pill">🔥 ' + q.streak + (q.freq==="weekly"?" wk":" day") + ' streak</span>';
   }
@@ -1695,14 +1754,29 @@ document.getElementById("questList").addEventListener("click", function(e){
 
 /* ---------------- render: rewards ---------------- */
 function renderRewards(){
-  var rb = "";
-  for(var i=0;i<TIERS.length;i++){
-    var t = TIERS[i];
-    rb += '<div class="roll-pill rp-' + t + '">'
-      + '<span>' + TIER_LABEL[t] + ': <b>' + state.rolls[t] + '</b></span>'
-      + '<button data-roll="' + t + '"' + (state.rolls[t]<=0?" disabled":"") + '>ROLL</button></div>';
+  var rollsEl = document.getElementById("rollsBar");
+  if(state.storage.length === 0){
+    rollsEl.innerHTML = '<div class="empty-note">Storage is empty. Fully complete a quest (reach its completion target) to earn a roll.</div>';
+  } else {
+    /* group identical tickets (same tier + crate) into one pill with a count */
+    var groups = {}, order = [];
+    for(var s=0;s<state.storage.length;s++){
+      var tk = state.storage[s];
+      var key = tk.tier + "|" + (tk.colId || "");
+      if(!groups[key]){ groups[key] = {tier:tk.tier, colId:tk.colId || "", count:0, first:tk.id}; order.push(key); }
+      groups[key].count++;
+    }
+    var rb = "";
+    for(var g=0;g<order.length;g++){
+      var gr = groups[order[g]];
+      var gcol = gr.colId ? colById(gr.colId) : null;
+      var lbl = gcol ? gcol.emoji + " " + esc(gcol.name) : "ANY " + TIER_LABEL[gr.tier] + " CRATE";
+      rb += '<div class="roll-pill rp-' + gr.tier + '">'
+        + '<span>🎟 ' + TIER_LABEL[gr.tier] + ' — ' + lbl + ' ×<b>' + gr.count + '</b></span>'
+        + '<button data-use="' + gr.first + '">USE</button></div>';
+    }
+    rollsEl.innerHTML = rb;
   }
-  document.getElementById("rollsBar").innerHTML = rb;
   var el = document.getElementById("collectionsList");
   if(state.collections.length === 0){
     el.innerHTML = '<div class="empty-note">No reward collections yet. Press the + button to create one — set pieces to collect and a real-life reward.</div>';
@@ -1745,8 +1819,8 @@ function renderRewards(){
   el.innerHTML = h;
 }
 document.getElementById("rollsBar").addEventListener("click", function(e){
-  var b = e.target.closest("button[data-roll]"); if(!b) return;
-  useRoll(b.getAttribute("data-roll"));
+  var b = e.target.closest("button[data-use]"); if(!b) return;
+  useStorageRoll(b.getAttribute("data-use"));
   renderRewards();
 });
 document.getElementById("collectionsList").addEventListener("click", function(e){
@@ -1923,7 +1997,7 @@ function renderAdmin(){
     {v:state.titles.length, l:"Titles"},
     {v:state.badges.length, l:"Badges"},
     {v:state.statPoints, l:"Unspent Points"},
-    {v:state.rolls.easy + state.rolls.medium + state.rolls.epic + state.rolls.mythic + state.rolls.legendary, l:"Total Rolls"}
+    {v:state.storage.length, l:"Rolls in Storage"}
   ];
   var ch = "";
   for(var c=0;c<cards.length;c++){
@@ -1953,12 +2027,18 @@ function renderAdmin(){
       + '</span></div>';
   }
   document.getElementById("admCols").innerHTML = chh || '<span class="empty-note">No collections.</span>';
-  /* daily package manager */
+  /* daily package manager — rows are directly editable */
   var pk = state.dailyPackage;
   var ph = "";
   for(var p=0;p<pk.items.length;p++){
     var it = pk.items[p];
-    ph += '<div class="adm-list-item"><span class="ali-name">' + it.icon + ' ' + esc(it.name) + ' <span class="pi-stat">+' + it.stat + '</span></span>'
+    var emOpts = (EMOJIS.indexOf(it.icon) === -1 ? '<option value="' + it.icon + '" selected>' + it.icon + '</option>' : '') + emojiOptions(it.icon);
+    var stOpts = "";
+    for(var st=0;st<STATS.length;st++) stOpts += '<option value="' + STATS[st] + '"' + (STATS[st]===it.stat?" selected":"") + '>' + STATS[st] + '</option>';
+    ph += '<div class="adm-list-item">'
+      + '<select class="sel pk-e-emoji" data-pki="' + p + '" style="width:78px;flex:0 0 auto">' + emOpts + '</select>'
+      + '<input class="inp pk-e-name" data-pki="' + p + '" style="flex:1;min-width:110px" maxlength="60" value="' + esc(it.name) + '">'
+      + '<select class="sel pk-e-stat" data-pki="' + p + '" style="width:84px;flex:0 0 auto">' + stOpts + '</select>'
       + '<button class="mini-btn" data-pkdel="' + it.id + '" title="Remove">🗑</button></div>';
   }
   document.getElementById("admPkg").innerHTML = ph || '<span class="empty-note">Package is empty.</span>';
@@ -1973,6 +2053,21 @@ function renderAdmin(){
   renderStorageStatus();
   renderSnapshots();
 }
+document.getElementById("admPkg").addEventListener("change", function(e){
+  var i = e.target.getAttribute("data-pki");
+  if(i === null) return;
+  var it = state.dailyPackage.items[+i];
+  if(!it) return;
+  if(e.target.classList.contains("pk-e-emoji")) it.icon = e.target.value;
+  else if(e.target.classList.contains("pk-e-name")){
+    var nv = e.target.value.trim();
+    if(nv) it.name = nv; else e.target.value = it.name;
+  }
+  else if(e.target.classList.contains("pk-e-stat")) it.stat = e.target.value;
+  save();
+  sysToast("Daily package updated.");
+  if(currentPage === "home") renderHome();
+});
 document.getElementById("admPkg").addEventListener("click", function(e){
   var b = e.target.closest("button[data-pkdel]"); if(!b) return;
   var id = b.getAttribute("data-pkdel");
@@ -2172,7 +2267,7 @@ function buildDayGrid(selectedDays){
 }
 function fillLinkOptions(selected){
   var sel = document.getElementById("qmLink");
-  var h = '<option value="">— None (earn gacha rolls instead) —</option>';
+  var h = '<option value="">— None (roll usable on any crate of this tier) —</option>';
   for(var i=0;i<state.collections.length;i++){
     var c = state.collections[i];
     h += '<option value="' + c.id + '"' + (c.id===selected?" selected":"") + '>'
@@ -2203,6 +2298,7 @@ function openQuestModal(id){
   buildSeg("qmTier", TIERS, [TIER_LABEL.easy,TIER_LABEL.medium,TIER_LABEL.epic,TIER_LABEL.mythic,TIER_LABEL.legendary], qmSel.tier, function(v){ qmSel.tier = v; }, true);
   buildSeg("qmStat", STATS, STATS, qmSel.stat, function(v){ qmSel.stat = v; });
   fillLinkOptions(q ? q.link : "");
+  document.getElementById("qmTarget").value = q ? (q.target || 1) : 7;
   document.getElementById("questModal").classList.add("show");
 }
 document.getElementById("qmCancel").addEventListener("click", function(){
@@ -2214,16 +2310,19 @@ document.getElementById("qmSave").addEventListener("click", function(){
   if(qmSel.freq === "custom" && qmSel.days.length === 0){ toast("Pick at least one day for a custom quest.", "err"); return; }
   var desc = document.getElementById("qmDesc").value.trim();
   var link = document.getElementById("qmLink").value;
+  var target = Math.max(1, Math.min(999, +document.getElementById("qmTarget").value || 1));
   if(qmEditId){
     var q = questById(qmEditId);
     if(q){
       q.icon = qmSel.emoji; q.name = name; q.desc = desc;
       q.freq = qmSel.freq; q.days = qmSel.days.slice();
       q.tier = qmSel.tier; q.stat = qmSel.stat; q.link = link;
+      q.target = target;
+      if(q.done && !q.rankCheck && (q.progress || 0) < target) q.done = false; /* raising the target reopens a one-time goal */
       sysToast("Quest updated: " + name);
     }
   } else {
-    var nq = makeQuest(qmSel.emoji, name, desc, qmSel.freq, qmSel.days.slice(), qmSel.tier, qmSel.stat, link, false);
+    var nq = makeQuest(qmSel.emoji, name, desc, qmSel.freq, qmSel.days.slice(), qmSel.tier, qmSel.stat, link, false, target);
     state.quests.push(nq);
     toast("New quest registered: " + name, "sys", "QUEST CREATED");
   }
@@ -2383,9 +2482,9 @@ function completePackageItem(id){
     if(pk.streak > pk.bestStreak) pk.bestStreak = pk.streak;
     pk.lastFullDay = pd;
     pk.completedDates.push(pd);
-    state.rolls.medium++;
+    state.storage.push(makeRollTicket("medium", "", "Daily Quest package"));
     announce("DAILY QUEST COMPLETE",
-      "All mandate quests have been cleared.\n\nReward: +60 XP, +1 MEDIUM roll.\nStreak: " + pk.streak + " day" + (pk.streak>1?"s":"") + ".\n\nThe System acknowledges your discipline, Hunter.",
+      "All mandate quests have been cleared.\n\nReward: +60 XP, +1 MEDIUM roll (sent to STORAGE).\nStreak: " + pk.streak + " day" + (pk.streak>1?"s":"") + ".\n\nThe System acknowledges your discipline, Hunter.",
       "📦", "CLAIM");
     var ms = [3,7,14,30,100];
     for(var m=0;m<ms.length;m++) if(pk.streak === ms[m]) addBadge("📦", ms[m] + " Day Mandate");
@@ -2415,7 +2514,8 @@ function renderHome(){
   document.getElementById("homeXpTxt").innerHTML = "<b>" + state.xp + "</b> / " + need + " XP";
   document.getElementById("homeXpBar").style.width = Math.min(100, (state.xp/need*100)) + "%";
   var chips = '<span class="title-chip">⚔️ ' + state.totalCompleted + ' quests done</span>'
-    + '<span class="title-chip">💠 ' + state.totalXp + ' total XP</span>';
+    + '<span class="title-chip">💠 ' + state.totalXp + ' total XP</span>'
+    + '<span class="title-chip">🎟 ' + state.storage.length + ' roll' + (state.storage.length===1?"":"s") + ' stored</span>';
   if(state.statPoints > 0) chips += '<span class="title-chip" style="color:var(--legendary);border-color:rgba(251,191,36,.5)">✨ ' + state.statPoints + ' stat points</span>';
   document.getElementById("homeChips").innerHTML = chips;
   /* package */
@@ -2460,6 +2560,10 @@ function renderHome(){
 document.getElementById("pkgList").addEventListener("click", function(e){
   var b = e.target.closest("button[data-pk]"); if(!b) return;
   completePackageItem(b.getAttribute("data-pk"));
+});
+document.getElementById("pkgEditBtn").addEventListener("click", function(){
+  switchPage("admin");
+  sysToast("Edit the Daily Quest package below — every field is editable.");
 });
 document.getElementById("quickGrid").addEventListener("click", function(e){
   var b = e.target.closest("button[data-goto]"); if(!b) return;
