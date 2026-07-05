@@ -513,8 +513,15 @@ nav::-webkit-scrollbar{display:none}
         <div class="adm-row" style="margin-top:14px">
           <button class="btn" id="admResetDailies">&#8635; RESET DAILY QUESTS</button>
           <button class="btn gold" id="admExport">&#128190; EXPORT JSON BACKUP</button>
+          <button class="btn gold" id="admImport">&#128194; IMPORT JSON BACKUP</button>
           <button class="btn danger" id="admWipe">&#9888;&#65039; FULL RESET</button>
         </div>
+        <input type="file" id="admImportFile" accept=".json,application/json" style="display:none">
+      </div>
+      <div class="panel">
+        <div class="panel-title">DATA VAULT</div>
+        <div class="empty-note" id="storageStatus" style="margin-bottom:12px"></div>
+        <div id="admSnapshots"></div>
       </div>
       <div class="panel">
         <div class="panel-title">MANAGE QUESTS</div>
@@ -700,7 +707,70 @@ function defaultState(){
     seeded:false
   };
 }
-function save(){ try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){} }
+function save(){
+  state.savedAt = new Date().toISOString();
+  state.saveCount = (state.saveCount || 0) + 1;
+  var t = todayStr();
+  var takeSnap = !!idb && state.lastSnapshotDay !== t;
+  if(takeSnap) state.lastSnapshotDay = t;
+  var json = JSON.stringify(state);
+  try{ localStorage.setItem(SKEY, json); }catch(e){}
+  idbPut("kv", "state", json);
+  if(takeSnap){ idbPut("snapshots", t, json); pruneSnapshots(); }
+}
+function adoptState(obj){
+  state = obj;
+  var d = defaultState();
+  for(var k in d){ if(state[k] === undefined) state[k] = d[k]; }
+}
+
+/* ---------------- IndexedDB vault (redundant storage + snapshots) ---------------- */
+var idb = null;
+var storagePersistent = null;
+function idbOpen(cb){
+  if(!window.indexedDB){ if(cb) cb(null); return; }
+  try{
+    var req = indexedDB.open("leveluphunter_db", 1);
+    req.onupgradeneeded = function(e){
+      var db = e.target.result;
+      if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
+      if(!db.objectStoreNames.contains("snapshots")) db.createObjectStore("snapshots");
+    };
+    req.onsuccess = function(e){ idb = e.target.result; if(cb) cb(idb); };
+    req.onerror = function(){ if(cb) cb(null); };
+  }catch(e){ if(cb) cb(null); }
+}
+function idbPut(store, key, val){
+  if(!idb) return;
+  try{ idb.transaction(store, "readwrite").objectStore(store).put(val, key); }catch(e){}
+}
+function idbGet(store, key, cb){
+  if(!idb){ cb(undefined); return; }
+  try{
+    var rq = idb.transaction(store, "readonly").objectStore(store).get(key);
+    rq.onsuccess = function(){ cb(rq.result); };
+    rq.onerror = function(){ cb(undefined); };
+  }catch(e){ cb(undefined); }
+}
+function idbAllKeys(store, cb){
+  if(!idb){ cb([]); return; }
+  try{
+    var rq = idb.transaction(store, "readonly").objectStore(store).getAllKeys();
+    rq.onsuccess = function(){ cb(rq.result || []); };
+    rq.onerror = function(){ cb([]); };
+  }catch(e){ cb([]); }
+}
+function idbDel(store, key){
+  if(!idb) return;
+  try{ idb.transaction(store, "readwrite").objectStore(store).delete(key); }catch(e){}
+}
+function pruneSnapshots(){
+  idbAllKeys("snapshots", function(keys){
+    if(!keys || keys.length <= 14) return;
+    keys = keys.slice().sort();
+    for(var i=0;i<keys.length-14;i++) idbDel("snapshots", keys[i]);
+  });
+}
 function load(){
   var raw = null;
   try{ raw = localStorage.getItem(SKEY); }catch(e){}
@@ -1714,6 +1784,8 @@ function renderAdmin(){
       + '</span></div>';
   }
   document.getElementById("admCols").innerHTML = chh || '<span class="empty-note">No collections.</span>';
+  renderStorageStatus();
+  renderSnapshots();
 }
 document.getElementById("page-admin").addEventListener("click", function(e){
   var b = e.target.closest("button[data-aact]"); if(!b) return;
@@ -1756,13 +1828,83 @@ document.getElementById("admExport").addEventListener("click", function(){
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  state.lastExportAt = new Date().toISOString();
+  save();
   toast("Progress exported as JSON backup.", "gold", "BACKUP CREATED");
 });
+document.getElementById("admImport").addEventListener("click", function(){
+  document.getElementById("admImportFile").click();
+});
+document.getElementById("admImportFile").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  this.value = "";
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var data = null;
+    try{ data = JSON.parse(reader.result); }catch(e){ toast("Could not read backup: invalid JSON.", "err"); return; }
+    if(!data || typeof data !== "object" || data.quests === undefined || data.level === undefined){
+      toast("This file is not a Level Up backup.", "err"); return;
+    }
+    if(!confirm("Restore backup for hunter \"" + (data.hunterName || "Hunter") + "\" (LV." + data.level + ", " + (data.totalCompleted || 0) + " quests done)? Current progress will be replaced.")) return;
+    adoptState(data);
+    save(); renderAll();
+    announce("SYSTEM RESTORED", "Backup imported successfully.\n\nWelcome back, " + state.hunterName + ".\nAll records have been re-synchronized.", "💾", "CONTINUE");
+  };
+  reader.onerror = function(){ toast("Could not read the file.", "err"); };
+  reader.readAsText(f);
+});
+document.getElementById("admSnapshots").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-snap]"); if(!b) return;
+  var key = b.getAttribute("data-snap");
+  idbGet("snapshots", key, function(raw){
+    if(!raw){ toast("Snapshot could not be read.", "err"); return; }
+    var data = null;
+    try{ data = JSON.parse(raw); }catch(err){ toast("Snapshot is corrupted.", "err"); return; }
+    if(!confirm("Restore snapshot from " + key + "? Current progress will be replaced.")) return;
+    adoptState(data);
+    save(); renderAll();
+    announce("SYSTEM RESTORED", "Snapshot from " + key + " has been restored.\n\nWelcome back, " + state.hunterName + ".", "💾", "CONTINUE");
+  });
+});
+function renderStorageStatus(){
+  var el = document.getElementById("storageStatus");
+  if(!el) return;
+  var parts = [];
+  parts.push("Last saved: " + (state.savedAt ? new Date(state.savedAt).toLocaleString() : "never"));
+  parts.push("Total saves: " + (state.saveCount || 0));
+  parts.push("Storage: localStorage + IndexedDB vault" + (idb ? " ✓" : " (vault unavailable)"));
+  if(storagePersistent === true) parts.push("Persistent storage: GRANTED ✓ (browser will not auto-evict)");
+  else if(storagePersistent === false) parts.push("Persistent storage: not granted — export JSON backups regularly");
+  parts.push("Auto-snapshot: on first save of each day (last 14 kept)");
+  parts.push("Last JSON export: " + (state.lastExportAt ? new Date(state.lastExportAt).toLocaleString() : "never — make one!"));
+  el.textContent = parts.join("  •  ");
+}
+function renderSnapshots(){
+  var el = document.getElementById("admSnapshots");
+  if(!el) return;
+  if(!idb){ el.innerHTML = '<span class="empty-note">Snapshot vault unavailable in this browser.</span>'; return; }
+  idbAllKeys("snapshots", function(keys){
+    if(!keys || keys.length === 0){
+      el.innerHTML = '<span class="empty-note">No snapshots yet. One is stored automatically on the first save of each day.</span>';
+      return;
+    }
+    keys = keys.slice().sort().reverse();
+    var h = "";
+    for(var i=0;i<keys.length;i++){
+      var k = String(keys[i]);
+      h += '<div class="adm-list-item"><span class="ali-name">💾 Daily snapshot — ' + esc(k) + '</span>'
+        + '<button class="btn" style="padding:6px 14px" data-snap="' + esc(k) + '">RESTORE</button></div>';
+    }
+    el.innerHTML = h;
+  });
+}
 document.getElementById("admWipe").addEventListener("click", function(){
   if(!confirm("FULL RESET: erase ALL progress permanently?")) return;
   if(!confirm("Are you absolutely sure, Hunter? This cannot be undone.")) return;
   localStorage.removeItem(SKEY);
-  location.reload();
+  idbDel("kv", "state");
+  setTimeout(function(){ location.reload(); }, 250);
 });
 
 /* ---------------- quest modal ---------------- */
@@ -1946,11 +2088,51 @@ function seedIfNew(){
   }, 600);
 }
 load();
+/* redundant vault: recover from IndexedDB if localStorage was lost or is older */
+idbOpen(function(){
+  idbGet("kv", "state", function(raw){
+    var adopted = false;
+    if(raw){
+      try{
+        var other = JSON.parse(raw);
+        if(other && (other.saveCount || 0) > (state.saveCount || 0)){
+          adoptState(other);
+          adopted = true;
+        }
+      }catch(e){}
+    }
+    if(adopted){
+      try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
+      sysToast("Progress recovered from the System vault. Records restored.");
+      renderAll();
+    } else {
+      idbPut("kv", "state", JSON.stringify(state));
+    }
+    /* catch-up: ensure today's snapshot exists now that the vault is open */
+    if(state.lastSnapshotDay !== todayStr()) save();
+    if(currentPage === "admin") renderAdmin();
+  });
+});
+/* ask the browser to never evict this site's storage */
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persist().then(function(granted){
+    storagePersistent = granted;
+    if(currentPage === "admin") renderStorageStatus();
+  }).catch(function(){});
+}
+function backupReminder(){
+  if(state.totalCompleted < 5) return;
+  var last = state.lastExportAt ? new Date(state.lastExportAt).getTime() : 0;
+  if(Date.now() - last > 7 * 86400000){
+    toast("Protect your records, Hunter: export a JSON backup in ADMIN.", "gold", "SYSTEM ADVICE");
+  }
+}
 seedIfNew();
 checkStreakResets();
 checkStoryUnlocks();
 renderAll();
 switchPage("profile");
+setTimeout(backupReminder, 4000);
 </script>
 </body>
 </html>
