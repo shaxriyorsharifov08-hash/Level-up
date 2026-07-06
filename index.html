@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <style>
 :root{
   --bg:#04050d;
@@ -731,6 +734,23 @@ nav::-webkit-scrollbar{display:none}
         <div class="cards-grid" id="admCards"></div>
       </div>
       <div class="panel">
+        <div class="panel-title">☁ CLOUD SYNC</div>
+        <div class="empty-note" style="margin-bottom:10px">Sign in with Google to sync your hunter automatically across every device — no export or import needed. Your save is private to your Google account.</div>
+        <div class="empty-note" id="cloudUnavailable" style="display:none">⚠ Cloud sync could not load (offline, or blocked by a browser extension). Your progress is still safe locally — use Export/Import below to move it between devices for now.</div>
+        <div id="cloudSignedOut">
+          <button class="btn primary" id="cloudSignInBtn">Sign in with Google</button>
+        </div>
+        <div id="cloudSignedIn" style="display:none">
+          <div class="adm-row" style="align-items:center;gap:10px">
+            <img id="cloudAvatar" alt="" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(124,97,255,.5)">
+            <span id="cloudName" style="font-weight:700;flex:1;min-width:100px"></span>
+            <span class="tag tag-legendary" id="cloudSyncTag">✓ AUTO-SYNCING</span>
+          </div>
+          <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
+        </div>
+      </div>
+
+      <div class="panel">
         <div class="panel-title">HUNTER SETTINGS</div>
         <label class="form-lbl">Hunter Name</label>
         <div class="adm-row">
@@ -1004,12 +1024,112 @@ function save(){
   try{ localStorage.setItem(SKEY, json); }catch(e){}
   idbPut("kv", "state", json);
   if(takeSnap){ idbPut("snapshots", t, json); pruneSnapshots(); }
+  cloudPush();
 }
 function adoptState(obj){
   state = obj;
   var d = defaultState();
   for(var k in d){ if(state[k] === undefined) state[k] = d[k]; }
   migrateState();
+}
+
+/* ---------------- cloud sync (Firebase Auth + Realtime Database) ---------------- */
+var firebaseConfig = {
+  apiKey: "AIzaSyBGsSjvMwATA6G2uGZu_lKtkmrBuXRuhUc",
+  authDomain: "level-up-hunter-03.firebaseapp.com",
+  databaseURL: "https://level-up-hunter-03-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "level-up-hunter-03",
+  storageBucket: "level-up-hunter-03.firebasestorage.app",
+  messagingSenderId: "1037097236196",
+  appId: "1:1037097236196:web:33c5775102c19a8c111ef1"
+};
+var cloudAvailable = (typeof firebase !== "undefined");
+var fbAuth = null, fbDb = null, cloudUser = null, cloudRef = null, cloudPushTimer = null;
+if(cloudAvailable){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    fbAuth = firebase.auth();
+    fbDb = firebase.database();
+  }catch(e){ cloudAvailable = false; }
+}
+function cloudPush(){
+  if(!cloudAvailable || !cloudUser || !cloudRef) return;
+  if(cloudPushTimer) clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(function(){
+    cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
+  }, 1200);
+}
+function cloudAdopt(remoteJson){
+  var remoteState;
+  try{ remoteState = JSON.parse(remoteJson); }catch(e){ return; }
+  if(!remoteState) return;
+  adoptState(remoteState);
+  try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
+  idbPut("kv", "state", JSON.stringify(state));
+  renderAll();
+}
+function cloudSignIn(){
+  if(!cloudAvailable){ toast("Cloud sync is unavailable right now (offline or blocked).", "err"); return; }
+  var provider = new firebase.auth.GoogleAuthProvider();
+  fbAuth.signInWithPopup(provider).catch(function(err){
+    toast("Sign-in failed: " + err.message, "err");
+  });
+}
+function cloudSignOut(){
+  if(fbAuth) fbAuth.signOut();
+}
+function renderCloudStatus(){
+  var na = document.getElementById("cloudUnavailable");
+  if(!na) return; /* admin panel not yet in the DOM */
+  var so = document.getElementById("cloudSignedOut");
+  var si = document.getElementById("cloudSignedIn");
+  if(!cloudAvailable){
+    na.style.display = ""; so.style.display = "none"; si.style.display = "none";
+    return;
+  }
+  na.style.display = "none";
+  if(cloudUser){
+    so.style.display = "none"; si.style.display = "";
+    document.getElementById("cloudAvatar").src = cloudUser.photoURL || "";
+    document.getElementById("cloudName").textContent = cloudUser.displayName || cloudUser.email || "Hunter";
+  } else {
+    so.style.display = ""; si.style.display = "none";
+  }
+}
+if(cloudAvailable){
+  fbAuth.onAuthStateChanged(function(user){
+    if(cloudRef){ cloudRef.off(); cloudRef = null; }
+    cloudUser = user;
+    renderCloudStatus();
+    if(!user) return;
+    cloudRef = fbDb.ref("hunters/" + user.uid);
+    cloudRef.once("value", function(snap){
+      var remote = snap.val();
+      if(remote && remote.json){
+        var remoteState;
+        try{ remoteState = JSON.parse(remote.json); }catch(e){ remoteState = null; }
+        if(remoteState && (remoteState.saveCount || 0) > (state.saveCount || 0)){
+          cloudAdopt(remote.json);
+          sysToast("Progress synced from the cloud.");
+        } else {
+          cloudPush();
+        }
+      } else {
+        cloudPush();
+      }
+      /* live updates from other signed-in devices */
+      cloudRef.on("value", function(snap2){
+        var remote2 = snap2.val();
+        if(!remote2 || !remote2.json) return;
+        var remoteState2;
+        try{ remoteState2 = JSON.parse(remote2.json); }catch(e){ return; }
+        if((remoteState2.saveCount || 0) > (state.saveCount || 0)){
+          cloudAdopt(remote2.json);
+          sysToast("Synced update from another device.");
+        }
+      });
+    });
+  });
 }
 
 /* ---------------- IndexedDB vault (redundant storage + snapshots) ---------------- */
@@ -2743,7 +2863,10 @@ function renderAdmin(){
   document.getElementById("admRoad").innerHTML = rh || '<span class="empty-note">The road is empty. Add level rewards below.</span>';
   renderStorageStatus();
   renderSnapshots();
+  renderCloudStatus();
 }
+document.getElementById("cloudSignInBtn").addEventListener("click", cloudSignIn);
+document.getElementById("cloudSignOutBtn").addEventListener("click", cloudSignOut);
 var heroUploadRank = "";
 document.getElementById("admHero").addEventListener("click", function(e){
   var up = e.target.closest("button[data-hiup]");
