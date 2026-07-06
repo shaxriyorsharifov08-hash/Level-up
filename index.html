@@ -140,7 +140,7 @@ nav::-webkit-scrollbar{display:none}
 
 .stat-row{display:grid;grid-template-columns:64px 1fr 44px 34px;gap:10px;align-items:center;margin-bottom:12px}
 .stat-key{font-family:'Orbitron',monospace;font-weight:700;font-size:.85rem}
-.stat-INT{color:#00d1ff}.stat-STR{color:#ef4444}.stat-VIT{color:#22c55e}.stat-WIS{color:#a855f7}.stat-END{color:#fbbf24}
+.stat-INT{color:#00d1ff}.stat-STR{color:#ef4444}.stat-VIT{color:#22c55e}.stat-WIS{color:#a855f7}.stat-END{color:#fbbf24}.stat-CON{color:#22c55e}
 .stat-bar{height:10px}
 .stat-val{font-family:'Orbitron',monospace;font-size:.85rem;text-align:right;color:#fff}
 .stat-plus{width:30px;height:30px;border-radius:8px;border:1px solid var(--purple);background:rgba(124,97,255,.15);
@@ -152,6 +152,7 @@ nav::-webkit-scrollbar{display:none}
 .sf-VIT{background:linear-gradient(90deg,#15803d,#22c55e)!important}
 .sf-WIS{background:linear-gradient(90deg,#7e22ce,#a855f7)!important}
 .sf-END{background:linear-gradient(90deg,#b45309,#fbbf24)!important}
+.sf-CON{background:linear-gradient(90deg,#15803d,#22c55e)!important}
 
 .chip-list{display:flex;flex-wrap:wrap;gap:8px}
 .title-chip{padding:6px 12px;border-radius:20px;font-size:.78rem;font-weight:600;letter-spacing:.05em;
@@ -223,25 +224,39 @@ nav::-webkit-scrollbar{display:none}
 .report-main{flex:1;min-width:0}
 .report-month{font-family:'Orbitron',monospace;font-weight:800;font-size:.86rem;letter-spacing:.12em;color:#fff}
 .report-line{font-size:.8rem;color:var(--dim);margin-top:4px}
-/* level road (score-hero style zigzag map) */
-.road{position:relative;padding:6px 0 6px 0}
-.road::before{content:"";position:absolute;left:25px;top:10px;bottom:10px;width:2px;
-  background:linear-gradient(180deg,rgba(124,97,255,.15),rgba(124,97,255,.35),rgba(34,197,94,.6))}
-.road-node{display:flex;align-items:center;gap:14px;margin-bottom:14px;position:relative}
+/* hunter dossier + real achievements + skill chips */
+.dossier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.ra-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:6px;background:rgba(5,6,16,.5)}
+.ra-name{font-weight:700;color:#fff}
+.ra-val{font-family:'Orbitron',monospace;font-weight:800;color:var(--legendary);margin-left:auto}
+.skill-chip{cursor:pointer}
+.skill-chip:hover{border-color:#ef4444;color:#ef4444}
+/* level road (winding score-hero style map with landmark stops) */
+.road{position:relative;overflow:hidden}
+.road-trail{position:absolute;inset:0;width:100%;height:100%}
+.road-node{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;
+  align-items:center;width:170px;text-align:center;z-index:1}
 .road-circle{width:52px;height:52px;border-radius:50%;border:2px solid rgba(124,97,255,.5);
   display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;
-  font-weight:800;font-size:.95rem;flex:0 0 auto;background:rgba(5,6,16,.9);z-index:1;color:var(--dim)}
+  font-weight:800;font-size:.95rem;background:rgba(5,6,16,.92);color:var(--dim)}
 .road-node.done .road-circle{border-color:var(--easy);color:var(--easy);box-shadow:0 0 12px rgba(34,197,94,.35)}
 .road-node.cur .road-circle{border-color:var(--legendary);color:var(--legendary);
   box-shadow:0 0 18px rgba(251,191,36,.5);animation:roadPulse 1.6s ease-in-out infinite}
-.road-node.lock{opacity:.55}
+.road-node.lock{opacity:.6}
 @keyframes roadPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
-.road-rew{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
-.road-rw-chip{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:8px;
-  border:1px solid rgba(124,97,255,.35);background:rgba(124,97,255,.08);color:var(--txt)}
+.road-rew{display:flex;flex-wrap:wrap;gap:4px;align-items:center;justify-content:center;margin-top:6px;max-width:170px}
+.road-rw-chip{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:8px;
+  border:1px solid rgba(124,97,255,.35);background:rgba(9,10,26,.85);color:var(--txt)}
 .road-rw-chip.dim{opacity:.4}
-.road-claimed{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--easy)}
-.road-next{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--legendary)}
+.road-claimed{font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--easy)}
+.road-next{font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--legendary)}
+.road-lm{display:flex;flex-direction:column;align-items:center;margin-bottom:4px}
+.road-lm-e{font-size:2.1rem;filter:drop-shadow(0 0 12px rgba(124,97,255,.65));line-height:1.1}
+.road-lm-n{font-family:'Orbitron',monospace;font-size:.56rem;font-weight:800;letter-spacing:.14em;
+  color:var(--dim);margin-top:2px;white-space:nowrap}
+.road-node.done .road-lm-n{color:var(--easy)}
+.road-node.cur .road-lm-n{color:var(--legendary)}
 /* admin level road rows */
 .road-edit-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .streak-pill{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;color:#fb923c;
@@ -577,6 +592,29 @@ nav::-webkit-scrollbar{display:none}
       </div>
 
       <div class="panel">
+        <div class="panel-title">📇 HUNTER DOSSIER</div>
+        <div class="dossier-grid">
+          <div><label class="form-lbl">Height</label><input class="inp ds-field" data-ds="height" maxlength="20" placeholder="e.g. 178 cm"></div>
+          <div><label class="form-lbl">Weight</label><input class="inp ds-field" data-ds="weight" maxlength="20" placeholder="e.g. 70 kg"></div>
+          <div><label class="form-lbl">Age</label><input class="inp ds-field" data-ds="age" maxlength="12" placeholder="e.g. 18"></div>
+          <div><label class="form-lbl">Status</label><input class="inp ds-field" data-ds="status" maxlength="60" placeholder="e.g. Student — preparing for university"></div>
+        </div>
+        <label class="form-lbl" style="margin-top:14px">🏅 Real-Life Achievements (IELTS, CEFR, certificates...)</label>
+        <div id="raList"></div>
+        <div class="adm-row" style="margin-top:8px">
+          <input class="inp" id="raName" style="flex:1;min-width:120px" maxlength="40" placeholder="Achievement, e.g. IELTS">
+          <input class="inp" id="raValue" style="width:130px;flex:0 0 auto" maxlength="30" placeholder="Score, e.g. 7.5">
+          <button class="btn primary" id="raAddBtn">ADD</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">⚡ SKILLS &amp; 🗡 EQUIPMENT</div>
+        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road (edit road rewards in ADMIN). Click one to remove it.</div>
+        <div class="chip-list" id="skillsList"></div>
+      </div>
+
+      <div class="panel">
         <div class="panel-title">TITLES</div>
         <div class="chip-list" id="titlesList"></div>
       </div>
@@ -806,6 +844,7 @@ nav::-webkit-scrollbar{display:none}
     <label class="form-lbl" id="qmTargetLbl">Completions to Fully Complete (earns 1 roll)</label>
     <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
     <div id="qmSchedWrap" style="display:none">
+      <div class="panel-title" style="margin-top:14px;font-size:.72rem">📅 SCHEDULE (CALENDAR)</div>
       <label class="form-lbl">📅 Start Date (optional — locked until then)</label>
       <input class="inp" id="qmStart" type="date">
       <label class="form-lbl">⏳ End Date / Deadline (optional)</label>
@@ -854,8 +893,8 @@ var TIERS = ["easy","medium","epic","mythic","legendary"];
 var TIER_LABEL = {easy:"EASY",medium:"MEDIUM",epic:"EPIC",mythic:"MYTHIC",legendary:"LEGENDARY"};
 var TIER_XP = {easy:15,medium:35,epic:75,mythic:140,legendary:250};
 var TIER_COLOR = {easy:"#22c55e",medium:"#3b82f6",epic:"#a855f7",mythic:"#ef4444",legendary:"#fbbf24"};
-var STATS = ["INT","STR","VIT","WIS","END"];
-var STAT_NAME = {INT:"Intelligence",STR:"Strength",VIT:"Vitality",WIS:"Wisdom",END:"Endurance"};
+var STATS = ["INT","STR","CON","END"];
+var STAT_NAME = {INT:"Intelligence",STR:"Strength",CON:"Confidence",END:"Endurance"};
 var FREQS = ["daily","weekly","longterm","custom","challenge"];
 var FREQ_LABEL = {daily:"DAILY",weekly:"WEEKLY",longterm:"ONE-TIME GOAL",custom:"CUSTOM",challenge:"🔥 CHALLENGE"};
 var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -875,8 +914,7 @@ var EMOJIS = ["⚔️","💪","🏋️","🏃","🧘","📚","📖","✍️","�
 var STAT_QUEST_TEMPLATES = {
   INT:{icon:"📚",name:"Mind Forging",desc:"Study or practice a skill for 30 minutes. The System demands a sharper mind."},
   STR:{icon:"💪",name:"Strength Conditioning",desc:"Complete a workout session. Weak bodies do not survive dungeons."},
-  VIT:{icon:"💧",name:"Vitality Protocol",desc:"Drink 8 glasses of water and sleep before midnight. Restore your life force."},
-  WIS:{icon:"📖",name:"Wisdom Seeker",desc:"Read 20 pages of a book. Knowledge is a weapon that never dulls."},
+  CON:{icon:"🗣️",name:"Confidence Protocol",desc:"Do one thing outside your comfort zone today — speak up, ask, volunteer. Fear is the real dungeon boss."},
   END:{icon:"🔥",name:"Endurance Trial",desc:"Complete every daily quest today. Consistency is the hunter's true power."}
 };
 var RANK_QUEST_TEMPLATES = {
@@ -921,7 +959,7 @@ function defaultState(){
   return {
     hunterName:"Hunter",
     level:1, xp:0, totalXp:0, statPoints:0,
-    stats:{INT:5,STR:5,VIT:5,WIS:5,END:5},
+    stats:{INT:5,STR:5,CON:5,END:5},
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
     storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
@@ -931,6 +969,10 @@ function defaultState(){
     heroImages:{},       /* optional user-uploaded portrait per rank key */
     monthlyReports:[],   /* graded month summaries, newest last */
     lastMonthlyReport:"",
+    dossier:{height:"",weight:"",age:"",status:""},
+    realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
+    skills:[],           /* earned from the level road */
+    equipment:[],
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -946,7 +988,7 @@ function defaultState(){
       items:[
         {id:"pk1",icon:"💪",name:"100 Push-ups",stat:"STR",done:false},
         {id:"pk2",icon:"🏋️",name:"100 Sit-ups",stat:"END",done:false},
-        {id:"pk3",icon:"🦵",name:"100 Squats",stat:"VIT",done:false},
+        {id:"pk3",icon:"🦵",name:"100 Squats",stat:"CON",done:false},
         {id:"pk4",icon:"🏃",name:"10 km Run",stat:"END",done:false}
       ]
     }
@@ -1041,6 +1083,25 @@ function migrateState(){
       }
     }
   }
+  /* stat rework: VIT becomes CON (Confidence), WIS retires (its points refund) */
+  if(state.stats && state.stats.CON === undefined){
+    state.stats.CON = state.stats.VIT !== undefined ? state.stats.VIT : 5;
+    delete state.stats.VIT;
+    if(state.stats.WIS !== undefined){
+      var wisExtra = state.stats.WIS - 5;
+      if(wisExtra > 0) state.statPoints += wisExtra;
+      delete state.stats.WIS;
+    }
+    var remap = {VIT:"CON", WIS:"INT"};
+    for(var mq=0; mq<state.quests.length; mq++){
+      if(remap[state.quests[mq].stat]) state.quests[mq].stat = remap[state.quests[mq].stat];
+    }
+    if(state.dailyPackage && state.dailyPackage.items){
+      for(var mp=0; mp<state.dailyPackage.items.length; mp++){
+        if(remap[state.dailyPackage.items[mp].stat]) state.dailyPackage.items[mp].stat = remap[state.dailyPackage.items[mp].stat];
+      }
+    }
+  }
   /* quests: completion target + progress counter + schedule fields */
   for(var q=0;q<state.quests.length;q++){
     var qq = state.quests[q];
@@ -1077,15 +1138,17 @@ function migrateState(){
   }
   if(!state.claimedLevels) state.claimedLevels = [];
 }
-var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","title","note"];
+var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","title","note"];
 var ROAD_KIND_LABEL = {
   "roll-easy":"🎟 EASY ROLL","roll-medium":"🎟 MEDIUM ROLL","roll-epic":"🎟 EPIC ROLL",
   "roll-mythic":"🎟 MYTHIC ROLL","roll-legendary":"🎟 LEGENDARY ROLL",
-  "sp":"✦ STAT POINTS","title":"👑 TITLE","note":"🎁 CUSTOM REWARD"
+  "sp":"✦ STAT POINTS","skill":"⚡ SKILL","equip":"🗡 EQUIPMENT","title":"👑 TITLE","note":"🎁 MY PRIZE (write anything)"
 };
 function roadRewardLabel(rw){
   if(rw.kind === "sp") return "✦ +" + (+rw.value || 1) + " SP";
   if(rw.kind.indexOf("roll-") === 0) return "🎟 " + TIER_LABEL[rw.kind.slice(5)];
+  if(rw.kind === "skill") return "⚡ " + (rw.value || "Skill");
+  if(rw.kind === "equip") return "🗡 " + (rw.value || "Equipment");
   if(rw.kind === "title") return "👑 " + (rw.value || "Title");
   return "🎁 " + (rw.value || "Reward");
 }
@@ -1102,6 +1165,14 @@ function applyLevelReward(rw){
     var tier = rw.kind.slice(5);
     state.storage.push(makeRollTicket(tier, "", "Level road"));
     return "🎟 +1 " + TIER_LABEL[tier] + " roll (sent to STORAGE)";
+  }
+  if(rw.kind === "skill"){
+    if(rw.value && state.skills.indexOf(rw.value) === -1) state.skills.push(rw.value);
+    return "⚡ Skill acquired: [" + (rw.value || "?") + "]";
+  }
+  if(rw.kind === "equip"){
+    if(rw.value && state.equipment.indexOf(rw.value) === -1) state.equipment.push(rw.value);
+    return "🗡 Equipment obtained: [" + (rw.value || "?") + "]";
   }
   if(rw.kind === "title"){
     if(rw.value) addTitle(rw.value);
@@ -1253,6 +1324,12 @@ function switchPage(p){
   }
   renderAll();
   window.scrollTo(0,0);
+  if(p === "story"){
+    setTimeout(function(){
+      var cur = document.getElementById("roadCur");
+      if(cur) cur.scrollIntoView({block:"center", behavior:"smooth"});
+    }, 80);
+  }
 }
 document.getElementById("nav").addEventListener("click", function(e){
   var b = e.target.closest(".nav-btn");
@@ -1865,6 +1942,36 @@ function renderProfile(){
       + '</div>';
   }
   document.getElementById("statsPanel").innerHTML = html;
+  /* dossier */
+  var dsFields = document.querySelectorAll(".ds-field");
+  for(var df=0; df<dsFields.length; df++){
+    var key = dsFields[df].getAttribute("data-ds");
+    if(document.activeElement !== dsFields[df]) dsFields[df].value = state.dossier[key] || "";
+  }
+  /* real-life achievements */
+  var ra = document.getElementById("raList");
+  if(state.realAchievements.length === 0){
+    ra.innerHTML = '<span class="empty-note">No records yet. Add your real victories — IELTS, CEFR, certificates, medals.</span>';
+  } else {
+    var rah = "";
+    for(var ri=0; ri<state.realAchievements.length; ri++){
+      var rr = state.realAchievements[ri];
+      rah += '<div class="ra-row"><span>🏅</span><span class="ra-name">' + esc(rr.name) + '</span>'
+        + '<span class="ra-val">' + esc(rr.value) + '</span>'
+        + '<button class="mini-btn" data-radel="' + rr.id + '" title="Remove">🗑</button></div>';
+    }
+    ra.innerHTML = rah;
+  }
+  /* skills & equipment (earned from level road) */
+  var sk = document.getElementById("skillsList");
+  var skh = "";
+  for(var si=0; si<state.skills.length; si++){
+    skh += '<span class="title-chip skill-chip" data-skill="' + si + '" title="Click to remove">⚡ ' + esc(state.skills[si]) + '</span>';
+  }
+  for(var ei=0; ei<state.equipment.length; ei++){
+    skh += '<span class="title-chip skill-chip" data-equip="' + ei + '" title="Click to remove">🗡 ' + esc(state.equipment[ei]) + '</span>';
+  }
+  sk.innerHTML = skh || '<span class="empty-note">Nothing earned yet — skills and equipment drop from the Level Road as you level up.</span>';
   /* titles */
   var tl = document.getElementById("titlesList");
   if(state.titles.length === 0) tl.innerHTML = '<span class="empty-note">No titles yet. Achievements will grant them automatically.</span>';
@@ -1892,6 +1999,41 @@ document.getElementById("statsPanel").addEventListener("click", function(e){
   state.statPoints--;
   sysToast("+1 " + k + " allocated. " + STAT_NAME[k] + " is now " + state.stats[k] + ".");
   save(); renderProfile(); 
+});
+/* dossier fields save on change */
+document.getElementById("page-profile").addEventListener("change", function(e){
+  if(!e.target.classList.contains("ds-field")) return;
+  state.dossier[e.target.getAttribute("data-ds")] = e.target.value.trim();
+  save();
+  sysToast("Dossier updated.");
+});
+document.getElementById("raAddBtn").addEventListener("click", function(){
+  var n = document.getElementById("raName").value.trim();
+  var v = document.getElementById("raValue").value.trim();
+  if(!n){ toast("Enter the achievement name (e.g. IELTS).", "err"); return; }
+  state.realAchievements.push({id: uid(), name: n, value: v || "✓"});
+  document.getElementById("raName").value = "";
+  document.getElementById("raValue").value = "";
+  save(); renderProfile();
+  toast("Real achievement recorded: " + n, "gold", "RESPECT");
+});
+document.getElementById("raList").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-radel]"); if(!b) return;
+  var id = b.getAttribute("data-radel");
+  state.realAchievements = state.realAchievements.filter(function(r){ return r.id !== id; });
+  save(); renderProfile();
+});
+document.getElementById("skillsList").addEventListener("click", function(e){
+  var el = e.target.closest(".skill-chip"); if(!el) return;
+  var si = el.getAttribute("data-skill"), ei = el.getAttribute("data-equip");
+  if(si !== null){
+    if(!confirm('Remove skill "' + state.skills[+si] + '"?')) return;
+    state.skills.splice(+si, 1);
+  } else if(ei !== null){
+    if(!confirm('Remove equipment "' + state.equipment[+ei] + '"?')) return;
+    state.equipment.splice(+ei, 1);
+  }
+  save(); renderProfile();
 });
 /* editable hunter name */
 document.getElementById("hunterName").addEventListener("click", function(){
@@ -2382,7 +2524,7 @@ function renderStats(){
     data:{ labels:tLabels, datasets:[{ data:tData, backgroundColor:tColors, borderColor:"#04050d", borderWidth:3 }] },
     options: doughOpts
   });
-  var STAT_COLOR = {INT:"#00d1ff", STR:"#ef4444", VIT:"#22c55e", WIS:"#a855f7", END:"#fbbf24"};
+  var STAT_COLOR = {INT:"#00d1ff", STR:"#ef4444", CON:"#22c55e", END:"#fbbf24"};
   var sLabels = [], sData = [], sColors = [];
   for(var ss=0; ss<STATS.length; ss++){
     if(statCounts[STATS[ss]]){
@@ -2428,21 +2570,49 @@ function checkStoryUnlocks(){
     }
   }
 }
+var LANDMARKS = [
+  {e:"🏜️", n:"PYRAMIDS OF GIZA"}, {e:"🏟️", n:"COLOSSEUM"}, {e:"🗼", n:"EIFFEL TOWER"},
+  {e:"🗽", n:"STATUE OF LIBERTY"}, {e:"⛩️", n:"TORII GATE"}, {e:"🏯", n:"HIMEJI CASTLE"},
+  {e:"🕌", n:"TAJ MAHAL"}, {e:"🗿", n:"EASTER ISLAND"}, {e:"🏛️", n:"ACROPOLIS"},
+  {e:"🗻", n:"MT. FUJI"}, {e:"🌋", n:"VOLCANO GATE"}, {e:"🏰", n:"SHADOW CASTLE"}
+];
 function renderRoad(){
   var el = document.getElementById("roadMap");
   var maxLv = Math.max(state.level + 12, 30);
-  var h = "";
-  /* the road climbs upward: lowest level at the bottom, higher levels above */
-  for(var lv=maxLv; lv>=2; lv--){
-    var rws = levelRewardsFor(lv);
-    var cls = lv <= state.level ? "done" : (lv === state.level + 1 ? "cur" : "lock");
-    h += '<div class="road-node ' + cls + '">';
-    h += '<div class="road-circle">' + lv + '</div>';
+  var count = maxLv - 1; /* levels 2..maxLv */
+  var rowH = 104, pad = 60;
+  var H = count * rowH + pad * 2;
+  el.style.height = H + "px";
+  /* serpentine points, bottom (lv2) to top (maxLv) */
+  var pts = [];
+  for(var i=0; i<count; i++){
+    var lv = i + 2;
+    pts.push({
+      lv: lv,
+      x: 50 + 31 * Math.sin(i * 0.75),
+      y: H - pad - i * rowH
+    });
+  }
+  /* dashed trail through every stop (drawn behind the nodes) */
+  var poly = "";
+  for(var p=0; p<pts.length; p++) poly += (p ? " " : "") + pts[p].x.toFixed(1) + "," + pts[p].y;
+  var h = '<svg class="road-trail" viewBox="0 0 100 ' + H + '" preserveAspectRatio="none">'
+    + '<polyline points="' + poly + '" fill="none" stroke="rgba(124,97,255,.4)" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>'
+    + '</svg>';
+  for(var n=0; n<pts.length; n++){
+    var pt = pts[n];
+    var rws = levelRewardsFor(pt.lv);
+    var cls = pt.lv <= state.level ? "done" : (pt.lv === state.level + 1 ? "cur" : "lock");
+    var lm = pt.lv % 5 === 0 ? LANDMARKS[(pt.lv / 5 - 1) % LANDMARKS.length] : null;
+    h += '<div class="road-node ' + cls + '"' + (pt.lv === state.level + 1 ? ' id="roadCur"' : '')
+      + ' style="left:' + pt.x.toFixed(1) + '%;top:' + (pt.y - 26) + 'px">';
+    if(lm) h += '<div class="road-lm"><span class="road-lm-e">' + lm.e + '</span><span class="road-lm-n">' + lm.n + '</span></div>';
+    h += '<div class="road-circle">' + pt.lv + '</div>';
     h += '<div class="road-rew">';
     if(rws.length === 0) h += '<span class="road-rw-chip dim">—</span>';
-    for(var i=0;i<rws.length;i++) h += '<span class="road-rw-chip">' + esc(roadRewardLabel(rws[i])) + '</span>';
-    if(lv <= state.level) h += '<span class="road-claimed">✓ CLAIMED</span>';
-    else if(lv === state.level + 1) h += '<span class="road-next">◄ NEXT — ' + state.xp + '/' + xpForLevel(state.level) + ' XP</span>';
+    for(var ri=0; ri<rws.length; ri++) h += '<span class="road-rw-chip">' + esc(roadRewardLabel(rws[ri])) + '</span>';
+    if(pt.lv <= state.level) h += '<span class="road-claimed">✓ CLAIMED</span>';
+    else if(pt.lv === state.level + 1) h += '<span class="road-next">NEXT — ' + state.xp + '/' + xpForLevel(state.level) + ' XP</span>';
     h += '</div></div>';
   }
   el.innerHTML = h;
@@ -2652,7 +2822,7 @@ document.getElementById("roadAddBtn").addEventListener("click", function(){
   var kind = document.getElementById("roadAddKind").value;
   var val = document.getElementById("roadAddValue").value.trim();
   if(kind === "sp" && !val) val = "1";
-  if((kind === "title" || kind === "note") && !val){ toast("Enter the title / reward text.", "err"); return; }
+  if((kind === "title" || kind === "note" || kind === "skill" || kind === "equip") && !val){ toast("Enter the text for this reward (skill / equipment / title / prize).", "err"); return; }
   state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
   document.getElementById("roadAddLevel").value = "";
   document.getElementById("roadAddValue").value = "";
