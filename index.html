@@ -197,6 +197,27 @@ nav::-webkit-scrollbar{display:none}
 @keyframes syspulse{0%,100%{box-shadow:0 0 6px rgba(124,97,255,.5)}50%{box-shadow:0 0 16px rgba(124,97,255,.9)}}
 .tag-link{color:#f0abfc;border-color:rgba(240,171,252,.5);background:rgba(240,171,252,.06)}
 .tag-target{color:#5eead4;border-color:rgba(94,234,212,.5);background:rgba(94,234,212,.06)}
+/* level road (score-hero style zigzag map) */
+.road{position:relative;padding:6px 0 6px 0}
+.road::before{content:"";position:absolute;left:25px;top:10px;bottom:10px;width:2px;
+  background:linear-gradient(180deg,rgba(34,197,94,.6),rgba(124,97,255,.35),rgba(124,97,255,.15))}
+.road-node{display:flex;align-items:center;gap:14px;margin-bottom:14px;position:relative}
+.road-circle{width:52px;height:52px;border-radius:50%;border:2px solid rgba(124,97,255,.5);
+  display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;
+  font-weight:800;font-size:.95rem;flex:0 0 auto;background:rgba(5,6,16,.9);z-index:1;color:var(--dim)}
+.road-node.done .road-circle{border-color:var(--easy);color:var(--easy);box-shadow:0 0 12px rgba(34,197,94,.35)}
+.road-node.cur .road-circle{border-color:var(--legendary);color:var(--legendary);
+  box-shadow:0 0 18px rgba(251,191,36,.5);animation:roadPulse 1.6s ease-in-out infinite}
+.road-node.lock{opacity:.55}
+@keyframes roadPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.road-rew{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.road-rw-chip{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:8px;
+  border:1px solid rgba(124,97,255,.35);background:rgba(124,97,255,.08);color:var(--txt)}
+.road-rw-chip.dim{opacity:.4}
+.road-claimed{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--easy)}
+.road-next{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--legendary)}
+/* admin level road rows */
+.road-edit-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .streak-pill{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;color:#fb923c;
   border:1px solid rgba(251,146,60,.5);background:rgba(251,146,60,.08);border-radius:12px;padding:2px 9px}
 .dots{display:flex;gap:4px;margin-top:8px}
@@ -615,6 +636,11 @@ nav::-webkit-scrollbar{display:none}
         <div class="sys-voice" id="sysVoice"></div>
       </div>
       <div class="panel">
+        <div class="panel-title">🗺 LEVEL ROAD</div>
+        <div class="empty-note" style="margin-bottom:14px">Collect XP to climb the road. Every level grants its rewards automatically the moment you reach it. Edit the rewards in ADMIN → Manage Level Road.</div>
+        <div class="road" id="roadMap"></div>
+      </div>
+      <div class="panel">
         <div class="panel-title">CHRONICLES OF THE HUNTER</div>
         <div id="chaptersList"></div>
       </div>
@@ -664,6 +690,17 @@ nav::-webkit-scrollbar{display:none}
       <div class="panel">
         <div class="panel-title">MANAGE COLLECTIONS</div>
         <div id="admCols"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">MANAGE LEVEL ROAD</div>
+        <div class="empty-note" style="margin-bottom:10px">Each row is a reward granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; value is the SP amount or the title/custom text. Rows are editable in place.</div>
+        <div id="admRoad"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
+          <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
+          <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / custom text)">
+          <button class="btn primary" id="roadAddBtn">ADD</button>
+        </div>
       </div>
     </section>
   </main>
@@ -720,7 +757,7 @@ nav::-webkit-scrollbar{display:none}
     <div class="seg" id="qmStat"></div>
     <label class="form-lbl">Link to Reward Collection</label>
     <select class="sel" id="qmLink"></select>
-    <label class="form-lbl">Completions to Fully Complete (earns 1 roll)</label>
+    <label class="form-lbl" id="qmTargetLbl">Completions to Fully Complete (earns 1 roll)</label>
     <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
     <div class="modal-actions">
       <button class="btn" id="qmCancel">CANCEL</button>
@@ -742,8 +779,6 @@ nav::-webkit-scrollbar{display:none}
     <label class="form-lbl">Prizes in this Crate (2 - 8, won in random order)</label>
     <div id="cmItems"></div>
     <button type="button" class="btn" id="cmAddItem" style="width:100%">+ ADD PRIZE</button>
-    <label class="form-lbl">Real Life Reward</label>
-    <input class="inp" id="cmReward" maxlength="120" placeholder="e.g. Buy that game you wanted">
     <label class="form-lbl">Cosmetic Title Unlocked</label>
     <input class="inp" id="cmTitleTxt" maxlength="40" placeholder="e.g. Shadow of the Arcade">
     <div class="modal-actions">
@@ -767,8 +802,8 @@ var TIER_XP = {easy:15,medium:35,epic:75,mythic:140,legendary:250};
 var TIER_COLOR = {easy:"#22c55e",medium:"#3b82f6",epic:"#a855f7",mythic:"#ef4444",legendary:"#fbbf24"};
 var STATS = ["INT","STR","VIT","WIS","END"];
 var STAT_NAME = {INT:"Intelligence",STR:"Strength",VIT:"Vitality",WIS:"Wisdom",END:"Endurance"};
-var FREQS = ["daily","weekly","longterm","custom"];
-var FREQ_LABEL = {daily:"DAILY",weekly:"WEEKLY",longterm:"ONE-TIME GOAL",custom:"CUSTOM"};
+var FREQS = ["daily","weekly","longterm","custom","challenge"];
+var FREQ_LABEL = {daily:"DAILY",weekly:"WEEKLY",longterm:"ONE-TIME GOAL",custom:"CUSTOM",challenge:"🔥 CHALLENGE"};
 var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var RANKS = [
   {key:"E", label:"E",  cls:"rank-E", minLevel:1,  name:"E-Rank Hunter"},
@@ -779,7 +814,10 @@ var RANKS = [
   {key:"S", label:"S",  cls:"rank-S", minLevel:30, name:"S-Rank Hunter"},
   {key:"N", label:"NAT'L", cls:"rank-N", minLevel:50, name:"National Level Hunter"}
 ];
-var EMOJIS = ["⚔️","💪","🏋️","🏃","🧘","📚","📖","✍️","🧠","💻","🎨","🎸","🎹","🎧","🍎","🥗","💧","😴","🧹","🧺","🚿","🦷","🐕","🌱","☀️","🌙","⭐","🔥","⚡","💎","🗡️","🏹","🛡️","🪄","👑","🏆","🎯","🎮","🎁","🧩","💰","🪙","📵","🚭","🍀","🥇"];
+var EMOJIS = ["⚔️","💪","🏋️","🏃","🧘","📚","📖","✍️","🧠","💻","🎨","🎸","🎹","🎧","🍎","🥗","💧","😴","🧹","🧺","🚿","🦷","🐕","🌱","☀️","🌙","⭐","🔥","⚡","💎","🗡️","🏹","🛡️","🪄","👑","🏆","🎯","🎮","🎁","🧩","💰","🪙","📵","🚭","🍀","🥇",
+  /* movies & shows */ "🎬","🎥","📽️","🎞️","🍿","📺","🎭","🎟️","🎫",
+  /* emotions */ "😀","😂","😊","🥰","😎","🤩","🥳","😌","🤗","😭","😡","😱","🤔","🤯","😇","🥶","💀","👻",
+  /* entertainment */ "🎤","🎵","🎶","🎲","🎳","🎱","♟️","🃏","🎰","🎪","🎡","🎢","🎠","⚽","🏀","🏈","🎾","🏐","🏸","🥊","🥋","🛹","🤖","👽","🦸","🧙","🐉","🚀"];
 var STAT_QUEST_TEMPLATES = {
   INT:{icon:"📚",name:"Mind Forging",desc:"Study or practice a skill for 30 minutes. The System demands a sharper mind."},
   STR:{icon:"💪",name:"Strength Conditioning",desc:"Complete a workout session. Weak bodies do not survive dungeons."},
@@ -833,6 +871,9 @@ function defaultState(){
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
     storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
+    levelRewards:[],     /* road map: {id, level, kind, value} */
+    claimedLevels:[],
+    roadSeeded:false,
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -958,6 +999,63 @@ function migrateState(){
       state.rolls[TIERS[t]] = 0;
     }
   }
+  /* seed the level road with default rewards (editable in Admin) */
+  if(!state.roadSeeded){
+    state.roadSeeded = true;
+    state.levelRewards = [];
+    for(var lv=2; lv<=60; lv++){
+      var kind, val = "";
+      if(lv % 10 === 0) kind = "roll-epic";
+      else if(lv % 5 === 0) kind = "roll-medium";
+      else if(lv % 2 === 0) kind = "roll-easy";
+      else { kind = "sp"; val = "2"; }
+      state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
+    }
+    state.claimedLevels = [];
+    /* levels already passed are marked claimed so old saves aren't flooded */
+    for(var cl=2; cl<=state.level; cl++) state.claimedLevels.push(cl);
+  }
+  if(!state.claimedLevels) state.claimedLevels = [];
+}
+var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","title","note"];
+var ROAD_KIND_LABEL = {
+  "roll-easy":"🎟 EASY ROLL","roll-medium":"🎟 MEDIUM ROLL","roll-epic":"🎟 EPIC ROLL",
+  "roll-mythic":"🎟 MYTHIC ROLL","roll-legendary":"🎟 LEGENDARY ROLL",
+  "sp":"✦ STAT POINTS","title":"👑 TITLE","note":"🎁 CUSTOM REWARD"
+};
+function roadRewardLabel(rw){
+  if(rw.kind === "sp") return "✦ +" + (+rw.value || 1) + " SP";
+  if(rw.kind.indexOf("roll-") === 0) return "🎟 " + TIER_LABEL[rw.kind.slice(5)];
+  if(rw.kind === "title") return "👑 " + (rw.value || "Title");
+  return "🎁 " + (rw.value || "Reward");
+}
+function levelRewardsFor(lv){
+  return state.levelRewards.filter(function(r){ return +r.level === lv; });
+}
+function applyLevelReward(rw){
+  if(rw.kind === "sp"){
+    var n = +rw.value || 1;
+    state.statPoints += n;
+    return "✦ +" + n + " stat point" + (n>1?"s":"");
+  }
+  if(rw.kind.indexOf("roll-") === 0){
+    var tier = rw.kind.slice(5);
+    state.storage.push(makeRollTicket(tier, "", "Level road"));
+    return "🎟 +1 " + TIER_LABEL[tier] + " roll (sent to STORAGE)";
+  }
+  if(rw.kind === "title"){
+    if(rw.value) addTitle(rw.value);
+    return "👑 Title: [" + (rw.value || "?") + "]";
+  }
+  return "🎁 " + (rw.value || "Reward");
+}
+function grantLevelRewards(lv){
+  if(state.claimedLevels.indexOf(lv) !== -1) return [];
+  var rws = levelRewardsFor(lv);
+  var lines = [];
+  for(var i=0;i<rws.length;i++) lines.push(applyLevelReward(rws[i]));
+  state.claimedLevels.push(lv);
+  return lines;
 }
 function makeRollTicket(tier, colId, from){
   return {id: uid(), tier:tier, colId:colId || "", earnedAt:todayStr(), from:from || ""};
@@ -1123,8 +1221,11 @@ function gainXP(amount){
     state.level++;
     state.statPoints += 3;
     leveled = true;
+    var roadLines = grantLevelRewards(state.level);
     sysToast("LEVEL UP! You are now level " + state.level + ". +3 stat points.");
-    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+3 stat points have been granted.\nAllocate them wisely, Hunter.", "⚡", "CONTINUE");
+    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+3 stat points have been granted."
+      + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : "")
+      + "\nAllocate them wisely, Hunter.", "⚡", "CONTINUE");
     var newRank = rankForLevel(state.level);
     if(newRank.key !== oldRank.key){
       onRankUp(oldRank, newRank);
@@ -1225,6 +1326,7 @@ function completedThisPeriod(q){
   var t = todayStr();
   if(q.freq === "weekly") return q.lastWeek === weekKey(t);
   if(q.freq === "longterm") return !!q.done;
+  if(q.freq === "challenge") return !!q.done || q.lastCompleted === t;
   return q.lastCompleted === t;
 }
 function prevScheduledDay(q, fromDs){
@@ -1240,7 +1342,7 @@ function prevScheduledDay(q, fromDs){
 }
 function updateStreakOnComplete(q){
   var t = todayStr();
-  if(q.freq === "daily"){
+  if(q.freq === "daily" || q.freq === "challenge"){
     if(q.lastCompleted && dayDiff(q.lastCompleted, t) === 1) q.streak++;
     else q.streak = 1;
   } else if(q.freq === "weekly"){
@@ -1267,6 +1369,11 @@ function checkStreakResets(){
     if(q.streak <= 0 || !q.lastCompleted) continue;
     if(q.freq === "daily"){
       if(dayDiff(q.lastCompleted, t) > 1){ q.streak = 0; changed = true; sysToast("Streak lost on quest: " + q.name); }
+    } else if(q.freq === "challenge"){
+      if(!q.done && dayDiff(q.lastCompleted, t) > 1){
+        q.streak = 0; q.progress = 0; changed = true;
+        toast("Challenge failed: " + q.name + ". The streak is broken — begin again from day 1.", "err", "CHALLENGE FAILED");
+      }
     } else if(q.freq === "weekly"){
       if(q.lastWeek && q.lastWeek !== weekKey(t) && q.lastWeek !== weekKey(addDays(t,-7))){
         q.streak = 0; changed = true; sysToast("Streak lost on quest: " + q.name);
@@ -1288,11 +1395,12 @@ function completeQuest(id){
   if(completedThisPeriod(q)){ toast("Already completed for this period.", "err"); return; }
   if(q.freq === "custom" && !isScheduledToday(q)){ toast("This quest is not scheduled today.", "err"); return; }
   var t = todayStr();
-  q.lastCompleted = t;
   q.completions.push(t);
-  q.progress = (q.progress || 0) + 1;
   state.totalCompleted++;
-  updateStreakOnComplete(q);
+  updateStreakOnComplete(q); /* must run before lastCompleted is overwritten — streak math reads the previous date */
+  q.lastCompleted = t;
+  if(q.freq === "challenge") q.progress = q.streak; /* challenge progress IS the unbroken streak */
+  else q.progress = (q.progress || 0) + 1;
   recordHistory(0, 1);
   /* stat bonus */
   if(q.stat && state.stats[q.stat] !== undefined){
@@ -1302,7 +1410,7 @@ function completeQuest(id){
   /* progress toward full completion; roll is granted only when target is reached */
   var target = q.target || 1;
   if(q.progress >= target){
-    if(q.freq === "longterm") q.done = true;
+    if(q.freq === "longterm" || q.freq === "challenge") q.done = true;
     else q.progress = 0; /* recurring quests start a new cycle */
     var col = q.link ? colById(q.link) : null;
     var ticket = makeRollTicket(q.tier, col ? col.id : "", q.name);
@@ -1310,10 +1418,19 @@ function completeQuest(id){
     var rollDesc = col
       ? TIER_LABEL[q.tier] + " roll for crate [" + col.emoji + " " + col.name + "]"
       : TIER_LABEL[q.tier] + " roll (any " + TIER_LABEL[q.tier] + " crate)";
-    announce("🎟 QUEST FULLY COMPLETED 🎟",
-      "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE.\nOpen REWARDS and use it whenever you wish, Hunter.",
-      "🎟", "STORE IT");
+    if(q.freq === "challenge"){
+      announce("🔥 CHALLENGE CONQUERED 🔥",
+        "[" + q.name + "]\n\n" + target + " days in a row. The streak held. You did not break.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE, Hunter.",
+        "🔥", "STORE IT");
+      addBadge("🔥", "Challenge: " + q.name);
+    } else {
+      announce("🎟 QUEST FULLY COMPLETED 🎟",
+        "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE.\nOpen REWARDS and use it whenever you wish, Hunter.",
+        "🎟", "STORE IT");
+    }
     toast("+" + TIER_XP[q.tier] + " XP • roll stored", "gold", "FULL CLEAR");
+  } else if(q.freq === "challenge"){
+    toast("Day " + q.progress + " / " + target + " — keep the streak alive! +" + TIER_XP[q.tier] + " XP", "gold", "CHALLENGE");
   } else {
     toast("Quest complete! +" + TIER_XP[q.tier] + " XP • progress " + q.progress + " / " + target, "gold", "QUEST CLEARED");
   }
@@ -1508,7 +1625,7 @@ function runGacha(tier, col, guaranteed){
         col.complete = true;
         save();
         announce("💥 COLLECTION COMPLETE 💥",
-          "[" + col.name + "]\n\nAll " + colTotal(col) + " prizes have been won.\n\n🎁 REAL LIFE REWARD UNLOCKED:\n" + col.reward + (col.title ? "\n\n👑 TITLE EARNED: [" + col.title + "]" : ""),
+          "[" + col.name + "]\n\nAll " + colTotal(col) + " prizes have been won." + (col.title ? "\n\n👑 TITLE EARNED: [" + col.title + "]" : ""),
           "🎁", "CLAIM REWARD");
         if(col.title) addTitle(col.title);
         addBadge("🎁", col.name);
@@ -1708,12 +1825,16 @@ function questCard(q){
   if(q.stat) h += '<span class="tag tag-stat">+' + q.stat + '</span>';
   if(col) h += '<span class="tag tag-link">🔗 ' + esc(col.name) + '</span>';
   var tgt = q.target || 1;
-  h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
-  if((q.freq==="daily"||q.freq==="weekly"||q.freq==="custom") && q.streak > 0){
+  if(q.freq === "challenge"){
+    h += '<span class="tag tag-target" title="Consecutive days — miss one and it resets">' + (q.done ? '🏆 CONQUERED' : '🔥 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + ' days') + '</span>';
+  } else {
+    h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
+  }
+  if((q.freq==="daily"||q.freq==="weekly"||q.freq==="custom"||q.freq==="challenge") && q.streak > 0 && !q.done){
     h += '<span class="streak-pill">🔥 ' + q.streak + (q.freq==="weekly"?" wk":" day") + ' streak</span>';
   }
   h += '</div>';
-  if(q.freq === "daily" || q.freq === "custom") h += streakDots(q);
+  if(q.freq === "daily" || q.freq === "custom" || (q.freq === "challenge" && !q.done)) h += streakDots(q);
   h += '</div>';
   h += '<div class="q-actions">';
   var btnTxt = doneNow ? "✓ DONE" : (offToday ? "NOT TODAY" : "COMPLETE");
@@ -1779,7 +1900,7 @@ function renderRewards(){
   }
   var el = document.getElementById("collectionsList");
   if(state.collections.length === 0){
-    el.innerHTML = '<div class="empty-note">No reward collections yet. Press the + button to create one — set pieces to collect and a real-life reward.</div>';
+    el.innerHTML = '<div class="empty-note">No reward collections yet. Press the + button to create one — add the prizes the crate can drop.</div>';
     return;
   }
   var h = "";
@@ -1795,7 +1916,6 @@ function renderRewards(){
       h += '<div class="col-card' + (col.complete?" complete":"") + '">';
       h += '<div class="col-top"><div style="flex:1;min-width:0">';
       h += '<div class="col-name">' + col.emoji + ' ' + esc(col.name) + (col.complete?' <span class="tag tag-legendary">✓ COMPLETE</span>':'') + '</div>';
-      h += '<div class="col-reward">🎁 ' + esc(col.reward) + '</div>';
       if(col.title) h += '<div class="col-title-tag">👑 Title: ' + esc(col.title) + '</div>';
       h += '</div><div class="mini-row">';
       h += '<button class="mini-btn" data-cact="edit" data-id="' + col.id + '" title="Edit">✎</button>';
@@ -1964,9 +2084,28 @@ function checkStoryUnlocks(){
     }
   }
 }
+function renderRoad(){
+  var el = document.getElementById("roadMap");
+  var maxLv = Math.max(state.level + 12, 30);
+  var h = "";
+  for(var lv=2; lv<=maxLv; lv++){
+    var rws = levelRewardsFor(lv);
+    var cls = lv <= state.level ? "done" : (lv === state.level + 1 ? "cur" : "lock");
+    h += '<div class="road-node ' + cls + '">';
+    h += '<div class="road-circle">' + lv + '</div>';
+    h += '<div class="road-rew">';
+    if(rws.length === 0) h += '<span class="road-rw-chip dim">—</span>';
+    for(var i=0;i<rws.length;i++) h += '<span class="road-rw-chip">' + esc(roadRewardLabel(rws[i])) + '</span>';
+    if(lv <= state.level) h += '<span class="road-claimed">✓ CLAIMED</span>';
+    else if(lv === state.level + 1) h += '<span class="road-next">◄ NEXT — ' + state.xp + '/' + xpForLevel(state.level) + ' XP</span>';
+    h += '</div></div>';
+  }
+  el.innerHTML = h;
+}
 function renderStory(){
   var r = rankForLevel(state.level);
   document.getElementById("sysVoice").textContent = SYS_VOICE[r.key];
+  renderRoad();
   var h = "";
   for(var i=0;i<CHAPTERS.length;i++){
     var un = state.unlockedChapters.indexOf(i) !== -1;
@@ -2050,9 +2189,68 @@ function renderAdmin(){
     for(var s=0;s<STATS.length;s++) sh += '<option value="' + STATS[s] + '">' + STATS[s] + '</option>';
     stSel.innerHTML = sh;
   }
+  /* level road manager — inline-editable rows sorted by level */
+  var kindSel = document.getElementById("roadAddKind");
+  if(!kindSel.options.length){
+    var kh = "";
+    for(var kk=0;kk<ROAD_KINDS.length;kk++) kh += '<option value="' + ROAD_KINDS[kk] + '">' + ROAD_KIND_LABEL[ROAD_KINDS[kk]] + '</option>';
+    kindSel.innerHTML = kh;
+  }
+  var road = state.levelRewards.slice().sort(function(a,b){ return (+a.level) - (+b.level); });
+  var rh = "";
+  for(var rr=0;rr<road.length;rr++){
+    var rw = road[rr];
+    var opts = "";
+    for(var ko=0;ko<ROAD_KINDS.length;ko++){
+      opts += '<option value="' + ROAD_KINDS[ko] + '"' + (ROAD_KINDS[ko]===rw.kind?" selected":"") + '>' + ROAD_KIND_LABEL[ROAD_KINDS[ko]] + '</option>';
+    }
+    rh += '<div class="adm-list-item road-edit-row">'
+      + '<input class="inp rd-e-level" data-rid="' + rw.id + '" type="number" min="2" max="999" style="width:72px;flex:0 0 auto" value="' + (+rw.level) + '">'
+      + '<select class="sel rd-e-kind" data-rid="' + rw.id + '" style="width:160px;flex:0 0 auto">' + opts + '</select>'
+      + '<input class="inp rd-e-value" data-rid="' + rw.id + '" style="flex:1;min-width:100px" maxlength="60" value="' + esc(rw.value || "") + '" placeholder="value">'
+      + (state.claimedLevels.indexOf(+rw.level) !== -1 ? '<span class="tag tag-legendary" title="This level was already reached">✓</span>' : '')
+      + '<button class="mini-btn" data-rddel="' + rw.id + '" title="Remove">🗑</button></div>';
+  }
+  document.getElementById("admRoad").innerHTML = rh || '<span class="empty-note">The road is empty. Add level rewards below.</span>';
   renderStorageStatus();
   renderSnapshots();
 }
+function roadRewardById(id){
+  for(var i=0;i<state.levelRewards.length;i++) if(state.levelRewards[i].id === id) return state.levelRewards[i];
+  return null;
+}
+document.getElementById("admRoad").addEventListener("change", function(e){
+  var id = e.target.getAttribute("data-rid");
+  if(!id) return;
+  var rw = roadRewardById(id);
+  if(!rw) return;
+  if(e.target.classList.contains("rd-e-level")) rw.level = Math.max(2, Math.min(999, +e.target.value || 2));
+  else if(e.target.classList.contains("rd-e-kind")) rw.kind = e.target.value;
+  else if(e.target.classList.contains("rd-e-value")) rw.value = e.target.value.trim();
+  save();
+  sysToast("Level road updated.");
+});
+document.getElementById("admRoad").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-rddel]"); if(!b) return;
+  var rw = roadRewardById(b.getAttribute("data-rddel"));
+  if(!rw) return;
+  if(!confirm("Remove the LV." + rw.level + " reward from the road?")) return;
+  state.levelRewards = state.levelRewards.filter(function(r){ return r.id !== rw.id; });
+  save(); renderAdmin();
+});
+document.getElementById("roadAddBtn").addEventListener("click", function(){
+  var lv = Math.max(2, Math.min(999, +document.getElementById("roadAddLevel").value || 0));
+  if(!+document.getElementById("roadAddLevel").value){ toast("Enter a level number (2+).", "err"); return; }
+  var kind = document.getElementById("roadAddKind").value;
+  var val = document.getElementById("roadAddValue").value.trim();
+  if(kind === "sp" && !val) val = "1";
+  if((kind === "title" || kind === "note") && !val){ toast("Enter the title / reward text.", "err"); return; }
+  state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
+  document.getElementById("roadAddLevel").value = "";
+  document.getElementById("roadAddValue").value = "";
+  save(); renderAdmin();
+  sysToast("Reward added to the road at LV." + lv + ".");
+});
 document.getElementById("admPkg").addEventListener("change", function(e){
   var i = e.target.getAttribute("data-pki");
   if(i === null) return;
@@ -2275,6 +2473,11 @@ function fillLinkOptions(selected){
   }
   sel.innerHTML = h;
 }
+function updateTargetLabel(freq){
+  document.getElementById("qmTargetLbl").textContent = freq === "challenge"
+    ? "Days in a Row to Conquer (miss a day = start over; earns 1 roll)"
+    : "Completions to Fully Complete (earns 1 roll)";
+}
 function openQuestModal(id){
   qmEditId = id;
   var q = id ? questById(id) : null;
@@ -2289,11 +2492,13 @@ function openQuestModal(id){
   document.getElementById("qmName").value = q ? q.name : "";
   document.getElementById("qmDesc").value = q ? q.desc : "";
   buildEmojiGrid("qmEmoji", qmSel.emoji, function(e){ qmSel.emoji = e; });
-  buildSeg("qmFreq", FREQS, [FREQ_LABEL.daily,FREQ_LABEL.weekly,FREQ_LABEL.longterm,FREQ_LABEL.custom], qmSel.freq, function(v){
+  buildSeg("qmFreq", FREQS, [FREQ_LABEL.daily,FREQ_LABEL.weekly,FREQ_LABEL.longterm,FREQ_LABEL.custom,FREQ_LABEL.challenge], qmSel.freq, function(v){
     qmSel.freq = v;
     document.getElementById("qmDaysWrap").style.display = v==="custom" ? "" : "none";
+    updateTargetLabel(v);
   });
   document.getElementById("qmDaysWrap").style.display = qmSel.freq==="custom" ? "" : "none";
+  updateTargetLabel(qmSel.freq);
   buildDayGrid(qmSel.days);
   buildSeg("qmTier", TIERS, [TIER_LABEL.easy,TIER_LABEL.medium,TIER_LABEL.epic,TIER_LABEL.mythic,TIER_LABEL.legendary], qmSel.tier, function(v){ qmSel.tier = v; }, true);
   buildSeg("qmStat", STATS, STATS, qmSel.stat, function(v){ qmSel.stat = v; });
@@ -2389,7 +2594,6 @@ function openColModal(id){
   }
   document.getElementById("cmTitle").textContent = c ? "EDIT COLLECTION" : "NEW COLLECTION";
   document.getElementById("cmName").value = c ? c.name : "";
-  document.getElementById("cmReward").value = c ? c.reward : "";
   document.getElementById("cmTitleTxt").value = c ? c.title : "";
   buildEmojiGrid("cmEmoji", cmSel.emoji, function(e){ cmSel.emoji = e; });
   buildSeg("cmTier", TIERS, [TIER_LABEL.easy,TIER_LABEL.medium,TIER_LABEL.epic,TIER_LABEL.mythic,TIER_LABEL.legendary], cmSel.tier, function(v){ cmSel.tier = v; }, true);
@@ -2412,19 +2616,18 @@ document.getElementById("cmSave").addEventListener("click", function(){
       owned: !!cmItems[i].owned
     });
   }
-  var reward = document.getElementById("cmReward").value.trim() || "A well-earned reward";
   var titleTxt = document.getElementById("cmTitleTxt").value.trim();
   if(cmEditId){
     var c = colById(cmEditId);
     if(c){
       c.name = name; c.emoji = cmSel.emoji; c.tier = cmSel.tier;
       c.items = items;
-      c.reward = reward; c.title = titleTxt;
+      c.title = titleTxt;
       c.complete = colOwned(c) >= colTotal(c);
       sysToast("Collection updated: " + name);
     }
   } else {
-    state.collections.push(makeCollection(name, cmSel.emoji, cmSel.tier, items, reward, titleTxt));
+    state.collections.push(makeCollection(name, cmSel.emoji, cmSel.tier, items, "", titleTxt));
     toast("New collection created: " + name, "sys", "COLLECTION CREATED");
   }
   document.getElementById("colModal").classList.remove("show");
@@ -2546,6 +2749,7 @@ function renderHome(){
   var qs = [
     {p:"profile", i:"⚔️", l:"PROFILE"},
     {p:"quests", i:"📜", l:"QUESTS"},
+    {p:"quests", i:"🔥", l:"CHALLENGES", f:"challenge"},
     {p:"rewards", i:"🎁", l:"REWARDS"},
     {p:"stats", i:"📊", l:"STATS"},
     {p:"story", i:"📖", l:"STORY"},
@@ -2553,7 +2757,7 @@ function renderHome(){
   ];
   var qh = "";
   for(var q=0;q<qs.length;q++){
-    qh += '<button class="quick-btn" data-goto="' + qs[q].p + '"><span class="qb-ico">' + qs[q].i + '</span>' + qs[q].l + '</button>';
+    qh += '<button class="quick-btn" data-goto="' + qs[q].p + '"' + (qs[q].f ? ' data-f="' + qs[q].f + '"' : '') + '><span class="qb-ico">' + qs[q].i + '</span>' + qs[q].l + '</button>';
   }
   document.getElementById("quickGrid").innerHTML = qh;
 }
@@ -2567,6 +2771,8 @@ document.getElementById("pkgEditBtn").addEventListener("click", function(){
 });
 document.getElementById("quickGrid").addEventListener("click", function(e){
   var b = e.target.closest("button[data-goto]"); if(!b) return;
+  var f = b.getAttribute("data-f");
+  freqFilter = f || "all";
   switchPage(b.getAttribute("data-goto"));
 });
 
