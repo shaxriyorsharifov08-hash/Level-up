@@ -746,6 +746,11 @@ nav::-webkit-scrollbar{display:none}
             <span id="cloudName" style="font-weight:700;flex:1;min-width:100px"></span>
             <span class="tag tag-legendary" id="cloudSyncTag">✓ AUTO-SYNCING</span>
           </div>
+          <div class="adm-row" style="margin-top:12px">
+            <button class="btn gold" id="cloudDownloadBtn">&#11015; DOWNLOAD FROM CLOUD</button>
+            <button class="btn gold" id="cloudUploadBtn">&#11014; UPLOAD THIS DEVICE</button>
+          </div>
+          <div class="empty-note" id="cloudRemoteInfo" style="margin-top:8px"></div>
           <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
         </div>
       </div>
@@ -1078,6 +1083,31 @@ function cloudSignIn(){
 function cloudSignOut(){
   if(fbAuth) fbAuth.signOut();
 }
+function cloudDownload(){
+  if(!cloudAvailable || !cloudRef){ toast("Sign in first.", "err"); return; }
+  cloudRef.once("value", function(snap){
+    var remote = snap.val();
+    if(!remote || !remote.json){ toast("Nothing saved in the cloud yet. Use UPLOAD from the device that has your data.", "err"); return; }
+    var rs;
+    try{ rs = JSON.parse(remote.json); }catch(e){ toast("Cloud data is unreadable.", "err"); return; }
+    var info = "Level " + (rs.level||1) + ", " + (rs.totalCompleted||0) + " quests done, " + (rs.quests?rs.quests.length:0) + " active quests";
+    if(!confirm("Download your cloud save and REPLACE this device's data?\n\nCloud save: " + info + ".\n\nThis device's current data will be overwritten.")) return;
+    /* bump so this becomes the newest everywhere and the phone stops pushing its old copy over it */
+    rs.saveCount = Math.max(rs.saveCount || 0, state.saveCount || 0) + 1;
+    cloudAdopt(JSON.stringify(rs));
+    save();
+    toast("Cloud save downloaded to this device.", "gold", "SYNCED");
+  });
+}
+function cloudUpload(){
+  if(!cloudAvailable || !cloudRef){ toast("Sign in first.", "err"); return; }
+  if(!confirm("Upload THIS device's data to the cloud, replacing whatever is there?\n\nUse this on the device that has your real progress.")) return;
+  state.saveCount = (state.saveCount || 0) + 1000; /* make this device decisively newest */
+  cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
+  try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
+  toast("This device's data uploaded to the cloud.", "gold", "SYNCED");
+  renderCloudStatus();
+}
 function renderCloudStatus(){
   var na = document.getElementById("cloudUnavailable");
   if(!na) return; /* admin panel not yet in the DOM */
@@ -1092,6 +1122,18 @@ function renderCloudStatus(){
     so.style.display = "none"; si.style.display = "";
     document.getElementById("cloudAvatar").src = cloudUser.photoURL || "";
     document.getElementById("cloudName").textContent = cloudUser.displayName || cloudUser.email || "Hunter";
+    /* show what's currently in the cloud so the user can choose the right direction */
+    var infoEl = document.getElementById("cloudRemoteInfo");
+    if(infoEl && cloudRef){
+      infoEl.textContent = "Checking cloud…";
+      cloudRef.once("value", function(snap){
+        var remote = snap.val();
+        if(!remote || !remote.json){ infoEl.textContent = "Cloud is empty — press UPLOAD on the device with your data."; return; }
+        var rs; try{ rs = JSON.parse(remote.json); }catch(e){ infoEl.textContent = "Cloud data unreadable."; return; }
+        infoEl.innerHTML = "☁ In cloud: <b>Level " + (rs.level||1) + "</b>, " + (rs.totalCompleted||0) + " quests done, "
+          + (rs.quests?rs.quests.length:0) + " active quests. &nbsp; 📱 This device: <b>Level " + state.level + "</b>, " + state.totalCompleted + " done.";
+      });
+    }
   } else {
     so.style.display = ""; si.style.display = "none";
   }
@@ -2867,6 +2909,8 @@ function renderAdmin(){
 }
 document.getElementById("cloudSignInBtn").addEventListener("click", cloudSignIn);
 document.getElementById("cloudSignOutBtn").addEventListener("click", cloudSignOut);
+document.getElementById("cloudDownloadBtn").addEventListener("click", cloudDownload);
+document.getElementById("cloudUploadBtn").addEventListener("click", cloudUpload);
 var heroUploadRank = "";
 document.getElementById("admHero").addEventListener("click", function(e){
   var up = e.target.closest("button[data-hiup]");
