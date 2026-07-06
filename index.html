@@ -197,6 +197,8 @@ nav::-webkit-scrollbar{display:none}
 @keyframes syspulse{0%,100%{box-shadow:0 0 6px rgba(124,97,255,.5)}50%{box-shadow:0 0 16px rgba(124,97,255,.9)}}
 .tag-link{color:#f0abfc;border-color:rgba(240,171,252,.5);background:rgba(240,171,252,.06)}
 .tag-target{color:#5eead4;border-color:rgba(94,234,212,.5);background:rgba(94,234,212,.06)}
+.tag-deadline{color:var(--legendary);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.07)}
+.tag-expired{color:#ef4444;border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.08)}
 /* level road (score-hero style zigzag map) */
 .road{position:relative;padding:6px 0 6px 0}
 .road::before{content:"";position:absolute;left:25px;top:10px;bottom:10px;width:2px;
@@ -604,6 +606,17 @@ nav::-webkit-scrollbar{display:none}
         <div class="panel-title">STREAK HISTORY PER QUEST</div>
         <div class="chart-box"><canvas id="chartStreaks"></canvas></div>
       </div>
+      <div class="panel">
+        <div class="panel-title">WEEKDAY PERFORMANCE</div>
+        <div class="empty-note" style="margin-bottom:8px">Which days of the week you clear the most quests — find your weak day and attack it.</div>
+        <div class="chart-box"><canvas id="chartWeekday"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">HUNTER ATTRIBUTE RADAR</div>
+        <div class="empty-note" style="margin-bottom:8px">The shape of your build. A lopsided radar means The System will target your weakest attribute.</div>
+        <div class="chart-box"><canvas id="chartRadar"></canvas></div>
+      </div>
+      <div class="empty-note" id="chartOffline" style="display:none">⚠ Charts need an internet connection (chart library loads from CDN). Your numbers above are still accurate.</div>
     </section>
 
     <!-- ============ STORY ============ -->
@@ -742,6 +755,14 @@ nav::-webkit-scrollbar{display:none}
     <select class="sel" id="qmLink"></select>
     <label class="form-lbl" id="qmTargetLbl">Completions to Fully Complete (earns 1 roll)</label>
     <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
+    <div id="qmSchedWrap" style="display:none">
+      <label class="form-lbl">📅 Start Date (optional — locked until then)</label>
+      <input class="inp" id="qmStart" type="date">
+      <label class="form-lbl">⏳ End Date / Deadline (optional)</label>
+      <input class="inp" id="qmEnd" type="date">
+      <label class="form-lbl">🔁 Repeat — reopen this many days after completion (0 = never)</label>
+      <input class="inp" id="qmRepeat" type="number" min="0" max="365" value="0">
+    </div>
     <div class="modal-actions">
       <button class="btn" id="qmCancel">CANCEL</button>
       <button class="btn primary" id="qmSave">SAVE QUEST</button>
@@ -968,11 +989,14 @@ function migrateState(){
       }
     }
   }
-  /* quests: completion target + progress counter */
+  /* quests: completion target + progress counter + schedule fields */
   for(var q=0;q<state.quests.length;q++){
     var qq = state.quests[q];
     if(qq.target === undefined) qq.target = qq.freq === "longterm" ? 1 : 7;
     if(qq.progress === undefined) qq.progress = qq.done ? qq.target : 0;
+    if(qq.startDate === undefined) qq.startDate = "";
+    if(qq.endDate === undefined) qq.endDate = "";
+    if(qq.repeatDays === undefined) qq.repeatDays = 0;
   }
   /* old per-tier roll counts become stored roll tickets */
   if(!state.storage) state.storage = [];
@@ -1288,6 +1312,7 @@ function makeQuest(icon, name, desc, freq, days, tier, stat, link, isSystem, tar
     link:link || "", system:!!isSystem,
     target: Math.max(1, +target || (freq === "longterm" ? 1 : 7)),
     progress:0,
+    startDate:"", endDate:"", repeatDays:0,
     streak:0, bestStreak:0, lastCompleted:"", lastWeek:"",
     completions:[], done:false, created:todayStr()
   };
@@ -1373,11 +1398,33 @@ function checkStreakResets(){
   }
   if(changed) save();
 }
+function checkGoalReopens(){
+  /* one-time goals & challenges with a repeat interval reopen automatically */
+  var t = todayStr();
+  var changed = false;
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(!q.done || !(q.repeatDays > 0) || !q.lastCompleted || q.rankCheck) continue;
+    if(dayDiff(q.lastCompleted, t) >= q.repeatDays){
+      q.done = false;
+      q.progress = 0;
+      if(q.freq === "challenge") q.streak = 0;
+      changed = true;
+      sysToast("Repeat schedule: quest reopened — " + q.name);
+    }
+  }
+  if(changed) save();
+}
 function completeQuest(id){
   var q = questById(id);
   if(!q) return;
   if(completedThisPeriod(q)){ toast("Already completed for this period.", "err"); return; }
   if(q.freq === "custom" && !isScheduledToday(q)){ toast("This quest is not scheduled today.", "err"); return; }
+  if(q.freq === "longterm" || q.freq === "challenge"){
+    var td = todayStr();
+    if(q.startDate && td < q.startDate){ toast("This quest unlocks on " + q.startDate + ". The System forbids early attempts.", "err"); return; }
+    if(q.endDate && td > q.endDate){ toast("The deadline (" + q.endDate + ") has passed. Edit the quest to extend it.", "err"); return; }
+  }
   var t = todayStr();
   q.completions.push(t);
   state.totalCompleted++;
@@ -1789,6 +1836,10 @@ function streakDots(q){
 function questCard(q){
   var doneNow = completedThisPeriod(q);
   var offToday = q.freq === "custom" && !isScheduledToday(q);
+  var tNow = todayStr();
+  var sched = q.freq === "longterm" || q.freq === "challenge";
+  var notStarted = sched && q.startDate && tNow < q.startDate;
+  var expired = sched && q.endDate && !q.done && tNow > q.endDate;
   var col = q.link ? colById(q.link) : null;
   var h = '<div class="quest-card tb-' + q.tier + (doneNow?" done-today":"") + '">';
   h += '<div class="q-ico">' + q.icon + '</div>';
@@ -1813,6 +1864,15 @@ function questCard(q){
   } else {
     h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
   }
+  if(sched){
+    if(notStarted) h += '<span class="tag tag-freq">📅 STARTS ' + q.startDate.slice(5) + '</span>';
+    if(q.endDate && !q.done){
+      var left = dayDiff(tNow, q.endDate);
+      if(left < 0) h += '<span class="tag tag-expired">⌛ EXPIRED ' + q.endDate.slice(5) + '</span>';
+      else h += '<span class="tag tag-deadline">⏳ ' + (left === 0 ? "LAST DAY" : left + "d LEFT") + '</span>';
+    }
+    if(q.repeatDays > 0) h += '<span class="tag tag-freq">🔁 EVERY ' + q.repeatDays + 'D</span>';
+  }
   if((q.freq==="daily"||q.freq==="weekly"||q.freq==="custom"||q.freq==="challenge") && q.streak > 0 && !q.done){
     h += '<span class="streak-pill">🔥 ' + q.streak + (q.freq==="weekly"?" wk":" day") + ' streak</span>';
   }
@@ -1820,8 +1880,8 @@ function questCard(q){
   if(q.freq === "daily" || q.freq === "custom" || (q.freq === "challenge" && !q.done)) h += streakDots(q);
   h += '</div>';
   h += '<div class="q-actions">';
-  var btnTxt = doneNow ? "✓ DONE" : (offToday ? "NOT TODAY" : "COMPLETE");
-  h += '<button class="btn-complete" data-act="complete" data-id="' + q.id + '"' + ((doneNow||offToday)?" disabled":"") + '>' + btnTxt + '</button>';
+  var btnTxt = doneNow ? "✓ DONE" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "COMPLETE")));
+  h += '<button class="btn-complete" data-act="complete" data-id="' + q.id + '"' + ((doneNow||offToday||notStarted||expired)?" disabled":"") + '>' + btnTxt + '</button>';
   h += '<div class="mini-row">';
   h += '<button class="mini-btn" data-act="edit" data-id="' + q.id + '" title="Edit">✎</button>';
   if(!q.system) h += '<button class="mini-btn" data-act="del" data-id="' + q.id + '" title="Delete">🗑</button>';
@@ -1935,7 +1995,7 @@ document.getElementById("collectionsList").addEventListener("click", function(e)
 
 /* ---------------- render: statistics ---------------- */
 var timeRange = "all";
-var charts = {c1:null, c2:null, c3:null};
+var charts = {c1:null, c2:null, c3:null, c4:null, c5:null};
 document.getElementById("timeFilters").addEventListener("click", function(e){
   var b = e.target.closest(".f-chip"); if(!b) return;
   timeRange = b.getAttribute("data-range");
@@ -1981,12 +2041,39 @@ function renderStats(){
     if(state.quests[i].bestStreak > best){ best = state.quests[i].bestStreak; bestQ = state.quests[i]; }
   }
   var compRate = completionRate30();
+  /* weekday totals over the selected range (also feeds the weekday chart) */
+  var wk = [0,0,0,0,0,0,0];
+  for(var wd=0; wd<dates.length; wd++){
+    var hp = state.history[dates[wd]];
+    if(!hp || !hp.count) continue;
+    var pp = dates[wd].split("-");
+    wk[new Date(+pp[0], +pp[1]-1, +pp[2]).getDay()] += hp.count;
+  }
+  var bestDow = 0;
+  for(var bw=1; bw<7; bw++) if(wk[bw] > wk[bestDow]) bestDow = bw;
+  /* active-day average + conquered challenges */
+  var activeDays = 0, doneInRange = 0;
+  for(var ad=0; ad<dates.length; ad++){
+    var hd = state.history[dates[ad]];
+    if(hd && hd.count > 0){ activeDays++; doneInRange += hd.count; }
+  }
+  var avgPerDay = activeDays ? (doneInRange / activeDays).toFixed(1) : "0";
+  var conquered = 0, challengesActive = 0;
+  for(var cc=0; cc<state.quests.length; cc++){
+    if(state.quests[cc].freq === "challenge"){
+      if(state.quests[cc].done) conquered++; else challengesActive++;
+    }
+  }
   var cards = [
     {v:totalDone, l:"Quests Completed"},
     {v:"LV." + state.level, l:"Current Level"},
     {v:best + "d", l:"Best Streak"},
     {v:state.totalXp, l:"Total XP"},
     {v:compRate + "%", l:"Completion Rate (30d)"},
+    {v:avgPerDay, l:"Avg Quests / Active Day"},
+    {v:wk[bestDow] ? DAY_NAMES[bestDow] : "—", l:"Strongest Weekday"},
+    {v:conquered + " / " + (conquered + challengesActive), l:"Challenges Conquered"},
+    {v:state.storage.length, l:"Rolls in Storage"},
     {v:bestQ ? bestQ.icon + " " + bestQ.name : "—", l:"Most Consistent Quest"}
   ];
   var ch = "";
@@ -1994,6 +2081,7 @@ function renderStats(){
     ch += '<div class="sum-card"><div class="sum-val">' + esc(String(cards[c].v)) + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
   }
   document.getElementById("sumCards").innerHTML = ch;
+  document.getElementById("chartOffline").style.display = (typeof Chart === "undefined") ? "" : "none";
   if(typeof Chart === "undefined"){ return; }
   /* completions bar */
   if(charts.c1) charts.c1.destroy();
@@ -2019,7 +2107,7 @@ function renderStats(){
   var qi = 0;
   for(var qidx=0;qidx<state.quests.length;qidx++){
     var q = state.quests[qidx];
-    if(q.freq !== "daily" && q.freq !== "weekly" && q.freq !== "custom") continue;
+    if(q.freq !== "daily" && q.freq !== "weekly" && q.freq !== "custom" && q.freq !== "challenge") continue;
     var data = [];
     var last = 0;
     for(var di=0;di<dates.length;di++){
@@ -2035,6 +2123,33 @@ function renderStats(){
   }
   charts.c3 = new Chart(document.getElementById("chartStreaks"), {
     type:"line", data:{ labels:labels, datasets:dsets }, options: chartOpts()
+  });
+  /* weekday performance bar */
+  if(charts.c4) charts.c4.destroy();
+  charts.c4 = new Chart(document.getElementById("chartWeekday"), {
+    type:"bar",
+    data:{ labels:DAY_NAMES, datasets:[{ label:"Quests completed", data:wk,
+      backgroundColor:"rgba(168,85,247,.5)", borderColor:"#a855f7", borderWidth:1, borderRadius:5 }] },
+    options: chartOpts()
+  });
+  /* attribute radar */
+  if(charts.c5) charts.c5.destroy();
+  charts.c5 = new Chart(document.getElementById("chartRadar"), {
+    type:"radar",
+    data:{ labels:STATS, datasets:[{ label:"Attributes",
+      data:STATS.map(function(k){ return state.stats[k]; }),
+      backgroundColor:"rgba(124,97,255,.22)", borderColor:"#7c61ff", borderWidth:2,
+      pointBackgroundColor:"#a855f7", pointRadius:3.5 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:"#8b92c9", font:{family:"Rajdhani", size:12} } } },
+      scales:{ r:{
+        angleLines:{ color:"rgba(124,97,255,.18)" },
+        grid:{ color:"rgba(124,97,255,.14)" },
+        pointLabels:{ color:"#c9cdf0", font:{family:"Orbitron", size:11, weight:"700"} },
+        ticks:{ display:false }, beginAtZero:true
+      } }
+    }
   });
 }
 function completionRate30(){
@@ -2524,6 +2639,8 @@ function updateTargetLabel(freq){
   document.getElementById("qmTargetLbl").textContent = freq === "challenge"
     ? "Days in a Row to Conquer (miss a day = start over; earns 1 roll)"
     : "Completions to Fully Complete (earns 1 roll)";
+  document.getElementById("qmSchedWrap").style.display =
+    (freq === "longterm" || freq === "challenge") ? "" : "none";
 }
 function openQuestModal(id){
   qmEditId = id;
@@ -2551,6 +2668,9 @@ function openQuestModal(id){
   buildSeg("qmStat", STATS, STATS, qmSel.stat, function(v){ qmSel.stat = v; });
   fillLinkOptions(q ? q.link : "");
   document.getElementById("qmTarget").value = q ? (q.target || 1) : 7;
+  document.getElementById("qmStart").value = q ? (q.startDate || "") : "";
+  document.getElementById("qmEnd").value = q ? (q.endDate || "") : "";
+  document.getElementById("qmRepeat").value = q ? (q.repeatDays || 0) : 0;
   document.getElementById("questModal").classList.add("show");
 }
 document.getElementById("qmCancel").addEventListener("click", function(){
@@ -2563,6 +2683,13 @@ document.getElementById("qmSave").addEventListener("click", function(){
   var desc = document.getElementById("qmDesc").value.trim();
   var link = document.getElementById("qmLink").value;
   var target = Math.max(1, Math.min(999, +document.getElementById("qmTarget").value || 1));
+  var startD = "", endD = "", repD = 0;
+  if(qmSel.freq === "longterm" || qmSel.freq === "challenge"){
+    startD = document.getElementById("qmStart").value || "";
+    endD = document.getElementById("qmEnd").value || "";
+    repD = Math.max(0, Math.min(365, +document.getElementById("qmRepeat").value || 0));
+    if(startD && endD && endD < startD){ toast("End date cannot be before the start date.", "err"); return; }
+  }
   if(qmEditId){
     var q = questById(qmEditId);
     if(q){
@@ -2570,11 +2697,13 @@ document.getElementById("qmSave").addEventListener("click", function(){
       q.freq = qmSel.freq; q.days = qmSel.days.slice();
       q.tier = qmSel.tier; q.stat = qmSel.stat; q.link = link;
       q.target = target;
+      q.startDate = startD; q.endDate = endD; q.repeatDays = repD;
       if(q.done && !q.rankCheck && (q.progress || 0) < target) q.done = false; /* raising the target reopens a one-time goal */
       sysToast("Quest updated: " + name);
     }
   } else {
     var nq = makeQuest(qmSel.emoji, name, desc, qmSel.freq, qmSel.days.slice(), qmSel.tier, qmSel.stat, link, false, target);
+    nq.startDate = startD; nq.endDate = endD; nq.repeatDays = repD;
     state.quests.push(nq);
     toast("New quest registered: " + name, "sys", "QUEST CREATED");
   }
@@ -2708,6 +2837,7 @@ function checkPackageReset(){
   for(var i=0;i<pk.items.length;i++) pk.items[i].done = false;
   pk.day = pd;
   save();
+  checkGoalReopens();
   if(currentPage === "home") renderHome();
 }
 function completePackageItem(id){
@@ -2992,6 +3122,7 @@ function backupReminder(){
 seedIfNew();
 checkPackageReset();
 checkStreakResets();
+checkGoalReopens();
 checkStoryUnlocks();
 renderAll();
 switchPage("home");
