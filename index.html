@@ -200,7 +200,7 @@ nav::-webkit-scrollbar{display:none}
 /* level road (score-hero style zigzag map) */
 .road{position:relative;padding:6px 0 6px 0}
 .road::before{content:"";position:absolute;left:25px;top:10px;bottom:10px;width:2px;
-  background:linear-gradient(180deg,rgba(34,197,94,.6),rgba(124,97,255,.35),rgba(124,97,255,.15))}
+  background:linear-gradient(180deg,rgba(124,97,255,.15),rgba(124,97,255,.35),rgba(34,197,94,.6))}
 .road-node{display:flex;align-items:center;gap:14px;margin-bottom:14px;position:relative}
 .road-circle{width:52px;height:52px;border-radius:50%;border:2px solid rgba(124,97,255,.5);
   display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;
@@ -405,6 +405,23 @@ nav::-webkit-scrollbar{display:none}
 @keyframes floaty{0%,100%{transform:translateY(0);opacity:.9}50%{transform:translateY(-12px);opacity:.4}}
 .eye-glow{animation:eyepulse 2.6s ease-in-out infinite}
 @keyframes eyepulse{0%,100%{opacity:1}50%{opacity:.55}}
+.hero-img{width:100%;height:auto;display:block;border-radius:16px;border:1px solid rgba(124,97,255,.45);
+  box-shadow:0 0 30px rgba(124,97,255,.35)}
+.sflame{animation:flameup 2.2s ease-in-out infinite;transform-origin:center bottom}
+.sf1{animation-delay:.4s}.sf2{animation-delay:.9s}.sf3{animation-delay:1.4s}
+@keyframes flameup{0%,100%{transform:scaleY(1);opacity:.5}50%{transform:scaleY(1.35);opacity:.85}}
+.sigil-spin{animation:sigilrot 14s linear infinite}
+@keyframes sigilrot{to{transform:rotate(360deg)}}
+.plume{animation:plumewave 3.4s ease-in-out infinite;transform-origin:center bottom}
+.pl2{animation-delay:1.7s}
+@keyframes plumewave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.08)}}
+.arcf{animation:arcflick 1.3s steps(2) infinite}
+.ar2{animation-delay:.6s}
+@keyframes arcflick{0%,100%{opacity:.8}50%{opacity:.15}}
+.crownf{animation:crownfloat 3s ease-in-out infinite}
+@keyframes crownfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hi-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hi-thumb{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid rgba(124,97,255,.5)}
 .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
 .quick-btn{padding:14px 8px;border-radius:14px;border:1px solid var(--line);
   background:linear-gradient(160deg,rgba(124,97,255,.18),rgba(8,11,26,.92));
@@ -475,47 +492,7 @@ nav::-webkit-scrollbar{display:none}
     <section id="page-home">
       <div class="panel">
         <div class="hero">
-          <div class="hero-art">
-            <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shadow Hunter">
-              <defs>
-                <radialGradient id="aura" cx="50%" cy="42%" r="62%">
-                  <stop offset="0%" stop-color="#7c61ff" stop-opacity=".55"/>
-                  <stop offset="55%" stop-color="#4c2fbf" stop-opacity=".22"/>
-                  <stop offset="100%" stop-color="#04050d" stop-opacity="0"/>
-                </radialGradient>
-                <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#1a1e40"/>
-                  <stop offset="100%" stop-color="#0a0d20"/>
-                </linearGradient>
-                <linearGradient id="hairg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#262c56"/>
-                  <stop offset="100%" stop-color="#0d1026"/>
-                </linearGradient>
-                <filter id="eglow" x="-80%" y="-80%" width="260%" height="260%">
-                  <feGaussianBlur stdDeviation="2.4" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <circle cx="110" cy="112" r="106" fill="url(#aura)"/>
-              <path d="M28 260 L38 192 Q45 161 79 151 L96 144 L124 144 L141 151 Q175 161 182 192 L192 260 Z" fill="url(#coat)" stroke="#7c61ff" stroke-opacity=".4"/>
-              <path d="M79 151 L89 129 L110 140 L131 129 L141 151 L110 164 Z" fill="#151936" stroke="#7c61ff" stroke-opacity=".35"/>
-              <path d="M38 192 Q45 161 79 151" stroke="#00d1ff" stroke-opacity=".55" fill="none" stroke-width="1.6"/>
-              <path d="M182 192 Q175 161 141 151" stroke="#00d1ff" stroke-opacity=".55" fill="none" stroke-width="1.6"/>
-              <path d="M100 126 L120 126 L118 144 L102 144 Z" fill="#c9b8a6"/>
-              <path d="M85 80 Q85 53 110 51 Q135 53 135 80 Q135 104 122 116 Q110 124 98 116 Q85 104 85 80 Z" fill="#cdbcaa"/>
-              <path d="M82 88 L76 58 L88 66 L86 42 L99 57 L106 32 L114 53 L126 36 L128 55 L143 46 L138 66 L148 62 L139 88 Q136 60 110 56 Q86 60 82 88 Z" fill="url(#hairg)" stroke="#2b3160" stroke-width="1"/>
-              <path class="eye-glow" d="M94 88 L107 85 L106 92 L95 92 Z" fill="#a78bfa" filter="url(#eglow)"/>
-              <path class="eye-glow" d="M113 85 L126 88 L125 92 L114 92 Z" fill="#a78bfa" filter="url(#eglow)"/>
-              <path d="M103 106 Q110 110 117 106" stroke="#8a7a68" stroke-width="1.5" fill="none"/>
-              <g fill="#7c61ff">
-                <circle class="fp" cx="40" cy="82" r="3"/>
-                <circle class="fp fp2" cx="182" cy="70" r="2.5"/>
-                <circle class="fp fp3" cx="62" cy="40" r="2"/>
-                <circle class="fp fp4" cx="172" cy="132" r="2.2"/>
-                <circle class="fp fp5" cx="28" cy="142" r="2.5"/>
-              </g>
-            </svg>
-          </div>
+          <div class="hero-art" id="heroArt"></div>
           <div class="hero-info">
             <div class="hero-name" id="homeName">Hunter</div>
             <div class="hunter-sub" id="homeSub">E-RANK HUNTER</div>
@@ -690,6 +667,12 @@ nav::-webkit-scrollbar{display:none}
       <div class="panel">
         <div class="panel-title">MANAGE COLLECTIONS</div>
         <div id="admCols"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">HERO PORTRAITS (PER RANK)</div>
+        <div class="empty-note" style="margin-bottom:10px">The dashboard shows evolving hunter art that changes as your rank rises. Upload your own picture for any rank here and it will be shown instead, switching automatically on rank-up. Images are resized and stored inside your save data.</div>
+        <div id="admHero"></div>
+        <input type="file" id="heroImgFile" accept="image/*" style="display:none">
       </div>
       <div class="panel">
         <div class="panel-title">MANAGE LEVEL ROAD</div>
@@ -874,6 +857,7 @@ function defaultState(){
     levelRewards:[],     /* road map: {id, level, kind, value} */
     claimedLevels:[],
     roadSeeded:false,
+    heroImages:{},       /* optional user-uploaded portrait per rank key */
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -1794,12 +1778,11 @@ document.getElementById("tierFilters").addEventListener("click", function(e){
   tierFilter = b.getAttribute("data-t"); renderQuests();
 });
 function streakDots(q){
-  var t = todayStr();
-  var h = '<div class="dots" title="Last 7 days">';
-  for(var i=6;i>=0;i--){
-    var d = addDays(t, -i);
-    var hit = q.completions.indexOf(d) !== -1;
-    h += '<span class="dot' + (hit?" hit":"") + '"></span>';
+  /* fills left to right as the streak grows */
+  var lit = Math.min(q.streak || 0, 7);
+  var h = '<div class="dots" title="Streak progress — fills left to right">';
+  for(var i=0;i<7;i++){
+    h += '<span class="dot' + (i < lit ? " hit" : "") + '"></span>';
   }
   return h + '</div>';
 }
@@ -2088,7 +2071,8 @@ function renderRoad(){
   var el = document.getElementById("roadMap");
   var maxLv = Math.max(state.level + 12, 30);
   var h = "";
-  for(var lv=2; lv<=maxLv; lv++){
+  /* the road climbs upward: lowest level at the bottom, higher levels above */
+  for(var lv=maxLv; lv>=2; lv--){
     var rws = levelRewardsFor(lv);
     var cls = lv <= state.level ? "done" : (lv === state.level + 1 ? "cur" : "lock");
     h += '<div class="road-node ' + cls + '">';
@@ -2189,6 +2173,20 @@ function renderAdmin(){
     for(var s=0;s<STATS.length;s++) sh += '<option value="' + STATS[s] + '">' + STATS[s] + '</option>';
     stSel.innerHTML = sh;
   }
+  /* hero portrait manager — one row per rank */
+  var hh = "";
+  for(var hr=0;hr<RANKS.length;hr++){
+    var rk = RANKS[hr];
+    var img = state.heroImages[rk.key];
+    hh += '<div class="adm-list-item hi-row">'
+      + '<span class="rank-badge ' + rk.cls + (rk.key==="N"?" nat":"") + '" style="flex:0 0 auto">' + rk.label + '</span>'
+      + '<span class="ali-name" style="flex:1">' + rk.name + '</span>'
+      + (img ? '<img class="hi-thumb" src="' + img + '" alt="' + rk.name + ' portrait">' : '<span class="empty-note" style="margin:0">evolving art</span>')
+      + '<button class="btn" style="padding:6px 12px;font-size:.7rem" data-hiup="' + rk.key + '">' + (img ? 'REPLACE' : 'UPLOAD') + '</button>'
+      + (img ? '<button class="mini-btn" data-hidel="' + rk.key + '" title="Remove — go back to evolving art">🗑</button>' : '')
+      + '</div>';
+  }
+  document.getElementById("admHero").innerHTML = hh;
   /* level road manager — inline-editable rows sorted by level */
   var kindSel = document.getElementById("roadAddKind");
   if(!kindSel.options.length){
@@ -2215,6 +2213,55 @@ function renderAdmin(){
   renderStorageStatus();
   renderSnapshots();
 }
+var heroUploadRank = "";
+document.getElementById("admHero").addEventListener("click", function(e){
+  var up = e.target.closest("button[data-hiup]");
+  if(up){
+    heroUploadRank = up.getAttribute("data-hiup");
+    document.getElementById("heroImgFile").click();
+    return;
+  }
+  var del = e.target.closest("button[data-hidel]");
+  if(del){
+    var k = del.getAttribute("data-hidel");
+    if(!confirm("Remove the custom " + k + "-rank portrait and go back to the evolving art?")) return;
+    delete state.heroImages[k];
+    heroArtKey = "";
+    save(); renderAdmin();
+    sysToast("Portrait removed for rank " + k + ".");
+  }
+});
+document.getElementById("heroImgFile").addEventListener("change", function(){
+  var file = this.files && this.files[0];
+  this.value = "";
+  if(!file || !heroUploadRank) return;
+  var rk = heroUploadRank;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      /* downscale so the save data stays small enough for localStorage */
+      var max = 700;
+      var w = img.width, h = img.height;
+      if(w > max || h > max){
+        var sc = Math.min(max / w, max / h);
+        w = Math.round(w * sc); h = Math.round(h * sc);
+      }
+      var cv = document.createElement("canvas");
+      cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      var url = cv.toDataURL("image/jpeg", 0.82);
+      if(url.length > 500000){ toast("That image is too large even after resizing. Try a smaller one.", "err"); return; }
+      state.heroImages[rk] = url;
+      heroArtKey = "";
+      save(); renderAdmin();
+      toast("Portrait set for rank " + rk + ". It will appear on the dashboard at that rank.", "sys", "PORTRAIT SAVED");
+    };
+    img.onerror = function(){ toast("Could not read that image file.", "err"); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
 function roadRewardById(id){
   for(var i=0;i<state.levelRewards.length;i++) if(state.levelRewards[i].id === id) return state.levelRewards[i];
   return null;
@@ -2707,8 +2754,108 @@ setInterval(function(){
   if(el && currentPage === "home") el.textContent = pkgCountdown();
 }, 1000);
 
+/* ---------------- hero art (original, evolves with rank) ---------------- */
+var HERO_THEME = {
+  E:{aura:"#7c61ff",auraOp:.30,eye:"#a78bfa",trim:"#7c61ff",edge:"#00d1ff",edgeOp:.40,parts:3,blades:0,arcs:false,flames:0,sigil:false,crown:false,plumes:false,label:"E-RANK AWAKENED"},
+  D:{aura:"#00d1ff",auraOp:.38,eye:"#7dd3fc",trim:"#00d1ff",edge:"#00d1ff",edgeOp:.55,parts:4,blades:1,arcs:false,flames:0,sigil:false,crown:false,plumes:false,label:"D-RANK HUNTER"},
+  C:{aura:"#22d3ee",auraOp:.44,eye:"#67e8f9",trim:"#22d3ee",edge:"#22d3ee",edgeOp:.65,parts:4,blades:1,arcs:false,flames:2,sigil:false,crown:false,plumes:false,label:"C-RANK HUNTER"},
+  B:{aura:"#8b5cf6",auraOp:.50,eye:"#c4b5fd",trim:"#8b5cf6",edge:"#00d1ff",edgeOp:.70,parts:5,blades:2,arcs:true,flames:3,sigil:false,crown:false,plumes:false,label:"B-RANK HUNTER"},
+  A:{aura:"#a855f7",auraOp:.56,eye:"#e9d5ff",trim:"#a855f7",edge:"#a855f7",edgeOp:.80,parts:6,blades:2,arcs:true,flames:4,sigil:true,crown:false,plumes:false,label:"A-RANK HUNTER"},
+  S:{aura:"#7c3aed",auraOp:.62,eye:"#f5f3ff",trim:"#a855f7",edge:"#c084fc",edgeOp:.90,parts:7,blades:2,arcs:true,flames:6,sigil:true,crown:false,plumes:true,label:"SHADOW SOVEREIGN"},
+  N:{aura:"#f59e0b",auraOp:.60,eye:"#fef3c7",trim:"#fbbf24",edge:"#a855f7",edgeOp:.95,parts:8,blades:2,arcs:true,flames:8,sigil:true,crown:true,plumes:true,label:"MONARCH OF SHADOWS"}
+};
+function buildHeroArt(rankKey){
+  var th = HERO_THEME[rankKey] || HERO_THEME.E;
+  var s = '<svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + th.label + '">';
+  s += '<defs>'
+    + '<radialGradient id="aura" cx="50%" cy="42%" r="62%">'
+    + '<stop offset="0%" stop-color="' + th.aura + '" stop-opacity="' + th.auraOp + '"/>'
+    + '<stop offset="55%" stop-color="' + th.aura + '" stop-opacity="' + (th.auraOp*0.4).toFixed(2) + '"/>'
+    + '<stop offset="100%" stop-color="#04050d" stop-opacity="0"/></radialGradient>'
+    + '<linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a1e40"/><stop offset="100%" stop-color="#0a0d20"/></linearGradient>'
+    + '<linearGradient id="hairg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#262c56"/><stop offset="100%" stop-color="#0d1026"/></linearGradient>'
+    + '<filter id="eglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+    + '</defs>';
+  s += '<circle cx="110" cy="112" r="106" fill="url(#aura)"/>';
+  /* rotating power sigil behind the hunter (A rank and above) */
+  if(th.sigil){
+    s += '<g class="sigil-spin" style="transform-origin:110px 118px">'
+      + '<circle cx="110" cy="118" r="88" fill="none" stroke="' + th.trim + '" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="10 7"/>'
+      + '<circle cx="110" cy="118" r="78" fill="none" stroke="' + th.trim + '" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 9"/>'
+      + '</g>';
+  }
+  /* wing-like shadow plumes (S and National) */
+  if(th.plumes){
+    s += '<g fill="' + th.edge + '" opacity=".28">'
+      + '<path class="plume" d="M40 150 Q8 120 14 78 Q34 108 48 122 Q30 96 34 66 Q52 100 60 118 Z"/>'
+      + '<path class="plume pl2" d="M180 150 Q212 120 206 78 Q186 108 172 122 Q190 96 186 66 Q168 100 160 118 Z"/>'
+      + '</g>';
+  }
+  /* rising shadow flames */
+  for(var f=0; f<th.flames; f++){
+    var fx = 34 + (f * 152 / Math.max(1, th.flames - 1 || 1));
+    var fh = 18 + (f % 3) * 9;
+    s += '<path class="sflame sf' + (f % 4) + '" d="M' + fx + ' 258 Q' + (fx-5) + ' ' + (244-fh) + ' ' + fx + ' ' + (236-fh)
+      + ' Q' + (fx+5) + ' ' + (246-fh) + ' ' + (fx+2) + ' 258 Z" fill="' + th.aura + '" opacity=".5"/>';
+  }
+  /* coat + shoulders */
+  s += '<path d="M28 260 L38 192 Q45 161 79 151 L96 144 L124 144 L141 151 Q175 161 182 192 L192 260 Z" fill="url(#coat)" stroke="' + th.trim + '" stroke-opacity=".45"/>';
+  s += '<path d="M79 151 L89 129 L110 140 L131 129 L141 151 L110 164 Z" fill="#151936" stroke="' + th.trim + '" stroke-opacity=".35"/>';
+  s += '<path d="M38 192 Q45 161 79 151" stroke="' + th.edge + '" stroke-opacity="' + th.edgeOp + '" fill="none" stroke-width="1.8"/>';
+  s += '<path d="M182 192 Q175 161 141 151" stroke="' + th.edge + '" stroke-opacity="' + th.edgeOp + '" fill="none" stroke-width="1.8"/>';
+  /* high collar (A+) */
+  if(th.sigil){
+    s += '<path d="M79 151 L74 128 L92 140 Z" fill="#10132b" stroke="' + th.trim + '" stroke-opacity=".5"/>'
+      + '<path d="M141 151 L146 128 L128 140 Z" fill="#10132b" stroke="' + th.trim + '" stroke-opacity=".5"/>';
+  }
+  /* daggers */
+  if(th.blades >= 1) s += '<g class="blade"><path d="M52 196 L60 232 L56 236 L46 202 Z" fill="#0e1230" stroke="' + th.edge + '" stroke-opacity=".8" stroke-width="1.2"/><path d="M50 194 L58 191 L60 197 L52 200 Z" fill="' + th.trim + '" opacity=".85"/></g>';
+  if(th.blades >= 2) s += '<g class="blade"><path d="M168 196 L160 232 L164 236 L174 202 Z" fill="#0e1230" stroke="' + th.edge + '" stroke-opacity=".8" stroke-width="1.2"/><path d="M170 194 L162 191 L160 197 L168 200 Z" fill="' + th.trim + '" opacity=".85"/></g>';
+  /* neck + face + hair */
+  s += '<path d="M100 126 L120 126 L118 144 L102 144 Z" fill="#c9b8a6"/>';
+  s += '<path d="M85 80 Q85 53 110 51 Q135 53 135 80 Q135 104 122 116 Q110 124 98 116 Q85 104 85 80 Z" fill="#cdbcaa"/>';
+  s += '<path d="M82 88 L76 58 L88 66 L86 42 L99 57 L106 32 L114 53 L126 36 L128 55 L143 46 L138 66 L148 62 L139 88 Q136 60 110 56 Q86 60 82 88 Z" fill="url(#hairg)" stroke="#2b3160" stroke-width="1"/>';
+  /* glowing eyes */
+  s += '<path class="eye-glow" d="M94 88 L107 85 L106 92 L95 92 Z" fill="' + th.eye + '" filter="url(#eglow)"/>';
+  s += '<path class="eye-glow" d="M113 85 L126 88 L125 92 L114 92 Z" fill="' + th.eye + '" filter="url(#eglow)"/>';
+  s += '<path d="M103 106 Q110 110 117 106" stroke="#8a7a68" stroke-width="1.5" fill="none"/>';
+  /* energy arcs (B+) */
+  if(th.arcs){
+    s += '<path class="arcf" d="M60 110 L54 122 L62 120 L55 136" stroke="' + th.edge + '" stroke-width="1.6" fill="none" opacity=".8"/>'
+      + '<path class="arcf ar2" d="M160 104 L166 116 L158 114 L165 130" stroke="' + th.edge + '" stroke-width="1.6" fill="none" opacity=".8"/>';
+  }
+  /* floating crown of the Monarch (National) */
+  if(th.crown){
+    s += '<g class="crownf"><path d="M92 22 L98 10 L104 20 L110 6 L116 20 L122 10 L128 22 L124 28 L96 28 Z" fill="none" stroke="#fbbf24" stroke-width="2" filter="url(#eglow)"/></g>';
+  }
+  /* floating mana particles */
+  s += '<g fill="' + th.trim + '">';
+  var px = [40,182,62,172,28,196,50,140];
+  var py = [82,70,40,132,142,110,178,26];
+  for(var p=0; p<th.parts; p++){
+    s += '<circle class="fp fp' + ((p % 5) + 1) + '" cx="' + px[p] + '" cy="' + py[p] + '" r="' + (2 + (p % 3) * 0.6).toFixed(1) + '"/>';
+  }
+  s += '</g></svg>';
+  return s;
+}
+var heroArtKey = "";
+function renderHeroArt(){
+  var r = rankForLevel(state.level);
+  var custom = state.heroImages && state.heroImages[r.key];
+  var key = r.key + (custom ? "#img" + custom.length : "#svg");
+  if(key === heroArtKey) return; /* avoid re-injecting (keeps CSS animations smooth) */
+  heroArtKey = key;
+  var el = document.getElementById("heroArt");
+  if(custom){
+    el.innerHTML = '<img class="hero-img" alt="Hunter — ' + r.name + '" src="' + custom + '">';
+  } else {
+    el.innerHTML = buildHeroArt(r.key);
+  }
+}
+
 /* ---------------- render: home dashboard ---------------- */
 function renderHome(){
+  renderHeroArt();
   var r = rankForLevel(state.level);
   document.getElementById("homeName").textContent = state.hunterName;
   document.getElementById("homeSub").textContent = r.name.toUpperCase();
