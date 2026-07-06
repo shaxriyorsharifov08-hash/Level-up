@@ -199,6 +199,30 @@ nav::-webkit-scrollbar{display:none}
 .tag-target{color:#5eead4;border-color:rgba(94,234,212,.5);background:rgba(94,234,212,.06)}
 .tag-deadline{color:var(--legendary);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.07)}
 .tag-expired{color:#ef4444;border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.08)}
+/* stats extras: heatmap, duo chart grid, monthly reports */
+.duo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.hm-wrap{overflow-x:auto;padding-bottom:6px}
+.hm-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);grid-auto-columns:13px;gap:3px;width:max-content}
+.hm-cell{width:13px;height:13px;border-radius:3px;background:rgba(124,97,255,.10);display:inline-block}
+.hm-l1{background:rgba(124,97,255,.35)}
+.hm-l2{background:rgba(147,110,255,.6)}
+.hm-l3{background:#a855f7}
+.hm-l4{background:#d8b4fe;box-shadow:0 0 7px rgba(216,180,254,.8)}
+.hm-legend{display:flex;align-items:center;gap:5px;margin-top:10px;font-size:.68rem;font-weight:700;
+  letter-spacing:.12em;color:var(--dim)}
+.report-card{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;
+  padding:14px;margin-bottom:10px;background:rgba(5,6,16,.5)}
+.report-grade{font-family:'Orbitron',monospace;font-weight:900;font-size:1.7rem;width:58px;height:58px;
+  border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid}
+.rg-S{color:#fbbf24;border-color:#fbbf24;box-shadow:0 0 16px rgba(251,191,36,.45)}
+.rg-A{color:#ef4444;border-color:#ef4444}
+.rg-B{color:#a855f7;border-color:#a855f7}
+.rg-C{color:#3b82f6;border-color:#3b82f6}
+.rg-D{color:#22c55e;border-color:#22c55e}
+.rg-E{color:#8b92c9;border-color:#8b92c9}
+.report-main{flex:1;min-width:0}
+.report-month{font-family:'Orbitron',monospace;font-weight:800;font-size:.86rem;letter-spacing:.12em;color:#fff}
+.report-line{font-size:.8rem;color:var(--dim);margin-top:4px}
 /* level road (score-hero style zigzag map) */
 .road{position:relative;padding:6px 0 6px 0}
 .road::before{content:"";position:absolute;left:25px;top:10px;bottom:10px;width:2px;
@@ -599,22 +623,48 @@ nav::-webkit-scrollbar{display:none}
         <div class="chart-box"><canvas id="chartCompletions"></canvas></div>
       </div>
       <div class="panel">
+        <div class="panel-title">🔮 XP FORECAST</div>
+        <div class="empty-note" style="margin-bottom:10px">Based on your XP pace over the last 14 days.</div>
+        <div class="cards-grid" id="fcCards"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🗓 ACTIVITY HEATMAP — LAST 6 MONTHS</div>
+        <div class="empty-note" style="margin-bottom:10px">One square per day. The brighter it burns, the more quests you cleared. Don't let the grid go dark, Hunter.</div>
+        <div class="hm-wrap"><div class="hm-grid" id="heatmap"></div></div>
+        <div class="hm-legend">LESS <span class="hm-cell"></span><span class="hm-cell hm-l1"></span><span class="hm-cell hm-l2"></span><span class="hm-cell hm-l3"></span><span class="hm-cell hm-l4"></span> MORE</div>
+      </div>
+      <div class="panel">
         <div class="panel-title">XP EARNED PER DAY</div>
         <div class="chart-box"><canvas id="chartXp"></canvas></div>
+      </div>
+      <div class="duo-grid">
+        <div class="panel">
+          <div class="panel-title">🍩 COMPLETIONS BY TIER</div>
+          <div class="chart-box"><canvas id="chartTier"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🥧 TRAINING BY ATTRIBUTE</div>
+          <div class="chart-box"><canvas id="chartStat"></canvas></div>
+        </div>
+      </div>
+      <div class="duo-grid">
+        <div class="panel">
+          <div class="panel-title">WEEKDAY PERFORMANCE</div>
+          <div class="chart-box"><canvas id="chartWeekday"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">ATTRIBUTE RADAR</div>
+          <div class="chart-box"><canvas id="chartRadar"></canvas></div>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-title">STREAK HISTORY PER QUEST</div>
         <div class="chart-box"><canvas id="chartStreaks"></canvas></div>
       </div>
       <div class="panel">
-        <div class="panel-title">WEEKDAY PERFORMANCE</div>
-        <div class="empty-note" style="margin-bottom:8px">Which days of the week you clear the most quests — find your weak day and attack it.</div>
-        <div class="chart-box"><canvas id="chartWeekday"></canvas></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">HUNTER ATTRIBUTE RADAR</div>
-        <div class="empty-note" style="margin-bottom:8px">The shape of your build. A lopsided radar means The System will target your weakest attribute.</div>
-        <div class="chart-box"><canvas id="chartRadar"></canvas></div>
+        <div class="panel-title">📋 MONTHLY REPORT CARDS</div>
+        <div class="empty-note" style="margin-bottom:10px">On the 1st of every month, The System grades your previous month.</div>
+        <div id="monthlyList"></div>
       </div>
       <div class="empty-note" id="chartOffline" style="display:none">⚠ Charts need an internet connection (chart library loads from CDN). Your numbers above are still accurate.</div>
     </section>
@@ -879,6 +929,8 @@ function defaultState(){
     claimedLevels:[],
     roadSeeded:false,
     heroImages:{},       /* optional user-uploaded portrait per rank key */
+    monthlyReports:[],   /* graded month summaries, newest last */
+    lastMonthlyReport:"",
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -1397,6 +1449,66 @@ function checkStreakResets(){
     }
   }
   if(changed) save();
+}
+/* ---------------- monthly report cards ---------------- */
+var MONTH_NAMES = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+function daysInMonth(mk){
+  var p = mk.split("-");
+  return new Date(+p[0], +p[1], 0).getDate();
+}
+function prevMonthKey(mk){
+  var p = mk.split("-");
+  var y = +p[0], m = +p[1] - 1;
+  if(m < 1){ m = 12; y--; }
+  return y + "-" + pad2(m);
+}
+function gradeForMonth(activeDays, totalDays){
+  var pct = totalDays ? (activeDays / totalDays) * 100 : 0;
+  if(pct >= 90) return "S";
+  if(pct >= 75) return "A";
+  if(pct >= 60) return "B";
+  if(pct >= 40) return "C";
+  if(pct >= 20) return "D";
+  return "E";
+}
+function buildMonthReport(mk){
+  var days = daysInMonth(mk);
+  var total = 0, xp = 0, activeDays = 0, bestDay = "", bestCount = 0;
+  for(var d=1; d<=days; d++){
+    var ds = mk + "-" + pad2(d);
+    var h = state.history[ds];
+    if(h && h.count > 0){
+      total += h.count; xp += h.xp; activeDays++;
+      if(h.count > bestCount){ bestCount = h.count; bestDay = ds; }
+    }
+  }
+  return { mk:mk, grade:gradeForMonth(activeDays, days), total:total, xp:xp,
+    activeDays:activeDays, days:days, bestDay:bestDay, bestCount:bestCount };
+}
+function checkMonthlyReport(){
+  var nowMk = todayStr().slice(0,7);
+  if(state.lastMonthlyReport === nowMk) return;
+  if(!state.lastMonthlyReport){
+    /* first run: start tracking from this month, no retro report */
+    state.lastMonthlyReport = nowMk;
+    save();
+    return;
+  }
+  var mk = prevMonthKey(nowMk);
+  if(state.lastMonthlyReport <= mk){
+    var rep = buildMonthReport(mk);
+    state.monthlyReports.push(rep);
+    if(state.monthlyReports.length > 24) state.monthlyReports.shift();
+    var mn = MONTH_NAMES[+mk.split("-")[1] - 1] + " " + mk.split("-")[0];
+    announce("📋 MONTHLY EVALUATION",
+      "The Hunter Association has graded your month.\n\n[" + mn + "]\nGRADE: " + rep.grade
+      + "\n\nQuests cleared: " + rep.total + "\nXP earned: " + rep.xp
+      + "\nActive days: " + rep.activeDays + " / " + rep.days
+      + (rep.grade === "S" ? "\n\nFlawless discipline. The System is watching you with interest." : "\n\nA new month begins. Surpass yourself."),
+      "📋", "ACKNOWLEDGE");
+  }
+  state.lastMonthlyReport = nowMk;
+  save();
 }
 function checkGoalReopens(){
   /* one-time goals & challenges with a repeat interval reopen automatically */
@@ -1995,7 +2107,7 @@ document.getElementById("collectionsList").addEventListener("click", function(e)
 
 /* ---------------- render: statistics ---------------- */
 var timeRange = "all";
-var charts = {c1:null, c2:null, c3:null, c4:null, c5:null};
+var charts = {c1:null, c2:null, c3:null, c4:null, c5:null, c6:null, c7:null};
 document.getElementById("timeFilters").addEventListener("click", function(e){
   var b = e.target.closest(".f-chip"); if(!b) return;
   timeRange = b.getAttribute("data-range");
@@ -2029,7 +2141,100 @@ function chartOpts(){
     }
   };
 }
+function renderHeatmap(){
+  var t = todayStr();
+  /* ~26 weeks, columns start on Sunday */
+  var todayDow = new Date().getDay();
+  var start = addDays(t, -(26 * 7 - 1) - todayDow + 0);
+  /* align start to a Sunday */
+  var sp = start.split("-");
+  var sd = new Date(+sp[0], +sp[1]-1, +sp[2]).getDay();
+  if(sd !== 0) start = addDays(start, -sd);
+  var h = "", d = start, guard = 0;
+  while(d <= t && guard < 200){
+    for(var row=0; row<7; row++){
+      var ds = addDays(d, row);
+      if(ds > t){ h += '<span class="hm-cell" style="visibility:hidden"></span>'; continue; }
+      var hh = state.history[ds];
+      var n = hh ? hh.count : 0;
+      var lvl = n <= 0 ? "" : (n <= 1 ? " hm-l1" : (n <= 3 ? " hm-l2" : (n <= 5 ? " hm-l3" : " hm-l4")));
+      h += '<span class="hm-cell' + lvl + '" title="' + ds + ' — ' + n + ' quest' + (n===1?"":"s") + '"></span>';
+    }
+    d = addDays(d, 7);
+    guard++;
+  }
+  document.getElementById("heatmap").innerHTML = h;
+}
+function xpPace(){
+  var t = todayStr(), sum = 0;
+  for(var i=0;i<14;i++){
+    var h = state.history[addDays(t,-i)];
+    if(h) sum += h.xp;
+  }
+  return sum / 14;
+}
+function xpUntilLevel(target){
+  var need = xpForLevel(state.level) - state.xp;
+  for(var l=state.level+1; l<target; l++) need += xpForLevel(l);
+  return Math.max(0, need);
+}
+function forecastDate(xpNeeded, pace){
+  if(pace <= 0) return null;
+  return addDays(todayStr(), Math.max(1, Math.ceil(xpNeeded / pace)));
+}
+function niceDate(ds){
+  var p = ds.split("-");
+  return MONTH_NAMES[+p[1]-1].slice(0,3) + " " + (+p[2]) + ", " + p[0];
+}
+function renderForecast(){
+  var pace = xpPace();
+  var el = document.getElementById("fcCards");
+  if(pace <= 0){
+    el.innerHTML = '<div class="empty-note">No XP earned in the last 14 days — complete quests and the System will project your future.</div>';
+    return;
+  }
+  var cards = [{v: Math.round(pace) + " XP", l:"Daily Pace (14d avg)"}];
+  var dNext = forecastDate(xpUntilLevel(state.level + 1), pace);
+  cards.push({v: niceDate(dNext), l:"Level " + (state.level + 1) + " Reached"});
+  var d5 = forecastDate(xpUntilLevel(state.level + 5), pace);
+  cards.push({v: niceDate(d5), l:"Level " + (state.level + 5) + " Reached"});
+  var nextRank = null;
+  for(var r=0;r<RANKS.length;r++){ if(RANKS[r].minLevel > state.level){ nextRank = RANKS[r]; break; } }
+  if(nextRank){
+    var dr = forecastDate(xpUntilLevel(nextRank.minLevel), pace);
+    cards.push({v: niceDate(dr), l:"Rank " + nextRank.label + " (" + nextRank.name.replace(" Hunter","") + ")"});
+  } else {
+    cards.push({v:"MAX", l:"Rank — already at the peak"});
+  }
+  var h = "";
+  for(var c=0;c<cards.length;c++){
+    h += '<div class="sum-card"><div class="sum-val">' + esc(String(cards[c].v)) + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
+  }
+  el.innerHTML = h;
+}
+function renderMonthlyReports(){
+  var el = document.getElementById("monthlyList");
+  if(state.monthlyReports.length === 0){
+    el.innerHTML = '<div class="empty-note">No report cards yet — your first arrives on the 1st of next month.</div>';
+    return;
+  }
+  var h = "";
+  for(var i=state.monthlyReports.length-1; i>=0; i--){
+    var rp = state.monthlyReports[i];
+    var mn = MONTH_NAMES[+rp.mk.split("-")[1] - 1] + " " + rp.mk.split("-")[0];
+    h += '<div class="report-card">'
+      + '<div class="report-grade rg-' + rp.grade + '">' + rp.grade + '</div>'
+      + '<div class="report-main"><div class="report-month">' + mn + '</div>'
+      + '<div class="report-line">⚔️ ' + rp.total + ' quests • 💠 ' + rp.xp + ' XP • 📅 active ' + rp.activeDays + '/' + rp.days + ' days'
+      + (rp.bestDay ? ' • 🔥 best day ' + rp.bestDay.slice(5) + ' (' + rp.bestCount + ')' : '') + '</div>'
+      + '</div></div>';
+  }
+  el.innerHTML = h;
+}
 function renderStats(){
+  renderHeatmap();
+  renderForecast();
+  renderMonthlyReports();
   var dates = rangeDates();
   var labels = dates.map(function(d){ return d.slice(5); });
   var compData = dates.map(function(d){ return state.history[d] ? state.history[d].count : 0; });
@@ -2150,6 +2355,47 @@ function renderStats(){
         ticks:{ display:false }, beginAtZero:true
       } }
     }
+  });
+  /* doughnuts: completions by tier + training by attribute */
+  var tierCounts = {}, statCounts = {};
+  for(var tq=0; tq<state.quests.length; tq++){
+    var qq2 = state.quests[tq];
+    var nC = qq2.completions.length;
+    if(!nC) continue;
+    tierCounts[qq2.tier] = (tierCounts[qq2.tier] || 0) + nC;
+    if(qq2.stat) statCounts[qq2.stat] = (statCounts[qq2.stat] || 0) + nC;
+  }
+  var doughOpts = {
+    responsive:true, maintainAspectRatio:false, cutout:"55%",
+    plugins:{ legend:{ position:"bottom", labels:{ color:"#c9cdf0", font:{family:"Rajdhani", size:13, weight:"600"}, padding:14 } } }
+  };
+  var tLabels = [], tData = [], tColors = [];
+  for(var tt=0; tt<TIERS.length; tt++){
+    if(tierCounts[TIERS[tt]]){
+      tLabels.push(TIER_LABEL[TIERS[tt]]); tData.push(tierCounts[TIERS[tt]]); tColors.push(TIER_COLOR[TIERS[tt]]);
+    }
+  }
+  if(tLabels.length === 0){ tLabels = ["No data yet"]; tData = [1]; tColors = ["rgba(124,97,255,.25)"]; }
+  if(charts.c6) charts.c6.destroy();
+  charts.c6 = new Chart(document.getElementById("chartTier"), {
+    type:"doughnut",
+    data:{ labels:tLabels, datasets:[{ data:tData, backgroundColor:tColors, borderColor:"#04050d", borderWidth:3 }] },
+    options: doughOpts
+  });
+  var STAT_COLOR = {INT:"#00d1ff", STR:"#ef4444", VIT:"#22c55e", WIS:"#a855f7", END:"#fbbf24"};
+  var sLabels = [], sData = [], sColors = [];
+  for(var ss=0; ss<STATS.length; ss++){
+    if(statCounts[STATS[ss]]){
+      sLabels.push(STATS[ss] + " — " + STAT_NAME[STATS[ss]]); sData.push(statCounts[STATS[ss]]); sColors.push(STAT_COLOR[STATS[ss]]);
+    }
+  }
+  if(sLabels.length === 0){ sLabels = ["No data yet"]; sData = [1]; sColors = ["rgba(124,97,255,.25)"]; }
+  if(charts.c7) charts.c7.destroy();
+  charts.c7 = new Chart(document.getElementById("chartStat"), {
+    type:"pie",
+    data:{ labels:sLabels, datasets:[{ data:sData, backgroundColor:sColors, borderColor:"#04050d", borderWidth:3 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:"bottom", labels:{ color:"#c9cdf0", font:{family:"Rajdhani", size:13, weight:"600"}, padding:14 } } } }
   });
 }
 function completionRate30(){
@@ -3123,6 +3369,7 @@ seedIfNew();
 checkPackageReset();
 checkStreakResets();
 checkGoalReopens();
+checkMonthlyReport();
 checkStoryUnlocks();
 renderAll();
 switchPage("home");
