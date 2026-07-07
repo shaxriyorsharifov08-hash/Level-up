@@ -292,6 +292,10 @@ nav::-webkit-scrollbar{display:none}
   border:1px solid rgba(124,97,255,.3);background:rgba(124,97,255,.08);color:var(--txt)}
 .honor-date{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;
   font-size:.7rem;color:var(--dim);border-top:1px solid var(--line);padding-top:8px}
+/* quote author byline */
+.ann-author{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:.98rem;
+  color:#d8c9a3;opacity:.9;letter-spacing:.06em;margin-top:14px;text-align:right;
+  padding-right:8vw;text-shadow:0 0 12px rgba(251,191,36,.25)}
 /* guide page */
 .guide p{color:var(--txt);font-size:.9rem;line-height:1.65;margin:0 0 6px}
 .guide ul{margin:0;padding-left:20px}
@@ -988,6 +992,7 @@ nav::-webkit-scrollbar{display:none}
     <div class="ann-ico" id="annIco">&#10071;</div>
     <div class="ann-title" id="annTitle"></div>
     <div class="ann-body" id="annBody"></div>
+    <div class="ann-author" id="annAuthor" style="display:none"></div>
     <button class="ann-btn" id="annOk">ACCEPT</button>
   </div>
 </div>
@@ -1637,8 +1642,8 @@ function sysToast(msg){ toast(msg, "sys", "SYSTEM NOTIFICATION"); }
 /* ---------------- announcements (queued fullscreen) ---------------- */
 var annQueue = [];
 var annOpen = false;
-function announce(title, body, ico, btnText){
-  annQueue.push({title:title, body:body, ico:ico || "❗", btn:btnText || "ACCEPT"});
+function announce(title, body, ico, btnText, author){
+  annQueue.push({title:title, body:body, ico:ico || "❗", btn:btnText || "ACCEPT", author:author || ""});
   if(!annOpen) nextAnnounce();
 }
 function nextAnnounce(){
@@ -1649,6 +1654,9 @@ function nextAnnounce(){
   document.getElementById("annIco").textContent = a.ico;
   document.getElementById("annTitle").textContent = a.title;
   document.getElementById("annBody").textContent = a.body;
+  var au = document.getElementById("annAuthor");
+  if(a.author){ au.textContent = "— " + a.author; au.style.display = ""; }
+  else au.style.display = "none";
   document.getElementById("annOk").textContent = a.btn;
   ov.classList.add("show");
 }
@@ -2129,18 +2137,24 @@ var QUOTES = [
   "Consistency beats intensity when intensity gets tired.",
   "Even the Shadow Monarch started at E-rank.",
   "The task you avoid holds the XP you need.",
-  "We suffer more in imagination than in reality. — Seneca",
-  "The obstacle on the path becomes the path. — ancient stoic teaching",
-  "You have power over your mind, not outside events. — Marcus Aurelius",
-  "Waste no more time arguing what a good man should be. Be one. — Marcus Aurelius",
-  "A journey of a thousand miles begins with a single step. — Lao Tzu",
-  "Fall seven times, stand up eight. — Japanese proverb"
+  {text:"We suffer more in imagination than in reality.", by:"Seneca"},
+  {text:"The obstacle on the path becomes the path.", by:"ancient stoic teaching"},
+  {text:"You have power over your mind, not outside events.", by:"Marcus Aurelius"},
+  {text:"Waste no more time arguing what a good man should be. Be one.", by:"Marcus Aurelius"},
+  {text:"A journey of a thousand miles begins with a single step.", by:"Lao Tzu"},
+  {text:"Fall seven times, stand up eight.", by:"Japanese proverb"},
+  {text:"Work for yourself, not for others. You will never grow rich building only another man's dream.", by:"J. Rockefeller"},
+  {text:"Save every coin and know where each one goes. Wealth begins in a ledger.", by:"J. Rockefeller"},
+  {text:"Reputation is capital. Build your character before you build your fortune.", by:"J. Rockefeller"},
+  {text:"Turn every disaster into an opportunity.", by:"J. Rockefeller"},
+  {text:"Stay hungry, stay foolish.", by:"Steve Jobs"}
 ];
 function showQuote(){
   var pool = QUOTES.concat(state.customQuotes || []);
   if(!pool.length) return;
   var qt = pool[Math.floor(Math.random() * pool.length)];
-  announce("💬 SYSTEM WHISPER", qt, "💬", "OK");
+  if(typeof qt === "string") announce("💬 SYSTEM WHISPER", qt, "💬", "OK");
+  else announce("💬 SYSTEM WHISPER", qt.text, "💬", "OK", qt.by);
 }
 
 /* ---------------- hall of honor ---------------- */
