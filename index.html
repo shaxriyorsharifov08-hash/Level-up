@@ -270,6 +270,28 @@ nav::-webkit-scrollbar{display:none}
   padding:14px;margin-bottom:14px}
 .punish-title{font-family:'Orbitron',monospace;font-weight:800;letter-spacing:.12em;color:#ef4444;
   font-size:.76rem;margin-bottom:6px}
+/* hall of honor trophy cards */
+.honor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.honor-card{position:relative;border:1px solid var(--line);border-radius:14px;padding:38px 16px 14px;
+  text-align:center;background:linear-gradient(180deg,rgba(124,97,255,.07),rgba(5,6,16,.6));
+  transition:transform .2s, box-shadow .2s}
+.honor-card:hover{transform:translateY(-3px)}
+.ht-easy{box-shadow:0 0 14px rgba(34,197,94,.12)}.ht-easy:hover{box-shadow:0 0 22px rgba(34,197,94,.3)}
+.ht-medium{box-shadow:0 0 14px rgba(59,130,246,.12)}.ht-medium:hover{box-shadow:0 0 22px rgba(59,130,246,.3)}
+.ht-epic{box-shadow:0 0 14px rgba(168,85,247,.14)}.ht-epic:hover{box-shadow:0 0 24px rgba(168,85,247,.35)}
+.ht-mythic{box-shadow:0 0 14px rgba(239,68,68,.14)}.ht-mythic:hover{box-shadow:0 0 24px rgba(239,68,68,.35)}
+.ht-legendary{box-shadow:0 0 16px rgba(251,191,36,.18)}.ht-legendary:hover{box-shadow:0 0 28px rgba(251,191,36,.4)}
+.honor-ribbon{position:absolute;top:10px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:'Orbitron',monospace;font-size:.56rem;font-weight:800;letter-spacing:.16em;
+  padding:3px 10px;border:1px solid;border-radius:20px;background:rgba(5,6,16,.85)}
+.honor-ico{font-size:2.6rem;line-height:1.2;margin:6px 0 4px}
+.honor-name{font-family:'Orbitron',monospace;font-weight:800;font-size:.9rem;color:#fff;margin-bottom:4px}
+.honor-desc{font-size:.76rem;color:var(--dim);margin-bottom:6px}
+.honor-bits{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0}
+.honor-bit{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:8px;
+  border:1px solid rgba(124,97,255,.3);background:rgba(124,97,255,.08);color:var(--txt)}
+.honor-date{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;
+  font-size:.7rem;color:var(--dim);border-top:1px solid var(--line);padding-top:8px}
 /* level road (winding score-hero style map with landmark stops) */
 .road{position:relative;overflow:hidden}
 .road-trail{position:absolute;inset:0;width:100%;height:100%}
@@ -563,6 +585,7 @@ nav::-webkit-scrollbar{display:none}
     <button class="nav-btn" data-page="rewards"><span class="nv-ico">&#127873;</span>REWARDS</button>
     <button class="nav-btn" data-page="stats"><span class="nv-ico">&#128202;</span>STATS</button>
     <button class="nav-btn" data-page="story"><span class="nv-ico">&#128218;</span>STORY</button>
+    <button class="nav-btn" data-page="honor"><span class="nv-ico">&#127942;</span>HONOR</button>
     <button class="nav-btn" data-page="admin"><span class="nv-ico">&#9881;&#65039;</span>ADMIN</button>
   </nav>
 
@@ -767,6 +790,16 @@ nav::-webkit-scrollbar{display:none}
         <div class="panel-title">CHRONICLES OF THE HUNTER</div>
         <div id="chaptersList"></div>
       </div>
+    </section>
+
+    <!-- ============ HONOR ============ -->
+    <section id="page-honor" style="display:none">
+      <div class="panel">
+        <div class="panel-title">🏆 HALL OF HONOR</div>
+        <div class="empty-note" style="margin-bottom:12px">Every one-time goal you achieve and every challenge you conquer is enshrined here — permanent proof of who you are becoming.</div>
+        <div class="cards-grid" id="honorCards"></div>
+      </div>
+      <div id="honorSections"></div>
     </section>
 
     <!-- ============ ADMIN ============ -->
@@ -1045,6 +1078,8 @@ function defaultState(){
     lastPenaltyDay:"", lastDebtCheck:"", lastLockdownFor:"",
     dossier:{height:"",weight:"",age:"",status:""},
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
+    honors:[],           /* hall of honor: archived conquered challenges / achieved goals */
+    honorsSeeded:false,
     skills:[],           /* earned from the level road */
     equipment:[],
     titles:[], badges:[],
@@ -1328,6 +1363,18 @@ function migrateState(){
   /* punishment trackers start counting from now (never retro-punish old saves) */
   if(!state.lastDebtCheck) state.lastDebtCheck = todayStr();
   if(!state.lastPenaltyDay) state.lastPenaltyDay = pkgDayNow();
+  /* one-time seed: goals/challenges already completed move into the Hall of Honor */
+  if(!state.honorsSeeded){
+    state.honorsSeeded = true;
+    if(!state.honors) state.honors = [];
+    for(var hq=state.quests.length-1; hq>=0; hq--){
+      var dq = state.quests[hq];
+      if(dq.done && (dq.freq === "longterm" || dq.freq === "challenge")){
+        state.honors.push(makeHonor(dq));
+        if(!(dq.repeatDays > 0)) state.quests.splice(hq, 1);
+      }
+    }
+  }
   /* old per-tier roll counts become stored roll tickets */
   if(!state.storage) state.storage = [];
   if(state.rolls){
@@ -1522,7 +1569,7 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["home","profile","quests","rewards","stats","story","admin"];
+var PAGES = ["home","profile","quests","rewards","stats","story","honor","admin"];
 function switchPage(p){
   currentPage = p;
   for(var i=0;i<PAGES.length;i++){
@@ -1975,6 +2022,34 @@ function checkMonthlyReport(){
   state.lastMonthlyReport = nowMk;
   save();
 }
+/* ---------------- hall of honor ---------------- */
+function makeHonor(q){
+  return {
+    id: uid(),
+    type: q.rankCheck ? "trial" : (q.freq === "challenge" ? "challenge" : "goal"),
+    icon: q.icon, name: q.name, desc: q.desc || "",
+    tier: q.tier, target: q.target || 1,
+    completedOn: q.lastCompleted || todayStr(),
+    started: q.created || "",
+    timeSpent: q.timeSpent || 0
+  };
+}
+function archiveDoneQuests(){
+  /* the day after a goal/challenge is completed, it leaves the quest log for the hall
+     (same-day it stays so the tri-state button can still undo it) */
+  var t = todayStr();
+  var changed = false;
+  for(var i=state.quests.length-1; i>=0; i--){
+    var q = state.quests[i];
+    if(!q.done || (q.freq !== "longterm" && q.freq !== "challenge")) continue;
+    if(q.repeatDays > 0) continue; /* repeating goals reopen instead */
+    if(q.lastCompleted && q.lastCompleted < t){
+      state.quests.splice(i, 1);
+      changed = true;
+    }
+  }
+  if(changed) save();
+}
 function loseXP(n){
   n = Math.max(0, Math.round(n));
   state.totalXp = Math.max(0, state.totalXp - n);
@@ -2022,6 +2097,11 @@ function cycleQuest(id){
     q.lastCompleted = u.prevLast;
     q.lastWeek = u.prevLastWeek;
     q.done = u.prevDone;
+    /* if this completion enshrined an honor today, take it back down */
+    if(q.lastHonorId && !q.done){
+      state.honors = state.honors.filter(function(hn){ return hn.id !== q.lastHonorId; });
+      q.lastHonorId = "";
+    }
     if(u.statGiven && q.stat && state.stats[q.stat] !== undefined) state.stats[q.stat] = Math.max(0, state.stats[q.stat] - 1);
     q.halfOn = "";
     q.undo = null;
@@ -2082,7 +2162,14 @@ function completeQuest(id){
   /* progress toward full completion; roll is granted only when target is reached */
   var target = q.target || 1;
   if(q.progress >= target){
-    if(q.freq === "longterm" || q.freq === "challenge") q.done = true;
+    if(q.freq === "longterm" || q.freq === "challenge"){
+      q.done = true;
+      /* enshrine it in the Hall of Honor (removable if today's completion is undone) */
+      var honor = makeHonor(q);
+      state.honors.push(honor);
+      q.lastHonorId = honor.id;
+      sysToast("🏆 Enshrined in the Hall of Honor: " + q.name);
+    }
     else q.progress = 0; /* recurring quests start a new cycle */
     var col = q.link ? colById(q.link) : null;
     var ticket = makeRollTicket(q.tier, col ? col.id : "", q.name);
@@ -2149,6 +2236,7 @@ function checkRankQuestConditions(){
       q.progress = q.target || 1;
       q.lastCompleted = t;
       q.completions.push(t);
+      state.honors.push(makeHonor(q));
       state.totalCompleted++;
       recordHistory(0,1);
       announce("SPECIAL QUEST CLEARED", "[" + q.name + "]\n\nThe System acknowledges your achievement.\n+" + TIER_XP[q.tier] + " XP awarded.", "🏆", "CLAIM");
@@ -3115,6 +3203,72 @@ function renderStory(){
   document.getElementById("chaptersList").innerHTML = h;
 }
 
+/* ---------------- render: hall of honor ---------------- */
+var HONOR_META = {
+  challenge:{ribbon:"CHALLENGE CONQUERED", icon:"🔥", head:"🔥 CHALLENGES CONQUERED"},
+  goal:{ribbon:"GOAL ACHIEVED", icon:"🎯", head:"🎯 GOALS ACHIEVED"},
+  trial:{ribbon:"RANK TRIAL PASSED", icon:"🏅", head:"🏅 RANK TRIALS PASSED"}
+};
+function honorDetail(hn){
+  var bits = [];
+  if(hn.type === "challenge") bits.push("🔥 " + hn.target + " days unbroken");
+  else if(hn.target > 1) bits.push("✓ completed " + hn.target + "×");
+  if(hn.started && hn.completedOn && hn.started !== hn.completedOn){
+    var span = dayDiff(hn.started, hn.completedOn);
+    if(span > 0) bits.push("🗓 " + span + "-day campaign");
+  }
+  if(hn.timeSpent > 0) bits.push("⏱ " + fmtDur(hn.timeSpent) + " invested");
+  return bits;
+}
+function renderHonor(){
+  var byType = {challenge:0, goal:0, trial:0};
+  for(var i=0;i<state.honors.length;i++) byType[state.honors[i].type] = (byType[state.honors[i].type] || 0) + 1;
+  var cards = [
+    {v:"🏆 " + state.honors.length, l:"Total Honors"},
+    {v:"🔥 " + byType.challenge, l:"Challenges Conquered"},
+    {v:"🎯 " + byType.goal, l:"Goals Achieved"},
+    {v:"🏅 " + byType.trial, l:"Rank Trials Passed"}
+  ];
+  var ch = "";
+  for(var c=0;c<cards.length;c++){
+    ch += '<div class="sum-card"><div class="sum-val">' + cards[c].v + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
+  }
+  document.getElementById("honorCards").innerHTML = ch;
+  var el = document.getElementById("honorSections");
+  if(state.honors.length === 0){
+    el.innerHTML = '<div class="panel"><div class="empty-note">The hall stands empty... for now.<br><br>Fully complete a ONE-TIME GOAL or conquer a CHALLENGE and it will be enshrined here forever, Hunter.</div></div>';
+    return;
+  }
+  var h = "";
+  var order = ["challenge","goal","trial"];
+  for(var o=0;o<order.length;o++){
+    var type = order[o];
+    var list = state.honors.filter(function(x){ return x.type === type; });
+    if(!list.length) continue;
+    list.sort(function(a,b){ return a.completedOn < b.completedOn ? 1 : -1; });
+    h += '<div class="panel"><div class="panel-title">' + HONOR_META[type].head + '</div><div class="honor-grid">';
+    for(var j=0;j<list.length;j++){
+      var hn = list[j];
+      var color = TIER_COLOR[hn.tier] || "#7c61ff";
+      h += '<div class="honor-card ht-' + hn.tier + '">'
+        + '<div class="honor-ribbon" style="color:' + color + ';border-color:' + color + '">' + HONOR_META[type].ribbon + '</div>'
+        + '<div class="honor-ico" style="text-shadow:0 0 24px ' + color + '">' + hn.icon + '</div>'
+        + '<div class="honor-name">' + esc(hn.name) + '</div>'
+        + (hn.desc ? '<div class="honor-desc">' + esc(hn.desc) + '</div>' : '');
+      var bits = honorDetail(hn);
+      if(bits.length){
+        h += '<div class="honor-bits">';
+        for(var b=0;b<bits.length;b++) h += '<span class="honor-bit">' + bits[b] + '</span>';
+        h += '</div>';
+      }
+      h += '<div class="honor-date"><span class="tag tag-' + hn.tier + '">' + TIER_LABEL[hn.tier] + '</span><span>' + niceDate(hn.completedOn) + '</span></div>'
+        + '</div>';
+    }
+    h += '</div></div>';
+  }
+  el.innerHTML = h;
+}
+
 /* ---------------- render: admin ---------------- */
 function renderAdmin(){
   var r = rankForLevel(state.level);
@@ -3965,6 +4119,7 @@ function renderHome(){
     {p:"rewards", i:"🎁", l:"REWARDS"},
     {p:"stats", i:"📊", l:"STATS"},
     {p:"story", i:"📖", l:"STORY"},
+    {p:"honor", i:"🏆", l:"HONOR"},
     {p:"admin", i:"⚙️", l:"ADMIN"}
   ];
   var qh = "";
@@ -3997,6 +4152,7 @@ function renderAll(){
   else if(currentPage === "rewards") renderRewards();
   else if(currentPage === "stats") renderStats();
   else if(currentPage === "story") renderStory();
+  else if(currentPage === "honor") renderHonor();
   else if(currentPage === "admin") renderAdmin();
 }
 
@@ -4058,6 +4214,7 @@ seedIfNew();
 checkPackageReset();
 checkStreakResets();
 checkGoalReopens();
+archiveDoneQuests();
 checkPunishments();
 checkMonthlyReport();
 checkStoryUnlocks();
