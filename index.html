@@ -292,6 +292,11 @@ nav::-webkit-scrollbar{display:none}
   border:1px solid rgba(124,97,255,.3);background:rgba(124,97,255,.08);color:var(--txt)}
 .honor-date{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;
   font-size:.7rem;color:var(--dim);border-top:1px solid var(--line);padding-top:8px}
+/* guide page */
+.guide p{color:var(--txt);font-size:.9rem;line-height:1.65;margin:0 0 6px}
+.guide ul{margin:0;padding-left:20px}
+.guide li{color:var(--txt);font-size:.9rem;line-height:1.65;margin-bottom:7px}
+.guide b{color:#fff}
 /* level road (winding score-hero style map with landmark stops) */
 .road{position:relative;overflow:hidden}
 .road-trail{position:absolute;inset:0;width:100%;height:100%}
@@ -586,6 +591,7 @@ nav::-webkit-scrollbar{display:none}
     <button class="nav-btn" data-page="stats"><span class="nv-ico">&#128202;</span>STATS</button>
     <button class="nav-btn" data-page="story"><span class="nv-ico">&#128218;</span>STORY</button>
     <button class="nav-btn" data-page="honor"><span class="nv-ico">&#127942;</span>HONOR</button>
+    <button class="nav-btn" data-page="guide"><span class="nv-ico">&#128278;</span>GUIDE</button>
     <button class="nav-btn" data-page="admin"><span class="nv-ico">&#9881;&#65039;</span>ADMIN</button>
   </nav>
 
@@ -802,6 +808,77 @@ nav::-webkit-scrollbar{display:none}
       <div id="honorSections"></div>
     </section>
 
+    <!-- ============ GUIDE ============ -->
+    <section id="page-guide" style="display:none">
+      <div class="panel guide">
+        <div class="panel-title">📘 HUNTER'S MANUAL — HOW THE SYSTEM WORKS</div>
+        <p>This app turns your real life into an RPG. Real actions earn XP, XP raises your level, levels raise your rank — and the System watches everything: it rewards discipline and punishes absence.</p>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">⚡ XP, LEVELS &amp; RANKS</div>
+        <ul>
+          <li><b>Earning XP:</b> complete quests. Harder tiers pay more — EASY 15 · MEDIUM 35 · EPIC 75 · MYTHIC 140 · LEGENDARY 250 XP. Clearing the whole Daily Quest package adds a +60 XP bonus.</li>
+          <li><b>Leveling:</b> when the XP bar fills, you level up and receive <b>+3 stat points</b> plus whatever the Level Road grants at that level.</li>
+          <li><b>Ranks:</b> E → D (Lv.5) → C (Lv.10) → B (Lv.15) → A (Lv.20) → S (Lv.30) → NATIONAL (Lv.50). Rank-ups bring titles, badges, a special Rank Trial quest, and your hero art evolves.</li>
+          <li><b>Stats:</b> INT · STR · CON · END. Each quest trains the stat you assign it. Spend unallocated points on PROFILE. Every 5 levels the System checks your weakest stat and assigns a corrective quest.</li>
+        </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">📜 QUESTS &amp; THE ROUND BUTTON</div>
+        <ul>
+          <li><b>Types:</b> DAILY (every day), WEEKLY (once per week), CUSTOM (chosen weekdays), ONE-TIME GOAL (finish it once), CHALLENGE (streak-based).</li>
+          <li><b>The round button:</b> tap once = fully complete (filled ✓, full XP). Tap again = half complete (½, half the XP returned). Tap a third time = cleared, as if never done. Only today's completion can be adjusted.</li>
+          <li><b>Completion target:</b> every quest has a target (e.g. 7). Each completion counts toward it; reaching it fully completes the quest and earns <b>1 roll</b>. Recurring quests then start a new cycle.</li>
+          <li><b>Schedule (goals &amp; challenges):</b> optional start date (locked until then), deadline (countdown, then EXPIRED), and repeat (reopens N days after completion).</li>
+          <li><b>Focus timer:</b> press ⏱ on a quest card before working, STOP when done. Time is logged per quest and per day, and appears in STATS.</li>
+        </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">🔥 CHALLENGES</div>
+        <p>A challenge is a streak contract: complete it every day, and the unbroken streak IS the progress. Miss one day and progress resets to zero — you start again. Survive to the target and it is <b>conquered forever</b>: a roll, a badge, and a trophy in the Hall of Honor.</p>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">📦 DAILY QUEST (SYSTEM MANDATE)</div>
+        <p>The package on your home page resets every day at <b>01:00</b>. Clear every item for +60 XP, a MEDIUM roll, and a mandate streak. Edit the items in ADMIN. Ignore it and the Penalty Zone opens…</p>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">🎁 REWARDS, ROLLS &amp; CRATES</div>
+        <ul>
+          <li><b>Crates (collections):</b> you create them — name, tier, and 2–8 prizes you define. Link quests to a crate.</li>
+          <li><b>Rolls:</b> earned by fully completing quests (linked quest → roll for its crate; unlinked → roll for any crate of that tier). Rolls wait in <b>STORAGE</b> until you press USE — then a random prize from the crate is revealed, gacha style.</li>
+          <li><b>Completing a crate</b> (winning every prize) triggers a celebration and can grant a title.</li>
+        </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">🗺 STORY — LEVEL ROAD</div>
+        <p>The winding road on the STORY page shows every level ahead, passing landmark stops like the Pyramids and the Colosseum. Each node carries awards granted automatically on level-up: rolls, stat points, skills, equipment, titles, or a prize you write yourself. Edit everything in ADMIN → STORY ROAD AWARDS. Story chapters unlock as your total completions grow.</p>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">🏆 HALL OF HONOR</div>
+        <p>Every achieved one-time goal, conquered challenge, and passed rank trial becomes a permanent trophy: ribbon, tier glow, campaign length, time invested, and the date. The finished quest leaves the quest log the next day — its place is in the hall.</p>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">⛓ PUNISHMENTS</div>
+        <ul>
+          <li><b>Penalty Quest:</b> miss the Daily Quest package and the Penalty Zone opens — all XP is frozen until you serve the penalty task and confirm it.</li>
+          <li><b>XP Debt:</b> each fully empty day adds 60 XP of debt; half of every gain is seized until repaid.</li>
+          <li><b>Quest Lockdown:</b> two consecutive empty days seal 2 random quests for 7 days.</li>
+        </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">☁ DATA &amp; SYNC</div>
+        <ul>
+          <li><b>Local:</b> progress saves instantly in your browser, with an IndexedDB vault and 14 days of snapshots as backup.</li>
+          <li><b>Cloud:</b> sign in with Google (ADMIN → CLOUD SYNC) to auto-sync across devices. Use UPLOAD/DOWNLOAD there for first-time setup direction.</li>
+          <li><b>Backup:</b> ADMIN → EXPORT JSON saves everything to a file; IMPORT restores it anywhere.</li>
+        </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">📇 PROFILE EXTRAS</div>
+        <p>The dossier stores your height, weight, age, status, and real-life achievements (IELTS, CEFR, certificates). Skills and equipment earned from the Level Road collect there too. Click your hunter name to rename yourself; upload per-rank portraits in ADMIN.</p>
+      </div>
+    </section>
+
     <!-- ============ ADMIN ============ -->
     <section id="page-admin" style="display:none">
       <div class="panel">
@@ -855,6 +932,15 @@ nav::-webkit-scrollbar{display:none}
           <select class="sel" id="roadAddSkillSel" style="display:none;flex:1;min-width:150px"></select>
           <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / prize text)">
           <button class="btn primary" id="roadAddBtn">ADD</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">💬 QUOTES</div>
+        <div class="empty-note" style="margin-bottom:10px">A random quote appears after every completed task. The System ships with <b id="quoteBuiltinCount"></b> built-in lines; add your own below — they join the pool.</div>
+        <div id="admQuotes"></div>
+        <div class="adm-row" style="margin-top:8px">
+          <input class="inp" id="quoteAddTxt" style="flex:1;min-width:180px" maxlength="180" placeholder="Your quote, e.g. Bugun qiynal, ertaga faxrlan.">
+          <button class="btn primary" id="quoteAddBtn">ADD</button>
         </div>
       </div>
       <div class="panel">
@@ -1080,6 +1166,7 @@ function defaultState(){
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
     honors:[],           /* hall of honor: archived conquered challenges / achieved goals */
     honorsSeeded:false,
+    customQuotes:[],     /* user-added quotes shown after completions */
     skills:[],           /* earned from the level road */
     equipment:[],
     titles:[], badges:[],
@@ -1569,7 +1656,7 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["home","profile","quests","rewards","stats","story","honor","admin"];
+var PAGES = ["home","profile","quests","rewards","stats","story","honor","guide","admin"];
 function switchPage(p){
   currentPage = p;
   for(var i=0;i<PAGES.length;i++){
@@ -2022,6 +2109,40 @@ function checkMonthlyReport(){
   state.lastMonthlyReport = nowMk;
   save();
 }
+/* ---------------- completion quotes ---------------- */
+var QUOTES = [
+  "The strongest hunters were once too weak to open the gate.",
+  "One quest at a time. That is how kingdoms fall — and how they are built.",
+  "You did not feel like doing it. You did it anyway. That is power.",
+  "Discipline is choosing the dungeon before it chooses you.",
+  "Small daily victories forge unbreakable hunters.",
+  "The System does not reward talent. It rewards those who show up.",
+  "Every completed task is a monster that will never bother you again.",
+  "Your future self is watching this moment through memory. Make it proud.",
+  "Streaks are chains — but they bind your weakness, not you.",
+  "Rest is part of training. Quitting is not.",
+  "A level is never given. It is taken, one XP at a time.",
+  "Fear is the first boss. You just landed a hit.",
+  "While others scroll, you climb.",
+  "The comfort zone is a dungeon with no loot.",
+  "You are not behind. You are on the road, and the road is long.",
+  "Consistency beats intensity when intensity gets tired.",
+  "Even the Shadow Monarch started at E-rank.",
+  "The task you avoid holds the XP you need.",
+  "We suffer more in imagination than in reality. — Seneca",
+  "The obstacle on the path becomes the path. — ancient stoic teaching",
+  "You have power over your mind, not outside events. — Marcus Aurelius",
+  "Waste no more time arguing what a good man should be. Be one. — Marcus Aurelius",
+  "A journey of a thousand miles begins with a single step. — Lao Tzu",
+  "Fall seven times, stand up eight. — Japanese proverb"
+];
+function showQuote(){
+  var pool = QUOTES.concat(state.customQuotes || []);
+  if(!pool.length) return;
+  var qt = pool[Math.floor(Math.random() * pool.length)];
+  announce("💬 SYSTEM WHISPER", qt, "💬", "OK");
+}
+
 /* ---------------- hall of honor ---------------- */
 function makeHonor(q){
   return {
@@ -2197,6 +2318,7 @@ function completeQuest(id){
   checkAchievements();
   checkRankQuestConditions();
   checkStoryUnlocks();
+  showQuote();
   save();
   renderAll();
 }
@@ -3372,10 +3494,33 @@ function renderAdmin(){
       + '<button class="mini-btn" data-rddel="' + rw.id + '" title="Remove">🗑</button></div>';
   }
   document.getElementById("admRoad").innerHTML = rh || '<span class="empty-note">The road is empty. Add level rewards below.</span>';
+  /* custom quotes manager */
+  document.getElementById("quoteBuiltinCount").textContent = QUOTES.length;
+  var qh2 = "";
+  for(var cq=0; cq<state.customQuotes.length; cq++){
+    qh2 += '<div class="adm-list-item"><span class="ali-name">💬 ' + esc(state.customQuotes[cq]) + '</span>'
+      + '<button class="mini-btn" data-qdel="' + cq + '" title="Remove">🗑</button></div>';
+  }
+  document.getElementById("admQuotes").innerHTML = qh2 || '<span class="empty-note">No custom quotes yet.</span>';
   renderStorageStatus();
   renderSnapshots();
   renderCloudStatus();
 }
+document.getElementById("admQuotes").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-qdel]"); if(!b) return;
+  var i = +b.getAttribute("data-qdel");
+  if(!confirm('Remove this quote?\n\n"' + state.customQuotes[i] + '"')) return;
+  state.customQuotes.splice(i, 1);
+  save(); renderAdmin();
+});
+document.getElementById("quoteAddBtn").addEventListener("click", function(){
+  var v = document.getElementById("quoteAddTxt").value.trim();
+  if(!v){ toast("Write the quote first.", "err"); return; }
+  state.customQuotes.push(v);
+  document.getElementById("quoteAddTxt").value = "";
+  save(); renderAdmin();
+  toast("Quote added to the pool.", "sys", "QUOTE SAVED");
+});
 document.getElementById("cloudSignInBtn").addEventListener("click", cloudSignIn);
 document.getElementById("cloudSignOutBtn").addEventListener("click", cloudSignOut);
 document.getElementById("cloudDownloadBtn").addEventListener("click", cloudDownload);
@@ -3961,6 +4106,7 @@ function completePackageItem(id){
   checkAchievements();
   checkRankQuestConditions();
   checkStoryUnlocks();
+  showQuote();
   save();
   renderAll();
 }
@@ -4120,6 +4266,7 @@ function renderHome(){
     {p:"stats", i:"📊", l:"STATS"},
     {p:"story", i:"📖", l:"STORY"},
     {p:"honor", i:"🏆", l:"HONOR"},
+    {p:"guide", i:"📘", l:"GUIDE"},
     {p:"admin", i:"⚙️", l:"ADMIN"}
   ];
   var qh = "";
