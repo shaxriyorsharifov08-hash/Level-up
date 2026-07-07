@@ -263,6 +263,13 @@ nav::-webkit-scrollbar{display:none}
 .cbtn.half{background:linear-gradient(90deg,rgba(0,209,255,.85) 50%,rgba(0,209,255,.07) 50%);border-color:var(--blue)}
 .cbtn:disabled{opacity:.3;cursor:default;box-shadow:none}
 .cbtn-lbl{font-size:.58rem;font-weight:800;letter-spacing:.08em;color:var(--dim);text-align:center;margin-top:4px}
+/* punishment banners */
+.punish-banner{border:1px solid rgba(239,68,68,.6);background:rgba(239,68,68,.07);border-radius:12px;
+  padding:14px;margin-bottom:14px;box-shadow:0 0 18px rgba(239,68,68,.18);animation:syspulse 2.4s infinite}
+.debt-banner{border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.06);border-radius:12px;
+  padding:14px;margin-bottom:14px}
+.punish-title{font-family:'Orbitron',monospace;font-weight:800;letter-spacing:.12em;color:#ef4444;
+  font-size:.76rem;margin-bottom:6px}
 /* level road (winding score-hero style map with landmark stops) */
 .road{position:relative;overflow:hidden}
 .road-trail{position:absolute;inset:0;width:100%;height:100%}
@@ -577,6 +584,7 @@ nav::-webkit-scrollbar{display:none}
         </div>
       </div>
 
+      <div id="punishHome"></div>
       <div class="panel">
         <div class="panel-title">DAILY QUEST — SYSTEM MANDATE</div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -658,6 +666,7 @@ nav::-webkit-scrollbar{display:none}
 
     <!-- ============ QUESTS ============ -->
     <section id="page-quests" style="display:none">
+      <div id="punishQuests"></div>
       <div class="panel">
         <div class="panel-title">QUEST LOG</div>
         <div class="filters" id="freqFilters"></div>
@@ -1031,6 +1040,9 @@ function defaultState(){
     lastMonthlyReport:"",
     timeHistory:{},      /* date -> seconds of tracked focus time */
     activeTimer:null,    /* {id, name, startedAt} while a session runs */
+    xpDebt:0,            /* punishment: half of XP gains seized until repaid */
+    penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
+    lastPenaltyDay:"", lastDebtCheck:"", lastLockdownFor:"",
     dossier:{height:"",weight:"",age:"",status:""},
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
     skills:[],           /* earned from the level road */
@@ -1311,7 +1323,11 @@ function migrateState(){
     if(qq.repeatDays === undefined) qq.repeatDays = 0;
     if(qq.timeSpent === undefined) qq.timeSpent = 0;
     if(qq.halfOn === undefined) qq.halfOn = "";
+    if(qq.lockedUntil === undefined) qq.lockedUntil = "";
   }
+  /* punishment trackers start counting from now (never retro-punish old saves) */
+  if(!state.lastDebtCheck) state.lastDebtCheck = todayStr();
+  if(!state.lastPenaltyDay) state.lastPenaltyDay = pkgDayNow();
   /* old per-tier roll counts become stored roll tickets */
   if(!state.storage) state.storage = [];
   if(state.rolls){
@@ -1549,6 +1565,18 @@ function rankForLevel(lv){
   return r;
 }
 function gainXP(amount){
+  amount = Math.max(0, Math.round(amount));
+  if(amount > 0 && state.xpDebt > 0){
+    var pay = Math.min(state.xpDebt, Math.ceil(amount / 2));
+    state.xpDebt -= pay;
+    amount -= pay;
+    if(state.xpDebt <= 0){
+      state.xpDebt = 0;
+      announce("💸 DEBT REPAID", "Your XP debt has been fully repaid.\n\nFull XP flow is restored. Stay consistent, Hunter.", "🔓", "FREEDOM");
+    } else {
+      sysToast("💸 " + pay + " XP seized for debt. Remaining: " + state.xpDebt);
+    }
+  }
   state.xp += amount;
   state.totalXp += amount;
   recordHistory(amount, 0);
@@ -1728,6 +1756,102 @@ function checkStreakResets(){
   }
   if(changed) save();
 }
+/* ---------------- punishments: penalty quest, XP debt, quest lockdown ---------------- */
+var PENALTY_TASKS = [
+  {icon:"⛓", name:"Penalty Zone: 100 Squats", desc:"The System demands payment in sweat. 100 squats, no shortcuts."},
+  {icon:"⛓", name:"Penalty Zone: 30 Push-up Tribute", desc:"30 push-ups performed with full focus."},
+  {icon:"⛓", name:"Penalty Zone: 20-Minute Cleanse", desc:"Clean your room or workspace for 20 minutes straight."},
+  {icon:"⛓", name:"Penalty Zone: Phone Exile", desc:"One full hour completely phone-free. The System is counting."},
+  {icon:"⛓", name:"Penalty Zone: Cold Water Trial", desc:"End your next shower with 60 seconds of cold water."}
+];
+var XP_DEBT_PER_DAY = 60;
+function penaltyActive(){ return !!state.penaltyTask; }
+function checkPunishments(){
+  var t = todayStr();
+  /* 1) XP debt: every fully empty day since the last check adds debt */
+  var d = state.lastDebtCheck || t;
+  var newDebt = 0, missed = 0;
+  var guard = 0;
+  while(d < t && guard < 400){
+    if(d >= state.created){
+      var h = state.history[d];
+      if(!h || !h.count){ newDebt += XP_DEBT_PER_DAY; missed++; }
+    }
+    d = addDays(d, 1); guard++;
+  }
+  state.lastDebtCheck = t;
+  if(newDebt > 0){
+    state.xpDebt = (state.xpDebt || 0) + newDebt;
+    announce("💸 XP DEBT INCURRED",
+      missed + " silent day" + (missed>1?"s":"") + " detected. Nothing was completed.\n\nDebt added: " + newDebt + " XP.\nTotal debt: " + state.xpDebt + " XP.\n\nHalf of every XP gain will be seized until the debt is repaid, Hunter.",
+      "💸", "UNDERSTOOD");
+  }
+  /* 2) lockdown: two consecutive empty days seal 2 random quests for a week */
+  var y1 = addDays(t,-1), y2 = addDays(t,-2);
+  var e1 = !state.history[y1] || !state.history[y1].count;
+  var e2 = !state.history[y2] || !state.history[y2].count;
+  if(e1 && e2 && y2 >= state.created && state.lastLockdownFor !== y1){
+    state.lastLockdownFor = y1;
+    var pool = state.quests.filter(function(q){ return !q.done && !q.rankCheck && (!q.lockedUntil || q.lockedUntil <= t); });
+    var names = [];
+    for(var i=0; i<2 && pool.length; i++){
+      var idx = Math.floor(Math.random() * pool.length);
+      var lq = pool.splice(idx, 1)[0];
+      lq.lockedUntil = addDays(t, 7);
+      names.push(lq.icon + " " + lq.name);
+    }
+    if(names.length){
+      announce("⛔ QUEST LOCKDOWN ⛔",
+        "Two days of total absence detected.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter.",
+        "⛔", "ACCEPT PUNISHMENT");
+    }
+  }
+  /* 3) penalty quest: yesterday's daily package was not fully cleared */
+  var pd = pkgDayNow(), prev = addDays(pd, -1);
+  if(state.lastPenaltyDay && state.lastPenaltyDay !== pd){
+    if(prev >= state.created && state.dailyPackage.items.length && state.dailyPackage.lastFullDay !== prev){
+      var tpl = PENALTY_TASKS[Math.floor(Math.random() * PENALTY_TASKS.length)];
+      state.penaltyTask = {icon:tpl.icon, name:tpl.name, desc:tpl.desc, day:pd};
+      announce("⛓ PENALTY QUEST ⛓",
+        "Yesterday's Daily Quest was not completed.\n\nThe System has opened the Penalty Zone:\n[" + tpl.name + "]\n" + tpl.desc + "\n\n⚠ ALL XP GAIN IS FROZEN until the penalty is served.\nFind the red banner and confirm when it is done.",
+        "⛓", "ENTER THE PENALTY ZONE");
+    }
+    state.lastPenaltyDay = pd;
+  }
+  save();
+}
+function clearPenalty(){
+  if(!state.penaltyTask) return;
+  if(!confirm("Confirm on your honor, Hunter: did you truly complete the penalty?\n\n[" + state.penaltyTask.name + "]")) return;
+  state.penaltyTask = null;
+  announce("⛓ PENALTY SERVED",
+    "The Penalty Zone closes.\n\nXP flow has been restored.\nDo not let the Daily Quest slip again.",
+    "🔓", "RETURN STRONGER");
+  save();
+  renderAll();
+}
+function punishBannerHtml(){
+  var h = "";
+  if(state.penaltyTask){
+    h += '<div class="punish-banner"><div class="punish-title">⛓ PENALTY ACTIVE — ALL XP FROZEN</div>'
+      + '<div style="font-weight:700">' + state.penaltyTask.icon + ' ' + esc(state.penaltyTask.name) + '</div>'
+      + '<div class="q-desc" style="margin:4px 0 10px">' + esc(state.penaltyTask.desc) + '</div>'
+      + '<button class="btn danger" onclick="clearPenalty()">✅ I SERVED THE PENALTY</button></div>';
+  }
+  if(state.xpDebt > 0){
+    h += '<div class="debt-banner"><div class="punish-title" style="color:var(--legendary)">💸 XP DEBT: ' + state.xpDebt + '</div>'
+      + '<div class="q-desc">Half of every XP gain is seized until the debt is repaid. Complete quests to work it off.</div></div>';
+  }
+  return h;
+}
+function renderPunishBanners(){
+  var ph = document.getElementById("punishHome");
+  var pq = document.getElementById("punishQuests");
+  var h = punishBannerHtml();
+  if(ph) ph.innerHTML = h;
+  if(pq) pq.innerHTML = h;
+}
+
 /* ---------------- focus timer (per-task time tracking) ---------------- */
 function fmtDur(s){
   s = Math.max(0, Math.round(s));
@@ -1873,7 +1997,8 @@ function cycleQuest(id){
   if(q.lastCompleted !== t || !q.undo || q.undo.date !== t){
     toast("Only today's completion can be adjusted, Hunter.", "err"); return;
   }
-  var halfRefund = Math.ceil(TIER_XP[q.tier] / 2);
+  var given = (q.undo.xpGiven !== undefined) ? q.undo.xpGiven : TIER_XP[q.tier];
+  var halfRefund = Math.ceil(given / 2);
   if(q.halfOn !== t){
     /* full -> half: keep the completion + streak, give back half the XP */
     q.halfOn = t;
@@ -1882,7 +2007,7 @@ function cycleQuest(id){
     toast("Marked HALF-complete: " + q.name + " (−" + halfRefund + " XP)", "sys", "HALF CLEAR");
   } else {
     /* half -> empty: undo today's completion entirely */
-    var rest = TIER_XP[q.tier] - halfRefund;
+    var rest = given - halfRefund;
     loseXP(rest);
     if(state.history[t]){
       state.history[t].xp = Math.max(0, state.history[t].xp - rest);
@@ -1927,16 +2052,20 @@ function completeQuest(id){
   if(!q) return;
   if(completedThisPeriod(q)){ toast("Already completed for this period.", "err"); return; }
   if(q.freq === "custom" && !isScheduledToday(q)){ toast("This quest is not scheduled today.", "err"); return; }
+  if(q.lockedUntil && todayStr() < q.lockedUntil){
+    toast("⛔ This quest is SEALED by the System until " + q.lockedUntil + ".", "err"); return;
+  }
   if(q.freq === "longterm" || q.freq === "challenge"){
     var td = todayStr();
     if(q.startDate && td < q.startDate){ toast("This quest unlocks on " + q.startDate + ". The System forbids early attempts.", "err"); return; }
     if(q.endDate && td > q.endDate){ toast("The deadline (" + q.endDate + ") has passed. Edit the quest to extend it.", "err"); return; }
   }
   var t = todayStr();
+  var xpEarn = penaltyActive() ? 0 : TIER_XP[q.tier];
   /* snapshot for the tri-state button so today's completion can be downgraded or cleared */
   q.undo = {date:t, prevStreak:q.streak, prevBest:q.bestStreak, prevProgress:q.progress || 0,
     prevLast:q.lastCompleted, prevLastWeek:q.lastWeek, prevDone:!!q.done,
-    statGiven:!!(q.stat && state.stats[q.stat] !== undefined)};
+    statGiven:!!(q.stat && state.stats[q.stat] !== undefined), xpGiven:xpEarn};
   q.halfOn = "";
   q.completions.push(t);
   state.totalCompleted++;
@@ -1971,13 +2100,13 @@ function completeQuest(id){
         "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE.\nOpen REWARDS and use it whenever you wish, Hunter.",
         "🎟", "STORE IT");
     }
-    toast("+" + TIER_XP[q.tier] + " XP • roll stored", "gold", "FULL CLEAR");
+    toast("+" + xpEarn + " XP • roll stored" + (xpEarn === 0 ? " • ⛓ PENALTY: XP frozen" : ""), "gold", "FULL CLEAR");
   } else if(q.freq === "challenge"){
-    toast("Day " + q.progress + " / " + target + " — keep the streak alive! +" + TIER_XP[q.tier] + " XP", "gold", "CHALLENGE");
+    toast("Day " + q.progress + " / " + target + " — keep the streak alive! +" + xpEarn + " XP" + (xpEarn === 0 ? " (⛓ penalty active)" : ""), "gold", "CHALLENGE");
   } else {
-    toast("Quest complete! +" + TIER_XP[q.tier] + " XP • progress " + q.progress + " / " + target, "gold", "QUEST CLEARED");
+    toast("Quest complete! +" + xpEarn + " XP • progress " + q.progress + " / " + target + (xpEarn === 0 ? " • ⛓ PENALTY: XP frozen" : ""), "gold", "QUEST CLEARED");
   }
-  gainXP(TIER_XP[q.tier]);
+  gainXP(xpEarn);
   checkAchievements();
   checkRankQuestConditions();
   checkStoryUnlocks();
@@ -2417,6 +2546,7 @@ function questCard(q){
   var sched = q.freq === "longterm" || q.freq === "challenge";
   var notStarted = sched && q.startDate && tNow < q.startDate;
   var expired = sched && q.endDate && !q.done && tNow > q.endDate;
+  var sealed = q.lockedUntil && tNow < q.lockedUntil;
   var col = q.link ? colById(q.link) : null;
   var h = '<div class="quest-card tb-' + q.tier + (doneNow?" done-today":"") + '">';
   h += '<div class="q-ico">' + q.icon + '</div>';
@@ -2441,6 +2571,7 @@ function questCard(q){
   } else {
     h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
   }
+  if(sealed) h += '<span class="tag tag-expired">⛔ SEALED · ' + dayDiff(tNow, q.lockedUntil) + 'd left</span>';
   if(sched){
     if(notStarted) h += '<span class="tag tag-freq">📅 STARTS ' + q.startDate.slice(5) + '</span>';
     if(q.endDate && !q.done){
@@ -2460,9 +2591,9 @@ function questCard(q){
   h += '<div class="q-actions">';
   var isHalf = doneNow && q.halfOn === tNow && q.lastCompleted === tNow;
   var cCls = doneNow ? (isHalf ? " half" : " full") : "";
-  var cDisabled = !doneNow && (offToday || notStarted || expired);
-  var cGlyph = doneNow ? (isHalf ? "½" : "✓") : "";
-  var cLbl = doneNow ? (isHalf ? "HALF" : "DONE") : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "TAP")));
+  var cDisabled = !doneNow && (offToday || notStarted || expired || sealed);
+  var cGlyph = doneNow ? (isHalf ? "½" : "✓") : (sealed ? "⛔" : "");
+  var cLbl = doneNow ? (isHalf ? "HALF" : "DONE") : (sealed ? "SEALED" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "TAP"))));
   h += '<div><button class="cbtn' + cCls + '" data-act="cycle" data-id="' + q.id + '"' + (cDisabled ? " disabled" : "")
     + ' title="Tap: complete → half → clear">' + cGlyph + '</button>'
     + '<div class="cbtn-lbl">' + cLbl + '</div></div>';
@@ -2475,6 +2606,7 @@ function questCard(q){
   return h;
 }
 function renderQuests(){
+  renderPunishBanners();
   renderFilterChips();
   var list = state.quests.slice();
   if(freqFilter !== "all") list = list.filter(function(q){ return q.freq === freqFilter; });
@@ -3637,6 +3769,7 @@ function checkPackageReset(){
   pk.day = pd;
   save();
   checkGoalReopens();
+  checkPunishments();
   if(currentPage === "home") renderHome();
 }
 function completePackageItem(id){
@@ -3667,9 +3800,9 @@ function completePackageItem(id){
       "📦", "CLAIM");
     var ms = [3,7,14,30,100];
     for(var m=0;m<ms.length;m++) if(pk.streak === ms[m]) addBadge("📦", ms[m] + " Day Mandate");
-    gainXP(60 + 12);
+    gainXP(penaltyActive() ? 0 : (60 + 12));
   } else {
-    gainXP(12);
+    gainXP(penaltyActive() ? 0 : 12);
   }
   checkAchievements();
   checkRankQuestConditions();
@@ -3786,6 +3919,7 @@ function renderHeroArt(){
 /* ---------------- render: home dashboard ---------------- */
 function renderHome(){
   renderHeroArt();
+  renderPunishBanners();
   var r = rankForLevel(state.level);
   document.getElementById("homeName").textContent = state.hunterName;
   document.getElementById("homeSub").textContent = r.name.toUpperCase();
@@ -3924,6 +4058,7 @@ seedIfNew();
 checkPackageReset();
 checkStreakResets();
 checkGoalReopens();
+checkPunishments();
 checkMonthlyReport();
 checkStoryUnlocks();
 renderAll();
