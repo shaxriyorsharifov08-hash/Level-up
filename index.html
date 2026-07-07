@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LEVEL UP — Hunter System</title>
+<meta name="theme-color" content="#7c61ff">
+<meta property="og:title" content="LEVEL UP — Hunter System">
+<meta property="og:description" content="Turn your habits into quests. Level up in real life.">
+<meta property="og:image" content="https://shaxriyorsharifov08-hash.github.io/Level-up/icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -235,6 +242,27 @@ nav::-webkit-scrollbar{display:none}
 .ra-val{font-family:'Orbitron',monospace;font-weight:800;color:var(--legendary);margin-left:auto}
 .skill-chip{cursor:pointer}
 .skill-chip:hover{border-color:#ef4444;color:#ef4444}
+/* focus timer pill */
+#timerPill{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);z-index:90;
+  display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:30px;
+  border:1px solid var(--blue);background:rgba(5,6,16,.94);font-weight:700;
+  box-shadow:0 0 24px rgba(0,209,255,.35);transition:transform .3s;max-width:92vw}
+#timerPill.show{transform:translateX(-50%) translateY(0)}
+#timerPill b{font-family:'Orbitron',monospace;color:var(--blue);font-size:1rem}
+#timerPill span{color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
+#timerStopBtn{padding:6px 14px;border-radius:20px;border:1px solid #ef4444;color:#ef4444;
+  background:transparent;font-weight:800;font-size:.72rem;letter-spacing:.06em;cursor:pointer}
+#timerStopBtn:hover{background:rgba(239,68,68,.15)}
+/* tri-state round completion button */
+.cbtn{width:50px;height:50px;border-radius:50%;border:2px solid var(--blue);background:transparent;
+  color:#fff;font-size:1.15rem;font-weight:800;cursor:pointer;transition:all .2s;
+  box-shadow:0 0 10px rgba(0,209,255,.15)}
+.cbtn:hover{box-shadow:0 0 16px rgba(0,209,255,.45)}
+.cbtn.full{background:linear-gradient(135deg,var(--blue),var(--violet));border-color:var(--violet);
+  box-shadow:0 0 16px rgba(124,97,255,.55)}
+.cbtn.half{background:linear-gradient(90deg,rgba(0,209,255,.85) 50%,rgba(0,209,255,.07) 50%);border-color:var(--blue)}
+.cbtn:disabled{opacity:.3;cursor:default;box-shadow:none}
+.cbtn-lbl{font-size:.58rem;font-weight:800;letter-spacing:.08em;color:var(--dim);text-align:center;margin-top:4px}
 /* level road (winding score-hero style map with landmark stops) */
 .road{position:relative;overflow:hidden}
 .road-trail{position:absolute;inset:0;width:100%;height:100%}
@@ -678,6 +706,11 @@ nav::-webkit-scrollbar{display:none}
         <div class="panel-title">XP EARNED PER DAY</div>
         <div class="chart-box"><canvas id="chartXp"></canvas></div>
       </div>
+      <div class="panel">
+        <div class="panel-title">⏱ ACTIVE MINUTES PER DAY</div>
+        <div class="empty-note" style="margin-bottom:8px">Time tracked with the quest focus timer — press ⏱ on a quest card before you start working.</div>
+        <div class="chart-box"><canvas id="chartTime"></canvas></div>
+      </div>
       <div class="duo-grid">
         <div class="panel">
           <div class="panel-title">🍩 COMPLETIONS BY TIER</div>
@@ -771,6 +804,18 @@ nav::-webkit-scrollbar{display:none}
         <input type="file" id="admImportFile" accept=".json,application/json" style="display:none">
       </div>
       <div class="panel">
+        <div class="panel-title">🗺 STORY ROAD AWARDS (LEVEL REWARDS)</div>
+        <div class="empty-note" style="margin-bottom:10px">These are the awards on the STORY page road map — each row is granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; skills and equipment appear on your PROFILE; MY PRIZE is anything you write yourself. Rows are editable in place.</div>
+        <div id="admRoad"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
+          <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
+          <select class="sel" id="roadAddSkillSel" style="display:none;flex:1;min-width:150px"></select>
+          <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / prize text)">
+          <button class="btn primary" id="roadAddBtn">ADD</button>
+        </div>
+      </div>
+      <div class="panel">
         <div class="panel-title">DATA VAULT</div>
         <div class="empty-note" id="storageStatus" style="margin-bottom:12px"></div>
         <div id="admSnapshots"></div>
@@ -800,22 +845,12 @@ nav::-webkit-scrollbar{display:none}
         <div id="admHero"></div>
         <input type="file" id="heroImgFile" accept="image/*" style="display:none">
       </div>
-      <div class="panel">
-        <div class="panel-title">MANAGE LEVEL ROAD</div>
-        <div class="empty-note" style="margin-bottom:10px">Each row is a reward granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; value is the SP amount or the title/custom text. Rows are editable in place.</div>
-        <div id="admRoad"></div>
-        <div class="adm-row" style="margin-top:10px">
-          <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
-          <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
-          <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / custom text)">
-          <button class="btn primary" id="roadAddBtn">ADD</button>
-        </div>
-      </div>
     </section>
   </main>
 </div>
 
 <button id="fab" title="Add">+</button>
+<div id="timerPill">⏱ <b id="timerElapsed">00:00</b> <span id="timerName"></span> <button id="timerStopBtn">■ STOP</button></div>
 <div id="toasts"></div>
 
 <!-- fullscreen announcement -->
@@ -994,6 +1029,8 @@ function defaultState(){
     heroImages:{},       /* optional user-uploaded portrait per rank key */
     monthlyReports:[],   /* graded month summaries, newest last */
     lastMonthlyReport:"",
+    timeHistory:{},      /* date -> seconds of tracked focus time */
+    activeTimer:null,    /* {id, name, startedAt} while a session runs */
     dossier:{height:"",weight:"",age:"",status:""},
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
     skills:[],           /* earned from the level road */
@@ -1272,6 +1309,8 @@ function migrateState(){
     if(qq.startDate === undefined) qq.startDate = "";
     if(qq.endDate === undefined) qq.endDate = "";
     if(qq.repeatDays === undefined) qq.repeatDays = 0;
+    if(qq.timeSpent === undefined) qq.timeSpent = 0;
+    if(qq.halfOn === undefined) qq.halfOn = "";
   }
   /* old per-tier roll counts become stored roll tickets */
   if(!state.storage) state.storage = [];
@@ -1689,6 +1728,69 @@ function checkStreakResets(){
   }
   if(changed) save();
 }
+/* ---------------- focus timer (per-task time tracking) ---------------- */
+function fmtDur(s){
+  s = Math.max(0, Math.round(s));
+  var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h) return h + "h " + m + "m";
+  if(m) return m + "m " + sec + "s";
+  return sec + "s";
+}
+function fmtHMS(s){
+  s = Math.max(0, Math.round(s));
+  var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h ? pad2(h) + ":" : "") + pad2(m) + ":" + pad2(sec);
+}
+function startTimer(id){
+  var q = questById(id);
+  if(!q) return;
+  if(state.activeTimer){
+    if(state.activeTimer.id === id){ stopTimer(false); return; }
+    if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Stop it and start this one?')) return;
+    stopTimer(true);
+  }
+  state.activeTimer = {id:id, name:q.name, startedAt: Date.now()};
+  save();
+  renderTimerPill();
+  if(currentPage === "quests") renderQuests();
+  sysToast("⏱ Timer started: " + q.name);
+}
+function stopTimer(silent){
+  var tm = state.activeTimer;
+  if(!tm) return;
+  var secs = Math.round((Date.now() - tm.startedAt) / 1000);
+  state.activeTimer = null;
+  var q = questById(tm.id);
+  if(secs >= 5){
+    if(q) q.timeSpent = (q.timeSpent || 0) + secs;
+    var t = todayStr();
+    state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
+    if(!silent) toast("Session logged: " + fmtDur(secs) + " — " + tm.name + (q ? " (total " + fmtDur(q.timeSpent) + ")" : ""), "gold", "TIME RECORDED");
+  } else if(!silent){
+    sysToast("Timer stopped — under 5 seconds, nothing recorded.");
+  }
+  save();
+  renderTimerPill();
+  if(currentPage === "quests") renderQuests();
+}
+function renderTimerPill(){
+  var p = document.getElementById("timerPill");
+  if(!state.activeTimer){ p.classList.remove("show"); return; }
+  document.getElementById("timerName").textContent = state.activeTimer.name;
+  updateTimerPillTime();
+  p.classList.add("show");
+}
+function updateTimerPillTime(){
+  if(!state.activeTimer) return;
+  var el = document.getElementById("timerElapsed");
+  if(el) el.textContent = fmtHMS((Date.now() - state.activeTimer.startedAt) / 1000);
+}
+function activeTimeInRange(dates){
+  var sum = 0;
+  for(var i=0;i<dates.length;i++) sum += state.timeHistory[dates[i]] || 0;
+  return sum;
+}
+
 /* ---------------- monthly report cards ---------------- */
 var MONTH_NAMES = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
 function daysInMonth(mk){
@@ -1749,6 +1851,60 @@ function checkMonthlyReport(){
   state.lastMonthlyReport = nowMk;
   save();
 }
+function loseXP(n){
+  n = Math.max(0, Math.round(n));
+  state.totalXp = Math.max(0, state.totalXp - n);
+  state.xp -= n;
+  while(state.xp < 0){
+    if(state.level <= 1){ state.xp = 0; break; }
+    state.level--;
+    state.statPoints = Math.max(0, state.statPoints - 3);
+    state.xp += xpForLevel(state.level);
+  }
+}
+function cycleQuest(id){
+  var q = questById(id);
+  if(!q) return;
+  var t = todayStr();
+  /* empty -> full */
+  if(!completedThisPeriod(q)){ completeQuest(id); return; }
+  /* adjustments only apply to a completion made today */
+  if(q.rankCheck){ toast("Rank trials cannot be adjusted.", "err"); return; }
+  if(q.lastCompleted !== t || !q.undo || q.undo.date !== t){
+    toast("Only today's completion can be adjusted, Hunter.", "err"); return;
+  }
+  var halfRefund = Math.ceil(TIER_XP[q.tier] / 2);
+  if(q.halfOn !== t){
+    /* full -> half: keep the completion + streak, give back half the XP */
+    q.halfOn = t;
+    loseXP(halfRefund);
+    if(state.history[t]) state.history[t].xp = Math.max(0, state.history[t].xp - halfRefund);
+    toast("Marked HALF-complete: " + q.name + " (−" + halfRefund + " XP)", "sys", "HALF CLEAR");
+  } else {
+    /* half -> empty: undo today's completion entirely */
+    var rest = TIER_XP[q.tier] - halfRefund;
+    loseXP(rest);
+    if(state.history[t]){
+      state.history[t].xp = Math.max(0, state.history[t].xp - rest);
+      state.history[t].count = Math.max(0, state.history[t].count - 1);
+    }
+    if(q.completions.length && q.completions[q.completions.length - 1] === t) q.completions.pop();
+    state.totalCompleted = Math.max(0, state.totalCompleted - 1);
+    var u = q.undo;
+    q.streak = u.prevStreak;
+    q.bestStreak = u.prevBest;
+    q.progress = u.prevProgress;
+    q.lastCompleted = u.prevLast;
+    q.lastWeek = u.prevLastWeek;
+    q.done = u.prevDone;
+    if(u.statGiven && q.stat && state.stats[q.stat] !== undefined) state.stats[q.stat] = Math.max(0, state.stats[q.stat] - 1);
+    q.halfOn = "";
+    q.undo = null;
+    toast("Completion cleared: " + q.name, "sys", "RESET");
+  }
+  save();
+  renderAll();
+}
 function checkGoalReopens(){
   /* one-time goals & challenges with a repeat interval reopen automatically */
   var t = todayStr();
@@ -1777,6 +1933,11 @@ function completeQuest(id){
     if(q.endDate && td > q.endDate){ toast("The deadline (" + q.endDate + ") has passed. Edit the quest to extend it.", "err"); return; }
   }
   var t = todayStr();
+  /* snapshot for the tri-state button so today's completion can be downgraded or cleared */
+  q.undo = {date:t, prevStreak:q.streak, prevBest:q.bestStreak, prevProgress:q.progress || 0,
+    prevLast:q.lastCompleted, prevLastWeek:q.lastWeek, prevDone:!!q.done,
+    statGiven:!!(q.stat && state.stats[q.stat] !== undefined)};
+  q.halfOn = "";
   q.completions.push(t);
   state.totalCompleted++;
   updateStreakOnComplete(q); /* must run before lastCompleted is overwritten — streak math reads the previous date */
@@ -2289,6 +2450,7 @@ function questCard(q){
     }
     if(q.repeatDays > 0) h += '<span class="tag tag-freq">🔁 EVERY ' + q.repeatDays + 'D</span>';
   }
+  if(q.timeSpent > 0) h += '<span class="tag tag-freq">⏱ ' + fmtDur(q.timeSpent) + '</span>';
   if((q.freq==="daily"||q.freq==="weekly"||q.freq==="custom"||q.freq==="challenge") && q.streak > 0 && !q.done){
     h += '<span class="streak-pill">🔥 ' + q.streak + (q.freq==="weekly"?" wk":" day") + ' streak</span>';
   }
@@ -2296,9 +2458,17 @@ function questCard(q){
   if(q.freq === "daily" || q.freq === "custom" || (q.freq === "challenge" && !q.done)) h += streakDots(q);
   h += '</div>';
   h += '<div class="q-actions">';
-  var btnTxt = doneNow ? "✓ DONE" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "COMPLETE")));
-  h += '<button class="btn-complete" data-act="complete" data-id="' + q.id + '"' + ((doneNow||offToday||notStarted||expired)?" disabled":"") + '>' + btnTxt + '</button>';
+  var isHalf = doneNow && q.halfOn === tNow && q.lastCompleted === tNow;
+  var cCls = doneNow ? (isHalf ? " half" : " full") : "";
+  var cDisabled = !doneNow && (offToday || notStarted || expired);
+  var cGlyph = doneNow ? (isHalf ? "½" : "✓") : "";
+  var cLbl = doneNow ? (isHalf ? "HALF" : "DONE") : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "TAP")));
+  h += '<div><button class="cbtn' + cCls + '" data-act="cycle" data-id="' + q.id + '"' + (cDisabled ? " disabled" : "")
+    + ' title="Tap: complete → half → clear">' + cGlyph + '</button>'
+    + '<div class="cbtn-lbl">' + cLbl + '</div></div>';
   h += '<div class="mini-row">';
+  var timing = state.activeTimer && state.activeTimer.id === q.id;
+  h += '<button class="mini-btn" data-act="timer" data-id="' + q.id + '" title="' + (timing ? "Stop the timer" : "Start a focus timer for this quest") + '">' + (timing ? "⏹" : "⏱") + '</button>';
   h += '<button class="mini-btn" data-act="edit" data-id="' + q.id + '" title="Edit">✎</button>';
   if(!q.system) h += '<button class="mini-btn" data-act="del" data-id="' + q.id + '" title="Delete">🗑</button>';
   h += '</div></div></div>';
@@ -2327,10 +2497,12 @@ function renderQuests(){
 document.getElementById("questList").addEventListener("click", function(e){
   var b = e.target.closest("button"); if(!b) return;
   var act = b.getAttribute("data-act"), id = b.getAttribute("data-id");
-  if(act === "complete") completeQuest(id);
+  if(act === "cycle") cycleQuest(id);
+  else if(act === "timer") startTimer(id);
   else if(act === "edit") openQuestModal(id);
   else if(act === "del") deleteQuest(id, false);
 });
+document.getElementById("timerStopBtn").addEventListener("click", function(){ stopTimer(false); });
 
 /* ---------------- render: rewards ---------------- */
 function renderRewards(){
@@ -2411,7 +2583,7 @@ document.getElementById("collectionsList").addEventListener("click", function(e)
 
 /* ---------------- render: statistics ---------------- */
 var timeRange = "all";
-var charts = {c1:null, c2:null, c3:null, c4:null, c5:null, c6:null, c7:null};
+var charts = {c1:null, c2:null, c3:null, c4:null, c5:null, c6:null, c7:null, c8:null};
 document.getElementById("timeFilters").addEventListener("click", function(e){
   var b = e.target.closest(".f-chip"); if(!b) return;
   timeRange = b.getAttribute("data-range");
@@ -2583,6 +2755,7 @@ function renderStats(){
     {v:wk[bestDow] ? DAY_NAMES[bestDow] : "—", l:"Strongest Weekday"},
     {v:conquered + " / " + (conquered + challengesActive), l:"Challenges Conquered"},
     {v:state.storage.length, l:"Rolls in Storage"},
+    {v:fmtDur(activeTimeInRange(dates)), l:"Tracked Active Time"},
     {v:bestQ ? bestQ.icon + " " + bestQ.name : "—", l:"Most Consistent Quest"}
   ];
   var ch = "";
@@ -2632,6 +2805,16 @@ function renderStats(){
   }
   charts.c3 = new Chart(document.getElementById("chartStreaks"), {
     type:"line", data:{ labels:labels, datasets:dsets }, options: chartOpts()
+  });
+  /* active minutes per day */
+  if(charts.c8) charts.c8.destroy();
+  var timeData = dates.map(function(d){ return Math.round((state.timeHistory[d] || 0) / 60); });
+  charts.c8 = new Chart(document.getElementById("chartTime"), {
+    type:"line",
+    data:{ labels:labels, datasets:[{ label:"Active minutes", data:timeData,
+      borderColor:"#5eead4", backgroundColor:"rgba(94,234,212,.16)", fill:true, tension:.35,
+      pointRadius:2, pointBackgroundColor:"#5eead4" }] },
+    options: chartOpts()
   });
   /* weekday performance bar */
   if(charts.c4) charts.c4.destroy();
@@ -2983,11 +3166,44 @@ document.getElementById("admRoad").addEventListener("click", function(e){
   state.levelRewards = state.levelRewards.filter(function(r){ return r.id !== rw.id; });
   save(); renderAdmin();
 });
+var SKILL_PRESETS = [
+  "💪 Diamond Push-ups","🤸 Pull-ups ×10","🦾 Muscle-up","🦵 Pistol Squats","🧗 Plank 5 min",
+  "🏃 5K Run","🥶 Cold Shower Master","🕔 5AM Wake-up","🧘 Meditation 10 min",
+  "📚 Speed Reading","🗣 Public Speaking","🇬🇧 English Fluency","⌨️ Touch Typing 80wpm",
+  "🧮 Mental Math","💻 Programming Basics","🎯 Deep Work 2h","✍️ Daily Journaling","📵 Digital Detox Day"
+];
+function updateRoadAddInputs(){
+  var kind = document.getElementById("roadAddKind").value;
+  var sel = document.getElementById("roadAddSkillSel");
+  var inp = document.getElementById("roadAddValue");
+  if(kind === "skill"){
+    if(!sel.options.length){
+      var sh = "";
+      for(var i=0;i<SKILL_PRESETS.length;i++) sh += '<option value="' + SKILL_PRESETS[i] + '">' + SKILL_PRESETS[i] + '</option>';
+      sh += '<option value="__custom">✏️ CUSTOM — type my own</option>';
+      sel.innerHTML = sh;
+    }
+    sel.style.display = "";
+    var isCustom = sel.value === "__custom";
+    inp.style.display = isCustom ? "" : "none";
+    if(isCustom) inp.placeholder = "Type your skill, e.g. Handstand 30s";
+  } else {
+    sel.style.display = "none";
+    inp.style.display = "";
+    inp.placeholder = "Value (SP count / title / prize text)";
+  }
+}
+document.getElementById("roadAddKind").addEventListener("change", updateRoadAddInputs);
+document.getElementById("roadAddSkillSel").addEventListener("change", updateRoadAddInputs);
 document.getElementById("roadAddBtn").addEventListener("click", function(){
   var lv = Math.max(2, Math.min(999, +document.getElementById("roadAddLevel").value || 0));
   if(!+document.getElementById("roadAddLevel").value){ toast("Enter a level number (2+).", "err"); return; }
   var kind = document.getElementById("roadAddKind").value;
   var val = document.getElementById("roadAddValue").value.trim();
+  if(kind === "skill"){
+    var selVal = document.getElementById("roadAddSkillSel").value;
+    if(selVal && selVal !== "__custom") val = selVal;
+  }
   if(kind === "sp" && !val) val = "1";
   if((kind === "title" || kind === "note" || kind === "skill" || kind === "equip") && !val){ toast("Enter the text for this reward (skill / equipment / title / prize).", "err"); return; }
   state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
@@ -3465,6 +3681,7 @@ setInterval(function(){
   checkPackageReset();
   var el = document.getElementById("pkgTimer");
   if(el && currentPage === "home") el.textContent = pkgCountdown();
+  updateTimerPillTime();
 }, 1000);
 
 /* ---------------- hero art (original, evolves with rank) ---------------- */
@@ -3578,7 +3795,8 @@ function renderHome(){
   document.getElementById("homeXpBar").style.width = Math.min(100, (state.xp/need*100)) + "%";
   var chips = '<span class="title-chip">⚔️ ' + state.totalCompleted + ' quests done</span>'
     + '<span class="title-chip">💠 ' + state.totalXp + ' total XP</span>'
-    + '<span class="title-chip">🎟 ' + state.storage.length + ' roll' + (state.storage.length===1?"":"s") + ' stored</span>';
+    + '<span class="title-chip">🎟 ' + state.storage.length + ' roll' + (state.storage.length===1?"":"s") + ' stored</span>'
+    + '<span class="title-chip">⏱ ' + fmtDur(state.timeHistory[todayStr()] || 0) + ' active today</span>';
   if(state.statPoints > 0) chips += '<span class="title-chip" style="color:var(--legendary);border-color:rgba(251,191,36,.5)">✨ ' + state.statPoints + ' stat points</span>';
   document.getElementById("homeChips").innerHTML = chips;
   /* package */
@@ -3710,6 +3928,7 @@ checkMonthlyReport();
 checkStoryUnlocks();
 renderAll();
 switchPage("home");
+renderTimerPill(); /* resume a running session after reload */
 setTimeout(backupReminder, 4000);
 </script>
 </body>
