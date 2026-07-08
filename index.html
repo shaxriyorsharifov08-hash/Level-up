@@ -263,6 +263,9 @@ nav::-webkit-scrollbar{display:none}
 .cbtn.half{background:linear-gradient(90deg,rgba(0,209,255,.85) 50%,rgba(0,209,255,.07) 50%);border-color:var(--blue)}
 .cbtn:disabled{opacity:.3;cursor:default;box-shadow:none}
 .cbtn-lbl{font-size:.58rem;font-weight:800;letter-spacing:.08em;color:var(--dim);text-align:center;margin-top:4px}
+.chk-row{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:.84rem;
+  font-weight:500;color:var(--txt);cursor:pointer;line-height:1.5}
+.chk-row input{margin-top:3px;accent-color:#7c61ff;width:16px;height:16px;flex:0 0 auto}
 /* punishment banners */
 .punish-banner{border:1px solid rgba(239,68,68,.6);background:rgba(239,68,68,.07);border-radius:12px;
   padding:14px;margin-bottom:14px;box-shadow:0 0 18px rgba(239,68,68,.18);animation:syspulse 2.4s infinite}
@@ -682,8 +685,18 @@ nav::-webkit-scrollbar{display:none}
 
       <div class="panel">
         <div class="panel-title">🎒 INVENTORY — SKILLS, EQUIPMENT &amp; FOOD</div>
-        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road (edit awards in ADMIN). Tap an item to USE it — for example, spend it to clear one Daily Quest task.</div>
+        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road, or add anything you won from rolls below. Tap an item to USE it, set its bonus, or remove it. Arm items on quests with the 🎒 button for bonuses like 2× XP.</div>
         <div class="chip-list" id="skillsList"></div>
+        <div class="adm-row" style="margin-top:12px">
+          <select class="sel" id="invAddKind" style="width:110px;flex:0 0 auto">
+            <option value="skill">⚡ SKILL</option>
+            <option value="equip">🗡 EQUIP</option>
+            <option value="food">🍖 FOOD</option>
+          </select>
+          <input class="inp" id="invAddName" style="flex:1;min-width:120px" maxlength="60" placeholder="Item name, e.g. Knight Killer Dagger">
+          <select class="sel" id="invAddBonus" style="width:160px;flex:0 0 auto"></select>
+          <button class="btn primary" id="invAddBtn">ADD</button>
+        </div>
       </div>
 
       <div class="panel">
@@ -835,6 +848,9 @@ nav::-webkit-scrollbar{display:none}
           <li><b>Completion target:</b> every quest has a target (e.g. 7). Each completion counts toward it; reaching it fully completes the quest and earns <b>1 roll</b>. Recurring quests then start a new cycle.</li>
           <li><b>Schedule (goals &amp; challenges):</b> optional start date (locked until then), deadline (countdown, then EXPIRED), and repeat (reopens N days after completion).</li>
           <li><b>Focus timer:</b> press ⏱ on a quest card before working, STOP when done. Time is logged per quest and per day, and appears in STATS.</li>
+          <li><b>⏱ Timer-required quests:</b> tick "Timer required" when creating a quest and it can only be completed after a tracked session that day — no timer, no clear.</li>
+          <li><b>🚧 Priority lock (one-time goals):</b> an EPIC lock seals easy+medium quests, MYTHIC seals every quest in the log, LEGENDARY seals everything including the Daily Quest — until the goal is done.</li>
+          <li><b>🎒 Item boosts:</b> press 🎒 on a quest card to arm a skill or equipment from your inventory; completing the quest consumes it and fires its bonus (2× XP, +1 random roll, or +1 stat point — you set each item's bonus yourself).</li>
         </ul>
       </div>
       <div class="panel guide">
@@ -934,6 +950,7 @@ nav::-webkit-scrollbar{display:none}
           <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
           <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
           <select class="sel" id="roadAddSkillSel" style="display:none;flex:1;min-width:150px"></select>
+          <select class="sel" id="roadAddBonus" style="display:none;width:170px;flex:0 0 auto" title="Bonus this item gives when used on a quest"></select>
           <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / prize text)">
           <button class="btn primary" id="roadAddBtn">ADD</button>
         </div>
@@ -1045,10 +1062,25 @@ nav::-webkit-scrollbar{display:none}
       <label class="form-lbl">🔁 Repeat — reopen this many days after completion (0 = never)</label>
       <input class="inp" id="qmRepeat" type="number" min="0" max="365" value="0">
     </div>
+    <label class="chk-row"><input type="checkbox" id="qmNeedTimer"><span>⏱ <b>Timer required</b> — this quest can only be completed after a tracked focus session today (start ⏱, work, then complete)</span></label>
+    <div id="qmBlockWrap" style="display:none">
+      <label class="chk-row"><input type="checkbox" id="qmBlocking"><span>🚧 <b>Priority lock</b> — seal other quests until this goal is done. EPIC seals easy+medium, MYTHIC seals all quests, LEGENDARY seals everything including the Daily Quest.</span></label>
+    </div>
     <div class="modal-actions">
       <button class="btn" id="qmCancel">CANCEL</button>
       <button class="btn primary" id="qmSave">SAVE QUEST</button>
     </div>
+  </div>
+</div>
+
+<!-- arm item on quest modal -->
+<div class="modal" id="armModal">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-title" id="amTitle">🎒 USE ITEM ON THIS QUEST</div>
+    <div class="empty-note" style="margin-bottom:12px">Pick a skill or equipment — it is consumed when you complete the quest and its bonus fires.</div>
+    <div id="amList"></div>
+    <button class="btn" id="amDisarm" style="width:100%;margin-top:8px;display:none">REMOVE ARMED ITEM</button>
+    <button class="btn" id="amCancel" style="width:100%;margin-top:8px">CANCEL</button>
   </div>
 </div>
 
@@ -1057,6 +1089,8 @@ nav::-webkit-scrollbar{display:none}
   <div class="modal-box" style="max-width:380px">
     <div class="modal-title" id="imTitle">USE ITEM</div>
     <div class="empty-note" id="imDesc" style="margin-bottom:14px"></div>
+    <label class="form-lbl">Bonus when used on a quest (via the 🎒 button)</label>
+    <select class="sel" id="imBonus" style="width:100%;margin-bottom:12px"></select>
     <button class="btn primary" id="imUsePkg" style="width:100%;margin-bottom:8px">📦 USE ON DAILY QUEST — clear one task</button>
     <button class="btn danger" id="imRemove" style="width:100%;margin-bottom:8px">🗑 REMOVE FROM INVENTORY</button>
     <button class="btn" id="imCancel" style="width:100%">CANCEL</button>
@@ -1463,6 +1497,18 @@ function migrateState(){
     if(qq.timeSpent === undefined) qq.timeSpent = 0;
     if(qq.halfOn === undefined) qq.halfOn = "";
     if(qq.lockedUntil === undefined) qq.lockedUntil = "";
+    if(qq.blocking === undefined) qq.blocking = false;
+    if(qq.needTimer === undefined) qq.needTimer = false;
+    if(qq.lastTimedOn === undefined) qq.lastTimedOn = "";
+    if(qq.armed === undefined) qq.armed = null;
+  }
+  /* inventory items gain a bonus field: plain names become {name, bonus} */
+  var invLists = ["skills","equipment","foods"];
+  for(var il=0; il<invLists.length; il++){
+    var arr = state[invLists[il]] || [];
+    for(var ii=0; ii<arr.length; ii++){
+      if(typeof arr[ii] === "string") arr[ii] = {name: arr[ii], bonus: "none"};
+    }
   }
   /* punishment trackers start counting from now (never retro-punish old saves) */
   if(!state.lastDebtCheck) state.lastDebtCheck = todayStr();
@@ -1536,15 +1582,15 @@ function applyLevelReward(rw){
     return "🎟 +1 " + TIER_LABEL[tier] + " roll (sent to STORAGE)";
   }
   if(rw.kind === "skill"){
-    if(rw.value && state.skills.indexOf(rw.value) === -1) state.skills.push(rw.value);
-    return "⚡ Skill acquired: [" + (rw.value || "?") + "]";
+    if(rw.value) state.skills.push({name: rw.value, bonus: rw.bonus || "none"});
+    return "⚡ Skill acquired: [" + (rw.value || "?") + "]" + (rw.bonus && rw.bonus !== "none" ? " (" + BONUS_LABEL[rw.bonus] + ")" : "");
   }
   if(rw.kind === "equip"){
-    if(rw.value && state.equipment.indexOf(rw.value) === -1) state.equipment.push(rw.value);
-    return "🗡 Equipment obtained: [" + (rw.value || "?") + "]";
+    if(rw.value) state.equipment.push({name: rw.value, bonus: rw.bonus || "none"});
+    return "🗡 Equipment obtained: [" + (rw.value || "?") + "]" + (rw.bonus && rw.bonus !== "none" ? " (" + BONUS_LABEL[rw.bonus] + ")" : "");
   }
   if(rw.kind === "food"){
-    if(rw.value) state.foods.push(rw.value);
+    if(rw.value) state.foods.push({name: rw.value, bonus: "none"});
     return "🍖 Food obtained: [" + (rw.value || "?") + "]";
   }
   if(rw.kind === "title"){
@@ -1830,6 +1876,7 @@ function makeQuest(icon, name, desc, freq, days, tier, stat, link, isSystem, tar
     target: Math.max(1, +target || (freq === "longterm" ? 1 : 7)),
     progress:0,
     startDate:"", endDate:"", repeatDays:0,
+    blocking:false, needTimer:false, lastTimedOn:"",
     streak:0, bestStreak:0, lastCompleted:"", lastWeek:"",
     completions:[], done:false, created:todayStr()
   };
@@ -1968,7 +2015,7 @@ function checkPunishments(){
   /* 3) penalty quest: yesterday's daily package was not fully cleared */
   var pd = pkgDayNow(), prev = addDays(pd, -1);
   if(state.lastPenaltyDay && state.lastPenaltyDay !== pd){
-    if(prev >= state.created && state.dailyPackage.items.length && state.dailyPackage.lastFullDay !== prev){
+    if(prev >= state.created && state.dailyPackage.items.length && state.dailyPackage.lastFullDay !== prev && !legendaryBlocker()){
       var tpl = PENALTY_TASKS[Math.floor(Math.random() * PENALTY_TASKS.length)];
       state.penaltyTask = {icon:tpl.icon, name:tpl.name, desc:tpl.desc, day:pd};
       announce("⛓ PENALTY QUEST ⛓",
@@ -2000,6 +2047,17 @@ function punishBannerHtml(){
   if(state.xpDebt > 0){
     h += '<div class="debt-banner"><div class="punish-title" style="color:var(--legendary)">💸 XP DEBT: ' + state.xpDebt + '</div>'
       + '<div class="q-desc">Half of every XP gain is seized until the debt is repaid. Complete quests to work it off.</div></div>';
+  }
+  var bs = activeBlockers();
+  for(var bi=0; bi<bs.length; bi++){
+    var b = bs[bi];
+    var scope = b.tier === "legendary" ? "EVERYTHING is sealed — even the Daily Quest."
+      : (b.tier === "mythic" ? "All quests are sealed. Only the Daily Quest package remains open."
+      : "All EASY and MEDIUM quests are sealed.");
+    h += '<div class="debt-banner" style="border-color:' + TIER_COLOR[b.tier] + '88">'
+      + '<div class="punish-title" style="color:' + TIER_COLOR[b.tier] + '">🚧 PRIORITY LOCK — ' + TIER_LABEL[b.tier] + '</div>'
+      + '<div style="font-weight:700">' + b.icon + ' ' + esc(b.name) + '</div>'
+      + '<div class="q-desc" style="margin-top:4px">' + scope + ' Complete this goal to break the lock.</div></div>';
   }
   return h;
 }
@@ -2045,8 +2103,8 @@ function stopTimer(silent){
   state.activeTimer = null;
   var q = questById(tm.id);
   if(secs >= 5){
-    if(q) q.timeSpent = (q.timeSpent || 0) + secs;
     var t = todayStr();
+    if(q){ q.timeSpent = (q.timeSpent || 0) + secs; q.lastTimedOn = t; }
     state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
     if(!silent) toast("Session logged: " + fmtDur(secs) + " — " + tm.name + (q ? " (total " + fmtDur(q.timeSpent) + ")" : ""), "gold", "TIME RECORDED");
   } else if(!silent){
@@ -2174,6 +2232,50 @@ function showQuote(){
   else announce("💬 SYSTEM WHISPER", qt.text, "💬", "OK", qt.by);
 }
 
+/* ---------------- item bonuses + priority-lock blocking ---------------- */
+var BONUSES = ["none","xp2","roll","sp1"];
+var BONUS_LABEL = {none:"no bonus", xp2:"✨ 2× XP", roll:"🎟 +1 random roll", sp1:"✦ +1 stat point"};
+function invIconOf(kind){ return kind === "skill" ? "⚡" : (kind === "equip" ? "🗡" : "🍖"); }
+function consumeInventoryItem(armed){
+  /* find by name in the armed kind's list, remove and return it */
+  var listName = armed.kind === "skill" ? "skills" : "equipment";
+  var arr = state[listName];
+  for(var i=0;i<arr.length;i++){
+    if(arr[i].name === armed.name){
+      var it = arr.splice(i, 1)[0];
+      return {name:it.name, bonus:it.bonus || "none", icon:invIconOf(armed.kind)};
+    }
+  }
+  return null;
+}
+function activeBlockers(){
+  var t = todayStr();
+  return state.quests.filter(function(b){
+    return b.blocking && b.freq === "longterm" && !b.done
+      && (!b.startDate || t >= b.startDate)
+      && (!b.endDate || t <= b.endDate);
+  });
+}
+function questBlocker(q){
+  /* active priority-lock goals stay completable themselves */
+  if(q.blocking && q.freq === "longterm" && !q.done) return null;
+  var bs = activeBlockers();
+  var pick = null;
+  for(var i=0;i<bs.length;i++){
+    var b = bs[i];
+    if(b.id === q.id) continue;
+    if(b.tier === "legendary") return b;                       /* seals everything */
+    if(b.tier === "mythic"){ pick = b; }                        /* seals all quest-log quests */
+    else if(b.tier === "epic" && !pick && (q.tier === "easy" || q.tier === "medium")) pick = b; /* seals lesser quests */
+  }
+  return pick;
+}
+function legendaryBlocker(){
+  var bs = activeBlockers();
+  for(var i=0;i<bs.length;i++) if(bs[i].tier === "legendary") return bs[i];
+  return null;
+}
+
 /* ---------------- hall of honor ---------------- */
 function makeHonor(q){
   return {
@@ -2287,6 +2389,16 @@ function completeQuest(id){
   if(q.lockedUntil && todayStr() < q.lockedUntil){
     toast("⛔ This quest is SEALED by the System until " + q.lockedUntil + ".", "err"); return;
   }
+  var blk = questBlocker(q);
+  if(blk){
+    toast("🚧 Blocked by priority goal [" + blk.name + "] (" + TIER_LABEL[blk.tier] + "). Complete it first, Hunter.", "err"); return;
+  }
+  if(q.needTimer){
+    if(state.activeTimer && state.activeTimer.id === q.id) stopTimer(false); /* finishing the session completes the ritual */
+    if(q.lastTimedOn !== todayStr()){
+      toast("⏱ This quest demands proof of work: start its timer, do the task, then complete.", "err"); return;
+    }
+  }
   if(q.freq === "longterm" || q.freq === "challenge"){
     var td = todayStr();
     if(q.startDate && td < q.startDate){ toast("This quest unlocks on " + q.startDate + ". The System forbids early attempts.", "err"); return; }
@@ -2294,6 +2406,13 @@ function completeQuest(id){
   }
   var t = todayStr();
   var xpEarn = penaltyActive() ? 0 : TIER_XP[q.tier];
+  /* armed inventory item: consume it and apply its bonus to this completion */
+  var usedItem = null;
+  if(q.armed){
+    usedItem = consumeInventoryItem(q.armed);
+    q.armed = null;
+    if(usedItem && usedItem.bonus === "xp2") xpEarn *= 2;
+  }
   /* snapshot for the tri-state button so today's completion can be downgraded or cleared */
   q.undo = {date:t, prevStreak:q.streak, prevBest:q.bestStreak, prevProgress:q.progress || 0,
     prevLast:q.lastCompleted, prevLastWeek:q.lastWeek, prevDone:!!q.done,
@@ -2310,6 +2429,21 @@ function completeQuest(id){
   if(q.stat && state.stats[q.stat] !== undefined){
     state.stats[q.stat]++;
     sysToast("+1 " + q.stat + " (" + STAT_NAME[q.stat] + ")");
+  }
+  /* item bonus effects */
+  if(usedItem){
+    if(usedItem.bonus === "roll"){
+      var rTier = TIERS[Math.floor(Math.random() * TIERS.length)];
+      state.storage.push(makeRollTicket(rTier, "", "Item bonus"));
+      toast("✨ " + usedItem.icon + " " + usedItem.name + " consumed — +1 " + TIER_LABEL[rTier] + " roll to STORAGE!", "gold", "ITEM BONUS");
+    } else if(usedItem.bonus === "sp1"){
+      state.statPoints++;
+      toast("✨ " + usedItem.icon + " " + usedItem.name + " consumed — +1 stat point!", "gold", "ITEM BONUS");
+    } else if(usedItem.bonus === "xp2"){
+      toast("✨ " + usedItem.icon + " " + usedItem.name + " consumed — XP doubled for this clear!", "gold", "ITEM BONUS");
+    } else {
+      toast("✨ " + usedItem.icon + " " + usedItem.name + " consumed.", "sys", "ITEM USED");
+    }
   }
   /* progress toward full completion; roll is granted only when target is reached */
   var target = q.target || 1;
@@ -2655,19 +2789,19 @@ function renderProfile(){
     }
     ra.innerHTML = rah;
   }
-  /* inventory: skills, equipment & food (earned from level road) */
+  /* inventory: skills, equipment & food (earned from level road or added manually) */
   var sk = document.getElementById("skillsList");
   var skh = "";
-  for(var si=0; si<state.skills.length; si++){
-    skh += '<span class="title-chip skill-chip" data-kind="skill" data-idx="' + si + '" title="Tap to use or remove">⚡ ' + esc(state.skills[si]) + '</span>';
+  var invSets = [{k:"skill", arr:state.skills}, {k:"equip", arr:state.equipment}, {k:"food", arr:state.foods}];
+  for(var vs=0; vs<invSets.length; vs++){
+    for(var vi=0; vi<invSets[vs].arr.length; vi++){
+      var vit = invSets[vs].arr[vi];
+      var bsuf = vit.bonus && vit.bonus !== "none" ? ' <span style="opacity:.75;font-size:.68rem">· ' + BONUS_LABEL[vit.bonus] + '</span>' : '';
+      skh += '<span class="title-chip skill-chip" data-kind="' + invSets[vs].k + '" data-idx="' + vi + '" title="Tap to use, set bonus or remove">'
+        + invIconOf(invSets[vs].k) + ' ' + esc(vit.name) + bsuf + '</span>';
+    }
   }
-  for(var ei=0; ei<state.equipment.length; ei++){
-    skh += '<span class="title-chip skill-chip" data-kind="equip" data-idx="' + ei + '" title="Tap to use or remove">🗡 ' + esc(state.equipment[ei]) + '</span>';
-  }
-  for(var fi=0; fi<state.foods.length; fi++){
-    skh += '<span class="title-chip skill-chip" data-kind="food" data-idx="' + fi + '" title="Tap to use or remove">🍖 ' + esc(state.foods[fi]) + '</span>';
-  }
-  sk.innerHTML = skh || '<span class="empty-note">Nothing earned yet — skills, equipment and food drop from the Level Road as you level up.</span>';
+  sk.innerHTML = skh || '<span class="empty-note">Nothing here yet — skills, equipment and food drop from the Level Road, or add one below.</span>';
   /* titles */
   var tl = document.getElementById("titlesList");
   if(state.titles.length === 0) tl.innerHTML = '<span class="empty-note">No titles yet. Achievements will grant them automatically.</span>';
@@ -2725,14 +2859,48 @@ var INV_ICON = {skill:"⚡", equip:"🗡", food:"🍖"};
 document.getElementById("skillsList").addEventListener("click", function(e){
   var el = e.target.closest(".skill-chip"); if(!el) return;
   var kind = el.getAttribute("data-kind"), idx = +el.getAttribute("data-idx");
-  var name = state[INV_LIST[kind]][idx];
-  if(name === undefined) return;
+  var item = state[INV_LIST[kind]][idx];
+  if(!item) return;
   itemSel = {kind:kind, idx:idx};
-  document.getElementById("imTitle").textContent = INV_ICON[kind] + " " + name;
+  document.getElementById("imTitle").textContent = INV_ICON[kind] + " " + item.name;
   document.getElementById("imDesc").textContent = kind === "food"
     ? "Consume this food to fuel one Daily Quest task — it will be marked complete."
-    : "Spend this " + (kind === "skill" ? "skill" : "equipment") + " to clear one remaining Daily Quest task.";
+    : "Spend it on the Daily Quest below, or arm it on a quest (🎒 on the quest card) to fire its bonus.";
+  var bsel = document.getElementById("imBonus");
+  var bh = "";
+  for(var bb=0;bb<BONUSES.length;bb++) bh += '<option value="' + BONUSES[bb] + '"' + ((item.bonus||"none")===BONUSES[bb]?" selected":"") + '>' + BONUS_LABEL[BONUSES[bb]] + '</option>';
+  bsel.innerHTML = bh;
+  bsel.style.display = kind === "food" ? "none" : "";
+  bsel.previousElementSibling.style.display = kind === "food" ? "none" : "";
   document.getElementById("itemModal").classList.add("show");
+});
+document.getElementById("imBonus").addEventListener("change", function(){
+  if(!itemSel) return;
+  var item = state[INV_LIST[itemSel.kind]][itemSel.idx];
+  if(!item) return;
+  item.bonus = this.value;
+  save(); renderProfile();
+  sysToast("Bonus set: " + item.name + " → " + BONUS_LABEL[item.bonus]);
+});
+/* manual inventory add (e.g. items won from rolls) */
+(function(){
+  var bsel = document.getElementById("invAddBonus");
+  var bh = "";
+  for(var bb=0;bb<BONUSES.length;bb++) bh += '<option value="' + BONUSES[bb] + '">' + BONUS_LABEL[BONUSES[bb]] + '</option>';
+  bsel.innerHTML = bh;
+})();
+document.getElementById("invAddKind").addEventListener("change", function(){
+  document.getElementById("invAddBonus").style.display = this.value === "food" ? "none" : "";
+});
+document.getElementById("invAddBtn").addEventListener("click", function(){
+  var kind = document.getElementById("invAddKind").value;
+  var name = document.getElementById("invAddName").value.trim();
+  if(!name){ toast("Name the item first.", "err"); return; }
+  var bonus = kind === "food" ? "none" : (document.getElementById("invAddBonus").value || "none");
+  state[INV_LIST[kind]].push({name:name, bonus:bonus});
+  document.getElementById("invAddName").value = "";
+  save(); renderProfile();
+  toast(invIconOf(kind) + " " + name + " added to your inventory" + (bonus !== "none" ? " (" + BONUS_LABEL[bonus] + ")" : "") + ".", "sys", "ITEM ADDED");
 });
 document.getElementById("imCancel").addEventListener("click", function(){
   document.getElementById("itemModal").classList.remove("show");
@@ -2742,23 +2910,25 @@ document.getElementById("imUsePkg").addEventListener("click", function(){
   if(!itemSel) return;
   checkPackageReset();
   var list = state[INV_LIST[itemSel.kind]];
-  var name = list[itemSel.idx];
+  var item = list[itemSel.idx];
+  if(!item) return;
   var pk = state.dailyPackage;
   var target = null;
   for(var i=0;i<pk.items.length;i++){ if(!pk.items[i].done){ target = pk.items[i]; break; } }
   if(!target){ toast("Today's Daily Quest is already fully cleared — nothing to use it on.", "err"); return; }
-  if(!confirm("Use " + INV_ICON[itemSel.kind] + " " + name + " to clear \"" + target.name + "\"?\n\nThe item will be consumed.")) return;
+  if(!confirm("Use " + INV_ICON[itemSel.kind] + " " + item.name + " to clear \"" + target.name + "\"?\n\nThe item will be consumed.")) return;
   list.splice(itemSel.idx, 1);
   document.getElementById("itemModal").classList.remove("show");
-  announce("🎒 ITEM USED", INV_ICON[itemSel.kind] + " [" + name + "] has been consumed.\n\nDaily Quest task cleared:\n[" + target.name + "]", "🎒", "NICE");
+  announce("🎒 ITEM USED", INV_ICON[itemSel.kind] + " [" + item.name + "] has been consumed.\n\nDaily Quest task cleared:\n[" + target.name + "]", "🎒", "NICE");
   completePackageItem(target.id);
   itemSel = null;
 });
 document.getElementById("imRemove").addEventListener("click", function(){
   if(!itemSel) return;
   var list = state[INV_LIST[itemSel.kind]];
-  var name = list[itemSel.idx];
-  if(!confirm('Remove "' + name + '" from your inventory?')) return;
+  var item = list[itemSel.idx];
+  if(!item) return;
+  if(!confirm('Remove "' + item.name + '" from your inventory?')) return;
   list.splice(itemSel.idx, 1);
   document.getElementById("itemModal").classList.remove("show");
   itemSel = null;
@@ -2824,6 +2994,8 @@ function questCard(q){
   var notStarted = sched && q.startDate && tNow < q.startDate;
   var expired = sched && q.endDate && !q.done && tNow > q.endDate;
   var sealed = q.lockedUntil && tNow < q.lockedUntil;
+  var blocker = completedThisPeriod(q) ? null : questBlocker(q);
+  var timerReady = !q.needTimer || q.lastTimedOn === tNow || (state.activeTimer && state.activeTimer.id === q.id);
   var col = q.link ? colById(q.link) : null;
   var h = '<div class="quest-card tb-' + q.tier + (doneNow?" done-today":"") + '">';
   h += '<div class="q-ico">' + q.icon + '</div>';
@@ -2849,6 +3021,10 @@ function questCard(q){
     h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
   }
   if(sealed) h += '<span class="tag tag-expired">⛔ SEALED · ' + dayDiff(tNow, q.lockedUntil) + 'd left</span>';
+  if(blocker) h += '<span class="tag tag-expired">🚧 BLOCKED BY ' + esc(blocker.name) + '</span>';
+  if(q.blocking && !q.done) h += '<span class="tag tag-' + q.tier + '">🚧 PRIORITY LOCK</span>';
+  if(q.needTimer) h += '<span class="tag tag-freq">⏱ TIMER QUEST' + (timerReady ? " ✓" : "") + '</span>';
+  if(q.armed) h += '<span class="tag tag-legendary">🎒 ' + esc(q.armed.name) + '</span>';
   if(sched){
     if(notStarted) h += '<span class="tag tag-freq">📅 STARTS ' + q.startDate.slice(5) + '</span>';
     if(q.endDate && !q.done){
@@ -2868,15 +3044,16 @@ function questCard(q){
   h += '<div class="q-actions">';
   var isHalf = doneNow && q.halfOn === tNow && q.lastCompleted === tNow;
   var cCls = doneNow ? (isHalf ? " half" : " full") : "";
-  var cDisabled = !doneNow && (offToday || notStarted || expired || sealed);
-  var cGlyph = doneNow ? (isHalf ? "½" : "✓") : (sealed ? "⛔" : "");
-  var cLbl = doneNow ? (isHalf ? "HALF" : "DONE") : (sealed ? "SEALED" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : "TAP"))));
+  var cDisabled = !doneNow && (offToday || notStarted || expired || sealed || !!blocker || !timerReady);
+  var cGlyph = doneNow ? (isHalf ? "½" : "✓") : (sealed ? "⛔" : (blocker ? "🚧" : (!timerReady ? "⏱" : "")));
+  var cLbl = doneNow ? (isHalf ? "HALF" : "DONE") : (sealed ? "SEALED" : (blocker ? "BLOCKED" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : (!timerReady ? "⏱ TIME IT" : "TAP"))))));
   h += '<div><button class="cbtn' + cCls + '" data-act="cycle" data-id="' + q.id + '"' + (cDisabled ? " disabled" : "")
     + ' title="Tap: complete → half → clear">' + cGlyph + '</button>'
     + '<div class="cbtn-lbl">' + cLbl + '</div></div>';
   h += '<div class="mini-row">';
   var timing = state.activeTimer && state.activeTimer.id === q.id;
   h += '<button class="mini-btn" data-act="timer" data-id="' + q.id + '" title="' + (timing ? "Stop the timer" : "Start a focus timer for this quest") + '">' + (timing ? "⏹" : "⏱") + '</button>';
+  if(!doneNow) h += '<button class="mini-btn" data-act="arm" data-id="' + q.id + '" title="Use a skill or equipment on this quest for a bonus">' + (q.armed ? "✨" : "🎒") + '</button>';
   h += '<button class="mini-btn" data-act="edit" data-id="' + q.id + '" title="Edit">✎</button>';
   if(!q.system) h += '<button class="mini-btn" data-act="del" data-id="' + q.id + '" title="Delete">🗑</button>';
   h += '</div></div></div>';
@@ -2908,9 +3085,48 @@ document.getElementById("questList").addEventListener("click", function(e){
   var act = b.getAttribute("data-act"), id = b.getAttribute("data-id");
   if(act === "cycle") cycleQuest(id);
   else if(act === "timer") startTimer(id);
+  else if(act === "arm") openArmModal(id);
   else if(act === "edit") openQuestModal(id);
   else if(act === "del") deleteQuest(id, false);
 });
+var armQuestId = null;
+function openArmModal(id){
+  var q = questById(id); if(!q) return;
+  armQuestId = id;
+  var h = "";
+  var lists = [{k:"skill", arr:state.skills}, {k:"equip", arr:state.equipment}];
+  for(var l=0;l<lists.length;l++){
+    for(var i=0;i<lists[l].arr.length;i++){
+      var it = lists[l].arr[i];
+      h += '<button class="btn" style="width:100%;margin-bottom:6px;text-align:left" data-amk="' + lists[l].k + '" data-ami="' + i + '">'
+        + invIconOf(lists[l].k) + ' ' + esc(it.name) + ' — <b>' + BONUS_LABEL[it.bonus || "none"] + '</b></button>';
+    }
+  }
+  document.getElementById("amList").innerHTML = h || '<div class="empty-note">Your inventory has no skills or equipment yet — earn them on the Level Road or add them on your PROFILE.</div>';
+  document.getElementById("amDisarm").style.display = q.armed ? "" : "none";
+  document.getElementById("armModal").classList.add("show");
+}
+document.getElementById("amList").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-amk]"); if(!b) return;
+  var q = questById(armQuestId); if(!q) return;
+  var kind = b.getAttribute("data-amk");
+  var arr = kind === "skill" ? state.skills : state.equipment;
+  var it = arr[+b.getAttribute("data-ami")];
+  if(!it) return;
+  q.armed = {kind:kind, name:it.name, bonus:it.bonus || "none"};
+  document.getElementById("armModal").classList.remove("show");
+  save(); renderQuests();
+  sysToast("🎒 " + it.name + " armed on: " + q.name + ". It fires on completion.");
+});
+document.getElementById("amDisarm").addEventListener("click", function(){
+  var q = questById(armQuestId);
+  if(q){ q.armed = null; save(); renderQuests(); }
+  document.getElementById("armModal").classList.remove("show");
+});
+document.getElementById("amCancel").addEventListener("click", function(){
+  document.getElementById("armModal").classList.remove("show");
+});
+document.getElementById("armModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("timerStopBtn").addEventListener("click", function(){ stopTimer(false); });
 
 /* ---------------- render: rewards ---------------- */
@@ -3690,6 +3906,18 @@ function updateRoadAddInputs(){
   var kind = document.getElementById("roadAddKind").value;
   var sel = document.getElementById("roadAddSkillSel");
   var inp = document.getElementById("roadAddValue");
+  var bon = document.getElementById("roadAddBonus");
+  /* bonus applies to usable items: skills and equipment */
+  if(kind === "skill" || kind === "equip"){
+    if(!bon.options.length){
+      var bh = "";
+      for(var bb=0;bb<BONUSES.length;bb++) bh += '<option value="' + BONUSES[bb] + '">BONUS: ' + BONUS_LABEL[BONUSES[bb]] + '</option>';
+      bon.innerHTML = bh;
+    }
+    bon.style.display = "";
+  } else {
+    bon.style.display = "none";
+  }
   var presets = ROAD_PRESET_MAP[kind];
   if(presets){
     if(roadPresetKind !== kind){
@@ -3722,7 +3950,9 @@ document.getElementById("roadAddBtn").addEventListener("click", function(){
   }
   if(kind === "sp" && !val) val = "1";
   if((kind === "title" || kind === "note" || kind === "skill" || kind === "equip" || kind === "food") && !val){ toast("Pick a type from the list or write your own.", "err"); return; }
-  state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
+  var rw = {id: uid(), level: lv, kind: kind, value: val};
+  if(kind === "skill" || kind === "equip") rw.bonus = document.getElementById("roadAddBonus").value || "none";
+  state.levelRewards.push(rw);
   document.getElementById("roadAddLevel").value = "";
   document.getElementById("roadAddValue").value = "";
   save(); renderAdmin();
@@ -3956,6 +4186,7 @@ function updateTargetLabel(freq){
     : "Completions to Fully Complete (earns 1 roll)";
   document.getElementById("qmSchedWrap").style.display =
     (freq === "longterm" || freq === "challenge") ? "" : "none";
+  document.getElementById("qmBlockWrap").style.display = freq === "longterm" ? "" : "none";
 }
 function openQuestModal(id){
   qmEditId = id;
@@ -3986,6 +4217,8 @@ function openQuestModal(id){
   document.getElementById("qmStart").value = q ? (q.startDate || "") : "";
   document.getElementById("qmEnd").value = q ? (q.endDate || "") : "";
   document.getElementById("qmRepeat").value = q ? (q.repeatDays || 0) : 0;
+  document.getElementById("qmNeedTimer").checked = q ? !!q.needTimer : false;
+  document.getElementById("qmBlocking").checked = q ? !!q.blocking : false;
   document.getElementById("questModal").classList.add("show");
 }
 document.getElementById("qmCancel").addEventListener("click", function(){
@@ -4005,6 +4238,11 @@ document.getElementById("qmSave").addEventListener("click", function(){
     repD = Math.max(0, Math.min(365, +document.getElementById("qmRepeat").value || 0));
     if(startD && endD && endD < startD){ toast("End date cannot be before the start date.", "err"); return; }
   }
+  var needTimer = document.getElementById("qmNeedTimer").checked;
+  var blocking = qmSel.freq === "longterm" && document.getElementById("qmBlocking").checked;
+  if(blocking && ["epic","mythic","legendary"].indexOf(qmSel.tier) === -1){
+    toast("A priority lock needs EPIC, MYTHIC or LEGENDARY tier — raise the difficulty.", "err"); return;
+  }
   if(qmEditId){
     var q = questById(qmEditId);
     if(q){
@@ -4013,12 +4251,14 @@ document.getElementById("qmSave").addEventListener("click", function(){
       q.tier = qmSel.tier; q.stat = qmSel.stat; q.link = link;
       q.target = target;
       q.startDate = startD; q.endDate = endD; q.repeatDays = repD;
+      q.needTimer = needTimer; q.blocking = blocking;
       if(q.done && !q.rankCheck && (q.progress || 0) < target) q.done = false; /* raising the target reopens a one-time goal */
       sysToast("Quest updated: " + name);
     }
   } else {
     var nq = makeQuest(qmSel.emoji, name, desc, qmSel.freq, qmSel.days.slice(), qmSel.tier, qmSel.stat, link, false, target);
     nq.startDate = startD; nq.endDate = endD; nq.repeatDays = repD;
+    nq.needTimer = needTimer; nq.blocking = blocking;
     state.quests.push(nq);
     toast("New quest registered: " + name, "sys", "QUEST CREATED");
   }
@@ -4158,6 +4398,10 @@ function checkPackageReset(){
 }
 function completePackageItem(id){
   checkPackageReset();
+  var lb = legendaryBlocker();
+  if(lb){
+    toast("🚧 [" + lb.name + "] is LEGENDARY — everything is sealed until it falls.", "err"); return;
+  }
   var pk = state.dailyPackage;
   var item = null;
   for(var i=0;i<pk.items.length;i++) if(pk.items[i].id === id) item = pk.items[i];
