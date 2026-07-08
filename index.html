@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LEVEL UP — Hunter System</title>
 <meta name="theme-color" content="#7c61ff">
+<meta name="description" content="LEVEL UP — a habit RPG. Turn real-life tasks into quests, earn XP, climb hunter ranks, and collect rewards.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LEVEL UP">
 <meta property="og:title" content="LEVEL UP — Hunter System">
 <meta property="og:description" content="Turn your habits into quests. Level up in real life.">
 <meta property="og:image" content="https://shaxriyorsharifov08-hash.github.io/Level-up/icon-512.png">
@@ -591,7 +595,27 @@ nav::-webkit-scrollbar{display:none}
   .chart-box{height:210px}
   header{padding:11px 13px}
   .logo{font-size:.95rem}
+  /* 16px inputs stop iOS Safari from zooming in on focus */
+  .inp,.sel,.ta{font-size:16px}
 }
+/* ---------- platform polish ---------- */
+:root{color-scheme:dark}
+*{-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:not(:disabled):active{transform:scale(.96)}
+button:focus-visible,.inp:focus-visible,.sel:focus-visible,.ta:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+main section{animation:pagein .28s ease}
+@keyframes pagein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+#timerPill{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+#app{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.mini-btn{width:34px;height:34px}
+/* first-steps onboarding card */
+.fs-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:6px;font-weight:600;font-size:.88rem}
+.fs-row.done{opacity:.55}
+.fs-row .fs-mark{font-size:1rem;flex:0 0 auto}
+.fs-row.done .fs-mark{color:var(--easy)}
 </style>
 </head>
 <body>
@@ -635,6 +659,7 @@ nav::-webkit-scrollbar{display:none}
         </div>
       </div>
 
+      <div id="firstSteps"></div>
       <div id="punishHome"></div>
       <div class="panel">
         <div class="panel-title">DAILY QUEST — SYSTEM MANDATE</div>
@@ -899,6 +924,10 @@ nav::-webkit-scrollbar{display:none}
         </ul>
       </div>
       <div class="panel guide">
+        <div class="panel-title">📱 INSTALL &amp; OFFLINE</div>
+        <p>Add the site to your home screen (browser menu → Add to Home Screen) and it installs like a real app with its own icon. The app works fully <b>offline</b> — everything except cloud sync and charts keeps running with no internet, and your progress syncs when you're back online.</p>
+      </div>
+      <div class="panel guide">
         <div class="panel-title">📇 PROFILE EXTRAS</div>
         <p>The dossier stores your height, weight, age, status, and real-life achievements (IELTS, CEFR, certificates). Skills, equipment and food earned from the Level Road collect in your 🎒 INVENTORY — tap any item to USE it (it clears one remaining Daily Quest task and is consumed) or remove it. Click your hunter name to rename yourself; upload per-rank portraits in ADMIN.</p>
       </div>
@@ -1018,8 +1047,8 @@ nav::-webkit-scrollbar{display:none}
   </main>
 </div>
 
-<button id="fab" title="Add">+</button>
-<div id="timerPill">⏱ <b id="timerElapsed">00:00</b> <span id="timerName"></span> <button id="timerStopBtn">■ STOP</button></div>
+<button id="fab" title="Add" aria-label="Add new">+</button>
+<div id="timerPill">⏱ <b id="timerElapsed">00:00</b> <span id="timerName"></span> <button id="timerStopBtn" aria-label="Stop the timer">■ STOP</button></div>
 <div id="toasts"></div>
 
 <!-- fullscreen announcement -->
@@ -1169,6 +1198,7 @@ nav::-webkit-scrollbar{display:none}
 ===================================================== */
 
 /* ---------------- constants ---------------- */
+var APP_VERSION = "1.0.0";
 var TIERS = ["easy","medium","epic","mythic","legendary"];
 var TIER_LABEL = {easy:"EASY",medium:"MEDIUM",epic:"EPIC",mythic:"MYTHIC",legendary:"LEGENDARY"};
 var TIER_XP = {easy:15,medium:35,epic:75,mythic:140,legendary:250};
@@ -1254,6 +1284,7 @@ function defaultState(){
     xpDebt:0,            /* punishment: half of XP gains seized until repaid */
     penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
     lastPenaltyDay:"", lastDebtCheck:"", lastLockdownFor:"",
+    firstStepsDismissed:false,
     dossier:{height:"",weight:"",age:"",status:""},
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
     honors:[],           /* hall of honor: archived conquered challenges / achieved goals */
@@ -2155,6 +2186,7 @@ function stopTimer(silent){
   save();
   renderTimerPill();
   if(currentPage === "quests") renderQuests();
+  else if(currentPage === "home") renderHome();
 }
 function renderTimerPill(){
   var p = document.getElementById("timerPill");
@@ -3737,7 +3769,8 @@ function renderAdmin(){
     {v:state.titles.length, l:"Titles"},
     {v:state.badges.length, l:"Badges"},
     {v:state.statPoints, l:"Unspent Points"},
-    {v:state.storage.length, l:"Rolls in Storage"}
+    {v:state.storage.length, l:"Rolls in Storage"},
+    {v:"v" + APP_VERSION, l:"App Version"}
   ];
   var ch = "";
   for(var c=0;c<cards.length;c++){
@@ -4726,9 +4759,34 @@ function renderHeroArt(){
   }
 }
 
+function renderFirstSteps(){
+  var el = document.getElementById("firstSteps");
+  if(!el) return;
+  var steps = [
+    {ok: state.quests.some(function(q){ return !q.system; }), t:"Create your first quest (＋ button on the QUESTS page)"},
+    {ok: state.totalCompleted >= 1, t:"Complete a task — tap the round button on a quest"},
+    {ok: state.collections.length >= 1, t:"Create a reward crate on the REWARDS page"},
+    {ok: state.level >= 2, t:"Reach Level 2 and claim your first road award"}
+  ];
+  var allDone = steps.every(function(s){ return s.ok; });
+  if(state.firstStepsDismissed || allDone){ el.innerHTML = ""; return; }
+  var doneN = steps.filter(function(s){ return s.ok; }).length;
+  var h = '<div class="panel"><div class="panel-title">🧭 FIRST STEPS — ' + doneN + '/' + steps.length + '</div>';
+  for(var i=0;i<steps.length;i++){
+    h += '<div class="fs-row' + (steps[i].ok ? " done" : "") + '"><span class="fs-mark">' + (steps[i].ok ? "✓" : "○") + '</span><span>' + steps[i].t + '</span></div>';
+  }
+  h += '<button class="btn" id="fsDismiss" style="margin-top:8px">HIDE THIS</button></div>';
+  el.innerHTML = h;
+  document.getElementById("fsDismiss").onclick = function(){
+    state.firstStepsDismissed = true;
+    save(); renderHome();
+  };
+}
+
 /* ---------------- render: home dashboard ---------------- */
 function renderHome(){
   renderHeroArt();
+  renderFirstSteps();
   renderPunishBanners();
   var r = rankForLevel(state.level);
   document.getElementById("homeName").textContent = state.hunterName;
@@ -4879,6 +4937,10 @@ renderAll();
 switchPage("home");
 renderTimerPill(); /* resume a running session after reload */
 setTimeout(backupReminder, 4000);
+/* offline support + installable app */
+if("serviceWorker" in navigator){
+  try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){}
+}
 </script>
 </body>
 </html>
