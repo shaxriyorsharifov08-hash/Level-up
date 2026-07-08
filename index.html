@@ -681,8 +681,8 @@ nav::-webkit-scrollbar{display:none}
       </div>
 
       <div class="panel">
-        <div class="panel-title">⚡ SKILLS &amp; 🗡 EQUIPMENT</div>
-        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road (edit road rewards in ADMIN). Click one to remove it.</div>
+        <div class="panel-title">🎒 INVENTORY — SKILLS, EQUIPMENT &amp; FOOD</div>
+        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road (edit awards in ADMIN). Tap an item to USE it — for example, spend it to clear one Daily Quest task.</div>
         <div class="chip-list" id="skillsList"></div>
       </div>
 
@@ -855,7 +855,7 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="panel guide">
         <div class="panel-title">🗺 STORY — LEVEL ROAD</div>
-        <p>The winding road on the STORY page shows every level ahead, passing landmark stops like the Pyramids and the Colosseum. Each node carries awards granted automatically on level-up: rolls, stat points, skills, equipment, titles, or a prize you write yourself. Edit everything in ADMIN → STORY ROAD AWARDS. Story chapters unlock as your total completions grow.</p>
+        <p>The winding road on the STORY page shows every level ahead, passing landmark stops like the Pyramids and the Colosseum. Each node carries awards granted automatically on level-up: rolls, stat points, skills, equipment, food, titles, or a prize you pick from the list (or write yourself). Edit everything in ADMIN → STORY ROAD AWARDS. Story chapters unlock as your total completions grow.</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">🏆 HALL OF HONOR</div>
@@ -879,7 +879,7 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="panel guide">
         <div class="panel-title">📇 PROFILE EXTRAS</div>
-        <p>The dossier stores your height, weight, age, status, and real-life achievements (IELTS, CEFR, certificates). Skills and equipment earned from the Level Road collect there too. Click your hunter name to rename yourself; upload per-rank portraits in ADMIN.</p>
+        <p>The dossier stores your height, weight, age, status, and real-life achievements (IELTS, CEFR, certificates). Skills, equipment and food earned from the Level Road collect in your 🎒 INVENTORY — tap any item to USE it (it clears one remaining Daily Quest task and is consumed) or remove it. Click your hunter name to rename yourself; upload per-rank portraits in ADMIN.</p>
       </div>
     </section>
 
@@ -1052,6 +1052,17 @@ nav::-webkit-scrollbar{display:none}
   </div>
 </div>
 
+<!-- inventory item modal -->
+<div class="modal" id="itemModal">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-title" id="imTitle">USE ITEM</div>
+    <div class="empty-note" id="imDesc" style="margin-bottom:14px"></div>
+    <button class="btn primary" id="imUsePkg" style="width:100%;margin-bottom:8px">📦 USE ON DAILY QUEST — clear one task</button>
+    <button class="btn danger" id="imRemove" style="width:100%;margin-bottom:8px">🗑 REMOVE FROM INVENTORY</button>
+    <button class="btn" id="imCancel" style="width:100%">CANCEL</button>
+  </div>
+</div>
+
 <!-- collection modal -->
 <div class="modal" id="colModal">
   <div class="modal-box">
@@ -1174,6 +1185,7 @@ function defaultState(){
     customQuotes:[],     /* user-added quotes shown after completions */
     skills:[],           /* earned from the level road */
     equipment:[],
+    foods:[],
     titles:[], badges:[],
     totalCompleted:0,
     history:{},          /* date -> {xp:n, count:n} */
@@ -1494,17 +1506,18 @@ function migrateState(){
   }
   if(!state.claimedLevels) state.claimedLevels = [];
 }
-var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","title","note"];
+var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","food","title","note"];
 var ROAD_KIND_LABEL = {
   "roll-easy":"🎟 EASY ROLL","roll-medium":"🎟 MEDIUM ROLL","roll-epic":"🎟 EPIC ROLL",
   "roll-mythic":"🎟 MYTHIC ROLL","roll-legendary":"🎟 LEGENDARY ROLL",
-  "sp":"✦ STAT POINTS","skill":"⚡ SKILL","equip":"🗡 EQUIPMENT","title":"👑 TITLE","note":"🎁 MY PRIZE (write anything)"
+  "sp":"✦ STAT POINTS","skill":"⚡ SKILL","equip":"🗡 EQUIPMENT","food":"🍖 FOOD","title":"👑 TITLE","note":"🎁 MY PRIZE"
 };
 function roadRewardLabel(rw){
   if(rw.kind === "sp") return "✦ +" + (+rw.value || 1) + " SP";
   if(rw.kind.indexOf("roll-") === 0) return "🎟 " + TIER_LABEL[rw.kind.slice(5)];
   if(rw.kind === "skill") return "⚡ " + (rw.value || "Skill");
   if(rw.kind === "equip") return "🗡 " + (rw.value || "Equipment");
+  if(rw.kind === "food") return "🍖 " + (rw.value || "Food");
   if(rw.kind === "title") return "👑 " + (rw.value || "Title");
   return "🎁 " + (rw.value || "Reward");
 }
@@ -1529,6 +1542,10 @@ function applyLevelReward(rw){
   if(rw.kind === "equip"){
     if(rw.value && state.equipment.indexOf(rw.value) === -1) state.equipment.push(rw.value);
     return "🗡 Equipment obtained: [" + (rw.value || "?") + "]";
+  }
+  if(rw.kind === "food"){
+    if(rw.value) state.foods.push(rw.value);
+    return "🍖 Food obtained: [" + (rw.value || "?") + "]";
   }
   if(rw.kind === "title"){
     if(rw.value) addTitle(rw.value);
@@ -2638,16 +2655,19 @@ function renderProfile(){
     }
     ra.innerHTML = rah;
   }
-  /* skills & equipment (earned from level road) */
+  /* inventory: skills, equipment & food (earned from level road) */
   var sk = document.getElementById("skillsList");
   var skh = "";
   for(var si=0; si<state.skills.length; si++){
-    skh += '<span class="title-chip skill-chip" data-skill="' + si + '" title="Click to remove">⚡ ' + esc(state.skills[si]) + '</span>';
+    skh += '<span class="title-chip skill-chip" data-kind="skill" data-idx="' + si + '" title="Tap to use or remove">⚡ ' + esc(state.skills[si]) + '</span>';
   }
   for(var ei=0; ei<state.equipment.length; ei++){
-    skh += '<span class="title-chip skill-chip" data-equip="' + ei + '" title="Click to remove">🗡 ' + esc(state.equipment[ei]) + '</span>';
+    skh += '<span class="title-chip skill-chip" data-kind="equip" data-idx="' + ei + '" title="Tap to use or remove">🗡 ' + esc(state.equipment[ei]) + '</span>';
   }
-  sk.innerHTML = skh || '<span class="empty-note">Nothing earned yet — skills and equipment drop from the Level Road as you level up.</span>';
+  for(var fi=0; fi<state.foods.length; fi++){
+    skh += '<span class="title-chip skill-chip" data-kind="food" data-idx="' + fi + '" title="Tap to use or remove">🍖 ' + esc(state.foods[fi]) + '</span>';
+  }
+  sk.innerHTML = skh || '<span class="empty-note">Nothing earned yet — skills, equipment and food drop from the Level Road as you level up.</span>';
   /* titles */
   var tl = document.getElementById("titlesList");
   if(state.titles.length === 0) tl.innerHTML = '<span class="empty-note">No titles yet. Achievements will grant them automatically.</span>';
@@ -2699,16 +2719,49 @@ document.getElementById("raList").addEventListener("click", function(e){
   state.realAchievements = state.realAchievements.filter(function(r){ return r.id !== id; });
   save(); renderProfile();
 });
+var itemSel = null; /* {kind, idx} for the item modal */
+var INV_LIST = {skill:"skills", equip:"equipment", food:"foods"};
+var INV_ICON = {skill:"⚡", equip:"🗡", food:"🍖"};
 document.getElementById("skillsList").addEventListener("click", function(e){
   var el = e.target.closest(".skill-chip"); if(!el) return;
-  var si = el.getAttribute("data-skill"), ei = el.getAttribute("data-equip");
-  if(si !== null){
-    if(!confirm('Remove skill "' + state.skills[+si] + '"?')) return;
-    state.skills.splice(+si, 1);
-  } else if(ei !== null){
-    if(!confirm('Remove equipment "' + state.equipment[+ei] + '"?')) return;
-    state.equipment.splice(+ei, 1);
-  }
+  var kind = el.getAttribute("data-kind"), idx = +el.getAttribute("data-idx");
+  var name = state[INV_LIST[kind]][idx];
+  if(name === undefined) return;
+  itemSel = {kind:kind, idx:idx};
+  document.getElementById("imTitle").textContent = INV_ICON[kind] + " " + name;
+  document.getElementById("imDesc").textContent = kind === "food"
+    ? "Consume this food to fuel one Daily Quest task — it will be marked complete."
+    : "Spend this " + (kind === "skill" ? "skill" : "equipment") + " to clear one remaining Daily Quest task.";
+  document.getElementById("itemModal").classList.add("show");
+});
+document.getElementById("imCancel").addEventListener("click", function(){
+  document.getElementById("itemModal").classList.remove("show");
+});
+document.getElementById("itemModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
+document.getElementById("imUsePkg").addEventListener("click", function(){
+  if(!itemSel) return;
+  checkPackageReset();
+  var list = state[INV_LIST[itemSel.kind]];
+  var name = list[itemSel.idx];
+  var pk = state.dailyPackage;
+  var target = null;
+  for(var i=0;i<pk.items.length;i++){ if(!pk.items[i].done){ target = pk.items[i]; break; } }
+  if(!target){ toast("Today's Daily Quest is already fully cleared — nothing to use it on.", "err"); return; }
+  if(!confirm("Use " + INV_ICON[itemSel.kind] + " " + name + " to clear \"" + target.name + "\"?\n\nThe item will be consumed.")) return;
+  list.splice(itemSel.idx, 1);
+  document.getElementById("itemModal").classList.remove("show");
+  announce("🎒 ITEM USED", INV_ICON[itemSel.kind] + " [" + name + "] has been consumed.\n\nDaily Quest task cleared:\n[" + target.name + "]", "🎒", "NICE");
+  completePackageItem(target.id);
+  itemSel = null;
+});
+document.getElementById("imRemove").addEventListener("click", function(){
+  if(!itemSel) return;
+  var list = state[INV_LIST[itemSel.kind]];
+  var name = list[itemSel.idx];
+  if(!confirm('Remove "' + name + '" from your inventory?')) return;
+  list.splice(itemSel.idx, 1);
+  document.getElementById("itemModal").classList.remove("show");
+  itemSel = null;
   save(); renderProfile();
 });
 /* editable hunter name */
@@ -3617,25 +3670,43 @@ var SKILL_PRESETS = [
   "📚 Speed Reading","🗣 Public Speaking","🇬🇧 English Fluency","⌨️ Touch Typing 80wpm",
   "🧮 Mental Math","💻 Programming Basics","🎯 Deep Work 2h","✍️ Daily Journaling","📵 Digital Detox Day"
 ];
+var EQUIP_PRESETS = [
+  "🗡 Knight Killer Dagger","🛡 Iron Will Shield","🥋 Gi of Discipline","👟 Runner's Boots",
+  "⌚ Focus Watch","📓 Strategist's Journal","🎧 Deep-Work Headset","💍 Ring of Habit",
+  "🧤 Grip Gloves","🏹 Hunter's Bow","🪄 Wand of Momentum","👑 Crown of Consistency"
+];
+var FOOD_PRESETS = [
+  "🍖 Hunter's Feast","🍎 Energy Apple","🍫 Victory Chocolate","🍜 Ramen of Recovery",
+  "🥤 Mana Potion","☕ Focus Coffee","🍕 Cheat-Day Pizza","🍦 Ice Cream Reward",
+  "🍿 Cinema Snack Pack","🧃 Stamina Juice"
+];
+var PRIZE_PRESETS = [
+  "🎬 Movie Night","🎮 1 Hour of Gaming","🍽 Favorite Meal Out","🛍 Buy Something Nice",
+  "😴 Guilt-Free Sleep-In","📵 Chill Day Off","🎢 Fun Day Trip","🎁 Small Gift to Myself"
+];
+var ROAD_PRESET_MAP = {skill:SKILL_PRESETS, equip:EQUIP_PRESETS, food:FOOD_PRESETS, note:PRIZE_PRESETS};
+var roadPresetKind = ""; /* which kind the select is currently populated for */
 function updateRoadAddInputs(){
   var kind = document.getElementById("roadAddKind").value;
   var sel = document.getElementById("roadAddSkillSel");
   var inp = document.getElementById("roadAddValue");
-  if(kind === "skill"){
-    if(!sel.options.length){
+  var presets = ROAD_PRESET_MAP[kind];
+  if(presets){
+    if(roadPresetKind !== kind){
+      roadPresetKind = kind;
       var sh = "";
-      for(var i=0;i<SKILL_PRESETS.length;i++) sh += '<option value="' + SKILL_PRESETS[i] + '">' + SKILL_PRESETS[i] + '</option>';
+      for(var i=0;i<presets.length;i++) sh += '<option value="' + presets[i] + '">' + presets[i] + '</option>';
       sh += '<option value="__custom">✏️ CUSTOM — type my own</option>';
       sel.innerHTML = sh;
     }
     sel.style.display = "";
     var isCustom = sel.value === "__custom";
     inp.style.display = isCustom ? "" : "none";
-    if(isCustom) inp.placeholder = "Type your skill, e.g. Handstand 30s";
+    if(isCustom) inp.placeholder = "Type your own " + (kind === "note" ? "prize" : ROAD_KIND_LABEL[kind].replace(/^\S+\s/, "").toLowerCase());
   } else {
     sel.style.display = "none";
     inp.style.display = "";
-    inp.placeholder = "Value (SP count / title / prize text)";
+    inp.placeholder = kind === "sp" ? "How many stat points, e.g. 2" : (kind === "title" ? "Title text, e.g. Iron Hunter" : "Value");
   }
 }
 document.getElementById("roadAddKind").addEventListener("change", updateRoadAddInputs);
@@ -3645,12 +3716,12 @@ document.getElementById("roadAddBtn").addEventListener("click", function(){
   if(!+document.getElementById("roadAddLevel").value){ toast("Enter a level number (2+).", "err"); return; }
   var kind = document.getElementById("roadAddKind").value;
   var val = document.getElementById("roadAddValue").value.trim();
-  if(kind === "skill"){
+  if(ROAD_PRESET_MAP[kind]){
     var selVal = document.getElementById("roadAddSkillSel").value;
     if(selVal && selVal !== "__custom") val = selVal;
   }
   if(kind === "sp" && !val) val = "1";
-  if((kind === "title" || kind === "note" || kind === "skill" || kind === "equip") && !val){ toast("Enter the text for this reward (skill / equipment / title / prize).", "err"); return; }
+  if((kind === "title" || kind === "note" || kind === "skill" || kind === "equip" || kind === "food") && !val){ toast("Pick a type from the list or write your own.", "err"); return; }
   state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
   document.getElementById("roadAddLevel").value = "";
   document.getElementById("roadAddValue").value = "";
