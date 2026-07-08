@@ -266,6 +266,21 @@ nav::-webkit-scrollbar{display:none}
 .chk-row{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:.84rem;
   font-weight:500;color:var(--txt);cursor:pointer;line-height:1.5}
 .chk-row input{margin-top:3px;accent-color:#7c61ff;width:16px;height:16px;flex:0 0 auto}
+/* calendar picker */
+.cal-input{cursor:pointer}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.cal-month{font-family:'Orbitron',monospace;font-weight:800;font-size:.85rem;letter-spacing:.1em;color:#fff}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;text-align:center}
+.cal-week span{font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--dim)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day{aspect-ratio:1;border-radius:10px;border:1px solid transparent;background:rgba(124,97,255,.07);
+  color:var(--txt);font-weight:700;font-size:.86rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-day:hover{border-color:var(--blue);background:rgba(0,209,255,.12)}
+.cal-day.other{opacity:.25}
+.cal-day.today{border-color:var(--legendary);color:var(--legendary)}
+.cal-day.selected{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;
+  box-shadow:0 0 14px rgba(124,97,255,.6);border-color:var(--violet)}
+.cal-day.past{opacity:.35}
 /* punishment banners */
 .punish-banner{border:1px solid rgba(239,68,68,.6);background:rgba(239,68,68,.07);border-radius:12px;
   padding:14px;margin-bottom:14px;box-shadow:0 0 18px rgba(239,68,68,.18);animation:syspulse 2.4s infinite}
@@ -685,18 +700,8 @@ nav::-webkit-scrollbar{display:none}
 
       <div class="panel">
         <div class="panel-title">🎒 INVENTORY — SKILLS, EQUIPMENT &amp; FOOD</div>
-        <div class="empty-note" style="margin-bottom:8px">Earned from the Level Road, or add anything you won from rolls below. Tap an item to USE it, set its bonus, or remove it. Arm items on quests with the 🎒 button for bonuses like 2× XP.</div>
+        <div class="empty-note" style="margin-bottom:8px">Collected automatically from the Level Road and from crate rolls (skill/equip prizes). Tap an item to USE it or remove it; arm items on quests with the 🎒 button for bonuses. Manage items and bonuses in ADMIN → MANAGE INVENTORY.</div>
         <div class="chip-list" id="skillsList"></div>
-        <div class="adm-row" style="margin-top:12px">
-          <select class="sel" id="invAddKind" style="width:110px;flex:0 0 auto">
-            <option value="skill">⚡ SKILL</option>
-            <option value="equip">🗡 EQUIP</option>
-            <option value="food">🍖 FOOD</option>
-          </select>
-          <input class="inp" id="invAddName" style="flex:1;min-width:120px" maxlength="60" placeholder="Item name, e.g. Knight Killer Dagger">
-          <select class="sel" id="invAddBonus" style="width:160px;flex:0 0 auto"></select>
-          <button class="btn primary" id="invAddBtn">ADD</button>
-        </div>
       </div>
 
       <div class="panel">
@@ -956,6 +961,21 @@ nav::-webkit-scrollbar{display:none}
         </div>
       </div>
       <div class="panel">
+        <div class="panel-title">🎒 MANAGE INVENTORY</div>
+        <div class="empty-note" style="margin-bottom:10px">Skills, equipment and food land here automatically from Level Road awards and crate rolls. Set each item's bonus (fires when armed on a quest via 🎒), add new items, or remove them.</div>
+        <div id="admInv"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <select class="sel" id="invAddKind" style="width:110px;flex:0 0 auto">
+            <option value="skill">⚡ SKILL</option>
+            <option value="equip">🗡 EQUIP</option>
+            <option value="food">🍖 FOOD</option>
+          </select>
+          <input class="inp" id="invAddName" style="flex:1;min-width:120px" maxlength="60" placeholder="Item name, e.g. Knight Killer Dagger">
+          <select class="sel" id="invAddBonus" style="width:160px;flex:0 0 auto"></select>
+          <button class="btn primary" id="invAddBtn">ADD</button>
+        </div>
+      </div>
+      <div class="panel">
         <div class="panel-title">💬 QUOTES</div>
         <div class="empty-note" style="margin-bottom:10px">A random quote appears after every completed task. The System ships with <b id="quoteBuiltinCount"></b> built-in lines; add your own below — they join the pool.</div>
         <div id="admQuotes"></div>
@@ -1051,14 +1071,16 @@ nav::-webkit-scrollbar{display:none}
     <div class="seg" id="qmStat"></div>
     <label class="form-lbl">Link to Reward Collection</label>
     <select class="sel" id="qmLink"></select>
+    <label class="form-lbl">🎒 Attach Skill / Equipment (consumed on completion, fires its bonus)</label>
+    <select class="sel" id="qmArm"></select>
     <label class="form-lbl" id="qmTargetLbl">Completions to Fully Complete (earns 1 roll)</label>
     <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
     <div id="qmSchedWrap" style="display:none">
       <div class="panel-title" style="margin-top:14px;font-size:.72rem">📅 SCHEDULE (CALENDAR)</div>
       <label class="form-lbl">📅 Start Date (optional — locked until then)</label>
-      <input class="inp" id="qmStart" type="date">
+      <input class="inp cal-input" id="qmStart" type="text" readonly placeholder="Tap to pick a date 📅">
       <label class="form-lbl">⏳ End Date / Deadline (optional)</label>
-      <input class="inp" id="qmEnd" type="date">
+      <input class="inp cal-input" id="qmEnd" type="text" readonly placeholder="Tap to pick a date 📅">
       <label class="form-lbl">🔁 Repeat — reopen this many days after completion (0 = never)</label>
       <input class="inp" id="qmRepeat" type="number" min="0" max="365" value="0">
     </div>
@@ -1069,6 +1091,26 @@ nav::-webkit-scrollbar{display:none}
     <div class="modal-actions">
       <button class="btn" id="qmCancel">CANCEL</button>
       <button class="btn primary" id="qmSave">SAVE QUEST</button>
+    </div>
+  </div>
+</div>
+
+<!-- calendar picker modal -->
+<div class="modal" id="calModal">
+  <div class="modal-box" style="max-width:340px">
+    <div class="cal-head">
+      <button type="button" class="mini-btn" id="calPrev">◀</button>
+      <div class="cal-month" id="calMonth"></div>
+      <button type="button" class="mini-btn" id="calNext">▶</button>
+    </div>
+    <div class="cal-week">
+      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="adm-row" style="margin-top:12px">
+      <button type="button" class="btn" id="calClear" style="flex:1">CLEAR</button>
+      <button type="button" class="btn" id="calToday" style="flex:1">TODAY</button>
+      <button type="button" class="btn" id="calCancel" style="flex:1">CANCEL</button>
     </div>
   </div>
 </div>
@@ -2659,7 +2701,15 @@ function runGacha(tier, col, guaranteed){
     core.style.transform = "scale(1.25)";
     core.style.textShadow = "0 0 40px " + color;
     status.textContent = "PRIZE WON";
-    result.textContent = prize.emoji + " " + prize.name + "  (" + colOwned(col) + "/" + colTotal(col) + " — " + col.name + ")";
+    var invNote = "";
+    /* skill / equipment prizes are collected into the inventory automatically */
+    if(prize.itype === "skill" || prize.itype === "equip"){
+      var listName = prize.itype === "skill" ? "skills" : "equipment";
+      state[listName].push({name: prize.name, bonus: "none"});
+      invNote = "  →  " + invIconOf(prize.itype) + " added to your INVENTORY";
+      sysToast(invIconOf(prize.itype) + " " + prize.name + " stored in your inventory. Set its bonus in ADMIN.");
+    }
+    result.textContent = prize.emoji + " " + prize.name + "  (" + colOwned(col) + "/" + colTotal(col) + " — " + col.name + ")" + invNote;
     spawnSparks(color);
     spawnConfetti(color);
     okBtn.style.display = "inline-block";
@@ -2899,7 +2949,7 @@ document.getElementById("invAddBtn").addEventListener("click", function(){
   var bonus = kind === "food" ? "none" : (document.getElementById("invAddBonus").value || "none");
   state[INV_LIST[kind]].push({name:name, bonus:bonus});
   document.getElementById("invAddName").value = "";
-  save(); renderProfile();
+  save(); renderAdmin();
   toast(invIconOf(kind) + " " + name + " added to your inventory" + (bonus !== "none" ? " (" + BONUS_LABEL[bonus] + ")" : "") + ".", "sys", "ITEM ADDED");
 });
 document.getElementById("imCancel").addEventListener("click", function(){
@@ -3777,6 +3827,22 @@ function renderAdmin(){
       + '<button class="mini-btn" data-rddel="' + rw.id + '" title="Remove">🗑</button></div>';
   }
   document.getElementById("admRoad").innerHTML = rh || '<span class="empty-note">The road is empty. Add level rewards below.</span>';
+  /* inventory manager — inline bonus editing */
+  var invRows = "";
+  var invSets2 = [{k:"skill", arr:state.skills}, {k:"equip", arr:state.equipment}, {k:"food", arr:state.foods}];
+  for(var iv=0; iv<invSets2.length; iv++){
+    for(var ij=0; ij<invSets2[iv].arr.length; ij++){
+      var invIt = invSets2[iv].arr[ij];
+      var bopts = "";
+      for(var ib=0; ib<BONUSES.length; ib++){
+        bopts += '<option value="' + BONUSES[ib] + '"' + ((invIt.bonus||"none")===BONUSES[ib]?" selected":"") + '>' + BONUS_LABEL[BONUSES[ib]] + '</option>';
+      }
+      invRows += '<div class="adm-list-item"><span class="ali-name">' + invIconOf(invSets2[iv].k) + ' ' + esc(invIt.name) + '</span>'
+        + (invSets2[iv].k !== "food" ? '<select class="sel inv-e-bonus" data-ik="' + invSets2[iv].k + '" data-ii="' + ij + '" style="width:150px;flex:0 0 auto">' + bopts + '</select>' : '')
+        + '<button class="mini-btn" data-invdel-k="' + invSets2[iv].k + '" data-invdel-i="' + ij + '" title="Remove">🗑</button></div>';
+    }
+  }
+  document.getElementById("admInv").innerHTML = invRows || '<span class="empty-note">Inventory is empty — items arrive from the Level Road, crate rolls, or the form below.</span>';
   /* custom quotes manager */
   document.getElementById("quoteBuiltinCount").textContent = QUOTES.length;
   var qh2 = "";
@@ -3789,6 +3855,24 @@ function renderAdmin(){
   renderSnapshots();
   renderCloudStatus();
 }
+document.getElementById("admInv").addEventListener("change", function(e){
+  if(!e.target.classList.contains("inv-e-bonus")) return;
+  var arr = state[INV_LIST[e.target.getAttribute("data-ik")]];
+  var it = arr[+e.target.getAttribute("data-ii")];
+  if(!it) return;
+  it.bonus = e.target.value;
+  save();
+  sysToast("Bonus set: " + it.name + " → " + BONUS_LABEL[it.bonus]);
+});
+document.getElementById("admInv").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-invdel-k]"); if(!b) return;
+  var arr = state[INV_LIST[b.getAttribute("data-invdel-k")]];
+  var idx = +b.getAttribute("data-invdel-i");
+  if(!arr[idx]) return;
+  if(!confirm('Remove "' + arr[idx].name + '" from the inventory?')) return;
+  arr.splice(idx, 1);
+  save(); renderAdmin();
+});
 document.getElementById("admQuotes").addEventListener("click", function(e){
   var b = e.target.closest("button[data-qdel]"); if(!b) return;
   var i = +b.getAttribute("data-qdel");
@@ -4180,6 +4264,83 @@ function fillLinkOptions(selected){
   }
   sel.innerHTML = h;
 }
+/* ---------------- calendar picker ---------------- */
+var calTarget = null;   /* input element being edited */
+var calYear = 0, calMonthIdx = 0;
+function openCalendar(inputEl){
+  calTarget = inputEl;
+  var v = inputEl.value;
+  var base = v ? new Date(+v.slice(0,4), +v.slice(5,7)-1, +v.slice(8,10)) : new Date();
+  calYear = base.getFullYear();
+  calMonthIdx = base.getMonth();
+  renderCalendar();
+  document.getElementById("calModal").classList.add("show");
+}
+function renderCalendar(){
+  document.getElementById("calMonth").textContent = MONTH_NAMES[calMonthIdx] + " " + calYear;
+  var first = new Date(calYear, calMonthIdx, 1);
+  var startDow = first.getDay();
+  var daysIn = new Date(calYear, calMonthIdx + 1, 0).getDate();
+  var prevDays = new Date(calYear, calMonthIdx, 0).getDate();
+  var t = todayStr();
+  var selVal = calTarget ? calTarget.value : "";
+  var h = "";
+  /* leading days from the previous month (dimmed, still tappable) */
+  for(var p = startDow - 1; p >= 0; p--){
+    var pm = calMonthIdx === 0 ? 11 : calMonthIdx - 1;
+    var py = calMonthIdx === 0 ? calYear - 1 : calYear;
+    var pds = py + "-" + pad2(pm + 1) + "-" + pad2(prevDays - p);
+    h += '<button type="button" class="cal-day other" data-d="' + pds + '">' + (prevDays - p) + '</button>';
+  }
+  for(var d = 1; d <= daysIn; d++){
+    var ds = calYear + "-" + pad2(calMonthIdx + 1) + "-" + pad2(d);
+    var cls = "cal-day" + (ds === t ? " today" : "") + (ds === selVal ? " selected" : "") + (ds < t ? " past" : "");
+    h += '<button type="button" class="' + cls + '" data-d="' + ds + '">' + d + '</button>';
+  }
+  document.getElementById("calGrid").innerHTML = h;
+}
+document.getElementById("calPrev").addEventListener("click", function(){
+  calMonthIdx--; if(calMonthIdx < 0){ calMonthIdx = 11; calYear--; }
+  renderCalendar();
+});
+document.getElementById("calNext").addEventListener("click", function(){
+  calMonthIdx++; if(calMonthIdx > 11){ calMonthIdx = 0; calYear++; }
+  renderCalendar();
+});
+document.getElementById("calGrid").addEventListener("click", function(e){
+  var b = e.target.closest(".cal-day"); if(!b || !calTarget) return;
+  calTarget.value = b.getAttribute("data-d");
+  document.getElementById("calModal").classList.remove("show");
+});
+document.getElementById("calClear").addEventListener("click", function(){
+  if(calTarget) calTarget.value = "";
+  document.getElementById("calModal").classList.remove("show");
+});
+document.getElementById("calToday").addEventListener("click", function(){
+  if(calTarget) calTarget.value = todayStr();
+  document.getElementById("calModal").classList.remove("show");
+});
+document.getElementById("calCancel").addEventListener("click", function(){
+  document.getElementById("calModal").classList.remove("show");
+});
+document.getElementById("calModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
+document.getElementById("qmStart").addEventListener("click", function(){ openCalendar(this); });
+document.getElementById("qmEnd").addEventListener("click", function(){ openCalendar(this); });
+
+function fillArmOptions(armed){
+  var sel = document.getElementById("qmArm");
+  var h = '<option value="">— None —</option>';
+  var lists = [{k:"skill", arr:state.skills}, {k:"equip", arr:state.equipment}];
+  for(var l=0;l<lists.length;l++){
+    for(var i=0;i<lists[l].arr.length;i++){
+      var it = lists[l].arr[i];
+      var v = lists[l].k + "||" + it.name;
+      var selFlag = armed && armed.kind === lists[l].k && armed.name === it.name ? " selected" : "";
+      h += '<option value="' + esc(v) + '"' + selFlag + '>' + invIconOf(lists[l].k) + ' ' + esc(it.name) + ' — ' + BONUS_LABEL[it.bonus || "none"] + '</option>';
+    }
+  }
+  sel.innerHTML = h;
+}
 function updateTargetLabel(freq){
   document.getElementById("qmTargetLbl").textContent = freq === "challenge"
     ? "Days in a Row to Conquer (miss a day = start over; earns 1 roll)"
@@ -4213,6 +4374,7 @@ function openQuestModal(id){
   buildSeg("qmTier", TIERS, [TIER_LABEL.easy,TIER_LABEL.medium,TIER_LABEL.epic,TIER_LABEL.mythic,TIER_LABEL.legendary], qmSel.tier, function(v){ qmSel.tier = v; }, true);
   buildSeg("qmStat", STATS, STATS, qmSel.stat, function(v){ qmSel.stat = v; });
   fillLinkOptions(q ? q.link : "");
+  fillArmOptions(q ? q.armed : null);
   document.getElementById("qmTarget").value = q ? (q.target || 1) : 7;
   document.getElementById("qmStart").value = q ? (q.startDate || "") : "";
   document.getElementById("qmEnd").value = q ? (q.endDate || "") : "";
@@ -4243,6 +4405,15 @@ document.getElementById("qmSave").addEventListener("click", function(){
   if(blocking && ["epic","mythic","legendary"].indexOf(qmSel.tier) === -1){
     toast("A priority lock needs EPIC, MYTHIC or LEGENDARY tier — raise the difficulty.", "err"); return;
   }
+  var armVal = document.getElementById("qmArm").value;
+  var armed = null;
+  if(armVal){
+    var ap = armVal.split("||");
+    var aArr = ap[0] === "skill" ? state.skills : state.equipment;
+    for(var ai=0; ai<aArr.length; ai++){
+      if(aArr[ai].name === ap[1]){ armed = {kind:ap[0], name:ap[1], bonus:aArr[ai].bonus || "none"}; break; }
+    }
+  }
   if(qmEditId){
     var q = questById(qmEditId);
     if(q){
@@ -4252,6 +4423,7 @@ document.getElementById("qmSave").addEventListener("click", function(){
       q.target = target;
       q.startDate = startD; q.endDate = endD; q.repeatDays = repD;
       q.needTimer = needTimer; q.blocking = blocking;
+      q.armed = armed;
       if(q.done && !q.rankCheck && (q.progress || 0) < target) q.done = false; /* raising the target reopens a one-time goal */
       sysToast("Quest updated: " + name);
     }
@@ -4259,6 +4431,7 @@ document.getElementById("qmSave").addEventListener("click", function(){
     var nq = makeQuest(qmSel.emoji, name, desc, qmSel.freq, qmSel.days.slice(), qmSel.tier, qmSel.stat, link, false, target);
     nq.startDate = startD; nq.endDate = endD; nq.repeatDays = repD;
     nq.needTimer = needTimer; nq.blocking = blocking;
+    nq.armed = armed;
     state.quests.push(nq);
     toast("New quest registered: " + name, "sys", "QUEST CREATED");
   }
@@ -4282,9 +4455,15 @@ function renderCmItems(){
   var h = "";
   for(var i=0;i<cmItems.length;i++){
     var it = cmItems[i];
+    var ty = it.itype || "prize";
     h += '<div class="cm-item-row">'
       + '<select class="sel cm-it-emoji" data-i="' + i + '">' + emojiOptions(it.emoji) + '</select>'
       + '<input class="inp cm-it-name" data-i="' + i + '" maxlength="60" placeholder="Prize ' + (i+1) + '" value="' + esc(it.name) + '">'
+      + '<select class="sel cm-it-type" data-i="' + i + '" title="Skills and equipment go to your inventory when won" style="width:96px;flex:0 0 auto">'
+      + '<option value="prize"' + (ty==="prize"?" selected":"") + '>🎁 PRIZE</option>'
+      + '<option value="skill"' + (ty==="skill"?" selected":"") + '>⚡ SKILL</option>'
+      + '<option value="equip"' + (ty==="equip"?" selected":"") + '>🗡 EQUIP</option>'
+      + '</select>'
       + (it.owned ? '<span class="tag tag-legendary" title="Already won">WON</span>' : '')
       + '<button type="button" class="mini-btn cm-it-del" data-i="' + i + '" title="Remove">🗑</button>'
       + '</div>';
@@ -4294,6 +4473,7 @@ function renderCmItems(){
 document.getElementById("cmItems").addEventListener("change", function(e){
   var i = +e.target.getAttribute("data-i");
   if(e.target.classList.contains("cm-it-emoji")) cmItems[i].emoji = e.target.value;
+  else if(e.target.classList.contains("cm-it-type")) cmItems[i].itype = e.target.value;
 });
 document.getElementById("cmItems").addEventListener("input", function(e){
   var i = +e.target.getAttribute("data-i");
@@ -4316,12 +4496,12 @@ function openColModal(id){
   cmItems = [];
   if(c){
     for(var i=0;i<c.items.length;i++){
-      cmItems.push({emoji:c.items[i].emoji, name:c.items[i].name, owned:!!c.items[i].owned});
+      cmItems.push({emoji:c.items[i].emoji, name:c.items[i].name, owned:!!c.items[i].owned, itype:c.items[i].itype || "prize"});
     }
   } else {
-    cmItems.push({emoji:"💎", name:"", owned:false});
-    cmItems.push({emoji:"👑", name:"", owned:false});
-    cmItems.push({emoji:"🏆", name:"", owned:false});
+    cmItems.push({emoji:"💎", name:"", owned:false, itype:"prize"});
+    cmItems.push({emoji:"👑", name:"", owned:false, itype:"prize"});
+    cmItems.push({emoji:"🏆", name:"", owned:false, itype:"prize"});
   }
   document.getElementById("cmTitle").textContent = c ? "EDIT COLLECTION" : "NEW COLLECTION";
   document.getElementById("cmName").value = c ? c.name : "";
@@ -4344,7 +4524,8 @@ document.getElementById("cmSave").addEventListener("click", function(){
     items.push({
       emoji: cmItems[i].emoji || "💎",
       name: (cmItems[i].name || "").trim() || ("Prize " + (i+1)),
-      owned: !!cmItems[i].owned
+      owned: !!cmItems[i].owned,
+      itype: cmItems[i].itype || "prize"
     });
   }
   var titleTxt = document.getElementById("cmTitleTxt").value.trim();
