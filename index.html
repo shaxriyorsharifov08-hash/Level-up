@@ -1963,19 +1963,19 @@ function renderGuild(){
   renderGuildChat();
 }
 function lastSeenInfo(ts){
-  if(!ts) return {dot:"⚪", txt:"Last seen: unknown", cls:"ls-old"};
-  var d = Date.now() - ts, MIN = 60000, HR = 60*MIN, DAY = 24*HR, WK = 7*DAY, MO = 30*DAY, YR = 365*DAY;
-  if(d < 10*MIN)  return {dot:"🟢", txt:"Online now", cls:"ls-now"};
-  if(d < DAY)     return {dot:"🟢", txt:"Was online today", cls:"ls-now"};
-  if(d < WK)      return {dot:"🟢", txt:"Was online this week", cls:"ls-week"};
-  if(d < MO)      return {dot:"🟡", txt:"Was online this month", cls:"ls-month"};
-  if(d < 2*MO)    return {dot:"🟡", txt:"Was online within 2 months", cls:"ls-month"};
-  if(d < 6*MO)    return {dot:"🟠", txt:"Was online within 6 months", cls:"ls-far"};
-  if(d < YR)      return {dot:"🟠", txt:"Was online within a year", cls:"ls-far"};
-  if(d < 2*YR)    return {dot:"🔴", txt:"Last online over a year ago", cls:"ls-old"};
-  if(d < 3*YR)    return {dot:"🔴", txt:"Last online over 2 years ago", cls:"ls-old"};
-  if(d < 4*YR)    return {dot:"🔴", txt:"Last online over 3 years ago", cls:"ls-old"};
-  return {dot:"🔴", txt:"Last online 4+ years ago", cls:"ls-old"};
+  /* deliberately coarse — the finest bucket is "this week" so it never feels
+     like exact-time surveillance (no now/today/yesterday). */
+  if(!ts) return {dot:"⚪", txt:"Activity: unknown", cls:"ls-old"};
+  var d = Date.now() - ts, DAY = 86400000, WK = 7*DAY, MO = 30*DAY, YR = 365*DAY;
+  if(d < WK)      return {dot:"🟢", txt:"Active this week", cls:"ls-week"};
+  if(d < MO)      return {dot:"🟡", txt:"Active this month", cls:"ls-month"};
+  if(d < 2*MO)    return {dot:"🟡", txt:"Active within 2 months", cls:"ls-month"};
+  if(d < 6*MO)    return {dot:"🟠", txt:"Active within 6 months", cls:"ls-far"};
+  if(d < YR)      return {dot:"🟠", txt:"Active within the past year", cls:"ls-far"};
+  if(d < 2*YR)    return {dot:"🔴", txt:"Inactive for over a year", cls:"ls-old"};
+  if(d < 3*YR)    return {dot:"🔴", txt:"Inactive for over 2 years", cls:"ls-old"};
+  if(d < 4*YR)    return {dot:"🔴", txt:"Inactive for over 3 years", cls:"ls-old"};
+  return {dot:"🔴", txt:"Inactive for 4+ years", cls:"ls-old"};
 }
 function openWatchStats(uid){
   var m = gMembers[uid];
