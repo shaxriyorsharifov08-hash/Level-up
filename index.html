@@ -43,6 +43,87 @@
   --glow:0 0 12px rgba(124,97,255,.55),0 0 32px rgba(124,97,255,.25);
   --glowblue:0 0 12px rgba(0,209,255,.5),0 0 30px rgba(0,209,255,.2);
 }
+/* ===== THEMES ===== */
+/* Rose — pink/lavender on the dark base (still dark, softer) */
+body[data-theme="rose"]{
+  --purple:#ec4899; --violet:#f472b6; --blue:#f9a8d4;
+  --line:rgba(236,72,153,.30); --line2:rgba(249,168,212,.28);
+  --glow:0 0 12px rgba(236,72,153,.55),0 0 32px rgba(236,72,153,.25);
+  --glowblue:0 0 12px rgba(249,168,212,.5),0 0 30px rgba(249,168,212,.2);
+}
+body[data-theme="rose"]{
+  background:radial-gradient(1200px 700px at 70% -10%,#3a1430 0%,transparent 55%),
+             radial-gradient(900px 600px at -10% 110%,#2a0f28 0%,transparent 50%),var(--bg);
+}
+/* Emerald — green/teal */
+body[data-theme="emerald"]{
+  --purple:#10b981; --violet:#34d399; --blue:#2dd4bf;
+  --line:rgba(16,185,129,.30); --line2:rgba(45,212,191,.28);
+  --glow:0 0 12px rgba(16,185,129,.55),0 0 32px rgba(16,185,129,.25);
+  --glowblue:0 0 12px rgba(45,212,191,.5),0 0 30px rgba(45,212,191,.2);
+}
+body[data-theme="emerald"]{
+  background:radial-gradient(1200px 700px at 70% -10%,#0c2e2a 0%,transparent 55%),
+             radial-gradient(900px 600px at -10% 110%,#08251f 0%,transparent 50%),var(--bg);
+}
+/* Ember — orange/amber */
+body[data-theme="ember"]{
+  --purple:#f97316; --violet:#fb923c; --blue:#fbbf24;
+  --line:rgba(249,115,22,.30); --line2:rgba(251,191,36,.28);
+  --glow:0 0 12px rgba(249,115,22,.55),0 0 32px rgba(249,115,22,.25);
+  --glowblue:0 0 12px rgba(251,191,36,.5),0 0 30px rgba(251,191,36,.2);
+}
+body[data-theme="ember"]{
+  background:radial-gradient(1200px 700px at 70% -10%,#3a1e0c 0%,transparent 55%),
+             radial-gradient(900px 600px at -10% 110%,#2a1408 0%,transparent 50%),var(--bg);
+}
+/* Blossom — light white & pink (girls) */
+body[data-theme="blossom"]{
+  --bg:#fff5fa; --bg2:#ffe9f3; --panel:#ffffff; --panel2:#fff2f8;
+  --line:rgba(236,72,153,.28); --line2:rgba(219,39,119,.22);
+  --purple:#ec4899; --violet:#db2777; --blue:#e0489e;
+  --text:#3b2438; --dim:#a06d8f;
+  --glow:0 0 12px rgba(236,72,153,.35),0 0 30px rgba(236,72,153,.15);
+  --glowblue:0 0 12px rgba(224,72,158,.3),0 0 26px rgba(224,72,158,.14);
+  color:#3b2438;
+  background:radial-gradient(1200px 700px at 70% -10%,#ffe1ef 0%,transparent 55%),
+             radial-gradient(900px 600px at -10% 110%,#ffeaf4 0%,transparent 50%),var(--bg);
+}
+body[data-theme="blossom"] .panel{background:linear-gradient(160deg,#ffffff,#fff4fa);}
+body[data-theme="blossom"] header{background:linear-gradient(120deg,rgba(255,255,255,.9),rgba(255,240,248,.9));}
+body[data-theme="blossom"] .sum-card{background:linear-gradient(150deg,#ffffff,#fff2f8);}
+body[data-theme="blossom"] .quest-card,
+body[data-theme="blossom"] .col-card,
+body[data-theme="blossom"] .dream-card,
+body[data-theme="blossom"] .gmem,
+body[data-theme="blossom"] .report-card,
+body[data-theme="blossom"] .adm-list-item,
+body[data-theme="blossom"] .honor-card,
+body[data-theme="blossom"] .roll-pill,
+body[data-theme="blossom"] .nav-btn,
+body[data-theme="blossom"] .seg-btn,
+body[data-theme="blossom"] .beat-btn{background:#ffffff;}
+body[data-theme="blossom"] .q-name,
+body[data-theme="blossom"] .hunter-name,
+body[data-theme="blossom"] .modal-title,
+body[data-theme="blossom"] .sum-val,
+body[data-theme="blossom"] .beat-lbl,
+body[data-theme="blossom"] .dream-title,
+body[data-theme="blossom"] .gmem-name,
+body[data-theme="blossom"] .hero-name{color:#3b2438;}
+body[data-theme="blossom"] .inp,
+body[data-theme="blossom"] .sel,
+body[data-theme="blossom"] .ta{background:#fff;color:#3b2438;}
+body[data-theme="blossom"] .modal-box{background:linear-gradient(160deg,#ffffff,#fff2f8);}
+body[data-theme="blossom"] .btn{color:#3b2438}
+body[data-theme="blossom"] .empty-note{color:#a06d8f}
+body[data-theme="blossom"] #particles{opacity:.35}
+body[data-theme="blossom"] .f-chip,
+body[data-theme="blossom"] .day-btn{background:#fff0f7;color:#a06d8f}
+body[data-theme="blossom"] .quest-card{background:linear-gradient(150deg,#ffffff,#fff6fb)}
+body[data-theme="blossom"] .q-desc,body[data-theme="blossom"] .dream-note{color:#8a6a83}
+body[data-theme="blossom"] .road-circle{background:#fff}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
@@ -331,6 +412,48 @@ nav::-webkit-scrollbar{display:none}
 .gmsg.mine .gmsg-head{color:var(--blue)}
 .gmsg-head span{color:var(--dim);font-weight:600;margin-left:6px}
 .gmsg-body{font-size:.9rem;color:var(--txt);word-break:break-word}
+/* story: beating choice buttons */
+.story-choice{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media (max-width:520px){.story-choice{grid-template-columns:1fr}}
+.beat-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:20px 14px;border-radius:16px;border:1px solid var(--line);cursor:pointer;overflow:hidden;
+  background:linear-gradient(160deg,rgba(124,97,255,.12),rgba(5,6,16,.6));animation:beat 1.9s ease-in-out infinite}
+.beat-dream{animation-delay:.95s;background:linear-gradient(160deg,rgba(251,191,36,.12),rgba(5,6,16,.6));border-color:rgba(251,191,36,.35)}
+.beat-btn.active{border-width:2px;box-shadow:var(--glow);animation:none}
+.beat-dream.active{box-shadow:0 0 12px rgba(251,191,36,.55),0 0 32px rgba(251,191,36,.25)}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.beat-ico{font-size:2rem;line-height:1}
+.beat-lbl{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.08em;color:#fff}
+.beat-sub{font-size:.68rem;color:var(--dim)}
+/* dream cards */
+.dream-card{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:9px;background:rgba(5,6,16,.5);cursor:pointer;transition:.15s}
+.dream-card:hover{border-color:var(--blue);transform:translateX(2px)}
+.dream-card.done{opacity:.6}
+.dream-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--dim);flex:0 0 auto;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:.15s}
+.dream-card.done .dream-check{border-color:var(--easy);background:rgba(34,197,94,.2);color:var(--easy)}
+.dream-main{flex:1;min-width:0}
+.dream-title{font-weight:700;color:#fff;font-size:.95rem}
+.dream-card.done .dream-title{text-decoration:line-through;color:var(--dim)}
+.dream-meta{font-size:.72rem;color:var(--dim);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.dream-note{font-size:.78rem;color:var(--txt);opacity:.85;margin-top:4px;font-style:italic}
+.dream-del{flex:0 0 auto;margin-top:2px}
+.dream-head{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:800;letter-spacing:.18em;margin:2px 0 10px;
+  display:flex;align-items:center;gap:8px}
+.dream-head::after{content:"";flex:1;height:1px;background:currentColor;opacity:.25}
+.dh-life{color:var(--legendary)}.dh-year{color:var(--epic)}.dh-month{color:var(--blue)}
+/* animated blue flame (announcement icon) */
+.flame{position:relative;width:64px;height:82px;margin:0 auto 4px}
+.flame span{position:absolute;left:50%;bottom:0;transform:translateX(-50%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  filter:blur(.5px);animation:flick 1.1s ease-in-out infinite}
+.flame .f1{width:44px;height:64px;background:radial-gradient(circle at 50% 75%,#bfefff,#00d1ff 45%,#3b82f6 80%);
+  box-shadow:0 0 26px rgba(0,209,255,.8),0 0 46px rgba(59,130,246,.5)}
+.flame .f2{width:26px;height:44px;background:radial-gradient(circle at 50% 75%,#eafcff,#7dd3fc 55%,#00d1ff 90%);animation-delay:.2s}
+.flame .f3{width:12px;height:24px;bottom:4px;background:radial-gradient(circle at 50% 70%,#fff,#bfefff 70%);animation-delay:.35s}
+.flame .fbase{width:30px;height:12px;bottom:-4px;border-radius:50%;background:rgba(0,209,255,.35);filter:blur(4px);animation:none}
+@keyframes flick{0%,100%{transform:translateX(-50%) scaleY(1) rotate(-1deg)}
+  50%{transform:translateX(-52%) scaleY(1.12) rotate(1.5deg)}}
 /* guide page */
 .guide p{color:var(--txt);font-size:.9rem;line-height:1.65;margin:0 0 6px}
 .guide ul{margin:0;padding-left:20px}
@@ -613,8 +736,10 @@ nav::-webkit-scrollbar{display:none}
   .rank-badge.big{width:72px;height:72px;font-size:2rem}
   .hunter-name{font-size:1.15rem}
   .stat-row{grid-template-columns:52px 1fr 38px 32px;gap:7px}
-  .q-actions{flex-direction:row;align-items:center}
+  /* stack the action row full-width below the quest text so the big button never squishes it */
+  .q-actions{flex-direction:row;align-items:center;justify-content:space-between;flex:1 0 100%;width:100%;margin-top:4px}
   .quest-card{flex-wrap:wrap}
+  .btn-complete{flex:1;min-width:0}
   .chart-box{height:210px}
   header{padding:11px 13px}
   .logo{font-size:.95rem}
@@ -854,18 +979,56 @@ main section{animation:pagein .28s ease}
 
     <!-- ============ STORY ============ -->
     <section id="page-story" style="display:none">
-      <div class="panel">
-        <div class="panel-title">SYSTEM TRANSMISSION</div>
-        <div class="sys-voice" id="sysVoice"></div>
+      <div class="story-choice">
+        <button class="beat-btn beat-path" id="chooseStoryPath">
+          <span class="beat-ico">🗺️</span><span class="beat-lbl">STORY PATH</span>
+          <span class="beat-sub">your rise, level by level</span>
+        </button>
+        <button class="beat-btn beat-dream" id="chooseDreams">
+          <span class="beat-ico">✨</span><span class="beat-lbl">CHASING AFTER DREAMS</span>
+          <span class="beat-sub">your goals &amp; dreams</span>
+        </button>
       </div>
-      <div class="panel">
-        <div class="panel-title">🗺 LEVEL ROAD</div>
-        <div class="empty-note" style="margin-bottom:14px">Collect XP to climb the road. Every level grants its rewards automatically the moment you reach it. Edit the rewards in ADMIN → Manage Level Road.</div>
-        <div class="road" id="roadMap"></div>
+
+      <div id="storyPathView" style="display:none">
+        <div class="panel">
+          <div class="panel-title">SYSTEM TRANSMISSION</div>
+          <div class="sys-voice" id="sysVoice"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🗺 LEVEL ROAD</div>
+          <div class="empty-note" style="margin-bottom:14px">Collect XP to climb the road. Every level grants its rewards automatically the moment you reach it. Edit the rewards in ADMIN → Manage Level Road.</div>
+          <div class="road" id="roadMap"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">CHRONICLES OF THE HUNTER</div>
+          <div id="chaptersList"></div>
+        </div>
       </div>
-      <div class="panel">
-        <div class="panel-title">CHRONICLES OF THE HUNTER</div>
-        <div id="chaptersList"></div>
+
+      <div id="dreamsView" style="display:none">
+        <div class="panel">
+          <div class="panel-title">✨ CHASING AFTER DREAMS</div>
+          <div class="empty-note" style="margin-bottom:12px">Your vision board. Capture what you are truly chasing — then let the daily quests carry you there. Tap a dream to mark it as achieved.</div>
+          <div class="cards-grid" id="dreamStats"></div>
+        </div>
+        <div id="dreamGroups"></div>
+        <div class="panel">
+          <div class="panel-title">➕ ADD A DREAM</div>
+          <div class="adm-row">
+            <select class="sel" id="dreamTier" style="width:150px;flex:0 0 auto">
+              <option value="life">🌟 LIFE DREAM</option>
+              <option value="year">📅 THIS YEAR</option>
+              <option value="month">🌙 THIS MONTH</option>
+            </select>
+            <input class="inp" id="dreamTitle" style="flex:1;min-width:150px" maxlength="80" placeholder="e.g. Become fluent in English">
+          </div>
+          <div class="adm-row" style="margin-top:8px">
+            <input class="inp cal-input" id="dreamTarget" type="text" readonly style="flex:1;min-width:140px" placeholder="🎯 Target date (optional)">
+            <input class="inp" id="dreamNote" style="flex:2;min-width:150px" maxlength="120" placeholder="Why it matters / first step (optional)">
+            <button class="btn primary" id="dreamAddBtn">ADD</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1037,6 +1200,12 @@ main section{animation:pagein .28s ease}
           <div class="empty-note" id="cloudRemoteInfo" style="margin-top:8px"></div>
           <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
         </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🎨 APPEARANCE</div>
+        <label class="form-lbl">Color Theme</label>
+        <select class="sel" id="admTheme"></select>
       </div>
 
       <div class="panel">
@@ -1380,6 +1549,9 @@ function defaultState(){
     honorsSeeded:false,
     customQuotes:[],     /* user-added quotes shown after completions */
     guildId:"",          /* hunters guild membership (synced across devices) */
+    dreams:[],           /* chasing after dreams: {id, tier, title, note, target, done} */
+    storyView:"path",    /* which story sub-view was last open */
+    theme:"shadow",      /* color theme */
     skills:[],           /* earned from the level road */
     equipment:[],
     foods:[],
@@ -1458,6 +1630,7 @@ function cloudAdopt(remoteJson){
   try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
   idbPut("kv", "state", JSON.stringify(state));
   if(cloudUser && state.guildId) attachGuild(); /* guild may have changed on another device */
+  applyTheme(state.theme || "shadow");
   renderAll();
 }
 function cloudSignIn(){
@@ -2093,7 +2266,12 @@ function nextAnnounce(){
   if(annQueue.length === 0){ annOpen = false; ov.classList.remove("show"); return; }
   annOpen = true;
   var a = annQueue.shift();
-  document.getElementById("annIco").textContent = a.ico;
+  var icoEl = document.getElementById("annIco");
+  if(a.ico === "__flame__"){
+    icoEl.innerHTML = '<div class="flame"><span class="fbase"></span><span class="f1"></span><span class="f2"></span><span class="f3"></span></div>';
+  } else {
+    icoEl.textContent = a.ico;
+  }
   document.getElementById("annTitle").textContent = a.title;
   document.getElementById("annBody").textContent = a.body;
   var au = document.getElementById("annAuthor");
@@ -4010,7 +4188,66 @@ function renderRoad(){
   }
   el.innerHTML = h;
 }
+var DREAM_META = {
+  life:{head:"🌟 LIFE DREAMS", cls:"dh-life", empty:"The big ones — who you want to become."},
+  year:{head:"📅 THIS YEAR", cls:"dh-year", empty:"Long-term goals for this year."},
+  month:{head:"🌙 THIS MONTH", cls:"dh-month", empty:"Short-term goals for the weeks ahead."}
+};
+function setStoryView(v, scrollToLevel){
+  state.storyView = v;
+  document.getElementById("storyPathView").style.display = v === "path" ? "" : "none";
+  document.getElementById("dreamsView").style.display = v === "dreams" ? "" : "none";
+  document.getElementById("chooseStoryPath").classList.toggle("active", v === "path");
+  document.getElementById("chooseDreams").classList.toggle("active", v === "dreams");
+  if(v === "dreams") renderDreams();
+  else if(scrollToLevel){
+    setTimeout(function(){
+      var cur = document.getElementById("roadCur");
+      if(cur) cur.scrollIntoView({block:"center", behavior:"smooth"});
+    }, 80);
+  }
+  save();
+}
+function renderDreams(){
+  var done = state.dreams.filter(function(d){ return d.done; }).length;
+  var cards = [
+    {v:"✨ " + state.dreams.length, l:"Dreams Set"},
+    {v:"✓ " + done, l:"Achieved"},
+    {v:state.dreams.filter(function(d){ return d.tier==="life"; }).length, l:"Life Dreams"},
+    {v:state.dreams.filter(function(d){ return !d.done; }).length, l:"Still Chasing"}
+  ];
+  var ch = "";
+  for(var c=0;c<cards.length;c++) ch += '<div class="sum-card"><div class="sum-val">' + cards[c].v + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
+  document.getElementById("dreamStats").innerHTML = ch;
+  var order = ["life","year","month"], gh = "";
+  for(var o=0;o<order.length;o++){
+    var tier = order[o];
+    var list = state.dreams.filter(function(d){ return d.tier === tier; });
+    var m = DREAM_META[tier];
+    gh += '<div class="panel"><div class="dream-head ' + m.cls + '">' + m.head + '</div>';
+    if(list.length === 0){
+      gh += '<div class="empty-note">' + m.empty + '</div>';
+    } else {
+      for(var i=0;i<list.length;i++){
+        var d = list[i];
+        var meta = [];
+        if(d.target) meta.push("🎯 " + niceDate(d.target));
+        meta.push(d.created ? "since " + niceDate(d.created) : "");
+        gh += '<div class="dream-card' + (d.done?" done":"") + '" data-dream="' + d.id + '">'
+          + '<div class="dream-check">' + (d.done?"✓":"") + '</div>'
+          + '<div class="dream-main"><div class="dream-title">' + esc(d.title) + '</div>'
+          + '<div class="dream-meta">' + meta.filter(Boolean).map(esc).join(" • ") + '</div>'
+          + (d.note ? '<div class="dream-note">“' + esc(d.note) + '”</div>' : '')
+          + '</div>'
+          + '<button class="mini-btn dream-del" data-dreamdel="' + d.id + '" title="Remove">🗑</button></div>';
+      }
+    }
+    gh += '</div>';
+  }
+  document.getElementById("dreamGroups").innerHTML = gh;
+}
 function renderStory(){
+  setStoryView(state.storyView || "path");
   var r = rankForLevel(state.level);
   document.getElementById("sysVoice").textContent = SYS_VOICE[r.key];
   renderRoad();
@@ -4119,6 +4356,13 @@ function renderAdmin(){
   }
   document.getElementById("admCards").innerHTML = ch;
   document.getElementById("admName").value = state.hunterName;
+  var themeSel = document.getElementById("admTheme");
+  if(!themeSel.options.length){
+    var th = "";
+    for(var ti=0;ti<THEMES.length;ti++) th += '<option value="' + THEMES[ti].id + '">' + THEMES[ti].name + '</option>';
+    themeSel.innerHTML = th;
+  }
+  themeSel.value = state.theme || "shadow";
   /* quests list */
   var qh = "";
   for(var i=0;i<state.quests.length;i++){
@@ -4468,6 +4712,12 @@ document.getElementById("page-admin").addEventListener("click", function(e){
   else if(act === "cedit") openColModal(id);
   else if(act === "cdel") deleteCollection(id);
 });
+document.getElementById("admTheme").addEventListener("change", function(){
+  state.theme = this.value;
+  applyTheme(state.theme);
+  save();
+  toast("Theme applied: " + this.value, "sys", "APPEARANCE");
+});
 document.getElementById("admNameSave").addEventListener("click", function(){
   var v = document.getElementById("admName").value.trim() || "Hunter";
   state.hunterName = v; save(); renderAll();
@@ -4700,6 +4950,70 @@ document.getElementById("calCancel").addEventListener("click", function(){
 document.getElementById("calModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("qmStart").addEventListener("click", function(){ openCalendar(this); });
 document.getElementById("qmEnd").addEventListener("click", function(){ openCalendar(this); });
+document.getElementById("dreamTarget").addEventListener("click", function(){ openCalendar(this); });
+
+/* ---------------- themes ---------------- */
+var THEMES = [
+  {id:"shadow", name:"🌑 Shadow (default)", tc:"#7c61ff"},
+  {id:"rose", name:"🌸 Rose (pink)", tc:"#ec4899"},
+  {id:"blossom", name:"🤍 Blossom (white & pink)", tc:"#ec4899"},
+  {id:"emerald", name:"💚 Emerald (green)", tc:"#10b981"},
+  {id:"ember", name:"🔥 Ember (orange)", tc:"#f97316"}
+];
+function applyTheme(id){
+  if(id === "shadow") document.body.removeAttribute("data-theme");
+  else document.body.setAttribute("data-theme", id);
+  var tc = "#7c61ff";
+  for(var i=0;i<THEMES.length;i++) if(THEMES[i].id === id) tc = THEMES[i].tc;
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", tc);
+}
+
+/* ---------------- chasing after dreams ---------------- */
+document.getElementById("chooseStoryPath").addEventListener("click", function(){ setStoryView("path", true); });
+document.getElementById("chooseDreams").addEventListener("click", function(){ setStoryView("dreams"); });
+document.getElementById("dreamAddBtn").addEventListener("click", function(){
+  var title = document.getElementById("dreamTitle").value.trim();
+  if(!title){ toast("Name the dream you are chasing.", "err"); return; }
+  state.dreams.push({
+    id: uid(),
+    tier: document.getElementById("dreamTier").value,
+    title: title,
+    note: document.getElementById("dreamNote").value.trim(),
+    target: document.getElementById("dreamTarget").value || "",
+    done: false,
+    created: todayStr()
+  });
+  document.getElementById("dreamTitle").value = "";
+  document.getElementById("dreamNote").value = "";
+  document.getElementById("dreamTarget").value = "";
+  save(); renderDreams();
+  toast("Dream added. Now chase it, Hunter.", "gold", "DREAM SET");
+});
+document.getElementById("dreamGroups").addEventListener("click", function(e){
+  var del = e.target.closest("button[data-dreamdel]");
+  if(del){
+    var did = del.getAttribute("data-dreamdel");
+    var dd = null;
+    for(var i=0;i<state.dreams.length;i++) if(state.dreams[i].id === did) dd = state.dreams[i];
+    if(dd && !confirm('Remove dream "' + dd.title + '"?')) return;
+    state.dreams = state.dreams.filter(function(x){ return x.id !== did; });
+    save(); renderDreams();
+    return;
+  }
+  var card = e.target.closest(".dream-card"); if(!card) return;
+  var id = card.getAttribute("data-dream");
+  for(var j=0;j<state.dreams.length;j++){
+    if(state.dreams[j].id === id){
+      state.dreams[j].done = !state.dreams[j].done;
+      if(state.dreams[j].done){
+        announce("🌟 DREAM ACHIEVED", "You reached a dream you were chasing:\n\n[" + state.dreams[j].title + "]\n\nThe distance between who you were and who you are grows. Keep chasing, Hunter.", "🌟", "ONWARD");
+      }
+      break;
+    }
+  }
+  save(); renderDreams();
+});
 
 function fillArmOptions(armed){
   var sel = document.getElementById("qmArm");
@@ -5225,10 +5539,11 @@ function seedIfNew(){
   setTimeout(function(){
     announce("SYSTEM INITIALIZED",
       "[You have been selected as the Player.]\n\nWelcome, " + state.hunterName + ".\nFrom this moment, your life is a dungeon and your habits are the monsters within.\n\nComplete quests. Gain XP. Level up.\nOnly those who act shall rise.\n\nYour first quest has been assigned.",
-      "🧿", "I ACCEPT");
+      "__flame__", "I ACCEPT");
   }, 600);
 }
 load();
+applyTheme(state.theme || "shadow");
 /* redundant vault: recover from IndexedDB if localStorage was lost or is older */
 idbOpen(function(){
   idbGet("kv", "state", function(raw){
