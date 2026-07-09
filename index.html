@@ -1090,7 +1090,7 @@ main section{animation:pagein .28s ease}
         </div>
         <div class="panel">
           <div class="panel-title">🏆 WEEKLY LEADERBOARD</div>
-          <div class="empty-note" style="margin-bottom:10px">Ranked by XP earned in the last 7 days. Press 👊 to send a hunter your RESPECT.</div>
+          <div class="empty-note" style="margin-bottom:10px">Ranked by <b>DISCIPLINE</b> — a fair score from showing up (active days), real streaks, and tracked focus time over the last 7 days. Not raw XP, so making quests harder or easier never changes your rank — only genuine effort does. Press 👊 to send RESPECT.</div>
           <div id="guildMembers"></div>
         </div>
         <div class="panel">
@@ -1174,7 +1174,7 @@ main section{animation:pagein .28s ease}
       </div>
       <div class="panel guide">
         <div class="panel-title">⚔️ HUNTERS CLAN</div>
-        <p>Team up on the CLAN page (Google sign-in required). Create a clan to get a 6-letter invite code, or join with a friend's code. Members share a <b>weekly leaderboard</b> ranked by XP earned in the last 7 days, can send each other <b>👊 respect boosts</b> (delivered as a System announcement), and talk in the <b>clan chat</b>. Your public clan card shows only your name, level, rank, streaks and counts — never your quest details.</p>
+        <p>Team up on the CLAN page (Google sign-in required). Create a clan to get a 6-letter invite code, or join with a friend's code. Members share a <b>weekly leaderboard</b> ranked by a fair <b>DISCIPLINE score</b> — built from showing up (active days), real streaks and tracked focus time, NOT raw XP. That means making your own quests easier or harder never changes your rank; only genuine daily effort does, so competition stays fair no matter how anyone sets their difficulty. Members can send each other <b>👊 respect boosts</b> and talk in the <b>clan chat</b>. Your public clan card shows only your name, level, rank, streaks and counts — never your quest details.</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">📱 INSTALL &amp; OFFLINE</div>
@@ -1732,6 +1732,14 @@ function guildProfile(){
   var best = 0;
   for(var i=0;i<state.quests.length;i++) if(state.quests[i].streak > best) best = state.quests[i].streak;
   var hToday = state.history[todayStr()];
+  /* cheat-resistant signals for the fair leaderboard: showing up beats inflating tiers */
+  var tt = todayStr(), activeDays7 = 0, focusSec7 = 0;
+  for(var dd=0; dd<7; dd++){
+    var ds = addDays(tt, -dd);
+    var hh = state.history[ds];
+    if(hh && hh.count > 0) activeDays7++;
+    focusSec7 += state.timeHistory[ds] || 0;
+  }
   /* top task stats (by streak then completions) shared so friends can watch your habits */
   var qs = state.quests.filter(function(q){ return !q.system || q.streak > 0; }).slice();
   qs.sort(function(a,b){ return (b.streak - a.streak) || (b.completions.length - a.completions.length); });
@@ -1750,6 +1758,8 @@ function guildProfile(){
     totalDone: state.totalCompleted,
     todayDone: hToday ? hToday.count : 0,
     streak: best,
+    activeDays7: activeDays7,
+    focusMin7: Math.round(focusSec7 / 60),
     stats: {INT:state.stats.INT, STR:state.stats.STR, CON:state.stats.CON, END:state.stats.END},
     titles: state.titles.slice(0, 16),
     badges: state.badges.length,
@@ -1873,6 +1883,16 @@ function renderGuildChat(){
   el.innerHTML = h;
   el.scrollTop = el.scrollHeight;
 }
+/* Fair leaderboard metric. Deliberately ignores raw self-assigned XP/tier so
+   inflating quests to LEGENDARY does nothing here. Only signals that require
+   genuinely showing up over real days move this number. */
+function disciplineScore(m){
+  if(!m) return 0;
+  var activeDays = Math.min(m.activeDays7 || 0, 7);   /* showing up — dominant, unfakeable */
+  var streak = Math.min(m.streak || 0, 60);           /* real consecutive days */
+  var focusMin = Math.min(m.focusMin7 || 0, 420);     /* measured time, capped at 7h/week */
+  return activeDays * 100 + streak * 10 + focusMin;
+}
 function renderGuild(){
   var authNote = document.getElementById("guildAuthNote");
   var setup = document.getElementById("guildSetup");
@@ -1889,24 +1909,25 @@ function renderGuild(){
   setup.style.display = "none"; main.style.display = "";
   document.getElementById("guildTitle").textContent = "⚔️ " + (gInfo && gInfo.name ? gInfo.name.toUpperCase() : "GUILD");
   document.getElementById("guildCode").textContent = gInfo && gInfo.code ? gInfo.code : "······";
-  /* leaderboard by weekly XP */
+  /* leaderboard ranked by the fair Discipline Score (see disciplineScore) */
   var list = [];
   for(var uid in gMembers){ var mm = gMembers[uid]; mm._uid = uid; list.push(mm); }
-  list.sort(function(a,b){ return (b.weeklyXp || 0) - (a.weeklyXp || 0); });
+  list.sort(function(a,b){ return disciplineScore(b) - disciplineScore(a); });
   var medals = ["🥇","🥈","🥉"];
   var h = "";
   for(var i=0;i<list.length;i++){
     var m = list[i];
     var me = cloudUser && m._uid === cloudUser.uid;
     var online = m.lastSeen && (Date.now() - m.lastSeen) < 10 * 60000;
+    var focusTxt = fmtDur((m.focusMin7 || 0) * 60);
     h += '<div class="gmem' + (me ? " me" : "") + '" data-watch="' + m._uid + '" title="Tap to watch stats">'
       + '<span class="gmem-rank">' + (medals[i] || ("#" + (i+1))) + '</span>'
       + (m.photo ? '<img class="gmem-ava" src="' + esc(m.photo) + '" alt="">' : '<span class="gmem-ava gmem-ava-fallback">⚔️</span>')
       + '<div class="gmem-main"><div class="gmem-name">' + esc(m.name || "Hunter")
       + ' <span class="rank-badge ' + ("rank-" + (m.rank || "E")) + '" style="width:20px;height:20px;font-size:.6rem">' + (m.rank || "E") + '</span>'
       + (online ? ' <span class="gmem-on" title="Active recently"></span>' : '') + '</div>'
-      + '<div class="gmem-sub">LV.' + (m.level || 1) + ' • 🔥 ' + (m.streak || 0) + ' streak • today ' + (m.todayDone || 0) + ' • total ' + (m.totalDone || 0) + '</div></div>'
-      + '<div class="gmem-xp"><b>' + (m.weeklyXp || 0) + '</b><span>XP / 7d</span></div>'
+      + '<div class="gmem-sub">LV.' + (m.level || 1) + ' • 📅 ' + (m.activeDays7 || 0) + '/7 days • 🔥 ' + (m.streak || 0) + ' • ⏱ ' + focusTxt + '</div></div>'
+      + '<div class="gmem-xp"><b>' + disciplineScore(m) + '</b><span>DISCIPLINE</span></div>'
       + '<button class="mini-btn" data-watch-btn="' + m._uid + '" title="Watch stats">👁</button>'
       + (me ? '' : '<button class="mini-btn" data-cheer="' + m._uid + '" data-cname="' + esc(m.name || "Hunter") + '" title="Send respect">👊</button>')
       + '</div>';
@@ -1921,6 +1942,9 @@ function openWatchStats(uid){
   var h = "";
   /* overall cards */
   var cards = [
+    {v:"🎖 " + disciplineScore(m), l:"Discipline (rank score)"},
+    {v:"📅 " + (m.activeDays7 || 0) + "/7", l:"Active Days (7d)"},
+    {v:"⏱ " + fmtDur((m.focusMin7 || 0) * 60), l:"Focus Time (7d)"},
     {v:"LV." + (m.level || 1), l:"Level"},
     {v:(m.rank || "E"), l:"Rank"},
     {v:(m.weeklyXp || 0), l:"XP / 7 days"},
