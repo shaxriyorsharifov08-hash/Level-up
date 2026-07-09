@@ -333,16 +333,27 @@ nav::-webkit-scrollbar{display:none}
 .skill-chip{cursor:pointer}
 .skill-chip:hover{border-color:#ef4444;color:#ef4444}
 /* focus timer pill */
-#timerPill{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);z-index:90;
-  display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:30px;
-  border:1px solid var(--blue);background:rgba(5,6,16,.94);font-weight:700;
-  box-shadow:0 0 24px rgba(0,209,255,.35);transition:transform .3s;max-width:92vw}
+#timerPill{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(120px);z-index:90;
+  display:flex;align-items:center;gap:11px;padding:9px 12px 9px 16px;border-radius:30px;
+  border:1px solid var(--blue);background:rgba(5,6,16,.96);backdrop-filter:blur(8px);font-weight:700;
+  box-shadow:0 6px 30px rgba(0,209,255,.4);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);max-width:94vw}
 #timerPill.show{transform:translateX(-50%) translateY(0)}
-#timerPill b{font-family:'Orbitron',monospace;color:var(--blue);font-size:1rem}
-#timerPill span{color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
-#timerStopBtn{padding:6px 14px;border-radius:20px;border:1px solid #ef4444;color:#ef4444;
-  background:transparent;font-weight:800;font-size:.72rem;letter-spacing:.06em;cursor:pointer}
-#timerStopBtn:hover{background:rgba(239,68,68,.15)}
+#timerPill.paused{border-color:var(--legendary);box-shadow:0 6px 30px rgba(251,191,36,.35)}
+#timerPill .tp-ico{font-size:1.2rem;flex:0 0 auto;animation:tpspin 3s linear infinite}
+#timerPill.paused .tp-ico{animation:none}
+@keyframes tpspin{to{transform:rotate(360deg)}}
+#timerPill .tp-info{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+#timerPill b{font-family:'Orbitron',monospace;color:var(--blue);font-size:1.15rem;letter-spacing:.02em}
+#timerPill.paused b{color:var(--legendary)}
+#timerPill .tp-info span{color:var(--dim);font-size:.68rem;font-weight:600;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.tp-btns{display:flex;gap:6px;flex:0 0 auto}
+.tp-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(11,15,34,.9);
+  color:var(--txt);font-size:.9rem;cursor:pointer;transition:.12s;display:flex;align-items:center;justify-content:center}
+.tp-btn:hover{border-color:var(--blue);color:var(--blue)}
+.tp-btn:active{transform:scale(.9)}
+.tp-btn.tp-stop{border-color:#ef4444;color:#ef4444}
+.tp-btn.tp-stop:hover{background:rgba(239,68,68,.18)}
 .chk-row{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:.84rem;
   font-weight:500;color:var(--txt);cursor:pointer;line-height:1.5}
 .chk-row input{margin-top:3px;accent-color:#7c61ff;width:16px;height:16px;flex:0 0 auto}
@@ -422,6 +433,14 @@ nav::-webkit-scrollbar{display:none}
 .watch-task .wt-ico{font-size:1.1rem;flex:0 0 auto}
 .watch-task .wt-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .watch-task .wt-meta{font-size:.72rem;font-weight:700;color:var(--dim);flex:0 0 auto}
+.last-seen{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;margin-bottom:14px;
+  font-weight:800;font-size:.92rem;border:1px solid}
+.last-seen .ls-dot{font-size:.8rem}
+.ls-now{color:#22c55e;border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.08)}
+.ls-week{color:#4ade80;border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.07)}
+.ls-month{color:#fbbf24;border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.07)}
+.ls-far{color:#fb923c;border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.07)}
+.ls-old{color:#ef4444;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.07)}
 .nav-edit-row{display:flex;align-items:center;gap:7px;padding:6px 0}
 .nav-edit-row .ne-ico{font-size:1.1rem;width:24px;text-align:center;flex:0 0 auto}
 .nav-edit-row .ne-name{flex:1;min-width:0}
@@ -1301,7 +1320,15 @@ main section{animation:pagein .28s ease}
 </div>
 
 <button id="fab" title="Add" aria-label="Add new">+</button>
-<div id="timerPill">⏱ <b id="timerElapsed">00:00</b> <span id="timerName"></span> <button id="timerStopBtn" aria-label="Stop the timer">■ STOP</button></div>
+<div id="timerPill">
+  <span class="tp-ico" id="timerIco">⏱</span>
+  <div class="tp-info"><b id="timerElapsed">00:00</b><span id="timerName"></span></div>
+  <div class="tp-btns">
+    <button id="timerPauseBtn" class="tp-btn" aria-label="Pause or resume">⏸</button>
+    <button id="timerRestartBtn" class="tp-btn" aria-label="Restart timer">↻</button>
+    <button id="timerStopBtn" class="tp-btn tp-stop" aria-label="Finish and log">■</button>
+  </div>
+</div>
 <div id="toasts"></div>
 
 <!-- fullscreen announcement -->
@@ -1585,7 +1612,7 @@ function defaultState(){
     monthlyReports:[],   /* graded month summaries, newest last */
     lastMonthlyReport:"",
     timeHistory:{},      /* date -> seconds of tracked focus time */
-    activeTimer:null,    /* {id, name, startedAt} while a session runs */
+    activeTimer:null,    /* {id, name, startedAt, accumulated, paused} while a session runs */
     xpDebt:0,            /* punishment: half of XP gains seized until repaid */
     penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
     lastPenaltyDay:"", lastDebtCheck:"", lastLockdownFor:"",
@@ -1935,11 +1962,27 @@ function renderGuild(){
   document.getElementById("guildMembers").innerHTML = h || '<div class="empty-note">Loading members…</div>';
   renderGuildChat();
 }
+function lastSeenInfo(ts){
+  if(!ts) return {dot:"⚪", txt:"Last seen: unknown", cls:"ls-old"};
+  var d = Date.now() - ts, MIN = 60000, HR = 60*MIN, DAY = 24*HR, WK = 7*DAY, MO = 30*DAY, YR = 365*DAY;
+  if(d < 10*MIN)  return {dot:"🟢", txt:"Online now", cls:"ls-now"};
+  if(d < DAY)     return {dot:"🟢", txt:"Was online today", cls:"ls-now"};
+  if(d < WK)      return {dot:"🟢", txt:"Was online this week", cls:"ls-week"};
+  if(d < MO)      return {dot:"🟡", txt:"Was online this month", cls:"ls-month"};
+  if(d < 2*MO)    return {dot:"🟡", txt:"Was online within 2 months", cls:"ls-month"};
+  if(d < 6*MO)    return {dot:"🟠", txt:"Was online within 6 months", cls:"ls-far"};
+  if(d < YR)      return {dot:"🟠", txt:"Was online within a year", cls:"ls-far"};
+  if(d < 2*YR)    return {dot:"🔴", txt:"Last online over a year ago", cls:"ls-old"};
+  if(d < 3*YR)    return {dot:"🔴", txt:"Last online over 2 years ago", cls:"ls-old"};
+  if(d < 4*YR)    return {dot:"🔴", txt:"Last online over 3 years ago", cls:"ls-old"};
+  return {dot:"🔴", txt:"Last online 4+ years ago", cls:"ls-old"};
+}
 function openWatchStats(uid){
   var m = gMembers[uid];
   if(!m){ toast("That hunter's stats aren't loaded yet.", "err"); return; }
   document.getElementById("watchTitle").textContent = "👁 " + (m.name || "Hunter") + " — LV." + (m.level || 1);
-  var h = "";
+  var ls = lastSeenInfo(m.lastSeen);
+  var h = '<div class="last-seen ' + ls.cls + '"><span class="ls-dot">' + ls.dot + '</span><span>' + ls.txt + '</span></div>';
   /* overall cards */
   var cards = [
     {v:"🎖 " + disciplineScore(m), l:"Discipline (rank score)"},
@@ -2808,24 +2851,56 @@ function fmtHMS(s){
   var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
   return (h ? pad2(h) + ":" : "") + pad2(m) + ":" + pad2(sec);
 }
+function timerElapsedSec(){
+  var tm = state.activeTimer;
+  if(!tm) return 0;
+  var run = tm.paused ? 0 : (Date.now() - tm.startedAt) / 1000;
+  return (tm.accumulated || 0) + run;
+}
 function startTimer(id){
   var q = questById(id);
   if(!q) return;
   if(state.activeTimer){
-    if(state.activeTimer.id === id){ stopTimer(false); return; }
-    if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Stop it and start this one?')) return;
+    if(state.activeTimer.id === id){ renderTimerPill(); return; } /* already timing this quest */
+    if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Finish it and start this one?')) return;
     stopTimer(true);
   }
-  state.activeTimer = {id:id, name:q.name, startedAt: Date.now()};
+  state.activeTimer = {id:id, name:q.name, startedAt: Date.now(), accumulated:0, paused:false};
   save();
   renderTimerPill();
   if(currentPage === "quests") renderQuests();
   sysToast("⏱ Timer started: " + q.name);
 }
+function pauseResumeTimer(){
+  var tm = state.activeTimer;
+  if(!tm) return;
+  if(tm.paused){
+    tm.startedAt = Date.now();
+    tm.paused = false;
+    sysToast("▶ Timer resumed.");
+  } else {
+    tm.accumulated = (tm.accumulated || 0) + (Date.now() - tm.startedAt) / 1000;
+    tm.paused = true;
+    sysToast("⏸ Timer paused. Your time is kept — resume when ready.");
+  }
+  save();
+  renderTimerPill();
+}
+function restartTimer(){
+  var tm = state.activeTimer;
+  if(!tm) return;
+  if(!confirm("Restart the timer for \"" + tm.name + "\"? The current session's time is discarded and counting starts from zero.")) return;
+  tm.accumulated = 0;
+  tm.startedAt = Date.now();
+  tm.paused = false;
+  save();
+  renderTimerPill();
+  sysToast("↻ Timer restarted from zero.");
+}
 function stopTimer(silent){
   var tm = state.activeTimer;
   if(!tm) return;
-  var secs = Math.round((Date.now() - tm.startedAt) / 1000);
+  var secs = Math.round(timerElapsedSec());
   state.activeTimer = null;
   var q = questById(tm.id);
   if(secs >= 5){
@@ -2844,14 +2919,20 @@ function stopTimer(silent){
 function renderTimerPill(){
   var p = document.getElementById("timerPill");
   if(!state.activeTimer){ p.classList.remove("show"); return; }
-  document.getElementById("timerName").textContent = state.activeTimer.name;
+  var tm = state.activeTimer;
+  document.getElementById("timerName").textContent = (tm.paused ? "⏸ PAUSED · " : "") + tm.name;
+  document.getElementById("timerIco").textContent = tm.paused ? "⏸" : "⏱";
+  var pb = document.getElementById("timerPauseBtn");
+  pb.textContent = tm.paused ? "▶" : "⏸";
+  pb.title = tm.paused ? "Resume" : "Pause";
+  p.classList.toggle("paused", !!tm.paused);
   updateTimerPillTime();
   p.classList.add("show");
 }
 function updateTimerPillTime(){
   if(!state.activeTimer) return;
   var el = document.getElementById("timerElapsed");
-  if(el) el.textContent = fmtHMS((Date.now() - state.activeTimer.startedAt) / 1000);
+  if(el) el.textContent = fmtHMS(timerElapsedSec());
 }
 function activeTimeInRange(dates){
   var sum = 0;
@@ -3894,6 +3975,8 @@ document.getElementById("amCancel").addEventListener("click", function(){
 });
 document.getElementById("armModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("timerStopBtn").addEventListener("click", function(){ stopTimer(false); });
+document.getElementById("timerPauseBtn").addEventListener("click", pauseResumeTimer);
+document.getElementById("timerRestartBtn").addEventListener("click", restartTimer);
 
 /* ---------------- render: rewards ---------------- */
 function renderRewards(){
