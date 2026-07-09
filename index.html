@@ -308,6 +308,29 @@ nav::-webkit-scrollbar{display:none}
 .ann-author{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:.98rem;
   color:#d8c9a3;opacity:.9;letter-spacing:.06em;margin-top:14px;text-align:right;
   padding-right:8vw;text-shadow:0 0 12px rgba(251,191,36,.25)}
+/* hunters guild */
+.gmem{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:8px;background:rgba(5,6,16,.5)}
+.gmem.me{border-color:rgba(124,97,255,.55);box-shadow:0 0 12px rgba(124,97,255,.2)}
+.gmem-rank{font-size:1.05rem;width:34px;text-align:center;font-family:'Orbitron',monospace;font-weight:800;color:var(--dim);flex:0 0 auto}
+.gmem-ava{width:38px;height:38px;border-radius:50%;border:1px solid rgba(124,97,255,.5);object-fit:cover;flex:0 0 auto}
+.gmem-ava-fallback{display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:rgba(124,97,255,.12)}
+.gmem-main{flex:1;min-width:0}
+.gmem-name{font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gmem-sub{font-size:.74rem;color:var(--dim);margin-top:2px}
+.gmem-on{width:8px;height:8px;border-radius:50%;background:var(--easy);box-shadow:0 0 6px rgba(34,197,94,.9);display:inline-block}
+.gmem-xp{text-align:right;flex:0 0 auto}
+.gmem-xp b{font-family:'Orbitron',monospace;color:var(--blue);font-size:1rem;display:block}
+.gmem-xp span{font-size:.6rem;font-weight:800;letter-spacing:.08em;color:var(--dim)}
+.gchat{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px}
+.gmsg{max-width:82%;align-self:flex-start;background:rgba(124,97,255,.1);border:1px solid rgba(124,97,255,.25);
+  border-radius:12px 12px 12px 4px;padding:8px 12px}
+.gmsg.mine{align-self:flex-end;background:rgba(0,209,255,.1);border-color:rgba(0,209,255,.3);
+  border-radius:12px 12px 4px 12px}
+.gmsg-head{font-size:.68rem;font-weight:800;color:var(--violet);margin-bottom:2px}
+.gmsg.mine .gmsg-head{color:var(--blue)}
+.gmsg-head span{color:var(--dim);font-weight:600;margin-left:6px}
+.gmsg-body{font-size:.9rem;color:var(--txt);word-break:break-word}
 /* guide page */
 .guide p{color:var(--txt);font-size:.9rem;line-height:1.65;margin:0 0 6px}
 .guide ul{margin:0;padding-left:20px}
@@ -637,6 +660,7 @@ main section{animation:pagein .28s ease}
     <button class="nav-btn" data-page="stats"><span class="nv-ico">&#128202;</span>STATS</button>
     <button class="nav-btn" data-page="story"><span class="nv-ico">&#128218;</span>STORY</button>
     <button class="nav-btn" data-page="honor"><span class="nv-ico">&#127942;</span>HONOR</button>
+    <button class="nav-btn" data-page="guild"><span class="nv-ico">&#9876;&#65039;</span>GUILD</button>
     <button class="nav-btn" data-page="guide"><span class="nv-ico">&#128278;</span>GUIDE</button>
     <button class="nav-btn" data-page="admin"><span class="nv-ico">&#9881;&#65039;</span>ADMIN</button>
   </nav>
@@ -855,6 +879,56 @@ main section{animation:pagein .28s ease}
       <div id="honorSections"></div>
     </section>
 
+    <!-- ============ GUILD ============ -->
+    <section id="page-guild" style="display:none">
+      <div class="panel" id="guildAuthNote" style="display:none">
+        <div class="panel-title">⚔️ HUNTERS GUILD</div>
+        <div class="empty-note" style="margin-bottom:12px">Team up with friends: shared leaderboard, respect boosts, and guild chat. Sign in with Google first so the guild knows who you are.</div>
+        <button class="btn primary" id="guildSignInBtn">SIGN IN WITH GOOGLE</button>
+      </div>
+      <div id="guildSetup" style="display:none">
+        <div class="panel">
+          <div class="panel-title">🏰 CREATE A GUILD</div>
+          <div class="empty-note" style="margin-bottom:10px">Found your own guild and share its invite code with friends.</div>
+          <div class="adm-row">
+            <input class="inp" id="guildNewName" style="flex:1;min-width:160px" maxlength="30" placeholder="Guild name, e.g. Shadow Squad">
+            <button class="btn primary" id="guildCreateBtn">CREATE</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🔑 JOIN A GUILD</div>
+          <div class="empty-note" style="margin-bottom:10px">Got a code from a friend? Enter it here.</div>
+          <div class="adm-row">
+            <input class="inp" id="guildJoinCode" style="flex:1;min-width:120px;text-transform:uppercase" maxlength="6" placeholder="6-letter code">
+            <button class="btn gold" id="guildJoinBtn">JOIN</button>
+          </div>
+        </div>
+      </div>
+      <div id="guildMain" style="display:none">
+        <div class="panel">
+          <div class="panel-title" id="guildTitle">⚔️ GUILD</div>
+          <div class="adm-row" style="align-items:center">
+            <span class="empty-note" style="margin:0">Invite code: <b id="guildCode" style="color:var(--legendary);font-family:'Orbitron',monospace;letter-spacing:.2em"></b></span>
+            <button class="btn" id="guildCopyBtn" style="padding:6px 12px;font-size:.7rem">COPY</button>
+            <button class="btn danger" id="guildLeaveBtn" style="padding:6px 12px;font-size:.7rem;margin-left:auto">LEAVE</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🏆 WEEKLY LEADERBOARD</div>
+          <div class="empty-note" style="margin-bottom:10px">Ranked by XP earned in the last 7 days. Press 👊 to send a hunter your RESPECT.</div>
+          <div id="guildMembers"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">💬 GUILD CHAT</div>
+          <div id="guildChat" class="gchat"></div>
+          <div class="adm-row" style="margin-top:10px">
+            <input class="inp" id="chatInput" style="flex:1;min-width:150px" maxlength="300" placeholder="Message your guild…">
+            <button class="btn primary" id="chatSendBtn">SEND</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ GUIDE ============ -->
     <section id="page-guide" style="display:none">
       <div class="panel guide">
@@ -922,6 +996,10 @@ main section{animation:pagein .28s ease}
           <li><b>Cloud:</b> sign in with Google (ADMIN → CLOUD SYNC) to auto-sync across devices. Use UPLOAD/DOWNLOAD there for first-time setup direction.</li>
           <li><b>Backup:</b> ADMIN → EXPORT JSON saves everything to a file; IMPORT restores it anywhere.</li>
         </ul>
+      </div>
+      <div class="panel guide">
+        <div class="panel-title">⚔️ HUNTERS GUILD</div>
+        <p>Team up on the GUILD page (Google sign-in required). Create a guild to get a 6-letter invite code, or join with a friend's code. Members share a <b>weekly leaderboard</b> ranked by XP earned in the last 7 days, can send each other <b>👊 respect boosts</b> (delivered as a System announcement), and talk in the <b>guild chat</b>. Your public guild card shows only your name, level, rank, streaks and counts — never your quest details.</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">📱 INSTALL &amp; OFFLINE</div>
@@ -1301,6 +1379,7 @@ function defaultState(){
     honors:[],           /* hall of honor: archived conquered challenges / achieved goals */
     honorsSeeded:false,
     customQuotes:[],     /* user-added quotes shown after completions */
+    guildId:"",          /* hunters guild membership (synced across devices) */
     skills:[],           /* earned from the level road */
     equipment:[],
     foods:[],
@@ -1368,6 +1447,7 @@ function cloudPush(){
   if(cloudPushTimer) clearTimeout(cloudPushTimer);
   cloudPushTimer = setTimeout(function(){
     cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
+    publishGuildProfile();
   }, 1200);
 }
 function cloudAdopt(remoteJson){
@@ -1377,6 +1457,7 @@ function cloudAdopt(remoteJson){
   adoptState(remoteState);
   try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
   idbPut("kv", "state", JSON.stringify(state));
+  if(cloudUser && state.guildId) attachGuild(); /* guild may have changed on another device */
   renderAll();
 }
 function cloudSignIn(){
@@ -1414,6 +1495,205 @@ function cloudUpload(){
   toast("This device's data uploaded to the cloud.", "gold", "SYNCED");
   renderCloudStatus();
 }
+/* ---------------- hunters guild (leaderboard, respect, chat) ---------------- */
+var gMembers = {}, gChat = [], gInfo = null;
+var gRefs = {members:null, chat:null, cheers:null, info:null};
+function weeklyXP(){
+  var t = todayStr(), sum = 0;
+  for(var i=0;i<7;i++){
+    var h = state.history[addDays(t,-i)];
+    if(h) sum += h.xp;
+  }
+  return sum;
+}
+function guildProfile(){
+  var r = rankForLevel(state.level);
+  var best = 0;
+  for(var i=0;i<state.quests.length;i++) if(state.quests[i].streak > best) best = state.quests[i].streak;
+  var hToday = state.history[todayStr()];
+  return {
+    name: state.hunterName,
+    photo: (cloudUser && cloudUser.photoURL) || "",
+    level: state.level,
+    rank: r.key,
+    weeklyXp: weeklyXP(),
+    totalDone: state.totalCompleted,
+    todayDone: hToday ? hToday.count : 0,
+    streak: best,
+    lastSeen: Date.now()
+  };
+}
+function publishGuildProfile(){
+  if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  fbDb.ref("guilds/" + state.guildId + "/members/" + cloudUser.uid).set(guildProfile());
+}
+function guildCode(){
+  var chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  var c = "";
+  for(var i=0;i<6;i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+function createGuild(){
+  if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
+  var name = document.getElementById("guildNewName").value.trim();
+  if(!name){ toast("Name your guild first.", "err"); return; }
+  var gid = fbDb.ref("guilds").push().key;
+  var code = guildCode();
+  fbDb.ref("guilds/" + gid + "/info").set({name:name, code:code, createdBy:cloudUser.uid, createdAt:Date.now()})
+    .then(function(){ return fbDb.ref("codes/" + code).set(gid); })
+    .then(function(){
+      state.guildId = gid;
+      save();
+      publishGuildProfile();
+      attachGuild();
+      renderGuild();
+      announce("🏰 GUILD FOUNDED", "[" + name + "]\n\nYour guild stands. Share the invite code with your allies:\n\n" + code, "🏰", "GATHER THE HUNTERS");
+    })
+    .catch(function(err){ toast("Could not create guild: " + err.message, "err"); });
+}
+function joinGuild(){
+  if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
+  var code = document.getElementById("guildJoinCode").value.trim().toUpperCase();
+  if(code.length !== 6){ toast("The invite code is 6 characters.", "err"); return; }
+  fbDb.ref("codes/" + code).once("value", function(snap){
+    var gid = snap.val();
+    if(!gid){ toast("No guild found with that code. Check it with your friend.", "err"); return; }
+    state.guildId = gid;
+    save();
+    publishGuildProfile();
+    attachGuild();
+    renderGuild();
+    toast("Welcome to the guild, Hunter!", "gold", "GUILD JOINED");
+  });
+}
+function leaveGuild(){
+  if(!state.guildId) return;
+  if(!confirm("Leave this guild? Your friends will no longer see your progress.")) return;
+  if(cloudAvailable && cloudUser){
+    fbDb.ref("guilds/" + state.guildId + "/members/" + cloudUser.uid).remove();
+  }
+  detachGuild();
+  state.guildId = "";
+  save();
+  renderGuild();
+}
+function detachGuild(){
+  for(var k in gRefs){ if(gRefs[k]){ gRefs[k].off(); gRefs[k] = null; } }
+  gMembers = {}; gChat = []; gInfo = null;
+}
+function attachGuild(){
+  if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  detachGuild();
+  var base = "guilds/" + state.guildId;
+  gRefs.info = fbDb.ref(base + "/info");
+  gRefs.info.on("value", function(s){ gInfo = s.val(); if(currentPage === "guild") renderGuild(); });
+  gRefs.members = fbDb.ref(base + "/members");
+  gRefs.members.on("value", function(s){ gMembers = s.val() || {}; if(currentPage === "guild") renderGuild(); });
+  gRefs.chat = fbDb.ref(base + "/chat").limitToLast(50);
+  gRefs.chat.on("value", function(s){
+    gChat = [];
+    s.forEach(function(m){ gChat.push(m.val()); });
+    if(currentPage === "guild") renderGuildChat();
+  });
+  /* respect boosts addressed to me */
+  gRefs.cheers = fbDb.ref(base + "/cheers/" + cloudUser.uid);
+  gRefs.cheers.on("child_added", function(s){
+    var c = s.val() || {};
+    announce("👊 RESPECT RECEIVED", (c.from || "A hunter") + " sends you their respect!\n\n\"Keep going. The guild is watching your climb.\"", "👊", "POWER UP");
+    s.ref.remove();
+  });
+}
+function sendCheer(uid, name){
+  if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  fbDb.ref("guilds/" + state.guildId + "/cheers/" + uid).push({from: state.hunterName, at: Date.now()});
+  toast("👊 Respect sent to " + name + "!", "gold", "SUPPORT");
+}
+function sendChat(){
+  if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  var inp = document.getElementById("chatInput");
+  var txt = inp.value.trim();
+  if(!txt) return;
+  fbDb.ref("guilds/" + state.guildId + "/chat").push({
+    uid: cloudUser.uid, name: state.hunterName, text: txt.slice(0,300), at: Date.now()
+  });
+  inp.value = "";
+}
+function renderGuildChat(){
+  var el = document.getElementById("guildChat");
+  if(!el) return;
+  if(gChat.length === 0){
+    el.innerHTML = '<div class="empty-note">No messages yet. Say something to your guild!</div>';
+    return;
+  }
+  var h = "";
+  for(var i=0;i<gChat.length;i++){
+    var m = gChat[i];
+    var mine = cloudUser && m.uid === cloudUser.uid;
+    var when = m.at ? new Date(m.at) : null;
+    var ts = when ? pad2(when.getHours()) + ":" + pad2(when.getMinutes()) : "";
+    h += '<div class="gmsg' + (mine ? " mine" : "") + '">'
+      + '<div class="gmsg-head">' + esc(m.name || "Hunter") + ' <span>' + ts + '</span></div>'
+      + '<div class="gmsg-body">' + esc(m.text || "") + '</div></div>';
+  }
+  el.innerHTML = h;
+  el.scrollTop = el.scrollHeight;
+}
+function renderGuild(){
+  var authNote = document.getElementById("guildAuthNote");
+  var setup = document.getElementById("guildSetup");
+  var main = document.getElementById("guildMain");
+  if(!cloudAvailable || !cloudUser){
+    authNote.style.display = ""; setup.style.display = "none"; main.style.display = "none";
+    return;
+  }
+  authNote.style.display = "none";
+  if(!state.guildId){
+    setup.style.display = ""; main.style.display = "none";
+    return;
+  }
+  setup.style.display = "none"; main.style.display = "";
+  document.getElementById("guildTitle").textContent = "⚔️ " + (gInfo && gInfo.name ? gInfo.name.toUpperCase() : "GUILD");
+  document.getElementById("guildCode").textContent = gInfo && gInfo.code ? gInfo.code : "······";
+  /* leaderboard by weekly XP */
+  var list = [];
+  for(var uid in gMembers){ var mm = gMembers[uid]; mm._uid = uid; list.push(mm); }
+  list.sort(function(a,b){ return (b.weeklyXp || 0) - (a.weeklyXp || 0); });
+  var medals = ["🥇","🥈","🥉"];
+  var h = "";
+  for(var i=0;i<list.length;i++){
+    var m = list[i];
+    var me = cloudUser && m._uid === cloudUser.uid;
+    var online = m.lastSeen && (Date.now() - m.lastSeen) < 10 * 60000;
+    h += '<div class="gmem' + (me ? " me" : "") + '">'
+      + '<span class="gmem-rank">' + (medals[i] || ("#" + (i+1))) + '</span>'
+      + (m.photo ? '<img class="gmem-ava" src="' + esc(m.photo) + '" alt="">' : '<span class="gmem-ava gmem-ava-fallback">⚔️</span>')
+      + '<div class="gmem-main"><div class="gmem-name">' + esc(m.name || "Hunter")
+      + ' <span class="rank-badge ' + ("rank-" + (m.rank || "E")) + '" style="width:20px;height:20px;font-size:.6rem">' + (m.rank || "E") + '</span>'
+      + (online ? ' <span class="gmem-on" title="Active recently"></span>' : '') + '</div>'
+      + '<div class="gmem-sub">LV.' + (m.level || 1) + ' • 🔥 ' + (m.streak || 0) + ' streak • today ' + (m.todayDone || 0) + ' • total ' + (m.totalDone || 0) + '</div></div>'
+      + '<div class="gmem-xp"><b>' + (m.weeklyXp || 0) + '</b><span>XP / 7d</span></div>'
+      + (me ? '' : '<button class="mini-btn" data-cheer="' + m._uid + '" data-cname="' + esc(m.name || "Hunter") + '" title="Send respect">👊</button>')
+      + '</div>';
+  }
+  document.getElementById("guildMembers").innerHTML = h || '<div class="empty-note">Loading members…</div>';
+  renderGuildChat();
+}
+document.getElementById("guildSignInBtn").addEventListener("click", cloudSignIn);
+document.getElementById("guildCreateBtn").addEventListener("click", createGuild);
+document.getElementById("guildJoinBtn").addEventListener("click", joinGuild);
+document.getElementById("guildLeaveBtn").addEventListener("click", leaveGuild);
+document.getElementById("guildCopyBtn").addEventListener("click", function(){
+  var code = document.getElementById("guildCode").textContent;
+  try{ navigator.clipboard.writeText(code); toast("Invite code copied: " + code, "sys", "COPIED"); }
+  catch(e){ toast("Code: " + code, "sys", "INVITE CODE"); }
+});
+document.getElementById("chatSendBtn").addEventListener("click", sendChat);
+document.getElementById("chatInput").addEventListener("keydown", function(e){ if(e.key === "Enter") sendChat(); });
+document.getElementById("guildMembers").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-cheer]"); if(!b) return;
+  sendCheer(b.getAttribute("data-cheer"), b.getAttribute("data-cname"));
+});
+
 function renderCloudStatus(){
   var na = document.getElementById("cloudUnavailable");
   if(!na) return; /* admin panel not yet in the DOM */
@@ -1447,9 +1727,12 @@ function renderCloudStatus(){
 if(cloudAvailable){
   fbAuth.onAuthStateChanged(function(user){
     if(cloudRef){ cloudRef.off(); cloudRef = null; }
+    detachGuild();
     cloudUser = user;
     renderCloudStatus();
+    if(currentPage === "guild") renderGuild();
     if(!user) return;
+    if(state.guildId){ attachGuild(); publishGuildProfile(); }
     cloudRef = fbDb.ref("hunters/" + user.uid);
     cloudRef.once("value", function(snap){
       var remote = snap.val();
@@ -1823,7 +2106,7 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["home","profile","quests","rewards","stats","story","honor","guide","admin"];
+var PAGES = ["home","profile","quests","rewards","stats","story","honor","guild","guide","admin"];
 function switchPage(p){
   currentPage = p;
   for(var i=0;i<PAGES.length;i++){
@@ -4892,6 +5175,7 @@ function renderHome(){
     {p:"stats", i:"📊", l:"STATS"},
     {p:"story", i:"📖", l:"STORY"},
     {p:"honor", i:"🏆", l:"HONOR"},
+    {p:"guild", i:"⚔️", l:"GUILD"},
     {p:"guide", i:"📘", l:"GUIDE"},
     {p:"admin", i:"⚙️", l:"ADMIN"}
   ];
@@ -4926,6 +5210,7 @@ function renderAll(){
   else if(currentPage === "stats") renderStats();
   else if(currentPage === "story") renderStory();
   else if(currentPage === "honor") renderHonor();
+  else if(currentPage === "guild") renderGuild();
   else if(currentPage === "admin") renderAdmin();
 }
 
