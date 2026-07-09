@@ -412,6 +412,15 @@ nav::-webkit-scrollbar{display:none}
 .gmsg.mine .gmsg-head{color:var(--blue)}
 .gmsg-head span{color:var(--dim);font-weight:600;margin-left:6px}
 .gmsg-body{font-size:.9rem;color:var(--txt);word-break:break-word}
+.watch-task{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;background:rgba(5,6,16,.4)}
+.watch-task .wt-ico{font-size:1.1rem;flex:0 0 auto}
+.watch-task .wt-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.watch-task .wt-meta{font-size:.72rem;font-weight:700;color:var(--dim);flex:0 0 auto}
+.nav-edit-row{display:flex;align-items:center;gap:7px;padding:6px 0}
+.nav-edit-row .ne-ico{font-size:1.1rem;width:24px;text-align:center;flex:0 0 auto}
+.nav-edit-row .ne-name{flex:1;min-width:0}
+.mini-btn.ne-on{color:var(--easy);border-color:var(--easy)}
 /* story: beating choice buttons */
 .story-choice{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 @media (max-width:520px){.story-choice{grid-template-columns:1fr}}
@@ -777,18 +786,7 @@ main section{animation:pagein .28s ease}
     </div>
   </header>
 
-  <nav id="nav">
-    <button class="nav-btn active" data-page="home"><span class="nv-ico">&#127968;</span>HOME</button>
-    <button class="nav-btn" data-page="profile"><span class="nv-ico">&#9876;&#65039;</span>PROFILE</button>
-    <button class="nav-btn" data-page="quests"><span class="nv-ico">&#128220;</span>QUESTS</button>
-    <button class="nav-btn" data-page="rewards"><span class="nv-ico">&#127873;</span>REWARDS<span class="nav-badge" id="navRollBadge" style="display:none"></span></button>
-    <button class="nav-btn" data-page="stats"><span class="nv-ico">&#128202;</span>STATS</button>
-    <button class="nav-btn" data-page="story"><span class="nv-ico">&#128218;</span>STORY</button>
-    <button class="nav-btn" data-page="honor"><span class="nv-ico">&#127942;</span>HONOR</button>
-    <button class="nav-btn" data-page="guild"><span class="nv-ico">&#9876;&#65039;</span>CLAN</button>
-    <button class="nav-btn" data-page="guide"><span class="nv-ico">&#128278;</span>GUIDE</button>
-    <button class="nav-btn" data-page="admin"><span class="nv-ico">&#9881;&#65039;</span>ADMIN</button>
-  </nav>
+  <nav id="nav"></nav>
 
   <main>
     <!-- ============ HOME / DASHBOARD ============ -->
@@ -1138,7 +1136,7 @@ main section{animation:pagein .28s ease}
       </div>
       <div class="panel guide">
         <div class="panel-title">🗺 STORY — LEVEL ROAD</div>
-        <p>The winding road on the STORY page shows every level ahead, passing landmark stops like the Pyramids and the Colosseum. Each node carries awards granted automatically on level-up: rolls, stat points, skills, equipment, food, titles, or a prize you pick from the list (or write yourself). Edit everything in ADMIN → STORY ROAD AWARDS. Story chapters unlock as your total completions grow.</p>
+        <p>The winding road on the STORY page shows every level ahead, passing landmark stops like the Pyramids and the Colosseum. Each node carries awards granted automatically on level-up: rolls, stat points, skills, equipment, food, titles, or a prize you pick from the list (or write yourself). Edit everything in ADMIN → EDIT STORY PATH AWARDS. Story chapters unlock as your total completions grow.</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">🏆 HALL OF HONOR</div>
@@ -1206,6 +1204,8 @@ main section{animation:pagein .28s ease}
         <div class="panel-title">🎨 APPEARANCE</div>
         <label class="form-lbl">Color Theme</label>
         <select class="sel" id="admTheme"></select>
+        <label class="form-lbl" style="margin-top:14px">Navigation Tabs</label>
+        <button class="btn primary" id="openNavEditor" style="width:100%">✎ RENAME &amp; REORDER TABS</button>
       </div>
 
       <div class="panel">
@@ -1224,17 +1224,9 @@ main section{animation:pagein .28s ease}
         <input type="file" id="admImportFile" accept=".json,application/json" style="display:none">
       </div>
       <div class="panel">
-        <div class="panel-title">🗺 STORY ROAD AWARDS (LEVEL REWARDS)</div>
-        <div class="empty-note" style="margin-bottom:10px">These are the awards on the STORY page road map — each row is granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; skills and equipment appear on your PROFILE; MY PRIZE is anything you write yourself. Rows are editable in place.</div>
-        <div id="admRoad"></div>
-        <div class="adm-row" style="margin-top:10px">
-          <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
-          <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
-          <select class="sel" id="roadAddSkillSel" style="display:none;flex:1;min-width:150px"></select>
-          <select class="sel" id="roadAddBonus" style="display:none;width:170px;flex:0 0 auto" title="Bonus this item gives when used on a quest"></select>
-          <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / prize text)">
-          <button class="btn primary" id="roadAddBtn">ADD</button>
-        </div>
+        <div class="panel-title">🗺 STORY PATH AWARDS</div>
+        <div class="empty-note" style="margin-bottom:10px">The rewards granted on the STORY road as you level up.</div>
+        <button class="btn primary" id="openRoadEditor" style="width:100%">✎ EDIT STORY PATH AWARDS</button>
       </div>
       <div class="panel">
         <div class="panel-title">🎒 MANAGE INVENTORY</div>
@@ -1368,6 +1360,47 @@ main section{animation:pagein .28s ease}
       <button class="btn" id="qmCancel">CANCEL</button>
       <button class="btn primary" id="qmSave">SAVE QUEST</button>
     </div>
+  </div>
+</div>
+
+<!-- customize navigation -->
+<div class="modal" id="navModal">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-title">✎ CUSTOMIZE NAVIGATION</div>
+    <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. ADMIN always stays visible so you can get back here.</div>
+    <div id="navEditor"></div>
+    <div class="modal-actions">
+      <button class="btn" id="navResetBtn">RESET</button>
+      <button class="btn primary" id="navDoneBtn">DONE</button>
+    </div>
+  </div>
+</div>
+
+<!-- story path awards editor -->
+<div class="modal" id="roadModal">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-title">🗺 STORY PATH AWARDS</div>
+    <div class="empty-note" style="margin-bottom:12px">Each row is granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; skills/equipment/food appear on your PROFILE; MY PRIZE is anything you write. Edit rows in place.</div>
+    <div id="admRoad" style="max-height:44vh;overflow-y:auto"></div>
+    <div class="form-lbl" style="margin-top:14px">ADD AN AWARD</div>
+    <div class="adm-row">
+      <input class="inp" id="roadAddLevel" type="number" min="2" max="999" style="width:80px;flex:0 0 auto" placeholder="Lv">
+      <select class="sel" id="roadAddKind" style="width:170px;flex:0 0 auto"></select>
+      <select class="sel" id="roadAddSkillSel" style="display:none;flex:1;min-width:150px"></select>
+      <select class="sel" id="roadAddBonus" style="display:none;width:170px;flex:0 0 auto" title="Bonus this item gives when used on a quest"></select>
+      <input class="inp" id="roadAddValue" style="flex:1;min-width:130px" maxlength="60" placeholder="Value (SP count / title / prize text)">
+      <button class="btn primary" id="roadAddBtn">ADD</button>
+    </div>
+    <button class="btn" id="roadModalClose" style="width:100%;margin-top:16px">DONE</button>
+  </div>
+</div>
+
+<!-- watch a clan member's stats -->
+<div class="modal" id="watchModal">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title" id="watchTitle">HUNTER STATS</div>
+    <div id="watchBody"></div>
+    <button class="btn" id="watchClose" style="width:100%;margin-top:14px">CLOSE</button>
   </div>
 </div>
 
@@ -1552,6 +1585,7 @@ function defaultState(){
     dreams:[],           /* chasing after dreams: {id, tier, title, note, target, done} */
     storyView:"path",    /* which story sub-view was last open */
     theme:"shadow",      /* color theme */
+    navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     skills:[],           /* earned from the level road */
     equipment:[],
     foods:[],
@@ -1684,15 +1718,29 @@ function guildProfile(){
   var best = 0;
   for(var i=0;i<state.quests.length;i++) if(state.quests[i].streak > best) best = state.quests[i].streak;
   var hToday = state.history[todayStr()];
+  /* top task stats (by streak then completions) shared so friends can watch your habits */
+  var qs = state.quests.filter(function(q){ return !q.system || q.streak > 0; }).slice();
+  qs.sort(function(a,b){ return (b.streak - a.streak) || (b.completions.length - a.completions.length); });
+  var topQuests = [];
+  for(var t=0; t<qs.length && t<10; t++){
+    topQuests.push({icon:qs[t].icon, name:qs[t].name, streak:qs[t].streak || 0,
+      count:qs[t].completions.length, tier:qs[t].tier, freq:qs[t].freq});
+  }
   return {
     name: state.hunterName,
     photo: (cloudUser && cloudUser.photoURL) || "",
     level: state.level,
     rank: r.key,
     weeklyXp: weeklyXP(),
+    totalXp: state.totalXp,
     totalDone: state.totalCompleted,
     todayDone: hToday ? hToday.count : 0,
     streak: best,
+    stats: {INT:state.stats.INT, STR:state.stats.STR, CON:state.stats.CON, END:state.stats.END},
+    titles: state.titles.slice(0, 16),
+    badges: state.badges.length,
+    honors: state.honors.length,
+    topQuests: topQuests,
     lastSeen: Date.now()
   };
 }
@@ -1837,7 +1885,7 @@ function renderGuild(){
     var m = list[i];
     var me = cloudUser && m._uid === cloudUser.uid;
     var online = m.lastSeen && (Date.now() - m.lastSeen) < 10 * 60000;
-    h += '<div class="gmem' + (me ? " me" : "") + '">'
+    h += '<div class="gmem' + (me ? " me" : "") + '" data-watch="' + m._uid + '" title="Tap to watch stats">'
       + '<span class="gmem-rank">' + (medals[i] || ("#" + (i+1))) + '</span>'
       + (m.photo ? '<img class="gmem-ava" src="' + esc(m.photo) + '" alt="">' : '<span class="gmem-ava gmem-ava-fallback">⚔️</span>')
       + '<div class="gmem-main"><div class="gmem-name">' + esc(m.name || "Hunter")
@@ -1845,12 +1893,63 @@ function renderGuild(){
       + (online ? ' <span class="gmem-on" title="Active recently"></span>' : '') + '</div>'
       + '<div class="gmem-sub">LV.' + (m.level || 1) + ' • 🔥 ' + (m.streak || 0) + ' streak • today ' + (m.todayDone || 0) + ' • total ' + (m.totalDone || 0) + '</div></div>'
       + '<div class="gmem-xp"><b>' + (m.weeklyXp || 0) + '</b><span>XP / 7d</span></div>'
+      + '<button class="mini-btn" data-watch-btn="' + m._uid + '" title="Watch stats">👁</button>'
       + (me ? '' : '<button class="mini-btn" data-cheer="' + m._uid + '" data-cname="' + esc(m.name || "Hunter") + '" title="Send respect">👊</button>')
       + '</div>';
   }
   document.getElementById("guildMembers").innerHTML = h || '<div class="empty-note">Loading members…</div>';
   renderGuildChat();
 }
+function openWatchStats(uid){
+  var m = gMembers[uid];
+  if(!m){ toast("That hunter's stats aren't loaded yet.", "err"); return; }
+  document.getElementById("watchTitle").textContent = "👁 " + (m.name || "Hunter") + " — LV." + (m.level || 1);
+  var h = "";
+  /* overall cards */
+  var cards = [
+    {v:"LV." + (m.level || 1), l:"Level"},
+    {v:(m.rank || "E"), l:"Rank"},
+    {v:(m.weeklyXp || 0), l:"XP / 7 days"},
+    {v:(m.totalDone || 0), l:"Quests Done"},
+    {v:"🔥 " + (m.streak || 0), l:"Best Streak"},
+    {v:(m.totalXp || 0), l:"Total XP"},
+    {v:(m.honors || 0), l:"Honors"},
+    {v:(m.badges || 0), l:"Badges"}
+  ];
+  h += '<div class="cards-grid" style="margin-bottom:14px">';
+  for(var c=0;c<cards.length;c++) h += '<div class="sum-card"><div class="sum-val" style="font-size:1.05rem">' + esc(String(cards[c].v)) + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
+  h += '</div>';
+  /* attributes */
+  if(m.stats){
+    h += '<div class="form-lbl">ATTRIBUTES</div><div class="chip-list" style="margin-bottom:14px">';
+    var sk = ["INT","STR","CON","END"];
+    for(var s=0;s<sk.length;s++) h += '<span class="tag tag-stat">' + sk[s] + ' ' + (m.stats[sk[s]] || 0) + '</span>';
+    h += '</div>';
+  }
+  /* titles */
+  h += '<div class="form-lbl">TITLES</div>';
+  if(m.titles && m.titles.length){
+    h += '<div class="chip-list" style="margin-bottom:14px">';
+    for(var ti=0;ti<m.titles.length;ti++) h += '<span class="title-chip">👑 ' + esc(m.titles[ti]) + '</span>';
+    h += '</div>';
+  } else h += '<div class="empty-note" style="margin-bottom:14px">No titles yet.</div>';
+  /* task stats */
+  h += '<div class="form-lbl">TASK STATS</div>';
+  if(m.topQuests && m.topQuests.length){
+    h += '<div>';
+    for(var q=0;q<m.topQuests.length;q++){
+      var tq = m.topQuests[q];
+      h += '<div class="watch-task"><span class="wt-ico">' + (tq.icon || "•") + '</span>'
+        + '<span class="wt-name">' + esc(tq.name || "Quest") + '</span>'
+        + '<span class="wt-meta">🔥 ' + (tq.streak || 0) + ' • ✓ ' + (tq.count || 0) + '</span></div>';
+    }
+    h += '</div>';
+  } else h += '<div class="empty-note">No task stats shared.</div>';
+  document.getElementById("watchBody").innerHTML = h;
+  document.getElementById("watchModal").classList.add("show");
+}
+document.getElementById("watchClose").addEventListener("click", function(){ document.getElementById("watchModal").classList.remove("show"); });
+document.getElementById("watchModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("guildSignInBtn").addEventListener("click", cloudSignIn);
 document.getElementById("guildCreateBtn").addEventListener("click", createGuild);
 document.getElementById("guildJoinBtn").addEventListener("click", joinGuild);
@@ -1863,6 +1962,12 @@ document.getElementById("guildCopyBtn").addEventListener("click", function(){
 document.getElementById("chatSendBtn").addEventListener("click", sendChat);
 document.getElementById("chatInput").addEventListener("keydown", function(e){ if(e.key === "Enter") sendChat(); });
 document.getElementById("guildMembers").addEventListener("click", function(e){
+  var cheer = e.target.closest("button[data-cheer]");
+  if(cheer){ sendCheer(cheer.getAttribute("data-cheer"), cheer.getAttribute("data-cname")); return; }
+  var watchBtn = e.target.closest("button[data-watch-btn]");
+  if(watchBtn){ openWatchStats(watchBtn.getAttribute("data-watch-btn")); return; }
+  var row = e.target.closest(".gmem[data-watch]");
+  if(row){ openWatchStats(row.getAttribute("data-watch")); return; }
   var b = e.target.closest("button[data-cheer]"); if(!b) return;
   sendCheer(b.getAttribute("data-cheer"), b.getAttribute("data-cname"));
 });
@@ -2285,6 +2390,32 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
 var PAGES = ["home","profile","quests","rewards","stats","story","honor","guild","guide","admin"];
+var NAV_ICON = {home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", guide:"GUIDE", admin:"ADMIN"};
+var NAV_ORDER = ["home","profile","quests","rewards","stats","story","honor","guild","guide","admin"];
+function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
+function reconcileNav(){
+  if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
+  var seen = {};
+  state.navConfig = state.navConfig.filter(function(c){
+    if(!NAV_ICON[c.page] || seen[c.page]) return false;
+    seen[c.page] = true; return true;
+  });
+  for(var i=0;i<NAV_ORDER.length;i++) if(!seen[NAV_ORDER[i]]) state.navConfig.push({page:NAV_ORDER[i], label:NAV_LABEL[NAV_ORDER[i]], hidden:false});
+}
+function renderNav(){
+  reconcileNav();
+  var h = "";
+  for(var i=0;i<state.navConfig.length;i++){
+    var c = state.navConfig[i];
+    if(c.hidden && c.page !== "admin") continue; /* admin can never be hidden — prevents lockout */
+    var badge = c.page === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
+    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "") + '" data-page="' + c.page + '">'
+      + '<span class="nv-ico">' + (NAV_ICON[c.page] || "•") + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
+  }
+  document.getElementById("nav").innerHTML = h;
+  renderHeader(); /* re-fill the roll badge that lives inside the nav */
+}
 function switchPage(p){
   currentPage = p;
   for(var i=0;i<PAGES.length;i++){
@@ -4712,6 +4843,65 @@ document.getElementById("page-admin").addEventListener("click", function(e){
   else if(act === "cedit") openColModal(id);
   else if(act === "cdel") deleteCollection(id);
 });
+function renderNavEditor(){
+  reconcileNav();
+  var h = "";
+  for(var i=0;i<state.navConfig.length;i++){
+    var c = state.navConfig[i];
+    h += '<div class="nav-edit-row">'
+      + '<span class="ne-ico">' + (NAV_ICON[c.page] || "•") + '</span>'
+      + '<input class="inp ne-name" data-i="' + i + '" maxlength="16" value="' + esc(c.label || NAV_LABEL[c.page]) + '">'
+      + '<button class="mini-btn" data-nmove="' + i + '" data-dir="-1" title="Move up"' + (i===0?" disabled":"") + '>▲</button>'
+      + '<button class="mini-btn" data-nmove="' + i + '" data-dir="1" title="Move down"' + (i===state.navConfig.length-1?" disabled":"") + '>▼</button>'
+      + (c.page === "admin"
+          ? '<span class="tag" style="opacity:.6">shown</span>'
+          : '<button class="mini-btn' + (c.hidden?"":" ne-on") + '" data-nhide="' + i + '" title="Show / hide">' + (c.hidden ? "🚫" : "👁") + '</button>')
+      + '</div>';
+  }
+  document.getElementById("navEditor").innerHTML = h;
+}
+document.getElementById("navEditor").addEventListener("input", function(e){
+  if(!e.target.classList.contains("ne-name")) return;
+  var i = +e.target.getAttribute("data-i");
+  state.navConfig[i].label = e.target.value.trim() || NAV_LABEL[state.navConfig[i].page];
+  renderNav();
+});
+document.getElementById("navEditor").addEventListener("click", function(e){
+  var mv = e.target.closest("button[data-nmove]");
+  if(mv){
+    var i = +mv.getAttribute("data-nmove"), dir = +mv.getAttribute("data-dir"), j = i + dir;
+    if(j < 0 || j >= state.navConfig.length) return;
+    var tmp = state.navConfig[i]; state.navConfig[i] = state.navConfig[j]; state.navConfig[j] = tmp;
+    save(); renderNav(); renderNavEditor();
+    return;
+  }
+  var hd = e.target.closest("button[data-nhide]");
+  if(hd){
+    var k = +hd.getAttribute("data-nhide");
+    state.navConfig[k].hidden = !state.navConfig[k].hidden;
+    save(); renderNav(); renderNavEditor();
+  }
+});
+document.getElementById("openNavEditor").addEventListener("click", function(){
+  renderNavEditor();
+  document.getElementById("navModal").classList.add("show");
+});
+document.getElementById("navDoneBtn").addEventListener("click", function(){
+  save();
+  document.getElementById("navModal").classList.remove("show");
+});
+document.getElementById("navResetBtn").addEventListener("click", function(){
+  if(!confirm("Reset all tabs to their defaults?")) return;
+  state.navConfig = defaultNav();
+  save(); renderNav(); renderNavEditor();
+});
+document.getElementById("navModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
+document.getElementById("openRoadEditor").addEventListener("click", function(){
+  renderAdmin(); /* refresh the road list + selects */
+  document.getElementById("roadModal").classList.add("show");
+});
+document.getElementById("roadModalClose").addEventListener("click", function(){ document.getElementById("roadModal").classList.remove("show"); });
+document.getElementById("roadModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("admTheme").addEventListener("change", function(){
   state.theme = this.value;
   applyTheme(state.theme);
@@ -5544,6 +5734,7 @@ function seedIfNew(){
 }
 load();
 applyTheme(state.theme || "shadow");
+renderNav();
 /* redundant vault: recover from IndexedDB if localStorage was lost or is older */
 idbOpen(function(){
   idbGet("kv", "state", function(raw){
