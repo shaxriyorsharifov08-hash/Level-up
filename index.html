@@ -660,7 +660,7 @@ main section{animation:pagein .28s ease}
     <button class="nav-btn" data-page="stats"><span class="nv-ico">&#128202;</span>STATS</button>
     <button class="nav-btn" data-page="story"><span class="nv-ico">&#128218;</span>STORY</button>
     <button class="nav-btn" data-page="honor"><span class="nv-ico">&#127942;</span>HONOR</button>
-    <button class="nav-btn" data-page="guild"><span class="nv-ico">&#9876;&#65039;</span>GUILD</button>
+    <button class="nav-btn" data-page="guild"><span class="nv-ico">&#9876;&#65039;</span>CLAN</button>
     <button class="nav-btn" data-page="guide"><span class="nv-ico">&#128278;</span>GUIDE</button>
     <button class="nav-btn" data-page="admin"><span class="nv-ico">&#9881;&#65039;</span>ADMIN</button>
   </nav>
@@ -882,21 +882,21 @@ main section{animation:pagein .28s ease}
     <!-- ============ GUILD ============ -->
     <section id="page-guild" style="display:none">
       <div class="panel" id="guildAuthNote" style="display:none">
-        <div class="panel-title">⚔️ HUNTERS GUILD</div>
-        <div class="empty-note" style="margin-bottom:12px">Team up with friends: shared leaderboard, respect boosts, and guild chat. Sign in with Google first so the guild knows who you are.</div>
+        <div class="panel-title">⚔️ HUNTERS CLAN</div>
+        <div class="empty-note" style="margin-bottom:12px">Team up with friends: shared leaderboard, respect boosts, and clan chat. Sign in with Google first so the clan knows who you are.</div>
         <button class="btn primary" id="guildSignInBtn">SIGN IN WITH GOOGLE</button>
       </div>
       <div id="guildSetup" style="display:none">
         <div class="panel">
-          <div class="panel-title">🏰 CREATE A GUILD</div>
-          <div class="empty-note" style="margin-bottom:10px">Found your own guild and share its invite code with friends.</div>
+          <div class="panel-title">🏰 CREATE A CLAN</div>
+          <div class="empty-note" style="margin-bottom:10px">Found your own clan and share its invite code with friends.</div>
           <div class="adm-row">
-            <input class="inp" id="guildNewName" style="flex:1;min-width:160px" maxlength="30" placeholder="Guild name, e.g. Shadow Squad">
+            <input class="inp" id="guildNewName" style="flex:1;min-width:160px" maxlength="30" placeholder="Clan name, e.g. Shadow Squad">
             <button class="btn primary" id="guildCreateBtn">CREATE</button>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-title">🔑 JOIN A GUILD</div>
+          <div class="panel-title">🔑 JOIN A CLAN</div>
           <div class="empty-note" style="margin-bottom:10px">Got a code from a friend? Enter it here.</div>
           <div class="adm-row">
             <input class="inp" id="guildJoinCode" style="flex:1;min-width:120px;text-transform:uppercase" maxlength="6" placeholder="6-letter code">
@@ -906,7 +906,7 @@ main section{animation:pagein .28s ease}
       </div>
       <div id="guildMain" style="display:none">
         <div class="panel">
-          <div class="panel-title" id="guildTitle">⚔️ GUILD</div>
+          <div class="panel-title" id="guildTitle">⚔️ CLAN</div>
           <div class="adm-row" style="align-items:center">
             <span class="empty-note" style="margin:0">Invite code: <b id="guildCode" style="color:var(--legendary);font-family:'Orbitron',monospace;letter-spacing:.2em"></b></span>
             <button class="btn" id="guildCopyBtn" style="padding:6px 12px;font-size:.7rem">COPY</button>
@@ -919,10 +919,10 @@ main section{animation:pagein .28s ease}
           <div id="guildMembers"></div>
         </div>
         <div class="panel">
-          <div class="panel-title">💬 GUILD CHAT</div>
+          <div class="panel-title">💬 CLAN CHAT</div>
           <div id="guildChat" class="gchat"></div>
           <div class="adm-row" style="margin-top:10px">
-            <input class="inp" id="chatInput" style="flex:1;min-width:150px" maxlength="300" placeholder="Message your guild…">
+            <input class="inp" id="chatInput" style="flex:1;min-width:150px" maxlength="300" placeholder="Message your clan…">
             <button class="btn primary" id="chatSendBtn">SEND</button>
           </div>
         </div>
@@ -998,8 +998,8 @@ main section{animation:pagein .28s ease}
         </ul>
       </div>
       <div class="panel guide">
-        <div class="panel-title">⚔️ HUNTERS GUILD</div>
-        <p>Team up on the GUILD page (Google sign-in required). Create a guild to get a 6-letter invite code, or join with a friend's code. Members share a <b>weekly leaderboard</b> ranked by XP earned in the last 7 days, can send each other <b>👊 respect boosts</b> (delivered as a System announcement), and talk in the <b>guild chat</b>. Your public guild card shows only your name, level, rank, streaks and counts — never your quest details.</p>
+        <div class="panel-title">⚔️ HUNTERS CLAN</div>
+        <p>Team up on the CLAN page (Google sign-in required). Create a clan to get a 6-letter invite code, or join with a friend's code. Members share a <b>weekly leaderboard</b> ranked by XP earned in the last 7 days, can send each other <b>👊 respect boosts</b> (delivered as a System announcement), and talk in the <b>clan chat</b>. Your public clan card shows only your name, level, rank, streaks and counts — never your quest details.</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">📱 INSTALL &amp; OFFLINE</div>
@@ -1536,7 +1536,7 @@ function guildCode(){
 function createGuild(){
   if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
   var name = document.getElementById("guildNewName").value.trim();
-  if(!name){ toast("Name your guild first.", "err"); return; }
+  if(!name){ toast("Name your clan first.", "err"); return; }
   var gid = fbDb.ref("guilds").push().key;
   var code = guildCode();
   fbDb.ref("guilds/" + gid + "/info").set({name:name, code:code, createdBy:cloudUser.uid, createdAt:Date.now()})
@@ -1547,9 +1547,9 @@ function createGuild(){
       publishGuildProfile();
       attachGuild();
       renderGuild();
-      announce("🏰 GUILD FOUNDED", "[" + name + "]\n\nYour guild stands. Share the invite code with your allies:\n\n" + code, "🏰", "GATHER THE HUNTERS");
+      announce("🏰 CLAN FOUNDED", "[" + name + "]\n\nYour clan stands. Share the invite code with your allies:\n\n" + code, "🏰", "GATHER THE HUNTERS");
     })
-    .catch(function(err){ toast("Could not create guild: " + err.message, "err"); });
+    .catch(function(err){ toast("Could not create clan: " + err.message, "err"); });
 }
 function joinGuild(){
   if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
@@ -1557,18 +1557,18 @@ function joinGuild(){
   if(code.length !== 6){ toast("The invite code is 6 characters.", "err"); return; }
   fbDb.ref("codes/" + code).once("value", function(snap){
     var gid = snap.val();
-    if(!gid){ toast("No guild found with that code. Check it with your friend.", "err"); return; }
+    if(!gid){ toast("No clan found with that code. Check it with your friend.", "err"); return; }
     state.guildId = gid;
     save();
     publishGuildProfile();
     attachGuild();
     renderGuild();
-    toast("Welcome to the guild, Hunter!", "gold", "GUILD JOINED");
+    toast("Welcome to the clan, Hunter!", "gold", "CLAN JOINED");
   });
 }
 function leaveGuild(){
   if(!state.guildId) return;
-  if(!confirm("Leave this guild? Your friends will no longer see your progress.")) return;
+  if(!confirm("Leave this clan? Your friends will no longer see your progress.")) return;
   if(cloudAvailable && cloudUser){
     fbDb.ref("guilds/" + state.guildId + "/members/" + cloudUser.uid).remove();
   }
@@ -1599,7 +1599,7 @@ function attachGuild(){
   gRefs.cheers = fbDb.ref(base + "/cheers/" + cloudUser.uid);
   gRefs.cheers.on("child_added", function(s){
     var c = s.val() || {};
-    announce("👊 RESPECT RECEIVED", (c.from || "A hunter") + " sends you their respect!\n\n\"Keep going. The guild is watching your climb.\"", "👊", "POWER UP");
+    announce("👊 RESPECT RECEIVED", (c.from || "A hunter") + " sends you their respect!\n\n\"Keep going. The clan is watching your climb.\"", "👊", "POWER UP");
     s.ref.remove();
   });
 }
@@ -1622,7 +1622,7 @@ function renderGuildChat(){
   var el = document.getElementById("guildChat");
   if(!el) return;
   if(gChat.length === 0){
-    el.innerHTML = '<div class="empty-note">No messages yet. Say something to your guild!</div>';
+    el.innerHTML = '<div class="empty-note">No messages yet. Say something to your clan!</div>';
     return;
   }
   var h = "";
@@ -5175,7 +5175,7 @@ function renderHome(){
     {p:"stats", i:"📊", l:"STATS"},
     {p:"story", i:"📖", l:"STORY"},
     {p:"honor", i:"🏆", l:"HONOR"},
-    {p:"guild", i:"⚔️", l:"GUILD"},
+    {p:"guild", i:"⚔️", l:"CLAN"},
     {p:"guide", i:"📘", l:"GUIDE"},
     {p:"admin", i:"⚙️", l:"ADMIN"}
   ];
