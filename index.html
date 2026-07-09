@@ -179,12 +179,14 @@ header{
   background:linear-gradient(135deg,rgba(124,97,255,.25),rgba(0,209,255,.25))}
 
 /* ---------- nav ---------- */
-nav{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+nav{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding:6px 2px 8px;scrollbar-width:none;
+  position:sticky;top:0;z-index:60;background:linear-gradient(180deg,var(--bg) 70%,transparent);
+  -webkit-overflow-scrolling:touch}
 nav::-webkit-scrollbar{display:none}
 .nav-btn{
-  flex:1;min-width:56px;padding:7px 5px;border-radius:10px;
+  flex:1;min-width:60px;min-height:52px;padding:8px 6px;border-radius:12px;
   background:rgba(11,15,34,.75);border:1px solid rgba(124,97,255,.18);
-  color:var(--dim);font-family:'Orbitron',monospace;font-size:.5rem;font-weight:700;
+  color:var(--dim);font-family:'Orbitron',monospace;font-size:.52rem;font-weight:700;
   letter-spacing:.05em;transition:.15s;white-space:nowrap;
   box-shadow:0 2px 0 rgba(40,30,90,.6);
 }
@@ -297,9 +299,12 @@ nav::-webkit-scrollbar{display:none}
 .tag-expired{color:#ef4444;border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.08)}
 /* stats extras: heatmap, duo chart grid, monthly reports */
 .duo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
-.hm-wrap{overflow-x:auto;padding-bottom:6px}
-.hm-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);grid-auto-columns:13px;gap:3px;width:max-content}
-.hm-cell{width:13px;height:13px;border-radius:3px;background:rgba(124,97,255,.10);display:inline-block}
+.hm-wrap{padding-bottom:6px}
+.hm-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,minmax(0,1fr));
+  grid-template-columns:repeat(var(--weeks,18),minmax(0,1fr));gap:3px;width:100%;
+  aspect-ratio:calc(var(--weeks,18) / 7)}
+.hm-cell{border-radius:3px;background:rgba(124,97,255,.10);min-width:0;min-height:0}
+.hm-empty{background:transparent}
 .hm-l1{background:rgba(124,97,255,.35)}
 .hm-l2{background:rgba(147,110,255,.6)}
 .hm-l3{background:#a855f7}
@@ -746,9 +751,18 @@ nav::-webkit-scrollbar{display:none}
   .hunter-name{font-size:1.15rem}
   .stat-row{grid-template-columns:52px 1fr 38px 32px;gap:7px}
   /* stack the action row full-width below the quest text so the big button never squishes it */
-  .q-actions{flex-direction:row;align-items:center;justify-content:space-between;flex:1 0 100%;width:100%;margin-top:4px}
+  .q-actions{flex-direction:row;align-items:center;justify-content:space-between;flex:1 0 100%;width:100%;margin-top:8px}
   .quest-card{flex-wrap:wrap}
-  .btn-complete{flex:1;min-width:0}
+  .btn-complete{flex:1;min-width:0;padding:14px 18px}
+  /* bigger, thumb-friendly tap targets */
+  .mini-btn{width:40px;height:40px;font-size:.95rem}
+  .btn{padding:12px 16px;font-size:.82rem}
+  .modal-box{padding:18px 16px 16px}
+  .modal-actions{position:sticky;bottom:-16px;background:linear-gradient(180deg,transparent,var(--panel) 30%);
+    padding-top:12px;margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+  .seg-btn{min-height:44px;font-size:.8rem}
+  .f-chip{min-height:38px}
+  .fab-lift{bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   .chart-box{height:210px}
   header{padding:11px 13px}
   .logo{font-size:.95rem}
@@ -3972,31 +3986,27 @@ function chartOpts(){
 }
 function renderHeatmap(){
   var t = todayStr();
-  /* ~26 weeks, columns start on Sunday */
+  /* fixed window that always fits the screen width: oldest week on the LEFT,
+     today on the far right — reads strictly left → right, no horizontal scroll. */
+  var weeks = 18;
   var todayDow = new Date().getDay();
-  var start = addDays(t, -(26 * 7 - 1) - todayDow + 0);
-  /* align start to a Sunday */
-  var sp = start.split("-");
-  var sd = new Date(+sp[0], +sp[1]-1, +sp[2]).getDay();
-  if(sd !== 0) start = addDays(start, -sd);
-  var h = "", d = start, guard = 0;
-  while(d <= t && guard < 200){
+  /* first cell = the Sunday that begins the leftmost week */
+  var start = addDays(t, -todayDow - (weeks - 1) * 7);
+  var h = "", d = start, cols = 0, guard = 0;
+  while(cols < weeks && guard < 60){
     for(var row=0; row<7; row++){
       var ds = addDays(d, row);
-      if(ds > t){ h += '<span class="hm-cell" style="visibility:hidden"></span>'; continue; }
+      if(ds > t){ h += '<span class="hm-cell hm-empty"></span>'; continue; }
       var hh = state.history[ds];
       var n = hh ? hh.count : 0;
       var lvl = n <= 0 ? "" : (n <= 1 ? " hm-l1" : (n <= 3 ? " hm-l2" : (n <= 5 ? " hm-l3" : " hm-l4")));
       h += '<span class="hm-cell' + lvl + '" title="' + ds + ' — ' + n + ' quest' + (n===1?"":"s") + '"></span>';
     }
-    d = addDays(d, 7);
-    guard++;
+    d = addDays(d, 7); cols++; guard++;
   }
   var hmEl = document.getElementById("heatmap");
+  hmEl.style.setProperty("--weeks", weeks);
   hmEl.innerHTML = h;
-  /* oldest weeks sit at the left — bring today (far right) into view */
-  var wrap = hmEl.parentNode;
-  requestAnimationFrame(function(){ wrap.scrollLeft = wrap.scrollWidth; });
 }
 function xpPace(){
   var t = todayStr(), sum = 0;
