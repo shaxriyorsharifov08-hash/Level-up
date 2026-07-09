@@ -1767,14 +1767,6 @@ function guildProfile(){
     if(hh && hh.count > 0) activeDays7++;
     focusSec7 += state.timeHistory[ds] || 0;
   }
-  /* top task stats (by streak then completions) shared so friends can watch your habits */
-  var qs = state.quests.filter(function(q){ return !q.system || q.streak > 0; }).slice();
-  qs.sort(function(a,b){ return (b.streak - a.streak) || (b.completions.length - a.completions.length); });
-  var topQuests = [];
-  for(var t=0; t<qs.length && t<10; t++){
-    topQuests.push({icon:qs[t].icon, name:qs[t].name, streak:qs[t].streak || 0,
-      count:qs[t].completions.length, tier:qs[t].tier, freq:qs[t].freq});
-  }
   return {
     name: state.hunterName,
     photo: (cloudUser && cloudUser.photoURL) || "",
@@ -1791,7 +1783,6 @@ function guildProfile(){
     titles: state.titles.slice(0, 16),
     badges: state.badges.length,
     honors: state.honors.length,
-    topQuests: topQuests,
     lastSeen: Date.now()
   };
 }
@@ -2014,18 +2005,6 @@ function openWatchStats(uid){
     for(var ti=0;ti<m.titles.length;ti++) h += '<span class="title-chip">👑 ' + esc(m.titles[ti]) + '</span>';
     h += '</div>';
   } else h += '<div class="empty-note" style="margin-bottom:14px">No titles yet.</div>';
-  /* task stats */
-  h += '<div class="form-lbl">TASK STATS</div>';
-  if(m.topQuests && m.topQuests.length){
-    h += '<div>';
-    for(var q=0;q<m.topQuests.length;q++){
-      var tq = m.topQuests[q];
-      h += '<div class="watch-task"><span class="wt-ico">' + (tq.icon || "•") + '</span>'
-        + '<span class="wt-name">' + esc(tq.name || "Quest") + '</span>'
-        + '<span class="wt-meta">🔥 ' + (tq.streak || 0) + ' • ✓ ' + (tq.count || 0) + '</span></div>';
-    }
-    h += '</div>';
-  } else h += '<div class="empty-note">No task stats shared.</div>';
   document.getElementById("watchBody").innerHTML = h;
   document.getElementById("watchModal").classList.add("show");
 }
