@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Level-up · Money Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">₿</span>
+        <div>
+          <h1>Money Tracker</h1>
+          <p class="tagline">Building your dreams by acting</p>
+        </div>
+      </div>
+      <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+    </header>
+
+    <!-- Summary cards -->
+    <section class="cards">
+      <div class="card balance">
+        <span class="card-label">Balance</span>
+        <span class="card-value" id="balanceVal">$0.00</span>
+      </div>
+      <div class="card income">
+        <span class="card-label">Income</span>
+        <span class="card-value" id="incomeVal">$0.00</span>
+      </div>
+      <div class="card expense">
+        <span class="card-label">Expenses</span>
+        <span class="card-value" id="expenseVal">$0.00</span>
+      </div>
+    </section>
+
+    <div class="main-grid">
+      <!-- Add transaction -->
+      <section class="panel">
+        <h2>Add transaction</h2>
+        <form id="txForm" class="tx-form" autocomplete="off">
+          <div class="toggle">
+            <input type="radio" name="type" id="typeExpense" value="expense" checked />
+            <label for="typeExpense" class="toggle-btn expense-toggle">Expense</label>
+            <input type="radio" name="type" id="typeIncome" value="income" />
+            <label for="typeIncome" class="toggle-btn income-toggle">Income</label>
+          </div>
+
+          <label class="field">
+            <span>Description</span>
+            <input type="text" id="desc" placeholder="e.g. Groceries" required maxlength="60" />
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Amount</span>
+              <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required />
+            </label>
+            <label class="field">
+              <span>Category</span>
+              <select id="category">
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Housing</option>
+                <option>Shopping</option>
+                <option>Bills</option>
+                <option>Health</option>
+                <option>Entertainment</option>
+                <option>Salary</option>
+                <option>Other</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Date</span>
+            <input type="date" id="date" required />
+          </label>
+
+          <button type="submit" class="submit-btn">Add transaction</button>
+        </form>
+      </section>
+
+      <!-- Transaction list -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>History</h2>
+          <select id="filter" class="filter">
+            <option value="all">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expenses</option>
+          </select>
+        </div>
+        <ul id="txList" class="tx-list"></ul>
+        <p id="emptyState" class="empty">No transactions yet. Add your first one!</p>
+      </section>
+    </div>
+
+    <!-- Category breakdown -->
+    <section class="panel breakdown">
+      <h2>Spending by category</h2>
+      <div id="breakdown" class="breakdown-list"></div>
+      <p id="breakdownEmpty" class="empty">Add some expenses to see your breakdown.</p>
+    </section>
+
+    <footer class="footer">
+      <span>Data is saved locally in your browser.</span>
+      <button id="clearAll" class="link-btn">Clear all data</button>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
