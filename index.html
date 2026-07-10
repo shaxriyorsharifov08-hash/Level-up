@@ -1680,14 +1680,19 @@ var firebaseConfig = {
   messagingSenderId: "1037097236196",
   appId: "1:1037097236196:web:33c5775102c19a8c111ef1"
 };
-var cloudAvailable = (typeof firebase !== "undefined");
-var fbAuth = null, fbDb = null, cloudUser = null, cloudRef = null, cloudPushTimer = null;
-if(cloudAvailable){
+var cloudAvailable = false;
+var fbAuth = null, fbDb = null, cloudUser = null, cloudRef = null, cloudPushTimer = null, authListenerSet = false;
+function initCloud(){
+  if(cloudAvailable) return true;
+  if(typeof firebase === "undefined") return false; /* SDK not loaded (yet) */
   try{
-    firebase.initializeApp(firebaseConfig);
+    if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
     fbAuth = firebase.auth();
     fbDb = firebase.database();
-  }catch(e){ cloudAvailable = false; }
+    cloudAvailable = true;
+    setupAuthListener();
+    return true;
+  }catch(e){ return false; }
 }
 function cloudPush(){
   if(!cloudAvailable || !cloudUser || !cloudRef) return;
@@ -1709,11 +1714,26 @@ function cloudAdopt(remoteJson){
   renderAll();
 }
 function cloudSignIn(){
-  if(!cloudAvailable){ toast("Cloud sync is unavailable right now (offline or blocked).", "err"); return; }
+  if(!cloudAvailable && !initCloud()){
+    if(typeof firebase === "undefined"){
+      toast("Sign-in is still loading. Check your connection and reload the page (or fully close and reopen the app).", "err");
+    } else {
+      toast("Cloud sync couldn't start. Please reload and try again.", "err");
+    }
+    return;
+  }
   var provider = new firebase.auth.GoogleAuthProvider();
-  fbAuth.signInWithPopup(provider).catch(function(err){
-    toast("Sign-in failed: " + err.message, "err");
-  });
+  /* redirect is far more reliable than popup on mobile browsers (popups get blocked) */
+  var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if(isMobile){
+    fbAuth.signInWithRedirect(provider).catch(function(err){
+      toast("Sign-in failed: " + err.message, "err");
+    });
+  } else {
+    fbAuth.signInWithPopup(provider).catch(function(err){
+      toast("Sign-in failed: " + err.message, "err");
+    });
+  }
 }
 function cloudSignOut(){
   if(fbAuth) fbAuth.signOut();
@@ -2037,12 +2057,9 @@ function renderCloudStatus(){
   if(!na) return; /* admin panel not yet in the DOM */
   var so = document.getElementById("cloudSignedOut");
   var si = document.getElementById("cloudSignedIn");
-  if(!cloudAvailable){
-    na.style.display = ""; so.style.display = "none"; si.style.display = "none";
-    return;
-  }
-  na.style.display = "none";
-  if(cloudUser){
+  /* the warning only appears as a note ABOVE the button — the button itself is always shown when signed out */
+  na.style.display = cloudAvailable ? "none" : "";
+  if(cloudAvailable && cloudUser){
     so.style.display = "none"; si.style.display = "";
     document.getElementById("cloudAvatar").src = cloudUser.photoURL || "";
     document.getElementById("cloudName").textContent = cloudUser.displayName || cloudUser.email || "Hunter";
@@ -2062,7 +2079,9 @@ function renderCloudStatus(){
     so.style.display = ""; si.style.display = "none";
   }
 }
-if(cloudAvailable){
+function setupAuthListener(){
+  if(authListenerSet || !fbAuth) return;
+  authListenerSet = true;
   fbAuth.onAuthStateChanged(function(user){
     if(cloudRef){ cloudRef.off(); cloudRef = null; }
     detachGuild();
@@ -5831,6 +5850,12 @@ function seedIfNew(){
 load();
 applyTheme(state.theme || "shadow");
 renderNav();
+/* start cloud; retry a few times in case the Firebase SDK loads late on a slow phone connection */
+initCloud();
+(function cloudRetry(n){
+  if(cloudAvailable || n <= 0) return;
+  setTimeout(function(){ if(!cloudAvailable){ initCloud(); renderCloudStatus(); } cloudRetry(n - 1); }, 1500);
+})(6);
 /* redundant vault: recover from IndexedDB if localStorage was lost or is older */
 idbOpen(function(){
   idbGet("kv", "state", function(raw){

@@ -1,7 +1,7 @@
 /* LEVEL UP — service worker: offline support + fast repeat loads.
    index.html is network-first (new versions arrive immediately when online,
    cached copy serves offline); all other assets are cache-first. */
-var CACHE = "levelup-v2";
+var CACHE = "levelup-v3";
 var CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", function(e){
