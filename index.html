@@ -487,6 +487,25 @@ nav::-webkit-scrollbar{display:none}
 .flame .fbase{width:30px;height:12px;bottom:-4px;border-radius:50%;background:rgba(0,209,255,.35);filter:blur(4px);animation:none}
 @keyframes flick{0%,100%{transform:translateX(-50%) scaleY(1) rotate(-1deg)}
   50%{transform:translateX(-52%) scaleY(1.12) rotate(1.5deg)}}
+/* budget */
+.budget-balance{text-align:center;padding:14px 0 4px}
+.bb-label{font-family:'Orbitron',monospace;font-size:.66rem;font-weight:800;letter-spacing:.2em;color:var(--dim)}
+.bb-amount{font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:var(--legendary);
+  text-shadow:0 0 22px rgba(251,191,36,.4);margin-top:4px;word-break:break-word}
+.save-goal{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;background:rgba(5,6,16,.5)}
+.save-goal.done{border-color:var(--easy)}
+.sg-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sg-name{font-weight:700;color:#fff}
+.sg-amt{font-family:'Orbitron',monospace;font-size:.82rem;color:var(--blue)}
+.sg-actions{display:flex;align-items:center;gap:6px}
+.sg-pct{font-size:.72rem;font-weight:800;color:var(--dim);flex:1}
+.tx-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.tx-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex:0 0 auto}
+.tx-in{color:var(--easy)}.tx-out{color:#ef4444}
+.tx-main{flex:1;min-width:0}
+.tx-note{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-date{font-size:.68rem;color:var(--dim)}
+.tx-amt{font-family:'Orbitron',monospace;font-weight:800;font-size:.86rem;flex:0 0 auto}
 /* guide page */
 .guide p{color:var(--txt);font-size:.9rem;line-height:1.65;margin:0 0 6px}
 .guide ul{margin:0;padding-left:20px}
@@ -1123,6 +1142,57 @@ main section{animation:pagein .28s ease}
       </div>
     </section>
 
+    <!-- ============ BUDGET ============ -->
+    <section id="page-budget" style="display:none">
+      <div class="panel">
+        <div class="panel-title">💰 BUDGET</div>
+        <div class="budget-balance">
+          <div class="bb-label">CURRENT BALANCE</div>
+          <div class="bb-amount" id="budgetBalance">0</div>
+        </div>
+        <div class="cards-grid" id="budgetStats" style="margin-top:14px"></div>
+        <label class="form-lbl" style="margin-top:14px">Currency</label>
+        <select class="sel" id="budgetCurrency">
+          <option value="$">$ — Dollar</option>
+          <option value="€">€ — Euro</option>
+          <option value="£">£ — Pound</option>
+          <option value="₽">₽ — Ruble</option>
+          <option value="so'm">so'm — Uzbek so'm</option>
+          <option value="₸">₸ — Tenge</option>
+          <option value="₴">₴ — Hryvnia</option>
+          <option value="¥">¥ — Yen / Yuan</option>
+          <option value="₹">₹ — Rupee</option>
+          <option value="₺">₺ — Lira</option>
+        </select>
+      </div>
+      <div class="panel">
+        <div class="panel-title">➕ ADD MONEY IN / OUT</div>
+        <div class="adm-row">
+          <select class="sel" id="txType" style="width:120px;flex:0 0 auto">
+            <option value="in">➕ INCOME</option>
+            <option value="out">➖ EXPENSE</option>
+          </select>
+          <input class="inp" id="txAmount" type="number" min="0" step="0.01" style="width:120px;flex:0 0 auto" placeholder="Amount">
+          <input class="inp" id="txNote" style="flex:1;min-width:120px" maxlength="60" placeholder="Note, e.g. Groceries">
+          <button class="btn primary" id="txAddBtn">ADD</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🎯 SAVINGS GOALS</div>
+        <div class="empty-note" style="margin-bottom:10px">Save toward things you want. Deposit money as you go and watch the bar fill.</div>
+        <div id="savingsList"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <input class="inp" id="goalName" style="flex:1;min-width:130px" maxlength="50" placeholder="Goal, e.g. New laptop">
+          <input class="inp" id="goalTarget" type="number" min="1" step="0.01" style="width:120px;flex:0 0 auto" placeholder="Target">
+          <button class="btn primary" id="goalAddBtn">ADD GOAL</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📒 RECENT TRANSACTIONS</div>
+        <div id="txList"></div>
+      </div>
+    </section>
+
     <!-- ============ GUIDE ============ -->
     <section id="page-guide" style="display:none">
       <div class="panel guide">
@@ -1627,6 +1697,7 @@ function defaultState(){
     storyView:"path",    /* which story sub-view was last open */
     theme:"shadow",      /* color theme */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
+    budget:{currency:"$", transactions:[], goals:[]},
     skills:[],           /* earned from the level road */
     equipment:[],
     foods:[],
@@ -2287,6 +2358,10 @@ function migrateState(){
     for(var cl=2; cl<=state.level; cl++) state.claimedLevels.push(cl);
   }
   if(!state.claimedLevels) state.claimedLevels = [];
+  if(!state.budget) state.budget = {currency:"$", transactions:[], goals:[]};
+  if(!state.budget.transactions) state.budget.transactions = [];
+  if(!state.budget.goals) state.budget.goals = [];
+  if(!state.budget.currency) state.budget.currency = "$";
 }
 var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","food","title","note"];
 var ROAD_KIND_LABEL = {
@@ -2468,10 +2543,10 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["home","profile","quests","rewards","stats","story","honor","guild","guide","admin"];
-var NAV_ICON = {home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", guide:"🔖", admin:"⚙️"};
-var NAV_LABEL = {home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", guide:"GUIDE", admin:"ADMIN"};
-var NAV_ORDER = ["home","profile","quests","rewards","stats","story","honor","guild","guide","admin"];
+var PAGES = ["home","profile","quests","rewards","stats","story","honor","guild","budget","guide","admin"];
+var NAV_ICON = {home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"ADMIN"};
+var NAV_ORDER = ["home","profile","quests","rewards","stats","story","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
   if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
@@ -5795,6 +5870,7 @@ function renderHome(){
     {p:"story", i:"📖", l:"STORY"},
     {p:"honor", i:"🏆", l:"HONOR"},
     {p:"guild", i:"⚔️", l:"CLAN"},
+    {p:"budget", i:"💰", l:"BUDGET"},
     {p:"guide", i:"📘", l:"GUIDE"},
     {p:"admin", i:"⚙️", l:"ADMIN"}
   ];
@@ -5819,6 +5895,146 @@ document.getElementById("quickGrid").addEventListener("click", function(e){
   switchPage(b.getAttribute("data-goto"));
 });
 
+/* ---------------- budget ---------------- */
+function money(n){
+  var neg = n < 0;
+  var v = Math.abs(Math.round(n * 100) / 100);
+  var s = v.toFixed(2).replace(/\.00$/, "");
+  /* thousands separators */
+  var parts = s.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return (neg ? "−" : "") + (state.budget.currency || "$") + parts.join(".");
+}
+function budgetBalance(){
+  var b = 0, tx = state.budget.transactions;
+  for(var i=0;i<tx.length;i++) b += tx[i].type === "in" ? tx[i].amount : -tx[i].amount;
+  return b;
+}
+function renderBudget(){
+  var curSel = document.getElementById("budgetCurrency");
+  if(curSel) curSel.value = state.budget.currency || "$";
+  var bal = budgetBalance();
+  var balEl = document.getElementById("budgetBalance");
+  balEl.textContent = money(bal);
+  balEl.style.color = bal < 0 ? "#ef4444" : "";
+  /* this-month in/out */
+  var mk = todayStr().slice(0, 7), inSum = 0, outSum = 0, savedTotal = 0;
+  for(var i=0;i<state.budget.transactions.length;i++){
+    var tx = state.budget.transactions[i];
+    if((tx.date || "").slice(0,7) === mk){
+      if(tx.type === "in") inSum += tx.amount; else outSum += tx.amount;
+    }
+  }
+  for(var g=0;g<state.budget.goals.length;g++) savedTotal += state.budget.goals[g].saved || 0;
+  var cards = [
+    {v:money(inSum), l:"Income this month"},
+    {v:money(outSum), l:"Spent this month"},
+    {v:money(savedTotal), l:"Saved in goals"},
+    {v:state.budget.goals.filter(function(x){return x.done;}).length + " / " + state.budget.goals.length, l:"Goals reached"}
+  ];
+  var ch = "";
+  for(var c=0;c<cards.length;c++) ch += '<div class="sum-card"><div class="sum-val" style="font-size:1.05rem">' + esc(String(cards[c].v)) + '</div><div class="sum-lbl">' + cards[c].l + '</div></div>';
+  document.getElementById("budgetStats").innerHTML = ch;
+  /* savings goals */
+  var sl = document.getElementById("savingsList");
+  if(state.budget.goals.length === 0){
+    sl.innerHTML = '<div class="empty-note">No savings goals yet. Add one below.</div>';
+  } else {
+    var sh = "";
+    for(var s=0;s<state.budget.goals.length;s++){
+      var go = state.budget.goals[s];
+      var pct = go.target > 0 ? Math.min(100, Math.round(go.saved / go.target * 100)) : 0;
+      sh += '<div class="save-goal' + (go.done ? " done" : "") + '">'
+        + '<div class="sg-top"><span class="sg-name">' + (go.done ? "✅ " : "🎯 ") + esc(go.name) + '</span>'
+        + '<span class="sg-amt">' + money(go.saved) + ' / ' + money(go.target) + '</span></div>'
+        + '<div class="bar" style="height:9px;margin:6px 0"><div class="bar-fill" style="width:' + pct + '%"></div></div>'
+        + '<div class="sg-actions"><span class="sg-pct">' + pct + '%</span>'
+        + '<button class="mini-btn" data-sgdep="' + go.id + '" title="Deposit">＋</button>'
+        + '<button class="mini-btn" data-sgwd="' + go.id + '" title="Withdraw">－</button>'
+        + '<button class="mini-btn" data-sgdel="' + go.id + '" title="Remove">🗑</button></div>'
+        + '</div>';
+    }
+    sl.innerHTML = sh;
+  }
+  /* transactions (most recent first) */
+  var tl = document.getElementById("txList");
+  var txs = state.budget.transactions.slice().reverse();
+  if(txs.length === 0){
+    tl.innerHTML = '<div class="empty-note">No transactions yet.</div>';
+  } else {
+    var th = "";
+    for(var t=0;t<txs.length && t<40;t++){
+      var x = txs[t];
+      th += '<div class="tx-row"><span class="tx-ico ' + (x.type==="in"?"tx-in":"tx-out") + '">' + (x.type==="in"?"➕":"➖") + '</span>'
+        + '<div class="tx-main"><div class="tx-note">' + esc(x.note || (x.type==="in"?"Income":"Expense")) + '</div>'
+        + '<div class="tx-date">' + (x.date ? niceDate(x.date) : "") + '</div></div>'
+        + '<span class="tx-amt ' + (x.type==="in"?"tx-in":"tx-out") + '">' + (x.type==="in"?"+":"−") + money(x.amount).replace("−","") + '</span>'
+        + '<button class="mini-btn" data-txdel="' + x.id + '" title="Remove">🗑</button></div>';
+    }
+    tl.innerHTML = th;
+  }
+}
+document.getElementById("budgetCurrency").addEventListener("change", function(){
+  state.budget.currency = this.value;
+  save(); renderBudget();
+});
+document.getElementById("txAddBtn").addEventListener("click", function(){
+  var amt = parseFloat(document.getElementById("txAmount").value);
+  if(!(amt > 0)){ toast("Enter an amount greater than zero.", "err"); return; }
+  state.budget.transactions.push({
+    id: uid(), type: document.getElementById("txType").value, amount: amt,
+    note: document.getElementById("txNote").value.trim(), date: todayStr()
+  });
+  document.getElementById("txAmount").value = "";
+  document.getElementById("txNote").value = "";
+  save(); renderBudget();
+});
+document.getElementById("txList").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-txdel]"); if(!b) return;
+  var id = b.getAttribute("data-txdel");
+  state.budget.transactions = state.budget.transactions.filter(function(x){ return x.id !== id; });
+  save(); renderBudget();
+});
+document.getElementById("goalAddBtn").addEventListener("click", function(){
+  var name = document.getElementById("goalName").value.trim();
+  var target = parseFloat(document.getElementById("goalTarget").value);
+  if(!name){ toast("Name your savings goal.", "err"); return; }
+  if(!(target > 0)){ toast("Enter a target amount.", "err"); return; }
+  state.budget.goals.push({id: uid(), name:name, target:target, saved:0, done:false, created:todayStr()});
+  document.getElementById("goalName").value = "";
+  document.getElementById("goalTarget").value = "";
+  save(); renderBudget();
+  toast("Savings goal added: " + name, "gold", "GOAL SET");
+});
+document.getElementById("savingsList").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  var goal = function(id){ for(var i=0;i<state.budget.goals.length;i++) if(state.budget.goals[i].id===id) return state.budget.goals[i]; return null; };
+  var dep = b.getAttribute("data-sgdep"), wd = b.getAttribute("data-sgwd"), del = b.getAttribute("data-sgdel");
+  if(dep){
+    var g1 = goal(dep); if(!g1) return;
+    var v = parseFloat(prompt("Deposit how much into \"" + g1.name + "\"?", ""));
+    if(!(v > 0)) return;
+    g1.saved = Math.round((g1.saved + v) * 100) / 100;
+    if(!g1.done && g1.saved >= g1.target){
+      g1.done = true;
+      announce("💰 SAVINGS GOAL REACHED", "You saved " + money(g1.target) + " for:\n\n[" + g1.name + "]\n\nDiscipline turned into results. Well done, Hunter.", "💰", "CLAIM IT");
+    }
+    save(); renderBudget();
+  } else if(wd){
+    var g2 = goal(wd); if(!g2) return;
+    var w = parseFloat(prompt("Withdraw how much from \"" + g2.name + "\"?", ""));
+    if(!(w > 0)) return;
+    g2.saved = Math.max(0, Math.round((g2.saved - w) * 100) / 100);
+    if(g2.saved < g2.target) g2.done = false;
+    save(); renderBudget();
+  } else if(del){
+    var g3 = goal(del); if(!g3) return;
+    if(!confirm('Remove savings goal "' + g3.name + '"?')) return;
+    state.budget.goals = state.budget.goals.filter(function(x){ return x.id !== del; });
+    save(); renderBudget();
+  }
+});
+
 /* ---------------- render dispatcher ---------------- */
 function renderAll(){
   renderHeader();
@@ -5830,6 +6046,7 @@ function renderAll(){
   else if(currentPage === "story") renderStory();
   else if(currentPage === "honor") renderHonor();
   else if(currentPage === "guild") renderGuild();
+  else if(currentPage === "budget") renderBudget();
   else if(currentPage === "admin") renderAdmin();
 }
 
