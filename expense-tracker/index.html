@@ -2,36 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Level-up · Money Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Money Tracker · Level-up</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#5b8def" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Money" />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <span class="logo">₿</span>
+        <img class="logo" src="icons/icon-192.png" alt="" width="46" height="46" />
         <div>
           <h1>Money Tracker</h1>
           <p class="tagline">Building your dreams by acting</p>
         </div>
       </div>
-      <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+      <div class="top-actions">
+        <div id="account" class="account"></div>
+        <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+      </div>
     </header>
+
+    <!-- Sync status / sign-in banner -->
+    <div id="syncBanner" class="sync-banner" hidden></div>
 
     <!-- Summary cards -->
     <section class="cards">
       <div class="card balance">
         <span class="card-label">Balance</span>
-        <span class="card-value" id="balanceVal">$0.00</span>
+        <span class="card-value money" id="balanceVal">$0.00</span>
       </div>
       <div class="card income">
         <span class="card-label">Income</span>
-        <span class="card-value" id="incomeVal">$0.00</span>
+        <span class="card-value money" id="incomeVal">$0.00</span>
       </div>
       <div class="card expense">
         <span class="card-label">Expenses</span>
-        <span class="card-value" id="expenseVal">$0.00</span>
+        <span class="card-value money" id="expenseVal">$0.00</span>
       </div>
     </section>
 
@@ -55,7 +71,7 @@
           <div class="field-row">
             <label class="field">
               <span>Amount</span>
-              <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required />
+              <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required inputmode="decimal" />
             </label>
             <label class="field">
               <span>Category</span>
@@ -105,11 +121,11 @@
     </section>
 
     <footer class="footer">
-      <span>Data is saved locally in your browser.</span>
+      <span id="footerNote">Data is saved on this device.</span>
       <button id="clearAll" class="link-btn">Clear all data</button>
     </footer>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
