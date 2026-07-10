@@ -16,12 +16,12 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBZ1WRVXc3dhuIlZa4HjuqF9li-OdEOsts",
+  authDomain: "level-up-manage-money.firebaseapp.com",
+  projectId: "level-up-manage-money",
+  storageBucket: "level-up-manage-money.firebasestorage.app",
+  messagingSenderId: "580966090398",
+  appId: "1:580966090398:web:08b6f9abb34f40793a1d8f",
 };
 
 // Version of the Firebase JS SDK loaded from the CDN when sync is enabled.
