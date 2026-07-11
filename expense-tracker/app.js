@@ -469,13 +469,13 @@ function hideBanner() { $('syncBanner').hidden = true; }
 function renderAccountChip() {
   const el = $('account');
   if (mode === 'cloud' && user) {
-    el.innerHTML = `<div class="acct-row"><span class="sync-dot"></span><span class="acct-email">${esc(user.email || 'Signed in')}</span></div><button id="signOutBtn" class="chip-btn">Sign out</button>`;
+    el.innerHTML = `<span class="acct-email">${esc(user.email || 'Signed in')}</span><button id="signOutBtn" class="chip-btn"><span class="sync-dot"></span>Sign out</button>`;
     el.querySelector('#signOutBtn').addEventListener('click', doSignOut);
   } else if (isFirebaseConfigured()) {
-    el.innerHTML = `<button id="signInBtn" class="chip-btn primary">Sign in to sync</button><span class="acct-email">Data saved on this device</span>`;
+    el.innerHTML = `<button id="signInBtn" class="chip-btn primary">Sign in</button>`;
     el.querySelector('#signInBtn').addEventListener('click', doSignIn);
   } else {
-    el.innerHTML = `<span class="acct-email">Saved on this device</span>`;
+    el.innerHTML = '';
   }
 }
 

@@ -42,9 +42,6 @@
           <span>Accounts</span>
         </button>
       </nav>
-      <div class="sidebar-foot">
-        <div id="account" class="account"></div>
-      </div>
     </aside>
 
     <!-- Main content -->
@@ -56,6 +53,7 @@
           <button id="monthNext" class="icon-btn sm" aria-label="Next month">›</button>
         </div>
         <div class="appbar-actions">
+          <div id="account" class="account"></div>
           <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
         </div>
       </header>
@@ -150,6 +148,7 @@
           <h1>Monthly budgets</h1>
           <span class="card-sub" id="budgetMonthLabel"></span>
         </div>
+        <p class="hint">💡 Type a monthly limit next to any category below to start tracking it. Bars turn <b style="color:var(--warn)">amber</b> near your limit and <b style="color:var(--neg)">red</b> when you go over.</p>
         <div class="budget-summary" id="budgetSummary"></div>
         <div id="budgetList" class="budget-list"></div>
       </section>

@@ -1,6 +1,6 @@
 // Service worker — offline app shell for Money Tracker.
 // Bump CACHE when shell files change so clients pick up the new version.
-const CACHE = 'money-tracker-v2';
+const CACHE = 'money-tracker-v3';
 const SHELL = [
   './',
   './index.html',
