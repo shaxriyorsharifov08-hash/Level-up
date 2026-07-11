@@ -1,8 +1,10 @@
 {
+  "id": "/Level-up/",
   "name": "LEVEL UP — Hunter System",
   "short_name": "LEVEL UP",
   "description": "Turn your habits into quests. Level up in real life.",
-  "start_url": ".",
+  "scope": "/Level-up/",
+  "start_url": "/Level-up/",
   "display": "standalone",
   "background_color": "#04050d",
   "theme_color": "#7c61ff",

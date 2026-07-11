@@ -6124,9 +6124,21 @@ renderAll();
 switchPage("home");
 renderTimerPill(); /* resume a running session after reload */
 setTimeout(backupReminder, 4000);
-/* offline support + installable app */
-if("serviceWorker" in navigator){
-  try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){}
+/* Level Up shares the github.io origin with the user's other projects. A service
+   worker or cache from another project (or a stale one of ours) can hijack this page
+   and stop it opening. So we DON'T register a service worker — instead we proactively
+   unregister every one on this origin and clear all caches on load, guaranteeing the
+   app always loads fresh from the network. Storage keys are namespaced
+   (leveluphunter_*), so saved data never mixes between projects. */
+if("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    for(var i=0;i<regs.length;i++) regs[i].unregister();
+  }).catch(function(){});
+}
+if(window.caches && caches.keys){
+  caches.keys().then(function(keys){
+    for(var i=0;i<keys.length;i++) caches.delete(keys[i]);
+  }).catch(function(){});
 }
 </script>
 </body>
