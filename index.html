@@ -1337,6 +1337,27 @@ main section{animation:pagein .28s ease}
       </div>
 
       <div class="panel">
+        <div class="panel-title">🌐 LANGUAGE / ЯЗЫК</div>
+        <select class="sel" id="admLang">
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+        </select>
+        <div class="empty-note" style="margin-top:8px">Anything not translated yet is shown in English automatically, so the app always keeps working. / Всё, что ещё не переведено, показывается на английском — приложение всегда работает.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🔔 NOTIFICATIONS</div>
+        <div class="empty-note" style="margin-bottom:10px">A daily reminder when today's quests are still unfinished. Works while LEVEL UP is open in a browser tab or installed on your home screen (⋮ → Add to Home screen).</div>
+        <div class="adm-row" style="align-items:center">
+          <button class="btn primary" id="notifyToggle">🔔 ENABLE REMINDERS</button>
+          <label class="form-lbl" style="margin:0">Remind at</label>
+          <input class="inp" type="time" id="notifyTime" style="width:120px;flex:0 0 auto">
+          <button class="btn" id="notifyTest">TEST</button>
+        </div>
+        <div class="empty-note" id="notifyStatus" style="margin-top:8px"></div>
+      </div>
+
+      <div class="panel">
         <div class="panel-title">HUNTER SETTINGS</div>
         <label class="form-lbl">Hunter Name</label>
         <div class="adm-row">
@@ -1721,6 +1742,8 @@ function defaultState(){
     dreams:[],           /* chasing after dreams: {id, tier, title, note, target, done} */
     storyView:"path",    /* which story sub-view was last open */
     theme:"shadow",      /* color theme */
+    lang:"en",           /* interface language: en | ru */
+    notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     budget:{currency:"$", transactions:[], goals:[]},
     skills:[],           /* earned from the level road */
@@ -2522,6 +2545,303 @@ function esc(s){
   requestAnimationFrame(tick);
 })();
 
+/* ---------------- i18n (interface language) ----------------
+   Russian dictionary keyed by the exact English UI string. A DOM observer
+   translates every text node it sees, so dynamic renders stay translated.
+   Anything NOT in this list simply stays English — a missing entry can never
+   break the app. To add a language: copy this table, translate the values,
+   add an <option> in ADMIN → LANGUAGE and a branch in tr()/trTextNode(). */
+var I18N_RU = {
+  /* navigation + header */
+  "HOME":"ГЛАВНАЯ","PROFILE":"ПРОФИЛЬ","QUESTS":"КВЕСТЫ","REWARDS":"НАГРАДЫ","STATS":"СТАТИСТИКА",
+  "STORY":"ИСТОРИЯ","HONOR":"ПОЧЁТ","CLAN":"КЛАН","BUDGET":"БЮДЖЕТ","GUIDE":"ГИД","ADMIN":"АДМИН",
+  "HUNTER SYSTEM":"СИСТЕМА ОХОТНИКА",
+  /* panel titles */
+  "COMMAND CENTER":"КОМАНДНЫЙ ЦЕНТР","DAILY QUEST — SYSTEM MANDATE":"ЕЖЕДНЕВНЫЙ КВЕСТ — ПРИКАЗ СИСТЕМЫ",
+  "QUEST LOG":"ЖУРНАЛ КВЕСТОВ","REWARD COLLECTIONS":"КОЛЛЕКЦИИ НАГРАД",
+  "STORAGE — EARNED ROLLS":"ХРАНИЛИЩЕ — ЗАРАБОТАННЫЕ РОЛЛЫ","STORAGE":"ХРАНИЛИЩЕ",
+  "HUNTER PROFILE":"ПРОФИЛЬ ОХОТНИКА","HUNTER STATS":"ПАРАМЕТРЫ ОХОТНИКА","ATTRIBUTE RADAR":"РАДАР АТРИБУТОВ",
+  "XP EARNED PER DAY":"XP ПО ДНЯМ","DAILY QUEST COMPLETIONS":"ВЫПОЛНЕНИЕ ЕЖЕДНЕВНЫХ КВЕСТОВ",
+  "WEEKDAY PERFORMANCE":"РЕЗУЛЬТАТЫ ПО ДНЯМ НЕДЕЛИ","STREAK HISTORY PER QUEST":"ИСТОРИЯ СЕРИЙ ПО КВЕСТАМ",
+  "CHRONICLES OF THE HUNTER":"ХРОНИКИ ОХОТНИКА","STORY PATH":"ПУТЬ ИСТОРИИ",
+  "🗺 LEVEL ROAD":"🗺 ДОРОГА УРОВНЕЙ","🗺 STORY — LEVEL ROAD":"🗺 ИСТОРИЯ — ДОРОГА УРОВНЕЙ",
+  "🗺 STORY PATH AWARDS":"🗺 НАГРАДЫ ПУТИ ИСТОРИИ","🏆 HALL OF HONOR":"🏆 ЗАЛ ПОЧЁТА",
+  "🏆 WEEKLY LEADERBOARD":"🏆 НЕДЕЛЬНЫЙ РЕЙТИНГ","⚔️ HUNTERS CLAN":"⚔️ КЛАН ОХОТНИКОВ","⚔️ CLAN":"⚔️ КЛАН",
+  "💬 CLAN CHAT":"💬 ЧАТ КЛАНА","💰 BUDGET":"💰 БЮДЖЕТ","🎯 SAVINGS GOALS":"🎯 ЦЕЛИ НАКОПЛЕНИЙ",
+  "📒 RECENT TRANSACTIONS":"📒 ПОСЛЕДНИЕ ОПЕРАЦИИ","CURRENT BALANCE":"ТЕКУЩИЙ БАЛАНС","OVERVIEW":"ОБЗОР",
+  "☁ CLOUD SYNC":"☁ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ","🎨 APPEARANCE":"🎨 ОФОРМЛЕНИЕ",
+  "HUNTER SETTINGS":"НАСТРОЙКИ ОХОТНИКА","DATA VAULT":"ХРАНИЛИЩЕ ДАННЫХ",
+  "MANAGE DAILY QUEST PACKAGE":"ПАКЕТ ЕЖЕДНЕВНЫХ КВЕСТОВ","MANAGE QUESTS":"УПРАВЛЕНИЕ КВЕСТАМИ",
+  "MANAGE COLLECTIONS":"УПРАВЛЕНИЕ КОЛЛЕКЦИЯМИ","HERO PORTRAITS (PER RANK)":"ПОРТРЕТЫ ГЕРОЯ (ПО РАНГАМ)",
+  "🎒 MANAGE INVENTORY":"🎒 УПРАВЛЕНИЕ ИНВЕНТАРЁМ","💬 QUOTES":"💬 ЦИТАТЫ","🔔 NOTIFICATIONS":"🔔 УВЕДОМЛЕНИЯ",
+  "📘 HUNTER'S MANUAL — HOW THE SYSTEM WORKS":"📘 РУКОВОДСТВО ОХОТНИКА — КАК РАБОТАЕТ СИСТЕМА",
+  "📇 HUNTER DOSSIER":"📇 ДОСЬЕ ОХОТНИКА","📇 PROFILE EXTRAS":"📇 ДОПОЛНЕНИЯ ПРОФИЛЯ",
+  "🎒 INVENTORY — SKILLS, EQUIPMENT & FOOD":"🎒 ИНВЕНТАРЬ — НАВЫКИ, СНАРЯЖЕНИЕ И ЕДА",
+  "📋 MONTHLY REPORT CARDS":"📋 МЕСЯЧНЫЕ ТАБЕЛИ","🗓 ACTIVITY HEATMAP — LAST 6 MONTHS":"🗓 КАРТА АКТИВНОСТИ — 6 МЕСЯЦЕВ",
+  "⏱ ACTIVE MINUTES PER DAY":"⏱ АКТИВНЫЕ МИНУТЫ ПО ДНЯМ","🍩 COMPLETIONS BY TIER":"🍩 ВЫПОЛНЕНИЯ ПО СЛОЖНОСТИ",
+  "🥧 TRAINING BY ATTRIBUTE":"🥧 ТРЕНИРОВКИ ПО АТРИБУТАМ","🔮 XP FORECAST":"🔮 ПРОГНОЗ XP",
+  "✨ CHASING AFTER DREAMS":"✨ В ПОГОНЕ ЗА МЕЧТАМИ","CHASING AFTER DREAMS":"В ПОГОНЕ ЗА МЕЧТАМИ",
+  "📦 DAILY QUEST (SYSTEM MANDATE)":"📦 ЕЖЕДНЕВНЫЙ КВЕСТ (ПРИКАЗ СИСТЕМЫ)","📱 INSTALL & OFFLINE":"📱 УСТАНОВКА И ОФЛАЙН",
+  "☁ DATA & SYNC":"☁ ДАННЫЕ И СИНХРОНИЗАЦИЯ","⚡ XP, LEVELS & RANKS":"⚡ XP, УРОВНИ И РАНГИ",
+  "⛓ PUNISHMENTS":"⛓ НАКАЗАНИЯ","📜 QUESTS & THE ROUND BUTTON":"📜 КВЕСТЫ И БОЛЬШАЯ КНОПКА",
+  "🎁 REWARDS, ROLLS & CRATES":"🎁 НАГРАДЫ, РОЛЛЫ И ЯЩИКИ","⚡ SYSTEM":"⚡ СИСТЕМА",
+  "🏰 CREATE A CLAN":"🏰 СОЗДАТЬ КЛАН","🔑 JOIN A CLAN":"🔑 ВСТУПИТЬ В КЛАН","COLOSSEUM":"КОЛИЗЕЙ",
+  /* quest card + package buttons (dynamic) */
+  "⚔ COMPLETE":"⚔ ВЫПОЛНИТЬ","✓ COMPLETED":"✓ ВЫПОЛНЕНО","½ HALF DONE":"½ НАПОЛОВИНУ",
+  "⛔ SEALED":"⛔ ЗАПЕЧАТАНО","🚧 BLOCKED":"🚧 ЗАБЛОКИРОВАНО","NOT TODAY":"НЕ СЕГОДНЯ",
+  "🔒 LOCKED":"🔒 ЗАКРЫТО","⌛ EXPIRED":"⌛ ИСТЁК","⏱ TIME IT":"⏱ ПО ТАЙМЕРУ",
+  "✓ DONE":"✓ ГОТОВО","COMPLETE":"ВЫПОЛНИТЬ","✓ CLAIMED":"✓ ПОЛУЧЕНО","✓ COMPLETE":"✓ СОБРАНО",
+  /* common buttons */
+  "CANCEL":"ОТМЕНА","CLOSE":"ЗАКРЫТЬ","DONE":"ГОТОВО","ADD":"ДОБАВИТЬ","CREATE":"СОЗДАТЬ",
+  "JOIN":"ВСТУПИТЬ","LEAVE":"ПОКИНУТЬ","COPY":"КОПИРОВАТЬ","SEND":"ОТПРАВИТЬ","RESET":"СБРОС",
+  "CLAIM":"ЗАБРАТЬ","CLEAR":"ОЧИСТИТЬ","TEST":"ТЕСТ","SAVE QUEST":"СОХРАНИТЬ КВЕСТ",
+  "SAVE COLLECTION":"СОХРАНИТЬ КОЛЛЕКЦИЮ","SAVE NAME":"СОХРАНИТЬ ИМЯ","NEW QUEST":"НОВЫЙ КВЕСТ",
+  "NEW COLLECTION":"НОВАЯ КОЛЛЕКЦИЯ","+ ADD PRIZE":"+ ДОБАВИТЬ ПРИЗ","USE ITEM":"ИСПОЛЬЗОВАТЬ",
+  "🗑 REMOVE FROM INVENTORY":"🗑 УБРАТЬ ИЗ ИНВЕНТАРЯ","🎒 USE ITEM ON THIS QUEST":"🎒 ИСПОЛЬЗОВАТЬ ПРЕДМЕТ НА ЭТОМ КВЕСТЕ",
+  "REMOVE ARMED ITEM":"СНЯТЬ ПРЕДМЕТ","📦 USE ON DAILY QUEST — clear one task":"📦 НА ЕЖЕДНЕВНЫЙ КВЕСТ — закрыть одну задачу",
+  "SIGN IN WITH GOOGLE":"ВОЙТИ ЧЕРЕЗ GOOGLE","Sign in with Google":"Войти через Google","SIGN OUT":"ВЫЙТИ",
+  "⬇ DOWNLOAD FROM CLOUD":"⬇ СКАЧАТЬ ИЗ ОБЛАКА","⬆ UPLOAD THIS DEVICE":"⬆ ЗАГРУЗИТЬ С ЭТОГО УСТРОЙСТВА",
+  "✓ AUTO-SYNCING":"✓ АВТОСИНХРОНИЗАЦИЯ","💾 EXPORT JSON BACKUP":"💾 ЭКСПОРТ РЕЗЕРВНОЙ КОПИИ",
+  "📂 IMPORT JSON BACKUP":"📂 ИМПОРТ РЕЗЕРВНОЙ КОПИИ","⚠️ FULL RESET":"⚠️ ПОЛНЫЙ СБРОС",
+  "↻ RESET DAILY QUESTS":"↻ СБРОСИТЬ ЕЖЕДНЕВНЫЕ КВЕСТЫ","✎ RENAME & REORDER TABS":"✎ ПЕРЕИМЕНОВАТЬ И ПЕРЕСТАВИТЬ ВКЛАДКИ",
+  "✎ CUSTOMIZE NAVIGATION":"✎ НАСТРОЙКА НАВИГАЦИИ","✎ EDIT STORY PATH AWARDS":"✎ ИЗМЕНИТЬ НАГРАДЫ ПУТИ","✎ EDIT":"✎ ИЗМЕНИТЬ",
+  "➕ ADD A DREAM":"➕ ДОБАВИТЬ МЕЧТУ","➕ ADD MONEY IN / OUT":"➕ ДОХОД / РАСХОД","➕ INCOME":"➕ ДОХОД","➖ EXPENSE":"➖ РАСХОД",
+  "ADD GOAL":"ДОБАВИТЬ ЦЕЛЬ","ADD AN AWARD":"ДОБАВИТЬ НАГРАДУ","HIDE THIS":"СКРЫТЬ","I ACCEPT":"ПРИНИМАЮ","ACCEPT":"ПРИНЯТЬ",
+  "🔔 ENABLE REMINDERS":"🔔 ВКЛЮЧИТЬ НАПОМИНАНИЯ","🔕 DISABLE REMINDERS":"🔕 ВЫКЛЮЧИТЬ НАПОМИНАНИЯ","Remind at":"Напоминать в",
+  "½ MARK AS HALF DONE — refund half the XP":"½ ОТМЕТИТЬ НАПОЛОВИНУ — вернуть половину XP",
+  "↩ UNDO COMPLETELY — as if never completed":"↩ ОТМЕНИТЬ ПОЛНОСТЬЮ — как будто не выполнялся",
+  "ADJUST COMPLETION":"КОРРЕКТИРОВКА ВЫПОЛНЕНИЯ","GATHER THE HUNTERS":"СОБЕРИ ОХОТНИКОВ","POWER UP":"УСИЛЕНИЕ","CLAIM IT":"ЗАБРАТЬ",
+  /* form labels */
+  "Quest Name":"Название квеста","Description":"Описание","Icon":"Иконка","Frequency":"Периодичность",
+  "Difficulty Tier":"Сложность","Tier":"Уровень","Days of Week":"Дни недели","Completion target:":"Цель выполнения:",
+  "Link to Reward Collection":"Привязать к коллекции наград","Stat Bonus":"Бонус к характеристике",
+  "Timer required":"Требуется таймер","Priority lock":"Приоритетная блокировка","Hunter Name":"Имя охотника",
+  "Color Theme":"Цветовая тема","Navigation Tabs":"Вкладки навигации","Collection Name":"Название коллекции",
+  "Crate Icon":"Иконка ящика","Currency":"Валюта","Height":"Рост","Weight":"Вес","Age":"Возраст","Status":"Статус",
+  "📅 Start Date (optional — locked until then)":"📅 Дата начала (необязательно — закрыт до неё)",
+  "⏳ End Date / Deadline (optional)":"⏳ Дедлайн (необязательно)",
+  "🔁 Repeat — reopen this many days after completion (0 = never)":"🔁 Повтор — открыть снова через столько дней после выполнения (0 = никогда)",
+  "Prizes in this Crate (2 - 8, won in random order)":"Призы в этом ящике (2–8, выпадают случайно)",
+  "Completions to Fully Complete (earns 1 roll)":"Выполнений до полного завершения (даёт 1 ролл)",
+  "🎒 Attach Skill / Equipment (consumed on completion, fires its bonus)":"🎒 Прикрепить навык / снаряжение (расходуется при выполнении, бонус срабатывает)",
+  "— this quest can only be completed after a tracked focus session today (start ⏱, work, then complete)":"— этот квест можно выполнить только после фокус-сессии по таймеру сегодня (нажмите ⏱, поработайте, затем выполняйте)",
+  "— seal other quests until this goal is done. EPIC seals easy+medium, MYTHIC seals all quests, LEGENDARY seals everything including the Daily Quest.":"— запечатать другие квесты, пока цель не выполнена. EPIC запечатывает лёгкие+средние, MYTHIC — все квесты, LEGENDARY — всё, включая Ежедневный квест.",
+  "no bonus":"без бонуса","🎟 +1 random roll":"🎟 +1 случайный ролл","✦ +1 stat point":"✦ +1 очко характеристики",
+  "Bonus when used on a quest (via the 🎒 button)":"Бонус при использовании на квесте (через кнопку 🎒)",
+  "Bonus this item gives when used on a quest":"Бонус предмета при использовании на квесте",
+  "Pick a skill or equipment — it is consumed when you complete the quest and its bonus fires.":"Выберите навык или снаряжение — предмет расходуется при выполнении квеста, и его бонус срабатывает.",
+  /* stat cards */
+  "Active Quests":"Активные квесты","Quests Done":"Квестов выполнено","Quests Completed":"Квестов выполнено",
+  "Total XP":"Всего XP","Best Streak":"Лучшая серия","Current Level":"Текущий уровень","Level / Rank":"Уровень / Ранг",
+  "Collections":"Коллекции","Rolls in Storage":"Роллов в хранилище","App Version":"Версия приложения",
+  "Titles":"Титулы","Badges":"Значки","TITLES":"ТИТУЛЫ","BADGES":"ЗНАЧКИ","ATTRIBUTES":"АТРИБУТЫ",
+  "Unspent Points":"Свободные очки","Completion Rate (30d)":"Процент выполнения (30 дн)",
+  "Avg Quests / Active Day":"Квестов в активный день","Most Consistent Quest":"Самый стабильный квест",
+  "Strongest Weekday":"Сильнейший день недели","Tracked Active Time":"Отслеженное время",
+  "Challenges Conquered":"Челленджей покорено","Goals Achieved":"Целей достигнуто","Goals reached":"Целей достигнуто",
+  "Achieved":"Достигнуто","Rank Trials Passed":"Испытаний ранга пройдено","Total Honors":"Всего почестей",
+  "Income this month":"Доход за месяц","Spent this month":"Расход за месяц","Saved in goals":"Накоплено в целях",
+  "Level":"Уровень","Rank":"Ранг","Honors":"Почести","DISCIPLINE":"ДИСЦИПЛИНА",
+  "Discipline (rank score)":"Дисциплина (рейтинг)","Active Days (7d)":"Активные дни (7д)","Focus Time (7d)":"Фокус-время (7д)",
+  "XP / 7 days":"XP / 7 дней","DISCIPLINE score":"счёту ДИСЦИПЛИНЫ",
+  /* filters / periods / tiers */
+  "ALL":"ВСЕ","ALL TIERS":"ВСЕ УРОВНИ","ALL TIME":"ЗА ВСЁ ВРЕМЯ","TODAY":"СЕГОДНЯ",
+  "LAST 7 DAYS":"ПОСЛЕДНИЕ 7 ДНЕЙ","LAST 30 DAYS":"ПОСЛЕДНИЕ 30 ДНЕЙ","🌙 THIS MONTH":"🌙 ЭТОТ МЕСЯЦ","📅 THIS YEAR":"📅 ЭТОТ ГОД",
+  "DAILY":"ЕЖЕДНЕВНЫЙ","WEEKLY":"ЕЖЕНЕДЕЛЬНЫЙ","ONE-TIME GOAL":"РАЗОВАЯ ЦЕЛЬ","CUSTOM":"СВОЙ ГРАФИК",
+  "🔥 CHALLENGE":"🔥 ЧЕЛЛЕНДЖ","🔥 CHALLENGES":"🔥 ЧЕЛЛЕНДЖИ","CHALLENGES":"ЧЕЛЛЕНДЖИ",
+  "EASY":"ЛЁГКИЙ","MEDIUM":"СРЕДНИЙ","EPIC":"ЭПИЧЕСКИЙ","MYTHIC":"МИФИЧЕСКИЙ","LEGENDARY":"ЛЕГЕНДАРНЫЙ",
+  "MORE":"ЕЩЁ","LESS":"МЕНЬШЕ","⏳ RESETS IN":"⏳ СБРОС ЧЕРЕЗ",
+  /* days + months */
+  "Su":"Вс","Mo":"Пн","Tu":"Вт","We":"Ср","Th":"Чт","Fr":"Пт","Sa":"Сб",
+  "Sun":"Вс","Mon":"Пн","Tue":"Вт","Wed":"Ср","Thu":"Чт","Fri":"Пт","Sat":"Сб",
+  "JANUARY":"ЯНВАРЬ","FEBRUARY":"ФЕВРАЛЬ","MARCH":"МАРТ","APRIL":"АПРЕЛЬ","MAY":"МАЙ","JUNE":"ИЮНЬ",
+  "JULY":"ИЮЛЬ","AUGUST":"АВГУСТ","SEPTEMBER":"СЕНТЯБРЬ","OCTOBER":"ОКТЯБРЬ","NOVEMBER":"НОЯБРЬ","DECEMBER":"ДЕКАБРЬ",
+  /* ranks */
+  "E-RANK HUNTER":"ОХОТНИК E-РАНГА","D-RANK HUNTER":"ОХОТНИК D-РАНГА","C-RANK HUNTER":"ОХОТНИК C-РАНГА",
+  "B-RANK HUNTER":"ОХОТНИК B-РАНГА","A-RANK HUNTER":"ОХОТНИК A-РАНГА","S-RANK HUNTER":"ОХОТНИК S-РАНГА",
+  "NATIONAL LEVEL HUNTER":"ОХОТНИК НАЦИОНАЛЬНОГО УРОВНЯ","Hunter":"Охотник",
+  /* landmarks + chapters */
+  "EIFFEL TOWER":"ЭЙФЕЛЕВА БАШНЯ","HIMEJI CASTLE":"ЗАМОК ХИМЭДЗИ","PYRAMIDS OF GIZA":"ПИРАМИДЫ ГИЗЫ",
+  "STATUE OF LIBERTY":"СТАТУЯ СВОБОДЫ","TORII GATE":"ВРАТА ТОРИИ","??? — SEALED":"??? — ЗАПЕЧАТАНО",
+  "Prologue — The Weakest Hunter":"Пролог — Слабейший охотник","Chapter 1 — The Double Dungeon":"Глава 1 — Двойное подземелье",
+  "Chapter 2 — Daily Quest: Preparation":"Глава 2 — Ежедневный квест: Подготовка","Chapter 3 — The Instant Dungeon":"Глава 3 — Мгновенное подземелье",
+  "Chapter 4 — The Reawakening Test":"Глава 4 — Тест повторного пробуждения","Chapter 5 — Arise":"Глава 5 — Восстань",
+  "Final Chapter — Monarch of Shadows":"Финальная глава — Монарх Теней",
+  /* road kinds */
+  "🎟 EASY ROLL":"🎟 ЛЁГКИЙ РОЛЛ","🎟 MEDIUM ROLL":"🎟 СРЕДНИЙ РОЛЛ","🎟 EPIC ROLL":"🎟 ЭПИЧЕСКИЙ РОЛЛ",
+  "🎟 MYTHIC ROLL":"🎟 МИФИЧЕСКИЙ РОЛЛ","🎟 LEGENDARY ROLL":"🎟 ЛЕГЕНДАРНЫЙ РОЛЛ","✦ STAT POINTS":"✦ ОЧКИ ХАРАКТЕРИСТИК",
+  "⚡ SKILL":"⚡ НАВЫК","🗡 EQUIPMENT":"🗡 СНАРЯЖЕНИЕ","🗡 EQUIP":"🗡 СНАРЯЖЕНИЕ","🍖 FOOD":"🍖 ЕДА",
+  "👑 TITLE":"👑 ТИТУЛ","🎁 MY PRIZE":"🎁 МОЙ ПРИЗ","🎟 EASY":"🎟 ЛЁГКИЙ","🎟 MEDIUM":"🎟 СРЕДНИЙ","🎟 EPIC":"🎟 ЭПИЧЕСКИЙ",
+  /* clan page */
+  "Invite code:":"Код приглашения:","Got a code from a friend? Enter it here.":"Есть код от друга? Введите его здесь.",
+  "Found your own clan and share its invite code with friends.":"Создайте свой клан и поделитесь кодом приглашения с друзьями.",
+  "Team up with friends: shared leaderboard, respect boosts, and clan chat. Sign in with Google first so the clan knows who you are.":"Объединяйтесь с друзьями: общий рейтинг, знаки уважения и чат клана. Сначала войдите через Google, чтобы клан знал, кто вы.",
+  "Ranked by":"Рейтинг по","No messages yet. Say something to your clan!":"Сообщений пока нет. Напишите что-нибудь клану!",
+  "Loading members…":"Загрузка участников…",
+  "Active this week":"Активен на этой неделе","Active this month":"Активен в этом месяце",
+  "Active within 2 months":"Активен в последние 2 месяца","Active within 6 months":"Активен в последние 6 месяцев",
+  "Active within the past year":"Активен в течение года","Inactive for over a year":"Неактивен больше года",
+  "Inactive for over 2 years":"Неактивен больше 2 лет","Inactive for over 3 years":"Неактивен больше 3 лет",
+  "Inactive for 4+ years":"Неактивен 4+ года","Activity: unknown":"Активность: неизвестно","No titles yet.":"Титулов пока нет.",
+  /* first steps + home */
+  "Create your first quest (＋ button on the QUESTS page)":"Создайте первый квест (кнопка ＋ на странице КВЕСТЫ)",
+  "Complete a task — tap the round button on a quest":"Выполните задачу — нажмите круглую кнопку на квесте",
+  "Create a reward crate on the REWARDS page":"Создайте ящик наград на странице НАГРАДЫ",
+  "Reach Level 2 and claim your first road award":"Достигните 2 уровня и заберите первую награду пути",
+  "One square per day. The brighter it burns, the more quests you cleared. Don't let the grid go dark, Hunter.":"Один квадрат — один день. Чем ярче он горит, тем больше квестов выполнено. Не дай сетке погаснуть, Охотник.",
+  "Based on your XP pace over the last 14 days.":"На основе вашего темпа XP за последние 14 дней.",
+  "No XP earned in the last 14 days — complete quests and the System will project your future.":"За последние 14 дней XP не получен — выполняйте квесты, и Система спрогнозирует ваше будущее.",
+  "Your vision board. Capture what you are truly chasing — then let the daily quests carry you there. Tap a dream to mark it as achieved.":"Ваша доска целей. Запишите, к чему вы по-настоящему стремитесь, — и пусть ежедневные квесты несут вас туда. Нажмите на мечту, чтобы отметить её достигнутой.",
+  "Save toward things you want. Deposit money as you go and watch the bar fill.":"Копите на желаемое. Пополняйте постепенно и смотрите, как заполняется полоса.",
+  "Only today's completion can be adjusted. XP is refunded accordingly.":"Корректировать можно только сегодняшнее выполнение. XP возвращается соответственно.",
+  "Time tracked with the quest focus timer — press ⏱ on a quest card before you start working.":"Время по таймеру фокуса — нажмите ⏱ на карточке квеста перед началом работы.",
+  "🌟 LIFE DREAM":"🌟 МЕЧТА ЖИЗНИ","On the 1st of every month, The System grades your previous month.":"1-го числа каждого месяца Система оценивает ваш прошедший месяц.",
+  /* rewards page */
+  "Fully complete a quest (hit its completion target) to earn a roll. Linked quests give a roll for their crate; unlinked quests give a roll usable on any crate of that tier. Rolls wait here until you USE them — then a random prize from the crate is revealed.":"Полностью выполните квест (достигните его цели), чтобы заработать ролл. Привязанные квесты дают ролл для своего ящика; непривязанные — ролл для любого ящика этого уровня. Роллы ждут здесь, пока вы не нажмёте ИСПОЛЬЗОВАТЬ — тогда откроется случайный приз из ящика.",
+  "Storage is empty. Fully complete a quest (reach its completion target) to earn a roll.":"Хранилище пусто. Полностью выполните квест (достигните цели), чтобы заработать ролл.",
+  "ANALYZING DROP...":"АНАЛИЗ ДОБЫЧИ...","ITEM DROP":"ВЫПАЛ ПРЕДМЕТ",
+  /* empty notes */
+  "No transactions yet.":"Операций пока нет.","No savings goals yet. Add one below.":"Целей накоплений пока нет. Добавьте ниже.",
+  "No badges yet. Complete quests, build streaks, level up.":"Значков пока нет. Выполняйте квесты, стройте серии, повышайте уровень.",
+  "No titles yet. Achievements will grant them automatically.":"Титулов пока нет. Достижения выдадут их автоматически.",
+  "No records yet. Add your real victories — IELTS, CEFR, certificates, medals.":"Записей пока нет. Добавьте реальные победы — IELTS, CEFR, сертификаты, медали.",
+  "No report cards yet — your first arrives on the 1st of next month.":"Табелей пока нет — первый придёт 1-го числа следующего месяца.",
+  "The hall stands empty... for now.":"Зал пока пуст... до времени.",
+  "Nothing here yet — skills, equipment and food drop from the Level Road, or add one below.":"Пока пусто — навыки, снаряжение и еда выпадают с Дороги уровней, или добавьте ниже.",
+  "No quests.":"Нет квестов.","The hall stands empty… for now.":"Зал пока пуст… до времени.",
+  "Every one-time goal you achieve and every challenge you conquer is enshrined here — permanent proof of who you are becoming.":"Каждая достигнутая разовая цель и каждый покорённый челлендж увековечены здесь — постоянное доказательство того, кем вы становитесь.",
+  "Fully complete a ONE-TIME GOAL or conquer a CHALLENGE and it will be enshrined here forever, Hunter.":"Полностью выполните РАЗОВУЮ ЦЕЛЬ или покорите ЧЕЛЛЕНДЖ — и это навсегда останется здесь, Охотник.",
+  /* admin notes */
+  "Sign in with Google to sync your hunter automatically across every device — no export or import needed. Your save is private to your Google account.":"Войдите через Google, чтобы автоматически синхронизировать охотника на всех устройствах — без экспорта и импорта. Ваши данные приватны и привязаны к вашему аккаунту Google.",
+  "These quests reset together every day at 01:00. Edit the package here.":"Эти квесты сбрасываются вместе каждый день в 01:00. Редактируйте пакет здесь.",
+  "The rewards granted on the STORY road as you level up.":"Награды, выдаваемые на пути ИСТОРИИ по мере роста уровня.",
+  "Rename a tab, reorder with ▲▼, or hide it. ADMIN always stays visible so you can get back here.":"Переименуйте вкладку, переставьте с помощью ▲▼ или скройте. АДМИН всегда остаётся видимым, чтобы вы могли вернуться сюда.",
+  "A daily reminder when today's quests are still unfinished. Works while LEVEL UP is open in a browser tab or installed on your home screen (⋮ → Add to Home screen).":"Ежедневное напоминание, если квесты на сегодня ещё не выполнены. Работает, пока LEVEL UP открыт во вкладке браузера или установлен на главный экран (⋮ → Добавить на главный экран).",
+  "Cloud is empty — press UPLOAD on the device with your data.":"Облако пусто — нажмите ЗАГРУЗИТЬ на устройстве с вашими данными.",
+  "Checking cloud…":"Проверка облака…","Cloud data unreadable.":"Данные облака нечитаемы.",
+  "⚠ Cloud sync could not load (offline, or blocked by a browser extension). Your progress is still safe locally — use Export/Import below to move it between devices for now.":"⚠ Облачная синхронизация не загрузилась (нет сети или мешает расширение браузера). Прогресс в безопасности локально — используйте Экспорт/Импорт ниже для переноса между устройствами.",
+  "⚠ Charts need an internet connection (chart library loads from CDN). Your numbers above are still accurate.":"⚠ Графикам нужен интернет (библиотека графиков загружается с CDN). Цифры выше всё равно точны.",
+  "This app turns your real life into an RPG. Real actions earn XP, XP raises your level, levels raise your rank — and the System watches everything: it rewards discipline and punishes absence.":"Это приложение превращает вашу реальную жизнь в RPG. Реальные действия дают XP, XP повышает уровень, уровень повышает ранг — и Система следит за всем: она награждает дисциплину и наказывает отсутствие.",
+  /* toasts + tags */
+  "Sign in first.":"Сначала войдите.","Sign in with Google first.":"Сначала войдите через Google.",
+  "Welcome to the clan, Hunter!":"Добро пожаловать в клан, Охотник!",
+  "Progress synced from the cloud.":"Прогресс синхронизирован из облака.",
+  "Synced update from another device.":"Получено обновление с другого устройства.",
+  "▶ Timer resumed.":"▶ Таймер возобновлён.",
+  "⏸ Timer paused. Your time is kept — resume when ready.":"⏸ Таймер на паузе. Время сохранено — продолжайте, когда будете готовы.",
+  "↻ Timer restarted from zero.":"↻ Таймер перезапущен с нуля.",
+  "Timer stopped — under 5 seconds, nothing recorded.":"Таймер остановлен — меньше 5 секунд, ничего не записано.",
+  "Only today's completion can be adjusted, Hunter.":"Корректировать можно только сегодняшнее выполнение, Охотник.",
+  "Already completed for this period.":"Уже выполнено за этот период.","Already marked as half.":"Уже отмечено наполовину.",
+  "This quest is not scheduled today.":"Этот квест не запланирован на сегодня.",
+  "Quest name is required.":"Название квеста обязательно.","Collection name is required.":"Название коллекции обязательно.",
+  "Progress exported as JSON backup.":"Прогресс экспортирован в резервную копию JSON.",
+  "Daily quests have been reset by The System.":"Ежедневные квесты сброшены Системой.",
+  "Daily Quest package was missed. Streak reset to 0.":"Пакет ежедневных квестов пропущен. Серия сброшена до 0.",
+  "Protect your records, Hunter: export a JSON backup in ADMIN.":"Защити свои записи, Охотник: экспортируй резервную копию JSON в разделе АДМИН.",
+  "Progress recovered from the System vault. Records restored.":"Прогресс восстановлен из хранилища Системы. Записи восстановлены.",
+  "Dossier updated.":"Досье обновлено.","Level road updated.":"Дорога уровней обновлена.","Daily package updated.":"Ежедневный пакет обновлён.",
+  "Dream added. Now chase it, Hunter.":"Мечта добавлена. Теперь гонись за ней, Охотник.",
+  "Cloud save downloaded to this device.":"Облачное сохранение скачано на это устройство.",
+  "This device's data uploaded to the cloud.":"Данные этого устройства загружены в облако.",
+  "SYSTEM NOTIFICATION":"СИСТЕМНОЕ УВЕДОМЛЕНИЕ","TIME RECORDED":"ВРЕМЯ ЗАПИСАНО","BACKUP CREATED":"КОПИЯ СОЗДАНА",
+  "SYNCED":"СИНХРОНИЗИРОВАНО","COPIED":"СКОПИРОВАНО","CLAN JOINED":"ВЫ В КЛАНЕ","SYSTEM ADVICE":"СОВЕТ СИСТЕМЫ",
+  "APPEARANCE":"ОФОРМЛЕНИЕ","SUPPORT":"ПОДДЕРЖКА","INVITE CODE":"КОД ПРИГЛАШЕНИЯ",
+  /* announce titles */
+  "SYSTEM INITIALIZED":"СИСТЕМА АКТИВИРОВАНА","SYSTEM TRANSMISSION":"ПЕРЕДАЧА СИСТЕМЫ",
+  "🎟 QUEST FULLY COMPLETED 🎟":"🎟 КВЕСТ ПОЛНОСТЬЮ ВЫПОЛНЕН 🎟","👊 RESPECT RECEIVED":"👊 ПОЛУЧЕНО УВАЖЕНИЕ",
+  "🏰 CLAN FOUNDED":"🏰 КЛАН ОСНОВАН","💰 SAVINGS GOAL REACHED":"💰 ЦЕЛЬ НАКОПЛЕНИЯ ДОСТИГНУТА",
+  /* notifications (runtime, via tr) */
+  "⚔ The System calls, Hunter!":"⚔ Система зовёт, Охотник!","Unfinished quests today: ":"Невыполненных квестов сегодня: ",
+  "Don't break the streak!":"Не прерывай серию!","🔔 Reminders armed":"🔔 Напоминания включены",
+  "The System will call you when quests are left unfinished.":"Система позовёт тебя, если останутся невыполненные квесты.",
+  "🔕 Daily reminders disabled.":"🔕 Ежедневные напоминания выключены.",
+  "This browser does not support notifications.":"Этот браузер не поддерживает уведомления.",
+  "⚠ Notifications are blocked for this site in your browser settings. Allow them there, then return here.":"⚠ Уведомления для этого сайта заблокированы в настройках браузера. Разрешите их там и вернитесь сюда.",
+  "✓ Armed. If quests are still unfinished at ":"✓ Включено. Если к ",
+  ", the System will call you.":" квесты не будут выполнены, Система позовёт вас.",
+  "Reminders are off.":"Напоминания выключены.",
+  "Enable reminders first — the browser must grant permission.":"Сначала включите напоминания — браузер должен дать разрешение.",
+  "This is a test. Notifications work.":"Это тест. Уведомления работают.","Test notification sent.":"Тестовое уведомление отправлено.",
+  "Theme applied: ":"Тема применена: ",
+  /* currencies + themes */
+  "$ — Dollar":"$ — Доллар","€ — Euro":"€ — Евро","₽ — Ruble":"₽ — Рубль","so'm — Uzbek so'm":"so'm — узбекский сум",
+  "₸ — Tenge":"₸ — Тенге","£ — Pound":"£ — Фунт","¥ — Yen / Yuan":"¥ — Иена / Юань","₴ — Hryvnia":"₴ — Гривна",
+  "₹ — Rupee":"₹ — Рупия","₺ — Lira":"₺ — Лира",
+  "🌑 Shadow (default)":"🌑 Тень (по умолчанию)","🌸 Rose (pink)":"🌸 Роза (розовая)",
+  "🤍 Blossom (white & pink)":"🤍 Цветение (бело-розовая)","💚 Emerald (green)":"💚 Изумруд (зелёная)","🔥 Ember (orange)":"🔥 Уголёк (оранжевая)",
+  /* placeholders + titles */
+  "6-letter code":"код из 6 букв","Clan name, e.g. Shadow Squad":"Название клана, напр. Отряд Теней",
+  "Message your clan…":"Напишите клану…","What must the hunter do?":"Что должен сделать охотник?",
+  "Why it matters / first step (optional)":"Почему это важно / первый шаг (необязательно)",
+  "e.g. Morning Workout":"напр. Утренняя тренировка","Amount":"Сумма","Note, e.g. Groceries":"Заметка, напр. Продукты",
+  "Goal, e.g. New laptop":"Цель, напр. Новый ноутбук","Target":"Цель","Tap to pick a date 📅":"Нажмите, чтобы выбрать дату 📅",
+  "Add Quest":"Добавить квест","Add Collection":"Добавить коллекцию","Add":"Добавить","Edit":"Изменить","Delete":"Удалить",
+  "Allocate point":"Вложить очко","Start a focus timer for this quest":"Запустить таймер фокуса для этого квеста",
+  "Use a skill or equipment on this quest for a bonus":"Использовать навык или снаряжение для бонуса",
+  "Pause":"Пауза","Resume":"Продолжить","Move down":"Вниз","Move up":"Вверх",
+  /* home chips + composite fragments (used via tr() at the source) */
+  " quests done":" квестов выполнено"," total XP":" всего XP"," rolls stored":" роллов в запасе",
+  " active today":" активности сегодня"," stat points":" очков характеристик",
+  "🧭 FIRST STEPS — ":"🧭 ПЕРВЫЕ ШАГИ — ","LEVEL":"УРОВЕНЬ","NEXT":"ДАЛЕЕ",
+  /* guide bold labels */
+  "Rolls:":"Роллы:","Local:":"Локально:","Cloud:":"Облако:","Backup:":"Резервная копия:",
+  "Crates (collections):":"Ящики (коллекции):","Stats:":"Характеристики:","Ranks:":"Ранги:","Types:":"Типы:",
+  "Leveling:":"Уровни:","Earning XP:":"Получение XP:","Focus timer:":"Таймер фокуса:","Completing:":"Выполнение:",
+  "XP Debt:":"Долг XP:","Penalty Quest:":"Штрафной квест:","Quest Lockdown:":"Блокировка квестов:",
+  "⏱ Timer-required quests:":"⏱ Квесты с обязательным таймером:","🎒 Item boosts:":"🎒 Бонусы предметов:",
+  "🚧 Priority lock (one-time goals):":"🚧 Приоритетная блокировка (разовые цели):"
+};
+function tr(s){
+  if(state && state.lang === "ru" && Object.prototype.hasOwnProperty.call(I18N_RU, s)) return I18N_RU[s];
+  return s;
+}
+function trTextNode(tn){
+  var raw = tn.nodeValue;
+  if(!raw) return;
+  var t = raw.trim();
+  if(!t) return;
+  if(Object.prototype.hasOwnProperty.call(I18N_RU, t) && I18N_RU[t] !== t){
+    tn.nodeValue = raw.replace(t, I18N_RU[t]);
+  }
+}
+function trTree(node){
+  if(node.nodeType === 3){ trTextNode(node); return; }
+  if(node.nodeType !== 1) return;
+  if(node.nodeName === "SCRIPT" || node.nodeName === "STYLE") return;
+  var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+  var tn;
+  while((tn = walker.nextNode())) trTextNode(tn);
+  if(node.getAttribute){
+    var p0 = node.getAttribute("placeholder");
+    if(p0 && I18N_RU[p0]) node.setAttribute("placeholder", I18N_RU[p0]);
+    var t0 = node.getAttribute("title");
+    if(t0 && I18N_RU[t0]) node.setAttribute("title", I18N_RU[t0]);
+  }
+  if(node.querySelectorAll){
+    var els = node.querySelectorAll("[placeholder],[title]");
+    for(var i=0;i<els.length;i++){
+      var p = els[i].getAttribute("placeholder");
+      if(p && I18N_RU[p]) els[i].setAttribute("placeholder", I18N_RU[p]);
+      var ti = els[i].getAttribute("title");
+      if(ti && I18N_RU[ti]) els[i].setAttribute("title", I18N_RU[ti]);
+    }
+  }
+}
+function startI18n(){
+  if((state.lang || "en") !== "ru") return;
+  document.documentElement.setAttribute("lang", "ru");
+  trTree(document.body);
+  var obs = new MutationObserver(function(muts){
+    for(var i=0;i<muts.length;i++){
+      var m = muts[i];
+      if(m.type === "characterData"){ trTextNode(m.target); continue; }
+      for(var j=0;j<m.addedNodes.length;j++) trTree(m.addedNodes[j]);
+    }
+  });
+  obs.observe(document.body, {childList:true, subtree:true, characterData:true});
+}
+
 /* ---------------- toasts ---------------- */
 function toast(msg, kind, tag){
   var wrap = document.getElementById("toasts");
@@ -3049,6 +3369,74 @@ function activeTimeInRange(dates){
   var sum = 0;
   for(var i=0;i<dates.length;i++) sum += state.timeHistory[dates[i]] || 0;
   return sum;
+}
+
+/* ---------------- notifications (daily quest reminder) ---------------- */
+var swReg = null;
+if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
+  /* notification-only worker: no fetch handler, no caching — cannot mix projects */
+  navigator.serviceWorker.register("notify-sw.js").then(function(r){ swReg = r; }).catch(function(){});
+}
+function notifySupported(){ return "Notification" in window; }
+function notifyGranted(){ return notifySupported() && Notification.permission === "granted"; }
+function showNotify(title, body){
+  if(!notifyGranted()) return false;
+  var opts = {body: body, icon: "icon-192.png", badge: "icon-192.png", tag: "levelup-reminder"};
+  if(swReg && swReg.showNotification){
+    try{ swReg.showNotification(title, opts); return true; }catch(e){}
+  }
+  try{ new Notification(title, opts); return true; }catch(e){}
+  return false;
+}
+function questsLeftToday(){
+  var n = 0;
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(q.freq === "longterm") continue;
+    if(q.freq === "custom" && !isScheduledToday(q)) continue;
+    if(!completedThisPeriod(q)) n++;
+  }
+  var pkg = state.dailyPackage;
+  if(pkg && pkg.items) for(var j=0;j<pkg.items.length;j++) if(!pkg.items[j].done) n++;
+  return n;
+}
+function notifyTick(){
+  var nf = state.notify;
+  if(!nf || !nf.on || !notifyGranted()) return;
+  var t = todayStr();
+  if(nf.lastFired === t) return;
+  var now = new Date();
+  var hm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+  if(hm < (nf.time || "20:00")) return; /* not reminder time yet */
+  var left = questsLeftToday();
+  nf.lastFired = t; /* one reminder per day, fired or skipped */
+  save();
+  if(left > 0){
+    showNotify(tr("⚔ The System calls, Hunter!"),
+      tr("Unfinished quests today: ") + left + ". " + tr("Don't break the streak!"));
+  }
+}
+setInterval(notifyTick, 60000);
+function renderNotifySettings(){
+  var btn = document.getElementById("notifyToggle");
+  var st = document.getElementById("notifyStatus");
+  var ti = document.getElementById("notifyTime");
+  if(!btn) return;
+  ti.value = (state.notify && state.notify.time) || "20:00";
+  if(!notifySupported()){
+    btn.disabled = true;
+    st.textContent = tr("This browser does not support notifications.");
+    return;
+  }
+  var on = state.notify && state.notify.on && Notification.permission === "granted";
+  btn.textContent = on ? tr("🔕 DISABLE REMINDERS") : tr("🔔 ENABLE REMINDERS");
+  if(Notification.permission === "denied"){
+    st.textContent = tr("⚠ Notifications are blocked for this site in your browser settings. Allow them there, then return here.");
+  } else if(on){
+    st.textContent = tr("✓ Armed. If quests are still unfinished at ") + ti.value + tr(", the System will call you.");
+  } else {
+    st.textContent = tr("Reminders are off.");
+  }
 }
 
 /* ---------------- monthly report cards ---------------- */
@@ -4727,6 +5115,8 @@ function renderAdmin(){
     themeSel.innerHTML = th;
   }
   themeSel.value = state.theme || "shadow";
+  document.getElementById("admLang").value = state.lang || "en";
+  renderNotifySettings();
   /* quests list */
   var qh = "";
   for(var i=0;i<state.quests.length;i++){
@@ -5139,7 +5529,43 @@ document.getElementById("admTheme").addEventListener("change", function(){
   state.theme = this.value;
   applyTheme(state.theme);
   save();
-  toast("Theme applied: " + this.value, "sys", "APPEARANCE");
+  toast(tr("Theme applied: ") + this.value, "sys", "APPEARANCE");
+});
+document.getElementById("admLang").addEventListener("change", function(){
+  state.lang = this.value;
+  save();
+  /* reload so every page renders cleanly in the chosen language */
+  location.reload();
+});
+document.getElementById("notifyToggle").addEventListener("click", function(){
+  if(!notifySupported()) return;
+  if(state.notify && state.notify.on && Notification.permission === "granted"){
+    state.notify.on = false;
+    save(); renderNotifySettings();
+    sysToast(tr("🔕 Daily reminders disabled."));
+    return;
+  }
+  Notification.requestPermission().then(function(perm){
+    if(perm === "granted"){
+      if(!state.notify) state.notify = {on:false, time:"20:00", lastFired:""};
+      state.notify.on = true;
+      save(); renderNotifySettings();
+      showNotify(tr("🔔 Reminders armed"), tr("The System will call you when quests are left unfinished."));
+    } else {
+      renderNotifySettings();
+    }
+  });
+});
+document.getElementById("notifyTime").addEventListener("change", function(){
+  if(!state.notify) state.notify = {on:false, time:"20:00", lastFired:""};
+  state.notify.time = this.value || "20:00";
+  state.notify.lastFired = ""; /* allow re-fire today at the new time */
+  save(); renderNotifySettings();
+});
+document.getElementById("notifyTest").addEventListener("click", function(){
+  if(!notifyGranted()){ toast(tr("Enable reminders first — the browser must grant permission."), "err"); return; }
+  var ok = showNotify(tr("⚔ The System calls, Hunter!"), tr("This is a test. Notifications work."));
+  if(ok) sysToast(tr("Test notification sent."));
 });
 document.getElementById("admNameSave").addEventListener("click", function(){
   var v = document.getElementById("admName").value.trim() || "Hunter";
@@ -5849,7 +6275,7 @@ function renderFirstSteps(){
   var allDone = steps.every(function(s){ return s.ok; });
   if(state.firstStepsDismissed || allDone){ el.innerHTML = ""; return; }
   var doneN = steps.filter(function(s){ return s.ok; }).length;
-  var h = '<div class="panel"><div class="panel-title">🧭 FIRST STEPS — ' + doneN + '/' + steps.length + '</div>';
+  var h = '<div class="panel"><div class="panel-title">' + esc(tr('🧭 FIRST STEPS — ')) + doneN + '/' + steps.length + '</div>';
   for(var i=0;i<steps.length;i++){
     h += '<div class="fs-row' + (steps[i].ok ? " done" : "") + '"><span class="fs-mark">' + (steps[i].ok ? "✓" : "○") + '</span><span>' + steps[i].t + '</span></div>';
   }
@@ -5873,11 +6299,11 @@ function renderHome(){
   var need = xpForLevel(state.level);
   document.getElementById("homeXpTxt").innerHTML = "<b>" + state.xp + "</b> / " + need + " XP";
   document.getElementById("homeXpBar").style.width = Math.min(100, (state.xp/need*100)) + "%";
-  var chips = '<span class="title-chip">⚔️ ' + state.totalCompleted + ' quests done</span>'
-    + '<span class="title-chip">💠 ' + state.totalXp + ' total XP</span>'
-    + '<span class="title-chip">🎟 ' + state.storage.length + ' roll' + (state.storage.length===1?"":"s") + ' stored</span>'
-    + '<span class="title-chip">⏱ ' + fmtDur(state.timeHistory[todayStr()] || 0) + ' active today</span>';
-  if(state.statPoints > 0) chips += '<span class="title-chip" style="color:var(--legendary);border-color:rgba(251,191,36,.5)">✨ ' + state.statPoints + ' stat points</span>';
+  var chips = '<span class="title-chip">⚔️ ' + state.totalCompleted + esc(tr(' quests done')) + '</span>'
+    + '<span class="title-chip">💠 ' + state.totalXp + esc(tr(' total XP')) + '</span>'
+    + '<span class="title-chip">🎟 ' + state.storage.length + esc(state.lang === "ru" ? tr(' rolls stored') : (' roll' + (state.storage.length===1?"":"s") + ' stored')) + '</span>'
+    + '<span class="title-chip">⏱ ' + fmtDur(state.timeHistory[todayStr()] || 0) + esc(tr(' active today')) + '</span>';
+  if(state.statPoints > 0) chips += '<span class="title-chip" style="color:var(--legendary);border-color:rgba(251,191,36,.5)">✨ ' + state.statPoints + esc(tr(' stat points')) + '</span>';
   document.getElementById("homeChips").innerHTML = chips;
   /* package */
   checkPackageReset();
@@ -6109,6 +6535,7 @@ function seedIfNew(){
 }
 load();
 applyTheme(state.theme || "shadow");
+startI18n(); /* translate static UI + watch dynamic renders (no-op in English) */
 renderNav();
 /* start cloud; retry a few times in case the Firebase SDK loads late on a slow phone connection */
 initCloud();
