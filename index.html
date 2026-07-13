@@ -480,8 +480,8 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .ls-old{color:#ef4444;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.07)}
 .nav-edit-row{display:flex;align-items:center;gap:7px;padding:6px 0}
 .ne-lockwrap{display:flex;align-items:center;gap:3px;font-size:.8rem;flex:0 0 auto}
-.ne-lockwrap .ne-lock{width:46px;padding:6px 4px;text-align:center}
-.ne-lockwrap .ne-nolock{width:46px;text-align:center;color:var(--dim)}
+.ne-lockwrap .ne-lockval{min-width:20px;text-align:center;font-weight:800;color:var(--blue)}
+.ne-lockwrap .ne-nolock{min-width:20px;text-align:center;color:var(--dim)}
 .nav-edit-row .ne-ico{font-size:1.1rem;width:24px;text-align:center;flex:0 0 auto}
 .nav-edit-row .ne-name{flex:1;min-width:0}
 .mini-btn.ne-on{color:var(--easy);border-color:var(--easy)}
@@ -707,6 +707,20 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .mode-card .mc-desc{font-size:.8rem;color:var(--dim);margin-top:4px;line-height:1.4}
 .nav-btn.locked{opacity:.45;filter:grayscale(.4)}
 
+/* AUTOMATIC mode: only play surfaces remain, all self-editing panels vanish */
+body.play-only .edit-only{display:none !important}
+body.play-only #fab{display:none !important}
+
+/* admin mode: pure back-office — no nav, no play, console only */
+body.admin-mode nav,
+body.admin-mode #navToggle,
+body.admin-mode #navBackdrop,
+body.admin-mode #fab,
+body.admin-mode #timerPill{display:none !important}
+body.admin-mode main>section:not(#page-admin){display:none !important}
+body.admin-mode #page-admin>.panel:not(#adminConsole){display:none !important}
+body.admin-mode .hdr-right{display:none !important}
+
 /* ---------- FAB ---------- */
 #fab{position:fixed;right:20px;bottom:24px;z-index:50;width:60px;height:60px;border-radius:50%;
   border:1px solid var(--blue);color:#fff;font-size:2rem;line-height:1;
@@ -925,11 +939,11 @@ main section{animation:pagein .28s ease}
       <div class="ent-sub">Choose your path, Hunter</div>
       <button class="mode-card" data-mode="manual">
         <div class="mc-title">🎮 MANUAL</div>
-        <div class="mc-desc">Full freedom. Every section is open — you build your own way.</div>
+        <div class="mc-desc">Full freedom to shape your quests, rewards and road — sections still obey any locks the Administrator sets.</div>
       </button>
       <button class="mode-card" data-mode="auto">
         <div class="mc-title">🤖 AUTOMATIC</div>
-        <div class="mc-desc">The System rules. Sections unlock one by one as you level up — earn your access.</div>
+        <div class="mc-desc">The System rules. You only play — no editing. Sections unlock as you level, or as the Administrator sets.</div>
       </button>
     </div>
     <div id="entUser" style="display:none">
@@ -1416,6 +1430,12 @@ main section{animation:pagein .28s ease}
       <div class="panel" id="adminConsole" style="display:none">
         <div class="panel-title">🛡 ADMIN CONSOLE</div>
         <div class="empty-note" style="margin-bottom:10px">System Administrator mode. Changes here affect real users — handle with care.</div>
+        <button class="btn danger" id="acExitBtn" style="width:100%;margin-bottom:12px">🚪 EXIT ADMIN MODE</button>
+        <label class="form-lbl">🔒 SECTION LOCKS (ALL USERS)</label>
+        <div class="empty-note" style="margin-bottom:8px">The unlock level for each section, enforced for every hunter in BOTH game modes. Leave a field blank to use the default (AUTOMATIC's built-in progression; MANUAL stays open).</div>
+        <div id="acLockRows"></div>
+        <button class="btn gold" id="acLockSave" style="width:100%;margin-top:8px">💾 SAVE SECTION LOCKS</button>
+        <label class="form-lbl" style="margin-top:18px">Users</label>
         <button class="btn primary" id="acLoadUsers" style="width:100%">🔄 LOAD ALL USERS</button>
         <div id="acUsers" style="margin-top:10px"></div>
         <div id="acEditor" style="display:none;margin-top:12px">
@@ -1480,8 +1500,10 @@ main section{animation:pagein .28s ease}
           <option value="on">🔊 On — every action has its sound</option>
           <option value="off">🔇 Off — silent mode</option>
         </select>
-        <label class="form-lbl" style="margin-top:14px">Navigation Tabs</label>
-        <button class="btn primary" id="openNavEditor" style="width:100%">✎ RENAME &amp; REORDER TABS</button>
+        <div class="edit-only">
+          <label class="form-lbl" style="margin-top:14px">Navigation Tabs</label>
+          <button class="btn primary" id="openNavEditor" style="width:100%">✎ RENAME &amp; REORDER TABS</button>
+        </div>
       </div>
 
       <div class="panel">
@@ -1514,8 +1536,8 @@ main section{animation:pagein .28s ease}
         </div>
         <label class="form-lbl" style="margin-top:14px">Game Mode</label>
         <select class="sel" id="admMode">
-          <option value="manual">🎮 MANUAL — full freedom, all sections open</option>
-          <option value="auto">🤖 AUTOMATIC — sections unlock as you level up</option>
+          <option value="manual">🎮 MANUAL — edit your quests, rewards and road</option>
+          <option value="auto">🤖 AUTOMATIC — play only, no editing</option>
         </select>
         <div class="adm-row" style="margin-top:14px">
           <button class="btn" id="admResetDailies">&#8635; RESET DAILY QUESTS</button>
@@ -1525,12 +1547,12 @@ main section{animation:pagein .28s ease}
         </div>
         <input type="file" id="admImportFile" accept=".json,application/json" style="display:none">
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">🗺 STORY PATH AWARDS</div>
         <div class="empty-note" style="margin-bottom:10px">The rewards granted on the STORY road as you level up.</div>
         <button class="btn primary" id="openRoadEditor" style="width:100%">✎ EDIT STORY PATH AWARDS</button>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">🎒 MANAGE INVENTORY</div>
         <div class="empty-note" style="margin-bottom:10px">Skills, equipment and food land here automatically from Level Road awards and crate rolls. Set each item's bonus (fires when armed on a quest via 🎒), add new items, or remove them.</div>
         <div id="admInv"></div>
@@ -1545,7 +1567,7 @@ main section{animation:pagein .28s ease}
           <button class="btn primary" id="invAddBtn">ADD</button>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">💬 QUOTES</div>
         <div class="empty-note" style="margin-bottom:10px">A random quote appears after every completed task. The System ships with <b id="quoteBuiltinCount"></b> built-in lines; add your own below — they join the pool.</div>
         <div id="admQuotes"></div>
@@ -1559,7 +1581,7 @@ main section{animation:pagein .28s ease}
         <div class="empty-note" id="storageStatus" style="margin-bottom:12px"></div>
         <div id="admSnapshots"></div>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">MANAGE DAILY QUEST PACKAGE</div>
         <div class="empty-note" style="margin-bottom:10px">These quests reset together every day at 01:00. Edit the package here.</div>
         <div id="admPkg"></div>
@@ -1570,15 +1592,15 @@ main section{animation:pagein .28s ease}
           <button class="btn primary" id="pkgAddBtn">ADD</button>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">MANAGE QUESTS</div>
         <div id="admQuests"></div>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">MANAGE COLLECTIONS</div>
         <div id="admCols"></div>
       </div>
-      <div class="panel">
+      <div class="panel edit-only">
         <div class="panel-title">HERO PORTRAITS (PER RANK)</div>
         <div class="empty-note" style="margin-bottom:10px">The dashboard shows evolving hunter art that changes as your rank rises. Upload your own picture for any rank here and it will be shown instead, switching automatically on rank-up. Images are resized and stored inside your save data.</div>
         <div id="admHero"></div>
@@ -1677,7 +1699,7 @@ main section{animation:pagein .28s ease}
 <div class="modal" id="navModal">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-title">✎ CUSTOMIZE NAVIGATION</div>
-    <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level in AUTOMATIC mode (0 = always open). ADMIN always stays visible so you can get back here.</div>
+    <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level set by the Administrator (— = always open) — it applies to everyone and can't be changed here. ADMIN always stays visible so you can get back here.</div>
     <div id="navEditor"></div>
     <div class="modal-actions">
       <button class="btn" id="navResetBtn">RESET</button>
@@ -1923,7 +1945,7 @@ function defaultState(){
     sound:true,          /* sound effects on/off */
     lang:"en",           /* interface language: en | ru */
     mode:"manual",       /* game mode: manual (free) | auto (System rules & level gates) */
-    autoLocks:null,      /* custom unlock levels per section (AUTOMATIC mode); null = defaults */
+    autoLocks:null,      /* cached copy of the admin's global section locks (synced from Firebase, read-only on the client) */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
     lastBroadcastId:0,   /* last admin broadcast shown on this device */
     lastSeasonId:0,      /* last season event applied on this device */
@@ -2002,6 +2024,7 @@ function initCloud(){
     }catch(e){}
     listenBroadcast();
     listenSeason();
+    listenSystemLocks();
     return true;
   }catch(e){ return false; }
 }
@@ -2387,7 +2410,7 @@ function showEntrance(){
   /* re-opened later (e.g. for admin login): allow closing without choosing */
   document.getElementById("entClose").style.display = state && state.entryChoice ? "" : "none";
 }
-function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); }
+function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); applyModeClasses(); }
 document.getElementById("entClose").addEventListener("click", hideEntrance);
 document.getElementById("openAdminLogin").addEventListener("click", function(){
   showEntrance();
@@ -2422,37 +2445,54 @@ document.getElementById("entAdmLogin").addEventListener("click", function(){
   if(!em || !pw){ msg.textContent = tr("Enter the admin email and password."); return; }
   if(!cloudAvailable && !initCloud()){ msg.textContent = tr("No connection — admin login needs internet."); return; }
   msg.textContent = tr("Checking…");
-  fbAuth.signInWithEmailAndPassword(em, pw).then(function(cred){
-    /* database rules are the real gate; this read only decides which UI to show */
-    return fbDb.ref("admins/" + cred.user.uid).once("value").then(function(s){
-      if(s.val()){
-        adminMode = true;
-        state.entryChoice = "admin";
-        save();
-        hideEntrance();
-        switchPage("admin");
-        renderAdminConsole();
-        toast(tr("Welcome, System Administrator."), "gold", "ADMIN");
-      } else {
-        msg.textContent = tr("This account has no admin rights.");
-        fbAuth.signOut();
-      }
-    });
-  }).catch(function(err){
+  /* the auth listener (setupAuthListener) does the actual admin check, enters
+     admin mode on success, or rejects with a message in this same form */
+  fbAuth.signInWithEmailAndPassword(em, pw).catch(function(err){
     msg.textContent = tr("Login failed: ") + (err && err.message ? err.message : "");
   });
 });
+
+/* ---------------- admin-only view / play-only mode ---------------- */
+function applyModeClasses(){
+  document.body.classList.toggle("play-only", !!state && state.mode === "auto" && !adminMode);
+}
+function enterAdminMode(){
+  if(adminMode) return;
+  adminMode = true;
+  document.body.classList.add("admin-mode");
+  document.body.classList.remove("play-only");
+  var hs = document.querySelector("header .logo small");
+  if(hs) hs.textContent = tr("SYSTEM ADMINISTRATOR");
+  switchPage("admin");
+  renderAdminConsole();
+  toast(tr("Welcome, System Administrator."), "gold", "ADMIN");
+}
+function exitAdminMode(){
+  if(!adminMode) return;
+  adminMode = false;
+  document.body.classList.remove("admin-mode");
+  var hs = document.querySelector("header .logo small");
+  if(hs) hs.textContent = tr("HUNTER SYSTEM");
+  applyModeClasses();
+  switchPage("home");
+  renderNav(); renderAll();
+}
 
 /* ---------------- admin console (edit any user, broadcast to all) ---------------- */
 var acSelectedUid = null;
 function renderAdminConsole(){
   var p = document.getElementById("adminConsole");
   if(p) p.style.display = adminMode ? "" : "none";
-  if(adminMode && acSeasonQuests.length === 0){
+  if(!adminMode) return;
+  if(acSeasonQuests.length === 0){
     acSeasonQuests.push({name:"", tier:"medium"});
     renderSeasonQuestRows();
   }
+  renderLockRows();
 }
+document.getElementById("acExitBtn").addEventListener("click", function(){
+  fbAuth.signOut(); /* the auth listener calls exitAdminMode() once signed out */
+});
 document.getElementById("acLoadUsers").addEventListener("click", function(){
   if(!adminMode || !cloudAvailable) return;
   var box = document.getElementById("acUsers");
@@ -2603,6 +2643,42 @@ function listenSeason(){
     fbDb.ref("season").on("value", function(snap){ applySeason(snap.val()); });
   }catch(e){}
 }
+function listenSystemLocks(){
+  if(!cloudAvailable) return;
+  try{
+    fbDb.ref("systemLocks").on("value", function(snap){
+      remoteSystemLocks = snap.val() || {};
+      if(state){ state.autoLocks = remoteSystemLocks; save(); }
+      renderNav();
+      if(sectionLockLevel(currentPage)) switchPage("home"); /* a fresh admin lock may seal the page we're on */
+      if(currentPage === "admin") renderLockRows();
+    });
+  }catch(e){}
+}
+function renderLockRows(){
+  var box = document.getElementById("acLockRows");
+  if(!box) return;
+  var h = "";
+  for(var i=0;i<LOCKABLE_PAGES.length;i++){
+    var p = LOCKABLE_PAGES[i];
+    var cur = remoteSystemLocks && remoteSystemLocks[p] !== undefined ? remoteSystemLocks[p] : "";
+    h += '<div class="adm-row" style="align-items:center;margin-bottom:6px">'
+      + '<span style="flex:1">' + (NAV_ICON[p] || "") + ' ' + esc(tr(NAV_LABEL[p])) + '</span>'
+      + '<input class="inp ac-lock-inp" data-lp="' + p + '" type="number" min="0" max="99" placeholder="' + esc(tr("default")) + '" value="' + esc(String(cur)) + '" style="width:90px;flex:0 0 auto"></div>';
+  }
+  box.innerHTML = h;
+}
+document.getElementById("acLockSave").addEventListener("click", function(){
+  var inputs = document.querySelectorAll(".ac-lock-inp");
+  var map = {};
+  for(var i=0;i<inputs.length;i++){
+    var v = inputs[i].value.trim();
+    if(v !== "") map[inputs[i].getAttribute("data-lp")] = Math.max(0, parseInt(v, 10) || 0);
+  }
+  fbDb.ref("systemLocks").set(map)
+    .then(function(){ toast(tr("Section locks updated for all users."), "gold", "ADMIN"); })
+    .catch(function(err){ toast(tr("Save failed: ") + err.message, "err"); });
+});
 function cleanupSeasonQuests(){
   /* a finished season takes its quests with it */
   var t = todayStr(), removed = 0;
@@ -2652,36 +2728,54 @@ function setupAuthListener(){
     cloudUser = user;
     renderCloudStatus();
     if(currentPage === "guild") renderGuild();
-    if(!user) return;
-    /* signed in — record the entrance choice and open the gate */
-    if(!state.entryChoice){ state.entryChoice = "google"; save(); }
-    hideEntrance();
-    if(state.guildId){ attachGuild(); publishGuildProfile(); }
-    cloudRef = fbDb.ref("hunters/" + user.uid);
-    cloudRef.once("value", function(snap){
-      var remote = snap.val();
-      if(remote && remote.json){
-        var remoteState;
-        try{ remoteState = JSON.parse(remote.json); }catch(e){ remoteState = null; }
-        if(remoteState && (remoteState.saveCount || 0) > (state.saveCount || 0)){
-          cloudAdopt(remote.json);
-          sysToast("Progress synced from the cloud.");
+    if(!user){ if(adminMode) exitAdminMode(); return; }
+    /* Every account is checked against admins/ before it's treated as anything.
+       An email/password account is ALWAYS an admin-login attempt — it is never
+       adopted as a hunter, even if it happens not to be listed as admin. */
+    var isPasswordAuth = user.providerData && user.providerData[0] && user.providerData[0].providerId === "password";
+    fbDb.ref("admins/" + user.uid).once("value").then(function(s){
+      if(s.val()){
+        if(!state.entryChoice){ state.entryChoice = "admin"; save(); }
+        hideEntrance();
+        enterAdminMode();
+        return;
+      }
+      if(isPasswordAuth){
+        var msg = document.getElementById("entAdmMsg");
+        if(msg) msg.textContent = tr("This account has no admin rights.");
+        fbAuth.signOut();
+        return;
+      }
+      /* ordinary Google hunter — record the entrance choice and open the gate */
+      if(!state.entryChoice){ state.entryChoice = "google"; save(); }
+      hideEntrance();
+      if(state.guildId){ attachGuild(); publishGuildProfile(); }
+      cloudRef = fbDb.ref("hunters/" + user.uid);
+      cloudRef.once("value", function(snap){
+        var remote = snap.val();
+        if(remote && remote.json){
+          var remoteState;
+          try{ remoteState = JSON.parse(remote.json); }catch(e){ remoteState = null; }
+          if(remoteState && (remoteState.saveCount || 0) > (state.saveCount || 0)){
+            cloudAdopt(remote.json);
+            sysToast("Progress synced from the cloud.");
+          } else {
+            cloudPush();
+          }
         } else {
           cloudPush();
         }
-      } else {
-        cloudPush();
-      }
-      /* live updates from other signed-in devices */
-      cloudRef.on("value", function(snap2){
-        var remote2 = snap2.val();
-        if(!remote2 || !remote2.json) return;
-        var remoteState2;
-        try{ remoteState2 = JSON.parse(remote2.json); }catch(e){ return; }
-        if((remoteState2.saveCount || 0) > (state.saveCount || 0)){
-          cloudAdopt(remote2.json);
-          sysToast("Synced update from another device.");
-        }
+        /* live updates from other signed-in devices */
+        cloudRef.on("value", function(snap2){
+          var remote2 = snap2.val();
+          if(!remote2 || !remote2.json) return;
+          var remoteState2;
+          try{ remoteState2 = JSON.parse(remote2.json); }catch(e){ return; }
+          if((remoteState2.saveCount || 0) > (state.saveCount || 0)){
+            cloudAdopt(remote2.json);
+            sysToast("Synced update from another device.");
+          }
+        });
       });
     });
   });
@@ -3234,7 +3328,7 @@ var I18N_RU = {
   "Sign in with Google to sync your hunter automatically across every device — no export or import needed. Your save is private to your Google account.":"Войдите через Google, чтобы автоматически синхронизировать охотника на всех устройствах — без экспорта и импорта. Ваши данные приватны и привязаны к вашему аккаунту Google.",
   "These quests reset together every day at 01:00. Edit the package here.":"Эти квесты сбрасываются вместе каждый день в 01:00. Редактируйте пакет здесь.",
   "The rewards granted on the STORY road as you level up.":"Награды, выдаваемые на пути ИСТОРИИ по мере роста уровня.",
-  "Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level in AUTOMATIC mode (0 = always open). ADMIN always stays visible so you can get back here.":"Переименуйте вкладку, переставьте с помощью ▲▼ или скройте. Число у 🔒 — уровень открытия в АВТОМАТИЧЕСКОМ режиме (0 = всегда открыт). АДМИН всегда остаётся видимым, чтобы вы могли вернуться сюда.",
+  "Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level set by the Administrator (— = always open) — it applies to everyone and can't be changed here. ADMIN always stays visible so you can get back here.":"Переименуйте вкладку, переставьте с помощью ▲▼ или скройте. Число у 🔒 — уровень открытия, установленный Администратором (— = всегда открыт), действует для всех и здесь не меняется. АДМИН всегда остаётся видимым, чтобы вы могли вернуться сюда.",
   "A daily reminder when today's quests are still unfinished. Works while LEVEL UP is open in a browser tab or installed on your home screen (⋮ → Add to Home screen).":"Ежедневное напоминание, если квесты на сегодня ещё не выполнены. Работает, пока LEVEL UP открыт во вкладке браузера или установлен на главный экран (⋮ → Добавить на главный экран).",
   "Cloud is empty — press UPLOAD on the device with your data.":"Облако пусто — нажмите ЗАГРУЗИТЬ на устройстве с вашими данными.",
   "Checking cloud…":"Проверка облака…","Cloud data unreadable.":"Данные облака нечитаемы.",
@@ -3313,8 +3407,8 @@ var I18N_RU = {
   "Turn your life into the game. Who enters?":"Преврати свою жизнь в игру. Кто входит?",
   "⚔️ USER":"⚔️ ПОЛЬЗОВАТЕЛЬ","🛡 ADMIN":"🛡 АДМИН","Choose your path, Hunter":"Выбери свой путь, Охотник",
   "🎮 MANUAL":"🎮 РУЧНОЙ","🤖 AUTOMATIC":"🤖 АВТОМАТИЧЕСКИЙ",
-  "Full freedom. Every section is open — you build your own way.":"Полная свобода. Все разделы открыты — вы строите свой путь сами.",
-  "The System rules. Sections unlock one by one as you level up — earn your access.":"Правит Система. Разделы открываются по одному с ростом уровня — доступ нужно заслужить.",
+  "Full freedom to shape your quests, rewards and road — sections still obey any locks the Administrator sets.":"Полная свобода настраивать квесты, награды и путь — разделы всё равно подчиняются блокировкам Администратора.",
+  "The System rules. You only play — no editing. Sections unlock as you level, or as the Administrator sets.":"Правит Система. Вы только играете — без редактирования. Разделы открываются с уровнем или по решению Администратора.",
   "Your progress, your account":"Ваш прогресс — ваш аккаунт",
   "🔑 SIGN UP / SIGN IN WITH GOOGLE":"🔑 ВОЙТИ / РЕГИСТРАЦИЯ ЧЕРЕЗ GOOGLE","👤 USE AS A GUEST":"👤 ВОЙТИ КАК ГОСТЬ",
   "Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).":"Прогресс гостя хранится только на этом устройстве. Войти можно позже в любой момент (АДМИН → ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ).",
@@ -3334,10 +3428,19 @@ var I18N_RU = {
   "📢 Broadcast to ALL users":"📢 Объявление ВСЕМ пользователям","📢 SEND TO ALL":"📢 ОТПРАВИТЬ ВСЕМ",
   "Write a title and a message.":"Напишите заголовок и сообщение.","Broadcast sent to all hunters.":"Объявление отправлено всем охотникам.",
   "Broadcast failed: ":"Объявление не отправлено: ","System Administrator":"Системный Администратор",
-  "Game Mode":"Режим игры","🎮 MANUAL — full freedom, all sections open":"🎮 РУЧНОЙ — полная свобода, все разделы открыты",
-  "🤖 AUTOMATIC — sections unlock as you level up":"🤖 АВТОМАТИЧЕСКИЙ — разделы открываются с уровнем",
-  "AUTOMATIC mode: the System now seals sections until you reach their level.":"АВТОМАТИЧЕСКИЙ режим: Система запечатывает разделы, пока вы не достигнете их уровня.",
-  "MANUAL mode: every section is open.":"РУЧНОЙ режим: все разделы открыты.",
+  "Game Mode":"Режим игры","🎮 MANUAL — edit your quests, rewards and road":"🎮 РУЧНОЙ — редактируйте квесты, награды и путь",
+  "🤖 AUTOMATIC — play only, no editing":"🤖 АВТОМАТИЧЕСКИЙ — только игра, без редактирования",
+  "AUTOMATIC mode: play only — no editing quests, rewards, road or tabs. Sections still unlock as you level.":"АВТОМАТИЧЕСКИЙ режим: только игра — нельзя редактировать квесты, награды, путь или вкладки. Разделы всё ещё открываются с уровнем.",
+  "MANUAL mode: you can edit your quests, rewards and road again.":"РУЧНОЙ режим: вы снова можете редактировать квесты, награды и путь.",
+  /* section locks + admin-only view */
+  "🔒 SECTION LOCKS (ALL USERS)":"🔒 БЛОКИРОВКИ РАЗДЕЛОВ (ДЛЯ ВСЕХ)",
+  "The unlock level for each section, enforced for every hunter in BOTH game modes. Leave a field blank to use the default (AUTOMATIC's built-in progression; MANUAL stays open).":"Уровень открытия каждого раздела, действует для всех охотников в ОБОИХ режимах. Оставьте поле пустым для значения по умолчанию (встроенная прогрессия АВТОМАТИЧЕСКОГО режима; РУЧНОЙ остаётся открытым).",
+  "💾 SAVE SECTION LOCKS":"💾 СОХРАНИТЬ БЛОКИРОВКИ","default":"по умолчанию",
+  "Section locks updated for all users.":"Блокировки разделов обновлены для всех.",
+  "🚪 EXIT ADMIN MODE":"🚪 ВЫЙТИ ИЗ РЕЖИМА АДМИНИСТРАТОРА",
+  "SYSTEM ADMINISTRATOR":"СИСТЕМНЫЙ АДМИНИСТРАТОР",
+  "Unlock level set by the Administrator (0 = always open)":"Уровень открытия, заданный Администратором (0 = всегда открыт)",
+  "Users":"Пользователи",
   "Sealed by the System. Reach Level ":"Запечатано Системой. Достигните уровня ",
   " to unlock this section.":", чтобы открыть этот раздел.",
   "⚔ QUEST UNLOCK":"⚔ ОТКРЫТИЕ КВЕСТА","Title":"Заголовок",
@@ -3480,18 +3583,24 @@ function reconcileNav(){
   });
   for(var i=0;i<NAV_ORDER.length;i++) if(!seen[NAV_ORDER[i]]) state.navConfig.push({page:NAV_ORDER[i], label:NAV_LABEL[NAV_ORDER[i]], hidden:false});
 }
-/* AUTOMATIC mode: sections unlock one by one as the hunter levels up */
+/* Section locks. AUTOMATIC mode ships with sensible default unlock levels;
+   the Administrator can override any section for EVERY hunter in BOTH game
+   modes (that override always wins). HOME, ADMIN, QUESTS, PROFILE and GUIDE
+   can never be locked — there must always be a way to play and get back. */
 var AUTO_LOCKS = {rewards:2, stats:3, story:4, honor:5, guild:6, budget:7};
+var LOCKABLE_PAGES = ["rewards","stats","story","honor","guild","budget"];
+var remoteSystemLocks = null; /* live admin config, synced from Firebase (systemLocks node) */
 function lockLevelFor(p){
-  /* the CONFIGURED unlock level for a section (custom override or default) */
-  if(p === "home" || p === "admin") return 0; /* never seal the way back */
-  if(state && state.autoLocks && state.autoLocks[p] !== undefined) return Math.max(0, +state.autoLocks[p] || 0);
-  return AUTO_LOCKS[p] || 0;
+  if(LOCKABLE_PAGES.indexOf(p) === -1) return 0; /* never seal the way back */
+  var src = remoteSystemLocks || state.autoLocks; /* live value, else last-synced cache */
+  if(src && src[p] !== undefined) return Math.max(0, +src[p] || 0);
+  if(state && state.mode === "auto") return AUTO_LOCKS[p] || 0;
+  return 0; /* MANUAL, no admin override: open */
 }
 function sectionLockLevel(p){
-  if(!state || state.mode !== "auto") return 0;
+  if(!state || adminMode) return 0; /* admin never plays, so is never gated */
   var need = lockLevelFor(p);
-  return state.level < need ? need : 0;
+  return need && state.level < need ? need : 0;
 }
 function renderNav(){
   reconcileNav();
@@ -3509,6 +3618,7 @@ function renderNav(){
   renderHeader(); /* re-fill the roll badge that lives inside the nav */
 }
 function switchPage(p){
+  if(adminMode && p !== "admin") return; /* the Administrator never plays — console only */
   var lockLv = sectionLockLevel(p);
   if(lockLv){
     toast(tr("Sealed by the System. Reach Level ") + lockLv + tr(" to unlock this section."), "err");
@@ -6096,13 +6206,12 @@ function renderNavEditor(){
   var h = "";
   for(var i=0;i<state.navConfig.length;i++){
     var c = state.navConfig[i];
-    var lockable = c.page !== "home" && c.page !== "admin";
+    var lockLv = lockLevelFor(c.page);
     h += '<div class="nav-edit-row">'
       + '<span class="ne-ico">' + (NAV_ICON[c.page] || "•") + '</span>'
       + '<input class="inp ne-name" data-i="' + i + '" maxlength="16" value="' + esc(c.label || NAV_LABEL[c.page]) + '">'
-      + (lockable
-          ? '<span class="ne-lockwrap" title="AUTOMATIC mode: unlocks at this level (0 = always open)">🔒'
-            + '<input class="inp ne-lock" data-lp="' + c.page + '" type="number" min="0" max="99" value="' + lockLevelFor(c.page) + '"></span>'
+      + (LOCKABLE_PAGES.indexOf(c.page) !== -1
+          ? '<span class="ne-lockwrap" title="' + esc(tr("Unlock level set by the Administrator (0 = always open)")) + '">🔒<span class="ne-lockval">' + (lockLv || "—") + '</span></span>'
           : '<span class="ne-lockwrap" style="opacity:.35">🔒<span class="ne-nolock">—</span></span>')
       + '<button class="mini-btn" data-nmove="' + i + '" data-dir="-1" title="Move up"' + (i===0?" disabled":"") + '>▲</button>'
       + '<button class="mini-btn" data-nmove="' + i + '" data-dir="1" title="Move down"' + (i===state.navConfig.length-1?" disabled":"") + '>▼</button>'
@@ -6114,14 +6223,6 @@ function renderNavEditor(){
   document.getElementById("navEditor").innerHTML = h;
 }
 document.getElementById("navEditor").addEventListener("input", function(e){
-  if(e.target.classList.contains("ne-lock")){
-    var pg = e.target.getAttribute("data-lp");
-    var lv = Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0));
-    if(!state.autoLocks) state.autoLocks = {};
-    state.autoLocks[pg] = lv;
-    save(); renderNav();
-    return;
-  }
   if(!e.target.classList.contains("ne-name")) return;
   var i = +e.target.getAttribute("data-i");
   state.navConfig[i].label = e.target.value.trim() || NAV_LABEL[state.navConfig[i].page];
@@ -6172,10 +6273,11 @@ document.getElementById("admTheme").addEventListener("change", function(){
 document.getElementById("admMode").addEventListener("change", function(){
   state.mode = this.value === "auto" ? "auto" : "manual";
   save();
+  applyModeClasses();
   renderNav();
   if(sectionLockLevel(currentPage)) switchPage("home"); /* don't strand the hunter on a now-sealed page */
-  if(state.mode === "auto") sysToast(tr("AUTOMATIC mode: the System now seals sections until you reach their level."));
-  else sysToast(tr("MANUAL mode: every section is open."));
+  if(state.mode === "auto") sysToast(tr("AUTOMATIC mode: play only — no editing quests, rewards, road or tabs. Sections still unlock as you level."));
+  else sysToast(tr("MANUAL mode: you can edit your quests, rewards and road again."));
 });
 document.getElementById("admSound").addEventListener("change", function(){
   state.sound = this.value !== "off";
@@ -7328,6 +7430,7 @@ function seedIfNew(){
 load();
 applyTheme(state.theme || "shadow");
 startI18n(); /* translate static UI + watch dynamic renders (no-op in English) */
+applyModeClasses();
 renderNav();
 /* start cloud; retry a few times in case the Firebase SDK loads late on a slow phone connection */
 initCloud();
