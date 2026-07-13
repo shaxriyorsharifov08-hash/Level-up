@@ -677,6 +677,33 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
   border:1px solid rgba(124,97,255,.2);border-radius:10px;margin-bottom:8px;background:rgba(5,6,16,.5);font-size:.88rem}
 .adm-list-item .ali-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* ---------- entrance (USER / ADMIN) ---------- */
+#entranceOv{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% -10%,#141b45 0%,transparent 60%),
+             radial-gradient(700px 500px at 50% 115%,#1a0f3a 0%,transparent 55%),var(--bg)}
+#entranceOv.show{display:flex}
+.ent-box{text-align:center;max-width:360px;width:92%;animation:pagein .4s ease}
+.ent-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:2rem;letter-spacing:.12em;color:#fff;
+  text-shadow:0 0 24px rgba(124,97,255,.9),0 0 60px rgba(0,209,255,.5)}
+.ent-logo small{display:block;font-size:.62rem;letter-spacing:.5em;color:var(--blue);margin-top:6px;font-weight:700}
+.ent-sub{color:var(--dim);font-size:.85rem;margin:14px 0 26px}
+.ent-user{width:100%;min-height:64px;border-radius:16px;border:1px solid var(--purple);color:#fff;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:1.05rem;letter-spacing:.12em;
+  background:linear-gradient(135deg,rgba(124,97,255,.9),rgba(0,209,255,.55));
+  box-shadow:0 0 22px rgba(124,97,255,.6),0 8px 28px rgba(0,0,0,.5);transition:.2s}
+.ent-user:hover{transform:scale(1.03)}
+.ent-admin{margin-top:18px;background:none;border:none;color:var(--dim);font-family:'Orbitron',monospace;
+  font-size:.68rem;font-weight:700;letter-spacing:.22em;opacity:.75}
+.ent-admin:hover{color:var(--blue);opacity:1}
+.ent-opt{width:100%;min-height:54px;border-radius:14px;margin-bottom:10px;font-weight:700;font-size:.95rem}
+.ent-back{background:none;border:none;color:var(--dim);font-size:.8rem;margin-top:10px}
+.mode-card{width:100%;text-align:left;border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  margin-bottom:10px;background:rgba(11,15,34,.75);color:var(--text);transition:.15s}
+.mode-card:hover{border-color:var(--purple);transform:translateY(-1px)}
+.mode-card .mc-title{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.12em;color:#fff}
+.mode-card .mc-desc{font-size:.8rem;color:var(--dim);margin-top:4px;line-height:1.4}
+.nav-btn.locked{opacity:.45;filter:grayscale(.4)}
+
 /* ---------- FAB ---------- */
 #fab{position:fixed;right:20px;bottom:24px;z-index:50;width:60px;height:60px;border-radius:50%;
   border:1px solid var(--blue);color:#fff;font-size:2rem;line-height:1;
@@ -880,6 +907,45 @@ main section{animation:pagein .28s ease}
 </head>
 <body>
 <canvas id="particles"></canvas>
+
+<!-- entrance: USER (big) / admin (small) -->
+<div id="entranceOv">
+  <div class="ent-box">
+    <div class="ent-logo">LEVEL UP<small>HUNTER SYSTEM</small></div>
+    <div id="entMain">
+      <div class="ent-sub">Turn your life into the game. Who enters?</div>
+      <button class="ent-user" id="entUserBtn">⚔️ USER</button>
+      <button class="ent-admin" id="entAdminBtn">🛡 ADMIN</button>
+    </div>
+    <div id="entMode" style="display:none">
+      <div class="ent-sub">Choose your path, Hunter</div>
+      <button class="mode-card" data-mode="manual">
+        <div class="mc-title">🎮 MANUAL</div>
+        <div class="mc-desc">Full freedom. Every section is open — you build your own way.</div>
+      </button>
+      <button class="mode-card" data-mode="auto">
+        <div class="mc-title">🤖 AUTOMATIC</div>
+        <div class="mc-desc">The System rules. Sections unlock one by one as you level up — earn your access.</div>
+      </button>
+    </div>
+    <div id="entUser" style="display:none">
+      <div class="ent-sub">Your progress, your account</div>
+      <button class="btn primary ent-opt" id="entGoogleBtn">🔑 SIGN UP / SIGN IN WITH GOOGLE</button>
+      <button class="btn ent-opt" id="entGuestBtn">👤 USE AS A GUEST</button>
+      <div class="empty-note" style="font-size:.72rem">Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).</div>
+      <button class="ent-back" id="entUserBack">← back</button>
+    </div>
+    <div id="entAdmin" style="display:none">
+      <div class="ent-sub">System Administrator access</div>
+      <input class="inp" id="entAdmEmail" type="email" placeholder="Admin email" style="margin-bottom:8px">
+      <input class="inp" id="entAdmPass" type="password" placeholder="Password" style="margin-bottom:10px">
+      <button class="btn primary ent-opt" id="entAdmLogin">🛡 LOGIN</button>
+      <div class="empty-note" id="entAdmMsg" style="min-height:18px"></div>
+      <button class="ent-back" id="entAdminBack">← back</button>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <header>
     <div class="logo">LEVEL UP<small>HUNTER SYSTEM</small></div>
@@ -1343,6 +1409,26 @@ main section{animation:pagein .28s ease}
 
     <!-- ============ ADMIN ============ -->
     <section id="page-admin" style="display:none">
+      <div class="panel" id="adminConsole" style="display:none">
+        <div class="panel-title">🛡 ADMIN CONSOLE</div>
+        <div class="empty-note" style="margin-bottom:10px">System Administrator mode. Changes here affect real users — handle with care.</div>
+        <button class="btn primary" id="acLoadUsers" style="width:100%">🔄 LOAD ALL USERS</button>
+        <div id="acUsers" style="margin-top:10px"></div>
+        <div id="acEditor" style="display:none;margin-top:12px">
+          <div class="form-lbl" id="acEditName">EDITING:</div>
+          <div class="adm-row">
+            <input class="inp" id="acName" placeholder="Hunter name" style="flex:1;min-width:130px">
+            <input class="inp" id="acLevel" type="number" min="1" placeholder="Lv" style="width:76px;flex:0 0 auto">
+            <input class="inp" id="acXp" type="number" min="0" placeholder="XP" style="width:96px;flex:0 0 auto">
+            <input class="inp" id="acSp" type="number" min="0" placeholder="SP" style="width:76px;flex:0 0 auto">
+          </div>
+          <button class="btn gold" id="acSaveUser" style="width:100%;margin-top:8px">💾 SAVE TO USER</button>
+        </div>
+        <label class="form-lbl" style="margin-top:16px">📢 Broadcast to ALL users</label>
+        <input class="inp" id="acBTitle" maxlength="60" placeholder="Title" style="margin-bottom:8px">
+        <textarea class="ta" id="acBBody" maxlength="500" placeholder="Message — appears as a System announcement on every hunter's screen"></textarea>
+        <button class="btn danger" id="acBSend" style="width:100%;margin-top:8px">📢 SEND TO ALL</button>
+      </div>
       <div class="panel">
         <div class="panel-title">OVERVIEW</div>
         <div class="cards-grid" id="admCards"></div>
@@ -1410,6 +1496,11 @@ main section{animation:pagein .28s ease}
           <input class="inp" id="admName" style="flex:1;min-width:180px" maxlength="24">
           <button class="btn primary" id="admNameSave">SAVE NAME</button>
         </div>
+        <label class="form-lbl" style="margin-top:14px">Game Mode</label>
+        <select class="sel" id="admMode">
+          <option value="manual">🎮 MANUAL — full freedom, all sections open</option>
+          <option value="auto">🤖 AUTOMATIC — sections unlock as you level up</option>
+        </select>
         <div class="adm-row" style="margin-top:14px">
           <button class="btn" id="admResetDailies">&#8635; RESET DAILY QUESTS</button>
           <button class="btn gold" id="admExport">&#128190; EXPORT JSON BACKUP</button>
@@ -1815,6 +1906,9 @@ function defaultState(){
     theme:"shadow",      /* color theme */
     sound:true,          /* sound effects on/off */
     lang:"en",           /* interface language: en | ru */
+    mode:"manual",       /* game mode: manual (free) | auto (System rules & level gates) */
+    entryChoice:"",      /* entrance screen result: google | guest | admin */
+    lastBroadcastId:0,   /* last admin broadcast shown on this device */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     budget:{currency:"$", transactions:[], goals:[]},
@@ -1882,6 +1976,13 @@ function initCloud(){
     fbDb = firebase.database();
     cloudAvailable = true;
     setupAuthListener();
+    /* surface redirect-flow errors that used to fail silently */
+    try{
+      fbAuth.getRedirectResult().catch(function(err){
+        if(err && err.code && err.code !== "auth/no-auth-event") toast("Sign-in failed: " + err.message, "err");
+      });
+    }catch(e){}
+    listenBroadcast();
     return true;
   }catch(e){ return false; }
 }
@@ -1914,14 +2015,24 @@ function cloudSignIn(){
     return;
   }
   var provider = new firebase.auth.GoogleAuthProvider();
-  /* redirect is far more reliable than popup on mobile browsers (popups get blocked) */
   var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  if(isMobile){
+  /* Home-screen (standalone) installs MUST use the popup flow: the redirect
+     flow stores its state in a browser session the installed app can't see,
+     so sign-in silently never completes there. Plain mobile browser tabs
+     keep redirect (popups get blocked in normal tabs). */
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches)
+    || window.navigator.standalone === true;
+  if(isMobile && !standalone){
     fbAuth.signInWithRedirect(provider).catch(function(err){
       toast("Sign-in failed: " + err.message, "err");
     });
   } else {
     fbAuth.signInWithPopup(provider).catch(function(err){
+      if(err && err.code === "auth/popup-blocked"){
+        fbAuth.signInWithRedirect(provider).catch(function(e2){ toast("Sign-in failed: " + e2.message, "err"); });
+        return;
+      }
+      if(err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) return;
       toast("Sign-in failed: " + err.message, "err");
     });
   }
@@ -2243,6 +2354,147 @@ document.getElementById("guildMembers").addEventListener("click", function(e){
   sendCheer(b.getAttribute("data-cheer"), b.getAttribute("data-cname"));
 });
 
+/* ---------------- entrance gate (USER / ADMIN) ---------------- */
+var adminMode = false;
+function entStep(s){
+  document.getElementById("entMain").style.display = s === "main" ? "" : "none";
+  document.getElementById("entMode").style.display = s === "mode" ? "" : "none";
+  document.getElementById("entUser").style.display = s === "user" ? "" : "none";
+  document.getElementById("entAdmin").style.display = s === "admin" ? "" : "none";
+}
+function showEntrance(){ document.getElementById("entranceOv").classList.add("show"); entStep("main"); }
+function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); }
+document.getElementById("entUserBtn").addEventListener("click", function(){
+  /* only fresh hunters pick a game mode; returning ones go straight to sign-in */
+  entStep(state.totalCompleted > 0 ? "user" : "mode");
+});
+document.getElementById("entAdminBtn").addEventListener("click", function(){ entStep("admin"); });
+document.getElementById("entUserBack").addEventListener("click", function(){ entStep("main"); });
+document.getElementById("entAdminBack").addEventListener("click", function(){ entStep("main"); });
+document.getElementById("entMode").addEventListener("click", function(e){
+  var c = e.target.closest(".mode-card"); if(!c) return;
+  state.mode = c.getAttribute("data-mode");
+  save();
+  entStep("user");
+});
+document.getElementById("entGoogleBtn").addEventListener("click", function(){
+  cloudSignIn(); /* the auth listener records the choice and opens the gate */
+});
+document.getElementById("entGuestBtn").addEventListener("click", function(){
+  state.entryChoice = "guest";
+  save();
+  hideEntrance();
+  renderNav(); renderAll();
+});
+document.getElementById("entAdmLogin").addEventListener("click", function(){
+  var em = document.getElementById("entAdmEmail").value.trim();
+  var pw = document.getElementById("entAdmPass").value;
+  var msg = document.getElementById("entAdmMsg");
+  if(!em || !pw){ msg.textContent = tr("Enter the admin email and password."); return; }
+  if(!cloudAvailable && !initCloud()){ msg.textContent = tr("No connection — admin login needs internet."); return; }
+  msg.textContent = tr("Checking…");
+  fbAuth.signInWithEmailAndPassword(em, pw).then(function(cred){
+    /* database rules are the real gate; this read only decides which UI to show */
+    return fbDb.ref("admins/" + cred.user.uid).once("value").then(function(s){
+      if(s.val()){
+        adminMode = true;
+        state.entryChoice = "admin";
+        save();
+        hideEntrance();
+        switchPage("admin");
+        renderAdminConsole();
+        toast(tr("Welcome, System Administrator."), "gold", "ADMIN");
+      } else {
+        msg.textContent = tr("This account has no admin rights.");
+        fbAuth.signOut();
+      }
+    });
+  }).catch(function(err){
+    msg.textContent = tr("Login failed: ") + (err && err.message ? err.message : "");
+  });
+});
+
+/* ---------------- admin console (edit any user, broadcast to all) ---------------- */
+var acSelectedUid = null;
+function renderAdminConsole(){
+  var p = document.getElementById("adminConsole");
+  if(p) p.style.display = adminMode ? "" : "none";
+}
+document.getElementById("acLoadUsers").addEventListener("click", function(){
+  if(!adminMode || !cloudAvailable) return;
+  var box = document.getElementById("acUsers");
+  box.innerHTML = '<div class="empty-note">' + esc(tr("Loading…")) + '</div>';
+  fbDb.ref("hunters").once("value", function(snap){
+    var all = snap.val() || {};
+    var h = "";
+    for(var uidK in all){
+      var st = null;
+      try{ st = JSON.parse(all[uidK].json); }catch(e){}
+      if(!st) continue;
+      h += '<div class="adm-list-item"><span class="ali-name">⚔️ ' + esc(st.hunterName || "Hunter")
+        + ' — LV.' + (st.level || 1) + ' · ' + (st.totalCompleted || 0) + ' done</span>'
+        + '<button class="mini-btn" data-acedit="' + esc(uidK) + '" title="Edit">✎</button></div>';
+    }
+    box.innerHTML = h || '<div class="empty-note">' + esc(tr("No users found (check database rules in README).")) + '</div>';
+  }, function(err){
+    box.innerHTML = '<div class="empty-note">⚠ ' + esc(err.message) + '</div>';
+  });
+});
+document.getElementById("acUsers").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-acedit]"); if(!b) return;
+  acSelectedUid = b.getAttribute("data-acedit");
+  fbDb.ref("hunters/" + acSelectedUid).once("value", function(snap){
+    var remote = snap.val();
+    var st = null;
+    try{ st = remote && JSON.parse(remote.json); }catch(e){}
+    if(!st) return;
+    document.getElementById("acEditor").style.display = "";
+    document.getElementById("acEditName").textContent = tr("EDITING: ") + (st.hunterName || "Hunter") + " (" + acSelectedUid.slice(0, 8) + "…)";
+    document.getElementById("acName").value = st.hunterName || "";
+    document.getElementById("acLevel").value = st.level || 1;
+    document.getElementById("acXp").value = st.xp || 0;
+    document.getElementById("acSp").value = st.statPoints || 0;
+  });
+});
+document.getElementById("acSaveUser").addEventListener("click", function(){
+  if(!acSelectedUid) return;
+  fbDb.ref("hunters/" + acSelectedUid).once("value", function(snap){
+    var remote = snap.val();
+    var st = null;
+    try{ st = remote && JSON.parse(remote.json); }catch(e){}
+    if(!st){ toast(tr("Could not read that user's save."), "err"); return; }
+    st.hunterName = document.getElementById("acName").value.trim() || st.hunterName;
+    st.level = Math.max(1, parseInt(document.getElementById("acLevel").value, 10) || st.level);
+    st.xp = Math.max(0, parseInt(document.getElementById("acXp").value, 10) || 0);
+    st.statPoints = Math.max(0, parseInt(document.getElementById("acSp").value, 10) || 0);
+    st.saveCount = (st.saveCount || 0) + 1000; /* user devices adopt the higher count on next sync */
+    fbDb.ref("hunters/" + acSelectedUid).set({json: JSON.stringify(st), updatedAt: Date.now()})
+      .then(function(){ toast(tr("User updated."), "gold", "ADMIN"); })
+      .catch(function(err){ toast(tr("Save failed: ") + err.message, "err"); });
+  });
+});
+document.getElementById("acBSend").addEventListener("click", function(){
+  var ti = document.getElementById("acBTitle").value.trim();
+  var bo = document.getElementById("acBBody").value.trim();
+  if(!ti || !bo){ toast(tr("Write a title and a message."), "err"); return; }
+  fbDb.ref("broadcast").set({id: Date.now(), title: ti, body: bo})
+    .then(function(){ toast(tr("Broadcast sent to all hunters."), "gold", "ADMIN"); })
+    .catch(function(err){ toast(tr("Broadcast failed: ") + err.message, "err"); });
+});
+function listenBroadcast(){
+  if(!cloudAvailable) return;
+  try{
+    fbDb.ref("broadcast").on("value", function(s){
+      var b = s.val();
+      if(!b || !b.id || !state) return;
+      if(b.id <= (state.lastBroadcastId || 0)) return;
+      state.lastBroadcastId = b.id;
+      save();
+      announce("📢 " + (b.title || "SYSTEM MESSAGE"), b.body || "", "📢", "OK", tr("System Administrator"));
+    });
+  }catch(e){}
+}
+
 function renderCloudStatus(){
   var na = document.getElementById("cloudUnavailable");
   if(!na) return; /* admin panel not yet in the DOM */
@@ -2280,6 +2532,9 @@ function setupAuthListener(){
     renderCloudStatus();
     if(currentPage === "guild") renderGuild();
     if(!user) return;
+    /* signed in — record the entrance choice and open the gate */
+    if(!state.entryChoice){ state.entryChoice = "google"; save(); }
+    hideEntrance();
     if(state.guildId){ attachGuild(); publishGuildProfile(); }
     cloudRef = fbDb.ref("hunters/" + user.uid);
     cloudRef.once("value", function(snap){
@@ -2487,11 +2742,12 @@ function migrateState(){
     if(!state.budget.transactions[bt].cat) state.budget.transactions[bt].cat = "other";
   }
 }
-var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","food","title","note"];
+var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","food","title","quest","note"];
 var ROAD_KIND_LABEL = {
   "roll-easy":"🎟 EASY ROLL","roll-medium":"🎟 MEDIUM ROLL","roll-epic":"🎟 EPIC ROLL",
   "roll-mythic":"🎟 MYTHIC ROLL","roll-legendary":"🎟 LEGENDARY ROLL",
-  "sp":"✦ STAT POINTS","skill":"⚡ SKILL","equip":"🗡 EQUIPMENT","food":"🍖 FOOD","title":"👑 TITLE","note":"🎁 MY PRIZE"
+  "sp":"✦ STAT POINTS","skill":"⚡ SKILL","equip":"🗡 EQUIPMENT","food":"🍖 FOOD","title":"👑 TITLE",
+  "quest":"⚔ QUEST UNLOCK","note":"🎁 MY PRIZE"
 };
 function roadRewardLabel(rw){
   if(rw.kind === "sp") return "✦ +" + (+rw.value || 1) + " SP";
@@ -2500,6 +2756,7 @@ function roadRewardLabel(rw){
   if(rw.kind === "equip") return "🗡 " + (rw.value || "Equipment");
   if(rw.kind === "food") return "🍖 " + (rw.value || "Food");
   if(rw.kind === "title") return "👑 " + (rw.value || "Title");
+  if(rw.kind === "quest") return "⚔ " + (rw.value || "Quest");
   return "🎁 " + (rw.value || "Reward");
 }
 function levelRewardsFor(lv){
@@ -2531,6 +2788,14 @@ function applyLevelReward(rw){
   if(rw.kind === "title"){
     if(rw.value) addTitle(rw.value);
     return "👑 Title: [" + (rw.value || "?") + "]";
+  }
+  if(rw.kind === "quest"){
+    /* a new quest OPENS at this level — the story path grows with the hunter */
+    if(rw.value){
+      var nq = makeQuest("⚔️", rw.value, "Unlocked by the System on the Level Road.", "daily", [], "medium", "END", "", true);
+      state.quests.push(nq);
+    }
+    return "⚔ New quest unlocked: [" + (rw.value || "?") + "]";
   }
   return "🎁 " + (rw.value || "Reward");
 }
@@ -2923,6 +3188,38 @@ var I18N_RU = {
   "Transaction updated.":"Операция обновлена.","Delete this transaction?":"Удалить эту операцию?",
   "Enter an amount greater than zero.":"Введите сумму больше нуля.",
   "Previous month":"Предыдущий месяц","Next month":"Следующий месяц",
+  /* entrance + accounts + modes + admin console */
+  "Turn your life into the game. Who enters?":"Преврати свою жизнь в игру. Кто входит?",
+  "⚔️ USER":"⚔️ ПОЛЬЗОВАТЕЛЬ","🛡 ADMIN":"🛡 АДМИН","Choose your path, Hunter":"Выбери свой путь, Охотник",
+  "🎮 MANUAL":"🎮 РУЧНОЙ","🤖 AUTOMATIC":"🤖 АВТОМАТИЧЕСКИЙ",
+  "Full freedom. Every section is open — you build your own way.":"Полная свобода. Все разделы открыты — вы строите свой путь сами.",
+  "The System rules. Sections unlock one by one as you level up — earn your access.":"Правит Система. Разделы открываются по одному с ростом уровня — доступ нужно заслужить.",
+  "Your progress, your account":"Ваш прогресс — ваш аккаунт",
+  "🔑 SIGN UP / SIGN IN WITH GOOGLE":"🔑 ВОЙТИ / РЕГИСТРАЦИЯ ЧЕРЕЗ GOOGLE","👤 USE AS A GUEST":"👤 ВОЙТИ КАК ГОСТЬ",
+  "Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).":"Прогресс гостя хранится только на этом устройстве. Войти можно позже в любой момент (АДМИН → ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ).",
+  "System Administrator access":"Доступ системного администратора","Admin email":"Email администратора","Password":"Пароль",
+  "🛡 LOGIN":"🛡 ВОЙТИ","← back":"← назад",
+  "Enter the admin email and password.":"Введите email и пароль администратора.",
+  "No connection — admin login needs internet.":"Нет соединения — вход администратора требует интернета.",
+  "Checking…":"Проверка…","This account has no admin rights.":"У этого аккаунта нет прав администратора.",
+  "Login failed: ":"Вход не выполнен: ","Welcome, System Administrator.":"Добро пожаловать, Системный Администратор.",
+  "🛡 ADMIN CONSOLE":"🛡 КОНСОЛЬ АДМИНИСТРАТОРА",
+  "System Administrator mode. Changes here affect real users — handle with care.":"Режим системного администратора. Изменения затрагивают реальных пользователей — будьте осторожны.",
+  "🔄 LOAD ALL USERS":"🔄 ЗАГРУЗИТЬ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ","Loading…":"Загрузка…",
+  "No users found (check database rules in README).":"Пользователи не найдены (проверьте правила базы в README).",
+  "EDITING: ":"РЕДАКТИРОВАНИЕ: ","💾 SAVE TO USER":"💾 СОХРАНИТЬ ПОЛЬЗОВАТЕЛЮ","User updated.":"Пользователь обновлён.",
+  "Save failed: ":"Сохранение не удалось: ","Could not read that user's save.":"Не удалось прочитать сохранение пользователя.",
+  "📢 Broadcast to ALL users":"📢 Объявление ВСЕМ пользователям","📢 SEND TO ALL":"📢 ОТПРАВИТЬ ВСЕМ",
+  "Write a title and a message.":"Напишите заголовок и сообщение.","Broadcast sent to all hunters.":"Объявление отправлено всем охотникам.",
+  "Broadcast failed: ":"Объявление не отправлено: ","System Administrator":"Системный Администратор",
+  "Game Mode":"Режим игры","🎮 MANUAL — full freedom, all sections open":"🎮 РУЧНОЙ — полная свобода, все разделы открыты",
+  "🤖 AUTOMATIC — sections unlock as you level up":"🤖 АВТОМАТИЧЕСКИЙ — разделы открываются с уровнем",
+  "AUTOMATIC mode: the System now seals sections until you reach their level.":"АВТОМАТИЧЕСКИЙ режим: Система запечатывает разделы, пока вы не достигнете их уровня.",
+  "MANUAL mode: every section is open.":"РУЧНОЙ режим: все разделы открыты.",
+  "Sealed by the System. Reach Level ":"Запечатано Системой. Достигните уровня ",
+  " to unlock this section.":", чтобы открыть этот раздел.",
+  "⚔ QUEST UNLOCK":"⚔ ОТКРЫТИЕ КВЕСТА","Title":"Заголовок",
+  "Message — appears as a System announcement on every hunter's screen":"Сообщение — появится как объявление Системы на экране каждого охотника",
   /* sound settings */
   "Sound Effects":"Звуковые эффекты","🔊 On — every action has its sound":"🔊 Вкл — у каждого действия свой звук",
   "🔇 Off — silent mode":"🔇 Выкл — тихий режим","🔊 Sounds on.":"🔊 Звуки включены.","🔇 Sounds off.":"🔇 Звуки выключены.",
@@ -3050,6 +3347,13 @@ function reconcileNav(){
   });
   for(var i=0;i<NAV_ORDER.length;i++) if(!seen[NAV_ORDER[i]]) state.navConfig.push({page:NAV_ORDER[i], label:NAV_LABEL[NAV_ORDER[i]], hidden:false});
 }
+/* AUTOMATIC mode: sections unlock one by one as the hunter levels up */
+var AUTO_LOCKS = {rewards:2, stats:3, story:4, honor:5, guild:6, budget:7};
+function sectionLockLevel(p){
+  if(!state || state.mode !== "auto") return 0;
+  var need = AUTO_LOCKS[p] || 0;
+  return state.level < need ? need : 0;
+}
 function renderNav(){
   reconcileNav();
   var h = "";
@@ -3057,13 +3361,20 @@ function renderNav(){
     var c = state.navConfig[i];
     if(c.hidden && c.page !== "admin") continue; /* admin can never be hidden — prevents lockout */
     var badge = c.page === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
-    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "") + '" data-page="' + c.page + '">'
-      + '<span class="nv-ico">' + (NAV_ICON[c.page] || "•") + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
+    var lockLv = sectionLockLevel(c.page);
+    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "") + (lockLv ? " locked" : "")
+      + '" data-page="' + c.page + '"' + (lockLv ? ' data-locklv="' + lockLv + '"' : '') + '>'
+      + '<span class="nv-ico">' + (lockLv ? "🔒" : (NAV_ICON[c.page] || "•")) + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
   }
   document.getElementById("nav").innerHTML = h;
   renderHeader(); /* re-fill the roll badge that lives inside the nav */
 }
 function switchPage(p){
+  var lockLv = sectionLockLevel(p);
+  if(lockLv){
+    toast(tr("Sealed by the System. Reach Level ") + lockLv + tr(" to unlock this section."), "err");
+    return;
+  }
   currentPage = p;
   for(var i=0;i<PAGES.length;i++){
     document.getElementById("page-" + PAGES[i]).style.display = (PAGES[i]===p ? "" : "none");
@@ -3114,7 +3425,13 @@ document.getElementById("navBackdrop").addEventListener("click", function(){ set
 document.addEventListener("keydown", function(e){ if(e.key === "Escape" && navOpen) setNavOpen(false); });
 document.getElementById("nav").addEventListener("click", function(e){
   var b = e.target.closest(".nav-btn");
-  if(b){ switchPage(b.getAttribute("data-page")); setNavOpen(false); }
+  if(!b) return;
+  if(b.getAttribute("data-locklv")){
+    toast(tr("Sealed by the System. Reach Level ") + b.getAttribute("data-locklv") + tr(" to unlock this section."), "err");
+    return; /* keep the dock open so the hunter can pick an unlocked section */
+  }
+  switchPage(b.getAttribute("data-page"));
+  setNavOpen(false);
 });
 document.getElementById("fab").addEventListener("click", function(){
   if(currentPage === "quests") openQuestModal(null);
@@ -3166,7 +3483,10 @@ function gainXP(amount){
     }
     checkAchievements();
   }
-  if(leveled) checkRankQuestConditions();
+  if(leveled){
+    checkRankQuestConditions();
+    renderNav(); /* AUTOMATIC mode: newly reached levels unseal their sections */
+  }
   save();
 }
 function onRankUp(oldRank, newRank){
@@ -5280,7 +5600,9 @@ function renderAdmin(){
   themeSel.value = state.theme || "shadow";
   document.getElementById("admSound").value = state.sound === false ? "off" : "on";
   document.getElementById("admLang").value = state.lang || "en";
+  document.getElementById("admMode").value = state.mode === "auto" ? "auto" : "manual";
   renderNotifySettings();
+  renderAdminConsole();
   /* quests list */
   var qh = "";
   for(var i=0;i<state.quests.length;i++){
@@ -5694,6 +6016,14 @@ document.getElementById("admTheme").addEventListener("change", function(){
   applyTheme(state.theme);
   save();
   toast(tr("Theme applied: ") + this.value, "sys", "APPEARANCE");
+});
+document.getElementById("admMode").addEventListener("change", function(){
+  state.mode = this.value === "auto" ? "auto" : "manual";
+  save();
+  renderNav();
+  if(sectionLockLevel(currentPage)) switchPage("home"); /* don't strand the hunter on a now-sealed page */
+  if(state.mode === "auto") sysToast(tr("AUTOMATIC mode: the System now seals sections until you reach their level."));
+  else sysToast(tr("MANUAL mode: every section is open."));
 });
 document.getElementById("admSound").addEventListener("change", function(){
   state.sound = this.value !== "off";
@@ -6903,6 +7233,9 @@ checkStoryUnlocks();
 renderAll();
 switchPage("home");
 renderTimerPill(); /* resume a running session after reload */
+/* entrance gate: shown until the hunter chooses USER (Google/guest) or ADMIN.
+   A signed-in session closes it automatically the moment auth restores. */
+if(!state.entryChoice) showEntrance();
 setTimeout(backupReminder, 4000);
 /* Level Up shares the github.io origin with the user's other projects. A service
    worker or cache from another project (or a stale one of ours) can hijack this page

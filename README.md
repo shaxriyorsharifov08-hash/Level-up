@@ -68,9 +68,50 @@ Editing `index.html` **never touches user data** — data lives in the browser a
 ### Firebase (accounts, clans, cloud saves)
 Console: `console.firebase.google.com` → project `level-up-hunter-03` (sign in with the Google account that created it).
 - **Authentication** → list of signed-in users.
-- **Realtime Database** → the actual saves (`hunters/…`), clans (`guilds/…`), invite codes (`codes/…`).
+- **Realtime Database** → the actual saves (`hunters/…`), clans (`guilds/…`), invite codes (`codes/…`), admin flags (`admins/…`), broadcasts (`broadcast`).
 - Free "Spark" plan is enough; there is nothing to pay or renew.
 - If sign-in ever fails on the live site: Authentication → Settings → **Authorized domains** must include `shaxriyorsharifov08-hash.github.io`.
+
+### ⚙ One-time ADMIN ACCOUNT setup (required for the 🛡 ADMIN login)
+The entrance screen has a small **ADMIN** button (email + password). To make it work:
+
+1. Firebase console → **Authentication → Sign-in method** → enable **Email/Password**.
+2. **Authentication → Users → Add user** → enter YOUR admin email and a strong password.
+3. Copy that new user's **UID** (shown in the users table).
+4. **Realtime Database → Data** → create: `admins → <paste the UID> → true`.
+5. **Realtime Database → Rules** → replace with the rules below → **Publish**:
+
+```json
+{
+  "rules": {
+    "hunters": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())"
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "broadcast": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "guilds": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "codes": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
+```
+
+After that: entrance screen → ADMIN → your email + password → the 🛡 ADMIN CONSOLE appears on the ADMIN page. There you can load every user, edit a chosen user (name, level, XP, stat points), and broadcast a System announcement to all users at once. These rules — not the app — are what actually protects user data: only each user and the admin UID can touch a save.
 
 ---
 
@@ -78,7 +119,10 @@ Console: `console.firebase.google.com` → project `level-up-hunter-03` (sign in
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.
 - **Notifications**: ADMIN → 🔔 NOTIFICATIONS. A daily reminder fires at the chosen time if quests are unfinished. It works while the app is open in a tab or installed on the home screen; it is *local* (no push server), so a fully-closed phone browser won't ring — that is a platform limit, not a bug.
-- **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **1%** button opens/closes the menu.
+- **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **+1%** button opens/closes the menu.
+- **Game modes**: ADMIN → HUNTER SETTINGS → Game Mode. MANUAL = everything open; AUTOMATIC = sections unlock by level (REWARDS Lv.2, STATS Lv.3, STORY Lv.4, HONOR Lv.5, CLAN Lv.6, BUDGET Lv.7). New users choose a mode on the entrance screen.
+- **Level-unlocked quests**: ADMIN → ✎ EDIT STORY PATH AWARDS → add a row with type **⚔ QUEST UNLOCK** and a quest name — that quest is created automatically when the user reaches that level.
+- **Sign-in inside the installed app**: the home-screen app uses the popup sign-in flow (the redirect flow cannot finish in standalone mode). If sign-in still fails there, sign in once in the normal browser tab first — the installed app shares the same storage.
 - **Daily package, story road awards, inventory, quotes, hero portraits** — all editable inside ADMIN, no code needed.
 
 ---
