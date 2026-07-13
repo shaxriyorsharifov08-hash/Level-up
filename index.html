@@ -919,6 +919,7 @@ main section{animation:pagein .28s ease}
       <div class="ent-sub">Turn your life into the game. Who enters?</div>
       <button class="ent-user" id="entUserBtn">⚔️ USER</button>
       <button class="ent-admin" id="entAdminBtn">🛡 ADMIN</button>
+      <div><button class="ent-back" id="entClose" style="display:none">✕ close</button></div>
     </div>
     <div id="entMode" style="display:none">
       <div class="ent-sub">Choose your path, Hunter</div>
@@ -1467,6 +1468,7 @@ main section{animation:pagein .28s ease}
           <div class="empty-note" id="cloudRemoteInfo" style="margin-top:8px"></div>
           <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
         </div>
+        <button class="btn" id="openAdminLogin" style="margin-top:12px;width:100%;opacity:.8">🛡 ADMIN LOGIN</button>
       </div>
 
       <div class="panel">
@@ -2379,8 +2381,18 @@ function entStep(s){
   document.getElementById("entUser").style.display = s === "user" ? "" : "none";
   document.getElementById("entAdmin").style.display = s === "admin" ? "" : "none";
 }
-function showEntrance(){ document.getElementById("entranceOv").classList.add("show"); entStep("main"); }
+function showEntrance(){
+  document.getElementById("entranceOv").classList.add("show");
+  entStep("main");
+  /* re-opened later (e.g. for admin login): allow closing without choosing */
+  document.getElementById("entClose").style.display = state && state.entryChoice ? "" : "none";
+}
 function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); }
+document.getElementById("entClose").addEventListener("click", hideEntrance);
+document.getElementById("openAdminLogin").addEventListener("click", function(){
+  showEntrance();
+  entStep("admin");
+});
 document.getElementById("entUserBtn").addEventListener("click", function(){
   /* only fresh hunters pick a game mode; returning ones go straight to sign-in */
   entStep(state.totalCompleted > 0 ? "user" : "mode");
@@ -3307,6 +3319,7 @@ var I18N_RU = {
   "🔑 SIGN UP / SIGN IN WITH GOOGLE":"🔑 ВОЙТИ / РЕГИСТРАЦИЯ ЧЕРЕЗ GOOGLE","👤 USE AS A GUEST":"👤 ВОЙТИ КАК ГОСТЬ",
   "Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).":"Прогресс гостя хранится только на этом устройстве. Войти можно позже в любой момент (АДМИН → ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ).",
   "System Administrator access":"Доступ системного администратора","Admin email":"Email администратора","Password":"Пароль",
+  "🛡 ADMIN LOGIN":"🛡 ВХОД АДМИНИСТРАТОРА","✕ close":"✕ закрыть",
   "🛡 LOGIN":"🛡 ВОЙТИ","← back":"← назад",
   "Enter the admin email and password.":"Введите email и пароль администратора.",
   "No connection — admin login needs internet.":"Нет соединения — вход администратора требует интернета.",
