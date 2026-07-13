@@ -99,6 +99,10 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
       ".read": true,
       ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
     },
+    "season": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
     "guilds": {
       ".read": "auth != null",
       ".write": "auth != null"
@@ -122,6 +126,8 @@ After that: entrance screen → ADMIN → your email + password → the 🛡 ADM
 - **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **+1%** button opens/closes the menu.
 - **Game modes**: ADMIN → HUNTER SETTINGS → Game Mode. MANUAL = everything open; AUTOMATIC = sections unlock by level (REWARDS Lv.2, STATS Lv.3, STORY Lv.4, HONOR Lv.5, CLAN Lv.6, BUDGET Lv.7). New users choose a mode on the entrance screen.
 - **Level-unlocked quests**: ADMIN → ✎ EDIT STORY PATH AWARDS → add a row with type **⚔ QUEST UNLOCK** and a quest name — that quest is created automatically when the user reaches that level.
+- **Custom unlock levels**: ✎ RENAME & REORDER TABS → the 🔒 number on each row sets which level opens that section in AUTOMATIC mode (0 = always open). HOME and ADMIN can never be locked.
+- **Season events**: 🛡 ADMIN CONSOLE → "🌀 Season event" — write a title, message, end date and up to 8 quests, press LAUNCH. Every user receives the announcement and the 🌀 quests; after the end date the quests remove themselves. Launching a new season replaces the old one (each user gets each season exactly once).
 - **Sign-in inside the installed app**: the home-screen app uses the popup sign-in flow (the redirect flow cannot finish in standalone mode). If sign-in still fails there, sign in once in the normal browser tab first — the installed app shares the same storage.
 - **Daily package, story road awards, inventory, quotes, hero portraits** — all editable inside ADMIN, no code needed.
 

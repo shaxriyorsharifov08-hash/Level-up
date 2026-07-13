@@ -479,6 +479,9 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .ls-far{color:#fb923c;border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.07)}
 .ls-old{color:#ef4444;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.07)}
 .nav-edit-row{display:flex;align-items:center;gap:7px;padding:6px 0}
+.ne-lockwrap{display:flex;align-items:center;gap:3px;font-size:.8rem;flex:0 0 auto}
+.ne-lockwrap .ne-lock{width:46px;padding:6px 4px;text-align:center}
+.ne-lockwrap .ne-nolock{width:46px;text-align:center;color:var(--dim)}
 .nav-edit-row .ne-ico{font-size:1.1rem;width:24px;text-align:center;flex:0 0 auto}
 .nav-edit-row .ne-name{flex:1;min-width:0}
 .mini-btn.ne-on{color:var(--easy);border-color:var(--easy)}
@@ -1428,6 +1431,17 @@ main section{animation:pagein .28s ease}
         <input class="inp" id="acBTitle" maxlength="60" placeholder="Title" style="margin-bottom:8px">
         <textarea class="ta" id="acBBody" maxlength="500" placeholder="Message — appears as a System announcement on every hunter's screen"></textarea>
         <button class="btn danger" id="acBSend" style="width:100%;margin-top:8px">📢 SEND TO ALL</button>
+        <label class="form-lbl" style="margin-top:18px">🌀 Season event — themed quest pack for ALL users</label>
+        <div class="empty-note" style="margin-bottom:8px">Launches a season: every hunter gets the announcement and the quests below. Season quests carry the 🌀 mark and vanish from quest logs after the end date.</div>
+        <input class="inp" id="acSTitle" maxlength="60" placeholder="Season title, e.g. WINTER TRIALS" style="margin-bottom:8px">
+        <textarea class="ta" id="acSBody" maxlength="500" placeholder="Season message — shown as a System announcement"></textarea>
+        <div class="adm-row" style="margin-top:8px;align-items:center">
+          <label class="form-lbl" style="margin:0">Ends</label>
+          <input class="inp" id="acSEnd" type="date" style="width:150px;flex:0 0 auto">
+        </div>
+        <div id="acSQuests" style="margin-top:8px"></div>
+        <button class="btn" id="acSAddQ" style="width:100%;margin-top:6px">+ ADD SEASON QUEST</button>
+        <button class="btn gold" id="acSSend" style="width:100%;margin-top:8px">🌀 LAUNCH SEASON FOR ALL</button>
       </div>
       <div class="panel">
         <div class="panel-title">OVERVIEW</div>
@@ -1661,7 +1675,7 @@ main section{animation:pagein .28s ease}
 <div class="modal" id="navModal">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-title">✎ CUSTOMIZE NAVIGATION</div>
-    <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. ADMIN always stays visible so you can get back here.</div>
+    <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level in AUTOMATIC mode (0 = always open). ADMIN always stays visible so you can get back here.</div>
     <div id="navEditor"></div>
     <div class="modal-actions">
       <button class="btn" id="navResetBtn">RESET</button>
@@ -1907,8 +1921,10 @@ function defaultState(){
     sound:true,          /* sound effects on/off */
     lang:"en",           /* interface language: en | ru */
     mode:"manual",       /* game mode: manual (free) | auto (System rules & level gates) */
+    autoLocks:null,      /* custom unlock levels per section (AUTOMATIC mode); null = defaults */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
     lastBroadcastId:0,   /* last admin broadcast shown on this device */
+    lastSeasonId:0,      /* last season event applied on this device */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     budget:{currency:"$", transactions:[], goals:[]},
@@ -1983,6 +1999,7 @@ function initCloud(){
       });
     }catch(e){}
     listenBroadcast();
+    listenSeason();
     return true;
   }catch(e){ return false; }
 }
@@ -2419,6 +2436,10 @@ var acSelectedUid = null;
 function renderAdminConsole(){
   var p = document.getElementById("adminConsole");
   if(p) p.style.display = adminMode ? "" : "none";
+  if(adminMode && acSeasonQuests.length === 0){
+    acSeasonQuests.push({name:"", tier:"medium"});
+    renderSeasonQuestRows();
+  }
 }
 document.getElementById("acLoadUsers").addEventListener("click", function(){
   if(!adminMode || !cloudAvailable) return;
@@ -2493,6 +2514,94 @@ function listenBroadcast(){
       announce("📢 " + (b.title || "SYSTEM MESSAGE"), b.body || "", "📢", "OK", tr("System Administrator"));
     });
   }catch(e){}
+}
+
+/* ---------------- season events (themed quest packs for everyone) ---------------- */
+var acSeasonQuests = [];
+function renderSeasonQuestRows(){
+  var box = document.getElementById("acSQuests");
+  if(!box) return;
+  var h = "";
+  for(var i=0;i<acSeasonQuests.length;i++){
+    var tOpts = "";
+    for(var t2=0;t2<TIERS.length;t2++) tOpts += '<option value="' + TIERS[t2] + '"' + (TIERS[t2]===acSeasonQuests[i].tier?" selected":"") + '>' + TIER_LABEL[TIERS[t2]] + '</option>';
+    h += '<div class="adm-list-item">'
+      + '<span style="flex:0 0 auto">🌀</span>'
+      + '<input class="inp acsq-name" data-si="' + i + '" style="flex:1;min-width:120px" maxlength="60" value="' + esc(acSeasonQuests[i].name) + '" placeholder="Quest name">'
+      + '<select class="sel acsq-tier" data-si="' + i + '" style="width:118px;flex:0 0 auto">' + tOpts + '</select>'
+      + '<button class="mini-btn" data-sqdel="' + i + '" title="Remove">🗑</button></div>';
+  }
+  box.innerHTML = h;
+}
+document.getElementById("acSAddQ").addEventListener("click", function(){
+  if(acSeasonQuests.length >= 8) return;
+  acSeasonQuests.push({name:"", tier:"medium"});
+  renderSeasonQuestRows();
+});
+document.getElementById("acSQuests").addEventListener("input", function(e){
+  var i = +e.target.getAttribute("data-si");
+  if(isNaN(i) || !acSeasonQuests[i]) return;
+  if(e.target.classList.contains("acsq-name")) acSeasonQuests[i].name = e.target.value;
+  else if(e.target.classList.contains("acsq-tier")) acSeasonQuests[i].tier = e.target.value;
+});
+document.getElementById("acSQuests").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-sqdel]"); if(!b) return;
+  acSeasonQuests.splice(+b.getAttribute("data-sqdel"), 1);
+  renderSeasonQuestRows();
+});
+document.getElementById("acSSend").addEventListener("click", function(){
+  var ti = document.getElementById("acSTitle").value.trim();
+  var bo = document.getElementById("acSBody").value.trim();
+  var quests = [];
+  for(var i=0;i<acSeasonQuests.length;i++){
+    if(acSeasonQuests[i].name.trim()) quests.push({name: acSeasonQuests[i].name.trim(), tier: acSeasonQuests[i].tier || "medium"});
+  }
+  if(!ti || !bo){ toast(tr("Write a title and a message."), "err"); return; }
+  if(!quests.length){ toast(tr("Add at least one season quest."), "err"); return; }
+  fbDb.ref("season").set({id: Date.now(), title: ti, body: bo, end: document.getElementById("acSEnd").value || "", quests: quests})
+    .then(function(){ toast(tr("Season launched for all hunters."), "gold", "ADMIN"); })
+    .catch(function(err){ toast(tr("Season launch failed: ") + err.message, "err"); });
+});
+function applySeason(s){
+  if(!s || !s.id || !state) return;
+  if(s.id <= (state.lastSeasonId || 0)) return;
+  state.lastSeasonId = s.id;
+  var names = [];
+  var qs = s.quests || [];
+  for(var i=0;i<qs.length && i<8;i++){
+    if(!qs[i] || !qs[i].name) continue;
+    var nq = makeQuest("🌀", String(qs[i].name).slice(0, 60), tr("Season event quest."), "daily", [],
+      TIER_XP[qs[i].tier] ? qs[i].tier : "medium", "END", "", true);
+    nq.seasonId = s.id;
+    if(s.end) nq.endDate = s.end;
+    state.quests.push(nq);
+    names.push(nq.name);
+  }
+  save();
+  announce("🌀 " + (s.title || "SEASON EVENT"),
+    (s.body || "")
+      + (names.length ? "\n\n" + tr("New season quests:") + "\n• " + names.join("\n• ") : "")
+      + (s.end ? "\n\n" + tr("Season ends: ") + s.end : ""),
+    "🌀", tr("ENTER THE SEASON"), tr("System Administrator"));
+  if(currentPage === "quests") renderQuests();
+}
+function listenSeason(){
+  if(!cloudAvailable) return;
+  try{
+    fbDb.ref("season").on("value", function(snap){ applySeason(snap.val()); });
+  }catch(e){}
+}
+function cleanupSeasonQuests(){
+  /* a finished season takes its quests with it */
+  var t = todayStr(), removed = 0;
+  for(var i=state.quests.length-1;i>=0;i--){
+    var q = state.quests[i];
+    if(q.seasonId && q.endDate && t > q.endDate){ state.quests.splice(i, 1); removed++; }
+  }
+  if(removed){
+    save();
+    sysToast(tr("The season has ended — its quests left the log."));
+  }
 }
 
 function renderCloudStatus(){
@@ -3113,7 +3222,7 @@ var I18N_RU = {
   "Sign in with Google to sync your hunter automatically across every device — no export or import needed. Your save is private to your Google account.":"Войдите через Google, чтобы автоматически синхронизировать охотника на всех устройствах — без экспорта и импорта. Ваши данные приватны и привязаны к вашему аккаунту Google.",
   "These quests reset together every day at 01:00. Edit the package here.":"Эти квесты сбрасываются вместе каждый день в 01:00. Редактируйте пакет здесь.",
   "The rewards granted on the STORY road as you level up.":"Награды, выдаваемые на пути ИСТОРИИ по мере роста уровня.",
-  "Rename a tab, reorder with ▲▼, or hide it. ADMIN always stays visible so you can get back here.":"Переименуйте вкладку, переставьте с помощью ▲▼ или скройте. АДМИН всегда остаётся видимым, чтобы вы могли вернуться сюда.",
+  "Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level in AUTOMATIC mode (0 = always open). ADMIN always stays visible so you can get back here.":"Переименуйте вкладку, переставьте с помощью ▲▼ или скройте. Число у 🔒 — уровень открытия в АВТОМАТИЧЕСКОМ режиме (0 = всегда открыт). АДМИН всегда остаётся видимым, чтобы вы могли вернуться сюда.",
   "A daily reminder when today's quests are still unfinished. Works while LEVEL UP is open in a browser tab or installed on your home screen (⋮ → Add to Home screen).":"Ежедневное напоминание, если квесты на сегодня ещё не выполнены. Работает, пока LEVEL UP открыт во вкладке браузера или установлен на главный экран (⋮ → Добавить на главный экран).",
   "Cloud is empty — press UPLOAD on the device with your data.":"Облако пусто — нажмите ЗАГРУЗИТЬ на устройстве с вашими данными.",
   "Checking cloud…":"Проверка облака…","Cloud data unreadable.":"Данные облака нечитаемы.",
@@ -3220,6 +3329,17 @@ var I18N_RU = {
   " to unlock this section.":", чтобы открыть этот раздел.",
   "⚔ QUEST UNLOCK":"⚔ ОТКРЫТИЕ КВЕСТА","Title":"Заголовок",
   "Message — appears as a System announcement on every hunter's screen":"Сообщение — появится как объявление Системы на экране каждого охотника",
+  /* season events */
+  "🌀 Season event — themed quest pack for ALL users":"🌀 Сезонное событие — тематический набор квестов для ВСЕХ",
+  "Launches a season: every hunter gets the announcement and the quests below. Season quests carry the 🌀 mark and vanish from quest logs after the end date.":"Запускает сезон: каждый охотник получит объявление и квесты ниже. Сезонные квесты помечены 🌀 и исчезают из журналов после даты окончания.",
+  "Season title, e.g. WINTER TRIALS":"Название сезона, напр. ЗИМНИЕ ИСПЫТАНИЯ",
+  "Season message — shown as a System announcement":"Сообщение сезона — показывается как объявление Системы",
+  "Ends":"Конец","+ ADD SEASON QUEST":"+ ДОБАВИТЬ СЕЗОННЫЙ КВЕСТ","🌀 LAUNCH SEASON FOR ALL":"🌀 ЗАПУСТИТЬ СЕЗОН ДЛЯ ВСЕХ",
+  "Quest name":"Название квеста","Add at least one season quest.":"Добавьте хотя бы один сезонный квест.",
+  "Season launched for all hunters.":"Сезон запущен для всех охотников.","Season launch failed: ":"Сезон не запущен: ",
+  "Season event quest.":"Квест сезонного события.","New season quests:":"Новые сезонные квесты:",
+  "Season ends: ":"Сезон закончится: ","ENTER THE SEASON":"ВОЙТИ В СЕЗОН",
+  "The season has ended — its quests left the log.":"Сезон завершён — его квесты покинули журнал.",
   /* sound settings */
   "Sound Effects":"Звуковые эффекты","🔊 On — every action has its sound":"🔊 Вкл — у каждого действия свой звук",
   "🔇 Off — silent mode":"🔇 Выкл — тихий режим","🔊 Sounds on.":"🔊 Звуки включены.","🔇 Sounds off.":"🔇 Звуки выключены.",
@@ -3349,9 +3469,15 @@ function reconcileNav(){
 }
 /* AUTOMATIC mode: sections unlock one by one as the hunter levels up */
 var AUTO_LOCKS = {rewards:2, stats:3, story:4, honor:5, guild:6, budget:7};
+function lockLevelFor(p){
+  /* the CONFIGURED unlock level for a section (custom override or default) */
+  if(p === "home" || p === "admin") return 0; /* never seal the way back */
+  if(state && state.autoLocks && state.autoLocks[p] !== undefined) return Math.max(0, +state.autoLocks[p] || 0);
+  return AUTO_LOCKS[p] || 0;
+}
 function sectionLockLevel(p){
   if(!state || state.mode !== "auto") return 0;
-  var need = AUTO_LOCKS[p] || 0;
+  var need = lockLevelFor(p);
   return state.level < need ? need : 0;
 }
 function renderNav(){
@@ -5957,9 +6083,14 @@ function renderNavEditor(){
   var h = "";
   for(var i=0;i<state.navConfig.length;i++){
     var c = state.navConfig[i];
+    var lockable = c.page !== "home" && c.page !== "admin";
     h += '<div class="nav-edit-row">'
       + '<span class="ne-ico">' + (NAV_ICON[c.page] || "•") + '</span>'
       + '<input class="inp ne-name" data-i="' + i + '" maxlength="16" value="' + esc(c.label || NAV_LABEL[c.page]) + '">'
+      + (lockable
+          ? '<span class="ne-lockwrap" title="AUTOMATIC mode: unlocks at this level (0 = always open)">🔒'
+            + '<input class="inp ne-lock" data-lp="' + c.page + '" type="number" min="0" max="99" value="' + lockLevelFor(c.page) + '"></span>'
+          : '<span class="ne-lockwrap" style="opacity:.35">🔒<span class="ne-nolock">—</span></span>')
       + '<button class="mini-btn" data-nmove="' + i + '" data-dir="-1" title="Move up"' + (i===0?" disabled":"") + '>▲</button>'
       + '<button class="mini-btn" data-nmove="' + i + '" data-dir="1" title="Move down"' + (i===state.navConfig.length-1?" disabled":"") + '>▼</button>'
       + (c.page === "admin"
@@ -5970,6 +6101,14 @@ function renderNavEditor(){
   document.getElementById("navEditor").innerHTML = h;
 }
 document.getElementById("navEditor").addEventListener("input", function(e){
+  if(e.target.classList.contains("ne-lock")){
+    var pg = e.target.getAttribute("data-lp");
+    var lv = Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0));
+    if(!state.autoLocks) state.autoLocks = {};
+    state.autoLocks[pg] = lv;
+    save(); renderNav();
+    return;
+  }
   if(!e.target.classList.contains("ne-name")) return;
   var i = +e.target.getAttribute("data-i");
   state.navConfig[i].label = e.target.value.trim() || NAV_LABEL[state.navConfig[i].page];
@@ -7226,6 +7365,7 @@ seedIfNew();
 checkPackageReset();
 checkStreakResets();
 checkGoalReopens();
+cleanupSeasonQuests();
 archiveDoneQuests();
 checkPunishments();
 checkMonthlyReport();
