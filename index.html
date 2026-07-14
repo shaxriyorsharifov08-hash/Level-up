@@ -247,6 +247,13 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .panel-title{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.25em;
   color:var(--blue);text-shadow:var(--glowblue);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .panel-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(0,209,255,.4),transparent)}
+/* collapsible settings panels: closed = just the title line, tap to open */
+.panel.collapsible > .panel-title{cursor:pointer;-webkit-user-select:none;user-select:none;margin-bottom:0}
+.panel.collapsible:not(.closed) > .panel-title{margin-bottom:14px}
+.panel.collapsible > .panel-title::before{content:"▸";color:var(--purple);font-size:.95em;
+  transition:transform .2s ease;flex:0 0 auto}
+.panel.collapsible:not(.closed) > .panel-title::before{transform:rotate(90deg)}
+.panel.collapsible.closed > :not(.panel-title){display:none}
 
 /* ---------- profile ---------- */
 .profile-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
@@ -1598,12 +1605,12 @@ main section{animation:pagein .28s ease}
           <button class="btn primary" id="quoteAddBtn">ADD</button>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel collapsible closed">
         <div class="panel-title">DATA VAULT</div>
         <div class="empty-note" id="storageStatus" style="margin-bottom:12px"></div>
         <div id="admSnapshots"></div>
       </div>
-      <div class="panel edit-only">
+      <div class="panel edit-only collapsible closed">
         <div class="panel-title">MANAGE DAILY QUEST PACKAGE</div>
         <div class="empty-note" style="margin-bottom:10px">These quests reset together every day at 01:00. Edit the package here.</div>
         <div id="admPkg"></div>
@@ -1614,15 +1621,15 @@ main section{animation:pagein .28s ease}
           <button class="btn primary" id="pkgAddBtn">ADD</button>
         </div>
       </div>
-      <div class="panel edit-only">
+      <div class="panel edit-only collapsible closed">
         <div class="panel-title">MANAGE QUESTS</div>
         <div id="admQuests"></div>
       </div>
-      <div class="panel edit-only">
+      <div class="panel edit-only collapsible closed">
         <div class="panel-title">MANAGE COLLECTIONS</div>
         <div id="admCols"></div>
       </div>
-      <div class="panel edit-only">
+      <div class="panel edit-only collapsible closed">
         <div class="panel-title">HERO PORTRAITS (PER RANK)</div>
         <div class="empty-note" style="margin-bottom:10px">The dashboard shows evolving hunter art that changes as your rank rises. Upload your own picture for any rank here and it will be shown instead, switching automatically on rank-up. Images are resized and stored inside your save data.</div>
         <div id="admHero"></div>
@@ -6742,6 +6749,14 @@ document.getElementById("pkgAddBtn").addEventListener("click", function(){
   sysToast("Added to Daily Quest package: " + name);
 });
 document.getElementById("page-admin").addEventListener("click", function(e){
+  /* collapsible settings panels: tap the title to open / close */
+  var pt = e.target.closest(".panel.collapsible > .panel-title");
+  if(pt){
+    var pnl = pt.parentNode;
+    pnl.classList.toggle("closed");
+    sfx(pnl.classList.contains("closed") ? "close" : "open");
+    return;
+  }
   var b = e.target.closest("button[data-aact]"); if(!b) return;
   var act = b.getAttribute("data-aact"), id = b.getAttribute("data-id");
   if(act === "qedit") openQuestModal(id);
