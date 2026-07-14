@@ -721,6 +721,22 @@ body.admin-mode main>section:not(#page-admin){display:none !important}
 body.admin-mode #page-admin>.panel:not(#adminConsole){display:none !important}
 body.admin-mode .hdr-right{display:none !important}
 
+/* ---------- honesty gate + finalize the day ---------- */
+.honesty-body{white-space:pre-line;color:var(--text);font-size:.92rem;line-height:1.65;margin-bottom:14px}
+#honestyOath{text-transform:uppercase;letter-spacing:.08em;font-family:'Orbitron',monospace;text-align:center}
+#finalizeBtn{display:block;width:100%;padding:11px 14px;margin-bottom:14px;border-radius:12px;
+  border:1px solid rgba(251,191,36,.55);color:#fbbf24;
+  font-family:'Orbitron',monospace;font-size:.72rem;font-weight:800;letter-spacing:.18em;
+  background:linear-gradient(90deg,rgba(251,191,36,.14),rgba(124,97,255,.12));
+  box-shadow:0 0 14px rgba(251,191,36,.18);transition:.2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#finalizeBtn:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(251,191,36,.35)}
+#finalizeBtn.done{border-color:rgba(34,197,94,.5);color:var(--easy);
+  background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(124,97,255,.08));box-shadow:none;animation:none}
+#finalizeBtn:not(.done){animation:fzpulse 2.4s ease-in-out infinite}
+@keyframes fzpulse{50%{box-shadow:0 0 26px rgba(251,191,36,.4)}}
+@media (prefers-reduced-motion: reduce){ #finalizeBtn{animation:none !important} }
+body.admin-mode #finalizeBtn{display:none !important}
+
 /* ---------- FAB ---------- */
 #fab{position:fixed;right:20px;bottom:24px;z-index:85;width:60px;height:60px;border-radius:50%;
   border:1px solid var(--blue);color:#fff;font-size:2rem;line-height:1;
@@ -968,6 +984,8 @@ main section{animation:pagein .28s ease}
   <div id="navBackdrop"></div>
   <nav id="nav"></nav>
   <button id="navToggle" aria-label="Sections menu" aria-expanded="false">+1%<span class="nav-badge" id="toggleRollBadge" style="display:none"></span></button>
+
+  <button id="finalizeBtn" style="display:none">🌙 FINALIZE THE DAY</button>
 
   <main>
     <!-- ============ HOME / DASHBOARD ============ -->
@@ -1811,6 +1829,38 @@ main section{animation:pagein .28s ease}
   </div>
 </div>
 
+<!-- honesty gate: clearing a penalty demands a sworn oath -->
+<div class="modal" id="honestyModal">
+  <div class="modal-box" style="border-color:rgba(239,68,68,.6)">
+    <div class="modal-title" style="color:#ef4444">⛓ THE HONESTY GATE</div>
+    <div class="honesty-body" id="honestyBody"></div>
+    <label class="form-lbl" id="honestyOathLbl"></label>
+    <input class="inp" id="honestyOath" autocomplete="off" spellcheck="false">
+    <div class="modal-actions">
+      <button class="btn" id="honestyLied">😔 NOT YET — I'LL GO DO IT NOW</button>
+      <button class="btn danger" id="honestySwear" disabled>⚔ SWORN</button>
+    </div>
+  </div>
+</div>
+
+<!-- finalize the day: evening reflection ritual -->
+<div class="modal" id="finalizeModal">
+  <div class="modal-box">
+    <div class="modal-title">🌙 FINALIZE THE DAY</div>
+    <div class="empty-note" id="finalizeDate" style="margin-bottom:10px"></div>
+    <label class="form-lbl">What did you learn today?</label>
+    <textarea class="ta" id="fzLearn" maxlength="500" placeholder="One honest sentence is enough…"></textarea>
+    <label class="form-lbl">What changed you today?</label>
+    <textarea class="ta" id="fzChanged" maxlength="500" placeholder="A thought, a person, a small win…"></textarea>
+    <label class="form-lbl">What are you expecting from tomorrow?</label>
+    <textarea class="ta" id="fzTomorrow" maxlength="500" placeholder="Set the target before you sleep…"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="fzCancel">CANCEL</button>
+      <button class="btn primary" id="fzSave">🌙 SEAL THE DAY</button>
+    </div>
+  </div>
+</div>
+
 <!-- transaction edit modal -->
 <div class="modal" id="txModal">
   <div class="modal-box">
@@ -1951,6 +2001,7 @@ function defaultState(){
     goalCapWeekly:10,    /* one-time goals allowed per rolling week (extended by the story path) */
     rewardsInv:[],       /* prizes won from crates, waiting to be used */
     rewardsArchive:[],   /* used prizes, kept as records */
+    journal:{},          /* finalize-the-day reflections: date -> {learn, changed, tomorrow} */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     budget:{currency:"$", transactions:[], goals:[]},
@@ -3590,6 +3641,31 @@ var I18N_RU = {
   "Season event quest.":"Квест сезонного события.","New season quests:":"Новые сезонные квесты:",
   "Season ends: ":"Сезон закончится: ","ENTER THE SEASON":"ВОЙТИ В СЕЗОН",
   "The season has ended — its quests left the log.":"Сезон завершён — его квесты покинули журнал.",
+  /* honesty gate */
+  "⛓ THE HONESTY GATE":"⛓ ВРАТА ЧЕСТНОСТИ",
+  "Stop, Hunter. Before you press anything — be still for one second.":"Стой, Охотник. Прежде чем нажать — замри на одну секунду.",
+  "The System cannot see your body. It cannot count your squats or feel the cold water. In the entire universe, exactly one person knows whether this penalty was truly served.":"Система не видит твоё тело. Она не может сосчитать приседания или почувствовать холодную воду. Во всей вселенной ровно один человек знает, было ли наказание отбыто по-настоящему.",
+  "You.":"Ты.",
+  "If you lie here, the System loses nothing. Your clan loses nothing. The only one you rob is the person in the mirror — the one who trusted you to become someone. Every false oath makes that person's voice a little quieter, until one day it stops calling you at all.":"Если ты солжёшь здесь, Система ничего не потеряет. Твой клан ничего не потеряет. Единственный, кого ты обкрадываешь, — человек в зеркале, который поверил, что ты станешь кем-то. Каждая ложная клятва делает его голос тише, пока однажды он не перестанет звать тебя совсем.",
+  "If you truly served it — type the oath and swear. If not, walk away with your honor and go do it. That choice is worth more XP than the System could ever grant.":"Если ты действительно отбыл наказание — введи клятву и поклянись. Если нет — уйди с честью и сделай его. Этот выбор стоит больше XP, чем Система может дать.",
+  "Type the oath: ":"Введи клятву: ","ON MY HONOR":"КЛЯНУСЬ ЧЕСТЬЮ",
+  "😔 NOT YET — I'LL GO DO IT NOW":"😔 ЕЩЁ НЕТ — ПОЙДУ СДЕЛАЮ СЕЙЧАС","⚔ SWORN":"⚔ КЛЯНУСЬ",
+  "That answer took more strength than the penalty itself. Go serve it — the System waits, with respect.":"Этот ответ потребовал больше силы, чем само наказание. Иди отбывай — Система ждёт, с уважением.",
+  "HONOR INTACT":"ЧЕСТЬ СОХРАНЕНА","Oath accepted.":"Клятва принята.",
+  "You paid the debt with sweat, not with a lie — remember how this feels. This is what keeping your word to yourself feels like.":"Ты заплатил долг потом, а не ложью — запомни это чувство. Вот каково это — держать слово перед самим собой.",
+  "XP flow has been restored. Do not let the Daily Quest slip again.":"Поток XP восстановлен. Больше не упускай Ежедневный квест.",
+  /* finalize the day */
+  "🌙 FINALIZE THE DAY":"🌙 ЗАВЕРШИТЬ ДЕНЬ","🌙 DAY FINALIZED ✓ — read tonight's page":"🌙 ДЕНЬ ЗАВЕРШЁН ✓ — открыть сегодняшнюю страницу",
+  "What did you learn today?":"Что ты сегодня узнал?","What changed you today?":"Что изменило тебя сегодня?",
+  "What are you expecting from tomorrow?":"Чего ты ждёшь от завтрашнего дня?",
+  "One honest sentence is enough…":"Одного честного предложения достаточно…",
+  "A thought, a person, a small win…":"Мысль, человек, маленькая победа…",
+  "Set the target before you sleep…":"Поставь цель перед сном…",
+  "🌙 SEAL THE DAY":"🌙 ЗАПЕЧАТАТЬ ДЕНЬ",
+  "Three blanks. Fill them honestly — this page becomes part of your record. ":"Три пропуска. Заполни их честно — эта страница станет частью твоей истории. ",
+  "Write at least one honest line, Hunter.":"Напиши хотя бы одну честную строку, Охотник.",
+  "The day is sealed. +15 XP for facing it honestly.":"День запечатан. +15 XP за честный взгляд на него.",
+  "DAY FINALIZED":"ДЕНЬ ЗАВЕРШЁН","Tonight's page updated.":"Сегодняшняя страница обновлена.",
   /* sound settings */
   "Sound Effects":"Звуковые эффекты","🔊 On — every action has its sound":"🔊 Вкл — у каждого действия свой звук",
   "🔇 Off — silent mode":"🔇 Выкл — тихий режим","🔊 Sounds on.":"🔊 Звуки включены.","🔇 Sounds off.":"🔇 Звуки выключены.",
@@ -4035,7 +4111,14 @@ var PENALTY_TASKS = [
   {icon:"⛓", name:"Penalty Zone: 30 Push-up Tribute", desc:"30 push-ups performed with full focus."},
   {icon:"⛓", name:"Penalty Zone: 20-Minute Cleanse", desc:"Clean your room or workspace for 20 minutes straight."},
   {icon:"⛓", name:"Penalty Zone: Phone Exile", desc:"One full hour completely phone-free. The System is counting."},
-  {icon:"⛓", name:"Penalty Zone: Cold Water Trial", desc:"End your next shower with 60 seconds of cold water."}
+  {icon:"⛓", name:"Penalty Zone: Cold Water Trial", desc:"End your next shower with 60 seconds of cold water."},
+  {icon:"⛓", name:"Penalty Zone: The Apology Letter", desc:"Write 5 honest sentences to your future self explaining why yesterday was empty. Keep the letter. He will read it."},
+  {icon:"⛓", name:"Penalty Zone: Dawn March", desc:"A 20-minute walk outside, no headphones, no phone. Just you and the thoughts you have been running from."},
+  {icon:"⛓", name:"Penalty Zone: The Mirror Minute", desc:"Stand in front of a mirror for 60 full seconds and say out loud: 'I broke my word to myself.' Then fix it: do 20 push-ups."},
+  {icon:"⛓", name:"Penalty Zone: Silence Discipline", desc:"30 minutes of complete silence — no music, no videos, no messages. Sit with what you did not do."},
+  {icon:"⛓", name:"Penalty Zone: Double Tribute", desc:"Pick the daily quest you skipped and do it TWICE today. The debt is paid in the same coin."},
+  {icon:"⛓", name:"Penalty Zone: 5:00 Plank Sentence", desc:"Accumulate 5 total minutes of plank today. Your core failed to hold the routine — now it holds you."},
+  {icon:"⛓", name:"Penalty Zone: The Cold Bed", desc:"Tonight you sleep 30 minutes earlier than usual. The evening you wasted yesterday is confiscated."}
 ];
 var XP_DEBT_PER_DAY = 60;
 function penaltyActive(){ return !!state.penaltyTask; }
@@ -4056,7 +4139,7 @@ function checkPunishments(){
   if(newDebt > 0){
     state.xpDebt = (state.xpDebt || 0) + newDebt;
     announce("💸 XP DEBT INCURRED",
-      missed + " silent day" + (missed>1?"s":"") + " detected. Nothing was completed.\n\nDebt added: " + newDebt + " XP.\nTotal debt: " + state.xpDebt + " XP.\n\nHalf of every XP gain will be seized until the debt is repaid, Hunter.",
+      missed + " silent day" + (missed>1?"s":"") + " detected. Nothing was completed.\n\nSomewhere, the person you promised to become waited all day.\nNobody came.\n\nDebt added: " + newDebt + " XP.\nTotal debt: " + state.xpDebt + " XP.\n\nHalf of every XP gain will be seized until the debt is repaid, Hunter.",
       "💸", "UNDERSTOOD");
   }
   /* 2) lockdown: two consecutive empty days seal 2 random quests for a week */
@@ -4075,7 +4158,7 @@ function checkPunishments(){
     }
     if(names.length){
       announce("⛔ QUEST LOCKDOWN ⛔",
-        "Two days of total absence detected.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter.",
+        "Two days of total absence detected.\n\nYou didn't fail loudly. You just... disappeared.\nThat is how most dreams actually die — quietly, two days at a time.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter.",
         "⛔", "ACCEPT PUNISHMENT");
     }
   }
@@ -4086,23 +4169,93 @@ function checkPunishments(){
       var tpl = PENALTY_TASKS[Math.floor(Math.random() * PENALTY_TASKS.length)];
       state.penaltyTask = {icon:tpl.icon, name:tpl.name, desc:tpl.desc, day:pd};
       announce("⛓ PENALTY QUEST ⛓",
-        "Yesterday's Daily Quest was not completed.\n\nThe System has opened the Penalty Zone:\n[" + tpl.name + "]\n" + tpl.desc + "\n\n⚠ ALL XP GAIN IS FROZEN until the penalty is served.\nFind the red banner and confirm when it is done.",
+        "Yesterday's Daily Quest was not completed.\n\nYesterday you had 24 hours. The 4 mandate quests needed less than one.\nYou gave that hour to something you don't even remember now.\n\nThe System has opened the Penalty Zone:\n[" + tpl.name + "]\n" + tpl.desc + "\n\n⚠ ALL XP GAIN IS FROZEN until the penalty is served.\nFind the red banner and confirm when it is done.",
         "⛓", "ENTER THE PENALTY ZONE");
     }
     state.lastPenaltyDay = pd;
   }
   save();
 }
+/* Clearing a penalty goes through the HONESTY GATE: a solemn typed oath.
+   The System cannot verify the body — it makes the lie expensive for the soul. */
 function clearPenalty(){
   if(!state.penaltyTask) return;
-  if(!confirm("Confirm on your honor, Hunter: did you truly complete the penalty?\n\n[" + state.penaltyTask.name + "]")) return;
+  document.getElementById("honestyBody").textContent =
+    tr("Stop, Hunter. Before you press anything — be still for one second.") + "\n\n"
+    + "[" + state.penaltyTask.name + "]\n\n"
+    + tr("The System cannot see your body. It cannot count your squats or feel the cold water. In the entire universe, exactly one person knows whether this penalty was truly served.")
+    + "\n\n" + tr("You.") + "\n\n"
+    + tr("If you lie here, the System loses nothing. Your clan loses nothing. The only one you rob is the person in the mirror — the one who trusted you to become someone. Every false oath makes that person's voice a little quieter, until one day it stops calling you at all.")
+    + "\n\n" + tr("If you truly served it — type the oath and swear. If not, walk away with your honor and go do it. That choice is worth more XP than the System could ever grant.");
+  document.getElementById("honestyOath").value = "";
+  document.getElementById("honestySwear").disabled = true;
+  document.getElementById("honestyOathLbl").textContent = tr("Type the oath: ") + tr("ON MY HONOR");
+  document.getElementById("honestyModal").classList.add("show");
+}
+document.getElementById("honestyOath").addEventListener("input", function(){
+  var ok = this.value.trim().toUpperCase() === tr("ON MY HONOR").toUpperCase();
+  document.getElementById("honestySwear").disabled = !ok;
+});
+document.getElementById("honestyLied").addEventListener("click", function(){
+  document.getElementById("honestyModal").classList.remove("show");
+  toast(tr("That answer took more strength than the penalty itself. Go serve it — the System waits, with respect."), "gold", tr("HONOR INTACT"));
+});
+document.getElementById("honestySwear").addEventListener("click", function(){
+  if(!state.penaltyTask) return;
+  document.getElementById("honestyModal").classList.remove("show");
   state.penaltyTask = null;
+  sfx("complete");
   announce("⛓ PENALTY SERVED",
-    "The Penalty Zone closes.\n\nXP flow has been restored.\nDo not let the Daily Quest slip again.",
+    tr("Oath accepted.") + "\n\n" + tr("You paid the debt with sweat, not with a lie — remember how this feels. This is what keeping your word to yourself feels like.") + "\n\n" + tr("XP flow has been restored. Do not let the Daily Quest slip again."),
     "🔓", "RETURN STRONGER");
   save();
   renderAll();
+});
+
+/* ---------------- finalize the day (evening reflection ritual) ---------------- */
+function updateFinalizeBtn(){
+  var btn = document.getElementById("finalizeBtn");
+  if(!btn || !state) return;
+  var done = !!(state.journal && state.journal[todayStr()]);
+  btn.classList.toggle("done", done);
+  btn.textContent = done ? tr("🌙 DAY FINALIZED ✓ — read tonight's page") : tr("🌙 FINALIZE THE DAY");
+  var show = new Date().getHours() >= 19; /* the last 5 hours of the day */
+  btn.style.display = show ? "" : "none";
 }
+document.getElementById("finalizeBtn").addEventListener("click", function(){
+  var j = (state.journal && state.journal[todayStr()]) || {};
+  document.getElementById("finalizeDate").textContent = tr("Three blanks. Fill them honestly — this page becomes part of your record. ") + niceDate(todayStr());
+  document.getElementById("fzLearn").value = j.learn || "";
+  document.getElementById("fzChanged").value = j.changed || "";
+  document.getElementById("fzTomorrow").value = j.tomorrow || "";
+  document.getElementById("finalizeModal").classList.add("show");
+});
+document.getElementById("fzCancel").addEventListener("click", function(){
+  document.getElementById("finalizeModal").classList.remove("show");
+});
+document.getElementById("finalizeModal").addEventListener("click", function(e){
+  if(e.target === this) this.classList.remove("show");
+});
+document.getElementById("fzSave").addEventListener("click", function(){
+  var learn = document.getElementById("fzLearn").value.trim();
+  var changed = document.getElementById("fzChanged").value.trim();
+  var tomorrow = document.getElementById("fzTomorrow").value.trim();
+  if(!learn && !changed && !tomorrow){ toast(tr("Write at least one honest line, Hunter."), "err"); return; }
+  if(!state.journal) state.journal = {};
+  var t = todayStr();
+  var first = !state.journal[t];
+  state.journal[t] = {learn: learn, changed: changed, tomorrow: tomorrow, at: new Date().toISOString()};
+  document.getElementById("finalizeModal").classList.remove("show");
+  if(first){
+    gainXP(penaltyActive() ? 0 : 15);
+    toast(tr("The day is sealed. +15 XP for facing it honestly."), "gold", tr("DAY FINALIZED"));
+  } else {
+    sysToast(tr("Tonight's page updated."));
+  }
+  save();
+  updateFinalizeBtn();
+});
+setInterval(updateFinalizeBtn, 60000);
 function punishBannerHtml(){
   var h = "";
   if(state.penaltyTask){
@@ -4451,7 +4604,44 @@ var QUOTES = [
   {text:"Save every coin and know where each one goes. Wealth begins in a ledger.", by:"J. Rockefeller"},
   {text:"Reputation is capital. Build your character before you build your fortune.", by:"J. Rockefeller"},
   {text:"Turn every disaster into an opportunity.", by:"J. Rockefeller"},
-  {text:"Stay hungry, stay foolish.", by:"Steve Jobs"}
+  {text:"Stay hungry, stay foolish.", by:"Steve Jobs"},
+  {text:"Your time is limited, so don't waste it living someone else's life.", by:"Steve Jobs"},
+  {text:"I have not failed. I've just found 10,000 ways that won't work.", by:"Thomas Edison"},
+  {text:"Whether you think you can, or you think you can't — you're right.", by:"Henry Ford"},
+  {text:"It's not that I'm so smart, it's just that I stay with problems longer.", by:"Albert Einstein"},
+  {text:"The best investment you can make is in yourself.", by:"Warren Buffett"},
+  {text:"Someone's sitting in the shade today because someone planted a tree a long time ago.", by:"Warren Buffett"},
+  {text:"Success is a lousy teacher. It seduces smart people into thinking they can't lose.", by:"Bill Gates"},
+  {text:"If you don't build your dream, someone else will hire you to help them build theirs.", by:"Dhirubhai Ambani"},
+  {text:"When something is important enough, you do it even if the odds are not in your favor.", by:"Elon Musk"},
+  {text:"I'd rather be optimistic and wrong than pessimistic and right.", by:"Elon Musk"},
+  {text:"If you double the number of experiments you do per year, you're going to double your inventiveness.", by:"Jeff Bezos"},
+  {text:"All our dreams can come true, if we have the courage to pursue them.", by:"Walt Disney"},
+  {text:"The way to get started is to quit talking and begin doing.", by:"Walt Disney"},
+  {text:"Never give up. Today is hard, tomorrow will be worse, but the day after tomorrow will be sunshine.", by:"Jack Ma"},
+  {text:"If you don't give up, you still have a chance.", by:"Jack Ma"},
+  {text:"I hated every minute of training, but I said: don't quit. Suffer now and live the rest of your life as a champion.", by:"Muhammad Ali"},
+  {text:"He who is not courageous enough to take risks will accomplish nothing in life.", by:"Muhammad Ali"},
+  {text:"I've missed more than 9000 shots. I've lost almost 300 games. And that is why I succeed.", by:"Michael Jordan"},
+  {text:"Some people want it to happen, some wish it would happen, others make it happen.", by:"Michael Jordan"},
+  {text:"Great things come from hard work and perseverance. No excuses.", by:"Kobe Bryant"},
+  {text:"If you're afraid to fail, then you're probably going to fail.", by:"Kobe Bryant"},
+  {text:"Your talent might get you to the top, but only your character keeps you there.", by:"Cristiano Ronaldo"},
+  {text:"The most dangerous thing you can do is nothing.", by:"David Goggins"},
+  {text:"You are in danger of living a life so comfortable that you will die without ever realizing your potential.", by:"David Goggins"},
+  {text:"The last three or four reps is what makes the muscle grow. This area of pain divides a champion from someone who is not.", by:"Arnold Schwarzenegger"},
+  {text:"Strength does not come from winning. Your struggles develop your strengths.", by:"Arnold Schwarzenegger"},
+  {text:"Discipline equals freedom.", by:"Jocko Willink"},
+  {text:"Play long-term games with long-term people.", by:"Naval Ravikant"},
+  {text:"Learn to sell. Learn to build. If you can do both, you will be unstoppable.", by:"Naval Ravikant"},
+  {text:"I fear not the man who has practiced 10,000 kicks once, but the man who has practiced one kick 10,000 times.", by:"Bruce Lee"},
+  {text:"Everybody has a plan until they get punched in the mouth.", by:"Mike Tyson"},
+  {text:"Success is not final, failure is not fatal: it is the courage to continue that counts.", by:"Winston Churchill"},
+  {text:"It does not matter how slowly you go as long as you do not stop.", by:"Confucius"},
+  {text:"By failing to prepare, you are preparing to fail.", by:"Benjamin Franklin"},
+  {text:"Either write something worth reading or do something worth writing.", by:"Benjamin Franklin"},
+  {text:"As one lamp lights another, greatness kindles greatness.", by:"Amir Timur"},
+  {text:"Strength is in justice.", by:"Amir Timur"}
 ];
 function showQuote(){
   var pool = QUOTES.concat(state.customQuotes || []);
@@ -7684,6 +7874,7 @@ checkStoryUnlocks();
 renderAll();
 switchPage("home");
 renderTimerPill(); /* resume a running session after reload */
+updateFinalizeBtn();
 /* entrance gate: shown until the hunter chooses USER (Google/guest) or ADMIN.
    A signed-in session closes it automatically the moment auth restores. */
 if(!state.entryChoice) showEntrance();
