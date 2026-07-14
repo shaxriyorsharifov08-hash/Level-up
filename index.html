@@ -1084,6 +1084,12 @@ main section{animation:pagein .28s ease}
         <div class="panel-title">BADGES</div>
         <div class="badge-grid" id="badgesList"></div>
       </div>
+
+      <div class="panel">
+        <div class="panel-title">📓 PAGES OF THE HUNTER</div>
+        <div class="empty-note" style="margin-bottom:10px">Your evening reflections, night by night. Written with the 🌙 FINALIZE THE DAY button.</div>
+        <div id="journalList"></div>
+      </div>
     </section>
 
     <!-- ============ QUESTS ============ -->
@@ -1448,8 +1454,8 @@ main section{animation:pagein .28s ease}
         <div class="panel-title">🛡 ADMIN CONSOLE</div>
         <div class="empty-note" style="margin-bottom:10px">System Administrator mode. Changes here affect real users — handle with care.</div>
         <button class="btn danger" id="acExitBtn" style="width:100%;margin-bottom:12px">🚪 EXIT ADMIN MODE</button>
-        <label class="form-lbl">🔒 SECTION LOCKS (ALL USERS)</label>
-        <div class="empty-note" style="margin-bottom:8px">The unlock level for each section, enforced for every hunter in BOTH game modes. Leave a field blank to use the default (AUTOMATIC's built-in progression; MANUAL stays open).</div>
+        <label class="form-lbl">🔒 FEATURE LOCKS (ALL USERS)</label>
+        <div class="empty-note" style="margin-bottom:8px">Every section AND function of the game. Set the level at which it unlocks on the story path (0 = open from the start, blank = default), or press 🚫 to REMOVE it from the game entirely. Applies to every hunter.</div>
         <div id="acLockRows"></div>
         <button class="btn gold" id="acLockSave" style="width:100%;margin-top:8px">💾 SAVE SECTION LOCKS</button>
         <label class="form-lbl" style="margin-top:18px">🗺 Story path (ALL USERS)</label>
@@ -1538,7 +1544,7 @@ main section{animation:pagein .28s ease}
 
       <div class="panel">
         <div class="panel-title">🔔 NOTIFICATIONS</div>
-        <div class="empty-note" style="margin-bottom:10px">A daily reminder when today's quests are still unfinished. Works while LEVEL UP is open in a browser tab or installed on your home screen (⋮ → Add to Home screen).</div>
+        <div class="empty-note" style="margin-bottom:10px">A daily reminder when today's quests are still unfinished. On Android, install LEVEL UP on your home screen (⋮ → Add to Home screen) and reminders also arrive with the app closed — the phone wakes the app in the background every few hours. A phone that is switched off cannot receive anything (that is true for every app).</div>
         <div class="adm-row" style="align-items:center">
           <button class="btn primary" id="notifyToggle">🔔 ENABLE REMINDERS</button>
           <label class="form-lbl" style="margin:0">Remind at</label>
@@ -1904,14 +1910,16 @@ var STAT_NAME = {INT:"Intelligence",STR:"Strength",CON:"Confidence",END:"Enduran
 var FREQS = ["daily","weekly","longterm","custom","challenge"];
 var FREQ_LABEL = {daily:"DAILY",weekly:"WEEKLY",longterm:"ONE-TIME GOAL",custom:"CUSTOM",challenge:"🔥 CHALLENGE"};
 var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+/* Rank ladder over the 100-level road. Adaptation is quick (E→D with the
+   first big unlock at 10), then each rank is a real era of the journey. */
 var RANKS = [
   {key:"E", label:"E",  cls:"rank-E", minLevel:1,  name:"E-Rank Hunter"},
-  {key:"D", label:"D",  cls:"rank-D", minLevel:5,  name:"D-Rank Hunter"},
-  {key:"C", label:"C",  cls:"rank-C", minLevel:10, name:"C-Rank Hunter"},
-  {key:"B", label:"B",  cls:"rank-B", minLevel:15, name:"B-Rank Hunter"},
-  {key:"A", label:"A",  cls:"rank-A", minLevel:20, name:"A-Rank Hunter"},
-  {key:"S", label:"S",  cls:"rank-S", minLevel:30, name:"S-Rank Hunter"},
-  {key:"N", label:"NAT'L", cls:"rank-N", minLevel:50, name:"National Level Hunter"}
+  {key:"D", label:"D",  cls:"rank-D", minLevel:10, name:"D-Rank Hunter"},
+  {key:"C", label:"C",  cls:"rank-C", minLevel:25, name:"C-Rank Hunter"},
+  {key:"B", label:"B",  cls:"rank-B", minLevel:40, name:"B-Rank Hunter"},
+  {key:"A", label:"A",  cls:"rank-A", minLevel:60, name:"A-Rank Hunter"},
+  {key:"S", label:"S",  cls:"rank-S", minLevel:80, name:"S-Rank Hunter"},
+  {key:"N", label:"NAT'L", cls:"rank-N", minLevel:95, name:"National Level Hunter"}
 ];
 var EMOJIS = ["⚔️","💪","🏋️","🏃","🧘","📚","📖","✍️","🧠","💻","🎨","🎸","🎹","🎧","🍎","🥗","💧","😴","🧹","🧺","🚿","🦷","🐕","🌱","☀️","🌙","⭐","🔥","⚡","💎","🗡️","🏹","🛡️","🪄","👑","🏆","🎯","🎮","🎁","🧩","💰","🪙","📵","🚭","🍀","🥇",
   /* movies & shows */ "🎬","🎥","📽️","🎞️","🍿","📺","🎭","🎟️","🎫",
@@ -2038,6 +2046,15 @@ function save(){
   var json = JSON.stringify(state);
   try{ localStorage.setItem(SKEY, json); }catch(e){}
   idbPut("kv", "state", json);
+  /* tiny snapshot for the background-reminder service worker */
+  try{
+    idbPut("kv", "notifySnapshot", JSON.stringify({
+      on: !!(state.notify && state.notify.on),
+      time: (state.notify && state.notify.time) || "20:00",
+      day: t, left: questsLeftToday(),
+      lastFired: (state.notify && state.notify.lastFired) || ""
+    }));
+  }catch(e){}
   if(takeSnap){ idbPut("snapshots", t, json); pruneSnapshots(); }
   cloudPush();
 }
@@ -2348,6 +2365,17 @@ function renderGuild(){
   /* leaderboard ranked by the fair Discipline Score (see disciplineScore) */
   var list = [];
   for(var uid in gMembers){ var mm = gMembers[uid]; mm._uid = uid; list.push(mm); }
+  /* dedupe ghosts: the same hunter can appear under two auth accounts
+     (e.g. an old admin-login copy) — keep the copy seen most recently */
+  var byIdentity = {};
+  for(var di=0; di<list.length; di++){
+    var m0 = list[di];
+    var idk = (m0.name || "") + "|" + (m0.level || 0) + "|" + (m0.totalDone || 0) + "|" + (m0.totalXp || 0);
+    if(!byIdentity[idk] || (m0.lastSeen || 0) > (byIdentity[idk].lastSeen || 0)) byIdentity[idk] = m0;
+  }
+  var deduped = [];
+  for(var dk in byIdentity) deduped.push(byIdentity[dk]);
+  list = deduped;
   list.sort(function(a,b){ return disciplineScore(b) - disciplineScore(a); });
   var medals = ["🥇","🥈","🥉"];
   var h = "";
@@ -2730,9 +2758,11 @@ function listenSystemLocks(){
   try{
     fbDb.ref("systemLocks").on("value", function(snap){
       remoteSystemLocks = snap.val() || {};
+      acRemovedDraft = null;
       if(state){ state.autoLocks = remoteSystemLocks; save(); }
       renderNav();
-      if(sectionLockLevel(currentPage)) switchPage("home"); /* a fresh admin lock may seal the page we're on */
+      updateFinalizeBtn();
+      if(sectionLockLevel(currentPage) || featureRemoved(currentPage)) switchPage("home");
       if(currentPage === "admin") renderLockRows();
     });
   }catch(e){}
@@ -2741,24 +2771,55 @@ function renderLockRows(){
   var box = document.getElementById("acLockRows");
   if(!box) return;
   var h = "";
-  for(var i=0;i<LOCKABLE_PAGES.length;i++){
-    var p = LOCKABLE_PAGES[i];
-    var cur = remoteSystemLocks && remoteSystemLocks[p] !== undefined ? remoteSystemLocks[p] : "";
-    h += '<div class="adm-row" style="align-items:center;margin-bottom:6px">'
-      + '<span style="flex:1">' + (NAV_ICON[p] || "") + ' ' + esc(tr(NAV_LABEL[p])) + '</span>'
-      + '<input class="inp ac-lock-inp" data-lp="' + p + '" type="number" min="0" max="99" placeholder="' + esc(tr("default")) + '" value="' + esc(String(cur)) + '" style="width:90px;flex:0 0 auto"></div>';
+  for(var i=0;i<FEATURES.length;i++){
+    var f = FEATURES[i];
+    var cur = remoteSystemLocks && remoteSystemLocks[f.key] !== undefined ? remoteSystemLocks[f.key] : "";
+    var removed = cur === -1;
+    var ico = f.type === "section" ? (NAV_ICON[f.key] || "▦") : "⚙";
+    h += '<div class="adm-row" style="align-items:center;margin-bottom:6px'
+      + (removed ? ";opacity:.55" : "") + '">'
+      + '<span style="flex:1;min-width:120px">' + ico + ' ' + esc(f.name)
+      + (removed ? ' <span class="tag" style="color:#ef4444;border-color:#ef444455">' + esc(tr("REMOVED")) + '</span>' : '') + '</span>'
+      + '<input class="inp ac-lock-inp" data-lp="' + f.key + '" type="number" min="0" max="99" placeholder="'
+      + (f.def > 0 ? esc(tr("default ") + f.def) : esc(tr("open"))) + '" value="' + (removed || cur === "" ? "" : esc(String(cur))) + '"'
+      + (removed ? " disabled" : "") + ' style="width:96px;flex:0 0 auto">'
+      + '<button class="mini-btn ac-rm-btn" data-rm="' + f.key + '" title="' + esc(tr("Remove from the game / restore")) + '">' + (removed ? "♻" : "🚫") + '</button>'
+      + '</div>';
   }
   box.innerHTML = h;
 }
+var acRemovedDraft = null; /* keys marked as removed in the console before saving */
+document.getElementById("acLockRows").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-rm]"); if(!b) return;
+  var key = b.getAttribute("data-rm");
+  if(acRemovedDraft === null){
+    acRemovedDraft = {};
+    for(var i=0;i<FEATURES.length;i++){
+      var k = FEATURES[i].key;
+      acRemovedDraft[k] = !!(remoteSystemLocks && remoteSystemLocks[k] === -1);
+    }
+  }
+  acRemovedDraft[key] = !acRemovedDraft[key];
+  /* reflect immediately in the row UI */
+  var inp = document.querySelector('.ac-lock-inp[data-lp="' + key + '"]');
+  if(inp){ inp.disabled = acRemovedDraft[key]; if(acRemovedDraft[key]) inp.value = ""; }
+  b.textContent = acRemovedDraft[key] ? "♻" : "🚫";
+  b.closest(".adm-row").style.opacity = acRemovedDraft[key] ? ".55" : "";
+});
 document.getElementById("acLockSave").addEventListener("click", function(){
   var inputs = document.querySelectorAll(".ac-lock-inp");
   var map = {};
   for(var i=0;i<inputs.length;i++){
+    var key = inputs[i].getAttribute("data-lp");
+    var removed = acRemovedDraft !== null
+      ? !!acRemovedDraft[key]
+      : !!(remoteSystemLocks && remoteSystemLocks[key] === -1);
+    if(removed){ map[key] = -1; continue; }
     var v = inputs[i].value.trim();
-    if(v !== "") map[inputs[i].getAttribute("data-lp")] = Math.max(0, parseInt(v, 10) || 0);
+    if(v !== "") map[key] = Math.max(0, parseInt(v, 10) || 0);
   }
   fbDb.ref("systemLocks").set(map)
-    .then(function(){ toast(tr("Section locks updated for all users."), "gold", "ADMIN"); })
+    .then(function(){ acRemovedDraft = null; toast(tr("Feature locks updated for all users."), "gold", "ADMIN"); })
     .catch(function(err){ toast(tr("Save failed: ") + err.message, "err"); });
 });
 function cleanupSeasonQuests(){
@@ -3064,6 +3125,29 @@ function migrateState(){
       if(state.claimedLevels.indexOf(cl2) === -1) state.claimedLevels.push(cl2);
     }
   }
+  /* progression v3: NO grandfathering — the road decides everyone's limits.
+     Slots are recomputed from the road for levels already passed; hunters
+     holding more quests than their slots keep them as a DEBT: nothing is
+     deleted, but new recurring quests stay blocked until the road grants
+     enough slots to cover what they already own. */
+  if(!state.limitsInit3){
+    state.limitsInit3 = true;
+    if(!state.roadTemplateId) state.levelRewards = defaultRoad(); /* adopt the v3 road (admin template wins if present) */
+    if(!state.claimedLevels) state.claimedLevels = [];
+    for(var cl3=2; cl3<=Math.min(state.level, 100); cl3++){
+      if(state.claimedLevels.indexOf(cl3) === -1) state.claimedLevels.push(cl3);
+    }
+    var qs3 = 0, gc3 = 10;
+    for(var lr3=0; lr3<state.levelRewards.length; lr3++){
+      var rw3 = state.levelRewards[lr3];
+      if(+rw3.level <= state.level){
+        if(rw3.kind === "slot-quest") qs3 += (+rw3.value || 1);
+        else if(rw3.kind === "slot-goal") gc3 += (+rw3.value || 5);
+      }
+    }
+    state.questSlots = qs3;
+    state.goalCapWeekly = gc3;
+  }
   /* rewards inventory: adopt prizes already won from crates */
   if(!state.rewardsInv) state.rewardsInv = [];
   if(!state.rewardsArchive) state.rewardsArchive = [];
@@ -3097,7 +3181,7 @@ function defaultRoad(){
   var unlockNotes = {4:"🔓 STATS section opens", 6:"🔓 REWARDS + INVENTORY open", 8:"🔓 HALL OF HONOR opens", 12:"🔓 CLAN opens", 15:"🔓 BUDGET opens"};
   for(var lv=2; lv<=100; lv++){
     var kind, val = "";
-    if(lv === 10){ kind = "slot-quest"; val = "2"; }
+    if(lv === 5 || lv === 10){ kind = "slot-quest"; val = "2"; }
     else if(lv === 14 || lv === 18 || lv === 22 || lv === 26 || lv === 30 || lv === 40 || lv === 60 || lv === 80){ kind = "slot-quest"; val = "1"; }
     else if(lv === 12 || lv === 20 || lv === 35 || lv === 55){ kind = "slot-goal"; val = "5"; }
     else if(lv === 50 || lv === 100){ kind = "roll-legendary"; }
@@ -3641,6 +3725,23 @@ var I18N_RU = {
   "Season event quest.":"Квест сезонного события.","New season quests:":"Новые сезонные квесты:",
   "Season ends: ":"Сезон закончится: ","ENTER THE SEASON":"ВОЙТИ В СЕЗОН",
   "The season has ended — its quests left the log.":"Сезон завершён — его квесты покинули журнал.",
+  /* feature registry + slots + journal */
+  "This section was removed by the System Administrator.":"Этот раздел удалён Системным Администратором.",
+  "The Focus Timer was removed by the System Administrator.":"Таймер фокуса удалён Системным Администратором.",
+  "The Focus Timer unlocks at Level ":"Таймер фокуса откроется на уровне ",
+  " on the story path.":" на пути истории.",
+  "Chasing After Dreams unlocks at Level ":"«В погоне за мечтами» откроется на уровне ",
+  "🔒 FEATURE LOCKS (ALL USERS)":"🔒 БЛОКИРОВКИ ФУНКЦИЙ (ДЛЯ ВСЕХ)",
+  "Every section AND function of the game. Set the level at which it unlocks on the story path (0 = open from the start, blank = default), or press 🚫 to REMOVE it from the game entirely. Applies to every hunter.":"Каждый раздел И каждая функция игры. Задайте уровень открытия на пути истории (0 = открыто с начала, пусто = по умолчанию) или нажмите 🚫, чтобы ПОЛНОСТЬЮ убрать из игры. Действует для всех охотников.",
+  "REMOVED":"УДАЛЕНО","default ":"по умолч. ","open":"открыто","Remove from the game / restore":"Убрать из игры / вернуть",
+  "Feature locks updated for all users.":"Блокировки функций обновлены для всех.",
+  "QUEST SLOTS: ":"СЛОТЫ КВЕСТОВ: ","debt ":"долг ",
+  "Your extra quests stay, but new recurring quests unlock only after the story path grants enough slots to cover them.":"Лишние квесты остаются, но новые повторяющиеся квесты откроются только когда путь истории даст достаточно слотов.",
+  "Recurring quest slots arrive on the STORY path (first at Level 5).":"Слоты повторяющихся квестов приходят на пути ИСТОРИИ (первые на 5 уровне).",
+  "📓 PAGES OF THE HUNTER":"📓 СТРАНИЦЫ ОХОТНИКА",
+  "Your evening reflections, night by night. Written with the 🌙 FINALIZE THE DAY button.":"Ваши вечерние размышления, ночь за ночью. Пишутся кнопкой 🌙 ЗАВЕРШИТЬ ДЕНЬ.",
+  "No pages yet. Tonight, when the 🌙 button appears, write your first one.":"Страниц пока нет. Сегодня вечером, когда появится кнопка 🌙, напишите первую.",
+  "Learned:":"Узнал:","Changed me:":"Изменило меня:","Tomorrow:":"Завтра:",
   /* honesty gate */
   "⛓ THE HONESTY GATE":"⛓ ВРАТА ЧЕСТНОСТИ",
   "Stop, Hunter. Before you press anything — be still for one second.":"Стой, Охотник. Прежде чем нажать — замри на одну секунду.",
@@ -3793,23 +3894,48 @@ function reconcileNav(){
   });
   for(var i=0;i<NAV_ORDER.length;i++) if(!seen[NAV_ORDER[i]]) state.navConfig.push({page:NAV_ORDER[i], label:NAV_LABEL[NAV_ORDER[i]], hidden:false});
 }
-/* Section locks — the story-path progression. Every hunter starts with the
-   basics (HOME, PROFILE, QUESTS, STORY, GUIDE, SETTINGS) and earns the rest
-   by leveling. The Administrator can override any section's unlock level for
-   EVERY hunter (systemLocks in Firebase — that override always wins). */
-var AUTO_LOCKS = {stats:4, rewards:6, inventory:6, honor:8, guild:12, budget:15};
-var LOCKABLE_PAGES = ["rewards","inventory","stats","honor","guild","budget"];
+/* The FEATURE REGISTRY — everything the story path can grant.
+   Sections AND functions unlock by level; the Administrator can override any
+   entry for EVERY hunter (systemLocks in Firebase — that override wins), set
+   it to 0 (always open) or to -1 (REMOVED from the game entirely).
+   HOME, PROFILE, QUESTS, STORY, GUIDE and SETTINGS can never be gated. */
+var FEATURES = [
+  {key:"stats",     type:"section",  name:"STATS section",          def:4},
+  {key:"rewards",   type:"section",  name:"REWARDS section",        def:6},
+  {key:"inventory", type:"section",  name:"INVENTORY section",      def:6},
+  {key:"honor",     type:"section",  name:"HALL OF HONOR section",  def:8},
+  {key:"guild",     type:"section",  name:"CLAN section",           def:12},
+  {key:"budget",    type:"section",  name:"BUDGET section",         def:15},
+  {key:"finalize",  type:"function", name:"Finalize the Day",       def:0},
+  {key:"timer",     type:"function", name:"Focus Timer",            def:0},
+  {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0}
+];
+var LOCKABLE_PAGES = ["stats","rewards","inventory","honor","guild","budget"];
 var remoteSystemLocks = null; /* live admin config, synced from Firebase (systemLocks node) */
-function lockLevelFor(p){
-  if(LOCKABLE_PAGES.indexOf(p) === -1) return 0; /* never seal the way back */
-  var src = remoteSystemLocks || state.autoLocks; /* live value, else last-synced cache */
-  if(src && src[p] !== undefined) return Math.max(0, +src[p] || 0);
-  return AUTO_LOCKS[p] || 0;
+function featureConf(key){
+  for(var i=0;i<FEATURES.length;i++) if(FEATURES[i].key === key) return FEATURES[i];
+  return null;
 }
+function featureLockLevel(key){
+  /* configured value: level, 0 = always open, -1 = removed */
+  var f = featureConf(key);
+  if(!f) return 0;
+  var src = remoteSystemLocks || (state && state.autoLocks);
+  if(src && src[key] !== undefined && src[key] !== null && src[key] !== "") return +src[key];
+  return f.def;
+}
+function featureRemoved(key){ return featureConf(key) !== null && featureLockLevel(key) === -1; }
+function featureSealedLv(key){
+  /* >0: sealed until that level; 0: usable (admin is never gated) */
+  if(!state || adminMode) return 0;
+  if(featureRemoved(key)) return 0; /* removal is handled separately (hidden) */
+  var v = featureLockLevel(key);
+  return v > 0 && state.level < v ? v : 0;
+}
+function lockLevelFor(p){ var v = featureLockLevel(p); return v > 0 ? v : 0; }
 function sectionLockLevel(p){
-  if(!state || adminMode) return 0; /* admin never plays, so is never gated */
-  var need = lockLevelFor(p);
-  return need && state.level < need ? need : 0;
+  if(LOCKABLE_PAGES.indexOf(p) === -1) return 0;
+  return featureSealedLv(p);
 }
 function renderNav(){
   reconcileNav();
@@ -3817,6 +3943,7 @@ function renderNav(){
   for(var i=0;i<state.navConfig.length;i++){
     var c = state.navConfig[i];
     if(c.hidden && c.page !== "admin") continue; /* admin can never be hidden — prevents lockout */
+    if(featureRemoved(c.page) && !adminMode) continue; /* removed by the Administrator */
     var badge = c.page === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
     var lockLv = sectionLockLevel(c.page);
     h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "") + (lockLv ? " locked" : "")
@@ -3828,6 +3955,7 @@ function renderNav(){
 }
 function switchPage(p){
   if(adminMode && p !== "admin") return; /* the Administrator never plays — console only */
+  if(featureRemoved(p)){ toast(tr("This section was removed by the System Administrator."), "err"); return; }
   var lockLv = sectionLockLevel(p);
   if(lockLv){
     toast(tr("Sealed by the System. Reach Level ") + lockLv + tr(" to unlock this section."), "err");
@@ -4216,6 +4344,7 @@ document.getElementById("honestySwear").addEventListener("click", function(){
 function updateFinalizeBtn(){
   var btn = document.getElementById("finalizeBtn");
   if(!btn || !state) return;
+  if(featureRemoved("finalize") || featureSealedLv("finalize")){ btn.style.display = "none"; return; }
   var done = !!(state.journal && state.journal[todayStr()]);
   btn.classList.toggle("done", done);
   btn.textContent = done ? tr("🌙 DAY FINALIZED ✓ — read tonight's page") : tr("🌙 FINALIZE THE DAY");
@@ -4309,6 +4438,9 @@ function timerElapsedSec(){
   return (tm.accumulated || 0) + run;
 }
 function startTimer(id){
+  if(featureRemoved("timer")){ toast(tr("The Focus Timer was removed by the System Administrator."), "err"); return; }
+  var tl = featureSealedLv("timer");
+  if(tl){ toast(tr("The Focus Timer unlocks at Level ") + tl + tr(" on the story path."), "err"); return; }
   var q = questById(id);
   if(!q) return;
   if(state.activeTimer){
@@ -4396,7 +4528,14 @@ function activeTimeInRange(dates){
 var swReg = null;
 if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
   /* notification-only worker: no fetch handler, no caching — cannot mix projects */
-  navigator.serviceWorker.register("notify-sw.js").then(function(r){ swReg = r; }).catch(function(){});
+  navigator.serviceWorker.register("notify-sw.js").then(function(r){
+    swReg = r;
+    /* Android installed app: ask the browser to wake the worker every few
+       hours so reminders arrive even with the app closed */
+    if("periodicSync" in r){
+      r.periodicSync.register("levelup-reminder", {minInterval: 4 * 60 * 60 * 1000}).catch(function(){});
+    }
+  }).catch(function(){});
 }
 function notifySupported(){ return "Notification" in window; }
 function notifyGranted(){ return notifySupported() && Notification.permission === "granted"; }
@@ -5268,6 +5407,27 @@ function renderProfile(){
     }
     bl.innerHTML = bh;
   }
+  /* 📓 pages of the hunter — evening reflections, newest first */
+  var jl = document.getElementById("journalList");
+  if(jl){
+    var days = Object.keys(state.journal || {}).sort().reverse().slice(0, 30);
+    if(days.length === 0){
+      jl.innerHTML = '<div class="empty-note">' + esc(tr("No pages yet. Tonight, when the 🌙 button appears, write your first one.")) + '</div>';
+    } else {
+      var jh = "";
+      for(var jd=0; jd<days.length; jd++){
+        var e = state.journal[days[jd]];
+        if(!e) continue;
+        jh += '<div class="save-goal" style="margin-bottom:10px">'
+          + '<div class="sg-top"><span class="sg-name">🌙 ' + esc(niceDate(days[jd])) + '</span></div>';
+        if(e.learn) jh += '<div class="q-desc" style="margin-top:6px"><b>' + esc(tr("Learned:")) + '</b> ' + esc(e.learn) + '</div>';
+        if(e.changed) jh += '<div class="q-desc" style="margin-top:4px"><b>' + esc(tr("Changed me:")) + '</b> ' + esc(e.changed) + '</div>';
+        if(e.tomorrow) jh += '<div class="q-desc" style="margin-top:4px"><b>' + esc(tr("Tomorrow:")) + '</b> ' + esc(e.tomorrow) + '</div>';
+        jh += '</div>';
+      }
+      jl.innerHTML = jh;
+    }
+  }
 }
 document.getElementById("statsPanel").addEventListener("click", function(e){
   var b = e.target.closest(".stat-plus");
@@ -5508,6 +5668,20 @@ function questCard(q){
   h += '</div></div></div>';
   return h;
 }
+function slotsNoteHtml(){
+  var slots = state.questSlots || 0, used = 0;
+  for(var i=0;i<state.quests.length;i++) if(state.quests[i].freq !== "longterm" && !state.quests[i].system) used++;
+  var debt = used - slots;
+  var h = '<div class="empty-note" style="margin-bottom:10px">🎫 ' + esc(tr("QUEST SLOTS: ")) + used + " / " + slots;
+  if(debt > 0){
+    h += ' — <b style="color:var(--legendary)">' + esc(tr("debt ")) + debt + '</b>. '
+      + esc(tr("Your extra quests stay, but new recurring quests unlock only after the story path grants enough slots to cover them."));
+  } else if(slots === 0){
+    h += '. ' + esc(tr("Recurring quest slots arrive on the STORY path (first at Level 5)."));
+  }
+  h += '</div>';
+  return h;
+}
 function renderQuests(){
   renderPunishBanners();
   renderFilterChips();
@@ -5522,10 +5696,10 @@ function renderQuests(){
   });
   var el = document.getElementById("questList");
   if(list.length === 0){
-    el.innerHTML = '<div class="empty-note">No quests here. Press the glowing + button to forge your first quest, Hunter.</div>';
+    el.innerHTML = slotsNoteHtml() + '<div class="empty-note">No quests here. Press the glowing + button to forge your first quest, Hunter.</div>';
     return;
   }
-  var h = "";
+  var h = slotsNoteHtml();
   for(var i=0;i<list.length;i++) h += questCard(list[i]);
   el.innerHTML = h;
 }
@@ -6059,6 +6233,15 @@ var DREAM_META = {
   month:{head:"🌙 THIS MONTH", cls:"dh-month", empty:"Short-term goals for the weeks ahead."}
 };
 function setStoryView(v, scrollToLevel){
+  if(v === "dreams"){
+    if(featureRemoved("dreams")) v = "path";
+    else {
+      var dl = featureSealedLv("dreams");
+      if(dl){ toast(tr("Chasing After Dreams unlocks at Level ") + dl + tr(" on the story path."), "err"); v = "path"; }
+    }
+  }
+  var dreamBtn = document.getElementById("chooseDreams");
+  if(dreamBtn) dreamBtn.style.display = featureRemoved("dreams") ? "none" : "";
   state.storyView = v;
   document.getElementById("storyPathView").style.display = v === "path" ? "" : "none";
   document.getElementById("dreamsView").style.display = v === "dreams" ? "" : "none";
