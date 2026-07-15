@@ -588,6 +588,8 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .road-rw-chip{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:8px;
   border:1px solid rgba(124,97,255,.35);background:rgba(9,10,26,.85);color:var(--txt)}
 .road-rw-chip.dim{opacity:.4}
+.road-rw-chip.unlock{border-color:rgba(251,191,36,.55);color:var(--legendary);
+  background:rgba(251,191,36,.08);box-shadow:0 0 8px rgba(251,191,36,.18)}
 .road-claimed{font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--easy)}
 .road-next{font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--legendary)}
 .road-lm{display:flex;flex-direction:column;align-items:center;margin-bottom:4px}
@@ -1466,7 +1468,7 @@ main section{animation:pagein .28s ease}
         <div id="acLockRows"></div>
         <button class="btn gold" id="acLockSave" style="width:100%;margin-top:8px">💾 SAVE SECTION LOCKS</button>
         <label class="form-lbl" style="margin-top:18px">🗺 Story path (ALL USERS)</label>
-        <div class="empty-note" style="margin-bottom:8px">The level road every hunter climbs: rewards, quest slots, weekly-goal permits. Edit it, then publish — all users adopt it (levels they already passed stay claimed).</div>
+        <div class="empty-note" style="margin-bottom:8px">The level road every hunter climbs: rewards, quest slots, weekly-goal permits. Edit it, then publish — all users adopt it (levels they already passed stay claimed). Section/function 🔓 markers appear on the road automatically from FEATURE LOCKS above — no need to add them here.</div>
         <button class="btn primary" id="acRoadEdit" style="width:100%">✎ EDIT STORY PATH</button>
         <button class="btn gold" id="acRoadPublish" style="width:100%;margin-top:8px">📤 PUBLISH STORY PATH TO ALL USERS</button>
         <label class="form-lbl" style="margin-top:18px">Users</label>
@@ -2771,6 +2773,7 @@ function listenSystemLocks(){
       updateFinalizeBtn();
       if(sectionLockLevel(currentPage) || featureRemoved(currentPage)) switchPage("home");
       if(currentPage === "admin") renderLockRows();
+      if(currentPage === "story") renderStory(); /* road unlock markers follow the locks live */
     });
   }catch(e){}
 }
@@ -3155,6 +3158,15 @@ function migrateState(){
     state.questSlots = qs3;
     state.goalCapWeekly = gc3;
   }
+  /* the road no longer carries baked unlock notes — markers are drawn live
+     from FEATURE LOCKS, so stale baked ones are stripped once */
+  if(!state.roadNotesCleaned){
+    state.roadNotesCleaned = true;
+    var baked = {"🔓 STATS section opens":1, "🔓 REWARDS + INVENTORY open":1, "🔓 HALL OF HONOR opens":1, "🔓 CLAN opens":1, "🔓 BUDGET opens":1};
+    if(state.levelRewards && state.levelRewards.length){
+      state.levelRewards = state.levelRewards.filter(function(r){ return !(r.kind === "note" && baked[r.value]); });
+    }
+  }
   /* rewards inventory: adopt prizes already won from crates */
   if(!state.rewardsInv) state.rewardsInv = [];
   if(!state.rewardsArchive) state.rewardsArchive = [];
@@ -3184,8 +3196,9 @@ var ROAD_KIND_LABEL = {
    the levels where whole sections open. The Administrator can replace this
    for everyone via the ADMIN CONSOLE story-path template. */
 function defaultRoad(){
+  /* unlock markers are NOT baked in here — the road view draws them live
+     from FEATURE LOCKS, so admin changes always match the road */
   var out = [];
-  var unlockNotes = {4:"🔓 STATS section opens", 6:"🔓 REWARDS + INVENTORY open", 8:"🔓 HALL OF HONOR opens", 12:"🔓 CLAN opens", 15:"🔓 BUDGET opens"};
   for(var lv=2; lv<=100; lv++){
     var kind, val = "";
     if(lv === 5 || lv === 10){ kind = "slot-quest"; val = "2"; }
@@ -3198,7 +3211,6 @@ function defaultRoad(){
     else if(lv % 2 === 0){ kind = "roll-easy"; }
     else { kind = "sp"; val = "2"; }
     out.push({id: uid(), level: lv, kind: kind, value: val});
-    if(unlockNotes[lv]) out.push({id: uid(), level: lv, kind: "note", value: unlockNotes[lv]});
   }
   return out;
 }
@@ -3732,6 +3744,10 @@ var I18N_RU = {
   "Season event quest.":"Квест сезонного события.","New season quests:":"Новые сезонные квесты:",
   "Season ends: ":"Сезон закончится: ","ENTER THE SEASON":"ВОЙТИ В СЕЗОН",
   "The season has ended — its quests left the log.":"Сезон завершён — его квесты покинули журнал.",
+  /* feature names (locks list + road unlock markers) */
+  "STATS section":"Раздел СТАТИСТИКА","REWARDS section":"Раздел НАГРАДЫ","INVENTORY section":"Раздел ИНВЕНТАРЬ",
+  "HALL OF HONOR section":"Раздел ЗАЛ ПОЧЁТА","CLAN section":"Раздел КЛАН","BUDGET section":"Раздел БЮДЖЕТ",
+  "Finalize the Day":"Завершить день","Focus Timer":"Таймер фокуса","Chasing After Dreams":"В погоне за мечтами",
   /* feature registry + slots + journal */
   "This section was removed by the System Administrator.":"Этот раздел удалён Системным Администратором.",
   "The Focus Timer was removed by the System Administrator.":"Таймер фокуса удалён Системным Администратором.",
@@ -3951,11 +3967,11 @@ function renderNav(){
     var c = state.navConfig[i];
     if(c.hidden && c.page !== "admin") continue; /* admin can never be hidden — prevents lockout */
     if(featureRemoved(c.page) && !adminMode) continue; /* removed by the Administrator */
+    if(sectionLockLevel(c.page)) continue; /* not yet earned — invisible until the story path grants it */
     var badge = c.page === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
-    var lockLv = sectionLockLevel(c.page);
-    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "") + (lockLv ? " locked" : "")
-      + '" data-page="' + c.page + '"' + (lockLv ? ' data-locklv="' + lockLv + '"' : '') + '>'
-      + '<span class="nv-ico">' + (lockLv ? "🔒" : (NAV_ICON[c.page] || "•")) + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
+    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "")
+      + '" data-page="' + c.page + '">'
+      + '<span class="nv-ico">' + (NAV_ICON[c.page] || "•") + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
   }
   document.getElementById("nav").innerHTML = h;
   renderHeader(); /* re-fill the roll badge that lives inside the nav */
@@ -6216,9 +6232,20 @@ function renderRoad(){
   var h = '<svg class="road-trail" viewBox="0 0 100 ' + H + '" preserveAspectRatio="none">'
     + '<polyline points="' + poly + '" fill="none" stroke="rgba(124,97,255,.4)" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>'
     + '</svg>';
+  /* live unlock markers: derived straight from FEATURE LOCKS, so the road
+     always matches whatever the Administrator configured (never baked in) */
+  var unlockAt = {};
+  for(var fi=0; fi<FEATURES.length; fi++){
+    var flv = featureLockLevel(FEATURES[fi].key);
+    if(flv > 0){
+      if(!unlockAt[flv]) unlockAt[flv] = [];
+      unlockAt[flv].push(FEATURES[fi]);
+    }
+  }
   for(var n=0; n<pts.length; n++){
     var pt = pts[n];
     var rws = levelRewardsFor(pt.lv);
+    var uls = unlockAt[pt.lv] || [];
     var cls = pt.lv <= state.level ? "done" : (pt.lv === state.level + 1 ? "cur" : "lock");
     var lm = pt.lv % 5 === 0 ? LANDMARKS[(pt.lv / 5 - 1) % LANDMARKS.length] : null;
     h += '<div class="road-node ' + cls + '"' + (pt.lv === state.level + 1 ? ' id="roadCur"' : '')
@@ -6226,7 +6253,8 @@ function renderRoad(){
     if(lm) h += '<div class="road-lm"><span class="road-lm-e">' + lm.e + '</span><span class="road-lm-n">' + lm.n + '</span></div>';
     h += '<div class="road-circle">' + pt.lv + '</div>';
     h += '<div class="road-rew">';
-    if(rws.length === 0) h += '<span class="road-rw-chip dim">—</span>';
+    if(rws.length === 0 && uls.length === 0) h += '<span class="road-rw-chip dim">—</span>';
+    for(var ui=0; ui<uls.length; ui++) h += '<span class="road-rw-chip unlock">🔓 ' + esc(tr(uls[ui].name)) + '</span>';
     for(var ri=0; ri<rws.length; ri++) h += '<span class="road-rw-chip">' + esc(roadRewardLabel(rws[ri])) + '</span>';
     if(pt.lv <= state.level) h += '<span class="road-claimed">✓ CLAIMED</span>';
     else if(pt.lv === state.level + 1) h += '<span class="road-next">NEXT — ' + state.xp + '/' + xpForLevel(state.level) + ' XP</span>';
