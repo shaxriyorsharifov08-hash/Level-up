@@ -1117,7 +1117,7 @@ main section{animation:pagein .28s ease}
       <div class="panel">
         <div class="panel-title">STORAGE — EARNED ROLLS</div>
         <div class="rolls-bar" id="rollsBar"></div>
-        <div class="empty-note">Fully complete a quest (hit its completion target) to earn a roll. Linked quests give a roll for their crate; unlinked quests give a roll usable on any crate of that tier. Rolls wait here until you USE them — then a random prize from the crate is revealed.</div>
+        <div class="empty-note">Rolls are rare by design — the System stakes them only on real campaigns: fully complete a MEDIUM+ quest with target 5+, conquer an EPIC+ quest, or hold a 7-day Daily Quest streak (30 days = LEGENDARY). Linked quests give a roll for their crate; unlinked ones for any crate of that tier. Rolls wait here until you USE them — then a random prize is revealed.</div>
       </div>
       <div class="panel">
         <div class="panel-title">REWARD COLLECTIONS</div>
@@ -1409,7 +1409,7 @@ main section{animation:pagein .28s ease}
       </div>
       <div class="panel guide">
         <div class="panel-title">📦 DAILY QUEST (SYSTEM MANDATE)</div>
-        <p>The package on your home page resets every day at <b>01:00</b>. Clear every item for +60 XP, a MEDIUM roll, and a mandate streak. Edit the items in ADMIN. Ignore it and the Penalty Zone opens…</p>
+        <p>The package on your home page resets every day at <b>01:00</b>. Clear every item for +60 XP and a mandate streak — every 7th unbroken day pays an EPIC roll, day 30 a LEGENDARY. Edit the items in SETTINGS. Ignore it and the Penalty Zone opens…</p>
       </div>
       <div class="panel guide">
         <div class="panel-title">🎁 REWARDS, ROLLS &amp; CRATES</div>
@@ -3158,6 +3158,28 @@ function migrateState(){
     state.questSlots = qs3;
     state.goalCapWeekly = gc3;
   }
+  /* roll scarcity rebalance: the road stops raining easy rolls — existing
+     default roads are re-seeded once (an admin-published template is kept) */
+  if(!state.rollRebalance){
+    state.rollRebalance = true;
+    if(!state.roadTemplateId){
+      state.levelRewards = defaultRoad();
+      if(!state.claimedLevels) state.claimedLevels = [];
+      for(var cl5=2; cl5<=Math.min(state.level, 100); cl5++){
+        if(state.claimedLevels.indexOf(cl5) === -1) state.claimedLevels.push(cl5);
+      }
+      var qs5 = 0, gc5 = 10;
+      for(var lr5=0; lr5<state.levelRewards.length; lr5++){
+        var rw5 = state.levelRewards[lr5];
+        if(+rw5.level <= state.level){
+          if(rw5.kind === "slot-quest") qs5 += (+rw5.value || 1);
+          else if(rw5.kind === "slot-goal") gc5 += (+rw5.value || 5);
+        }
+      }
+      state.questSlots = qs5;
+      state.goalCapWeekly = gc5;
+    }
+  }
   /* the road no longer carries baked unlock notes — markers are drawn live
      from FEATURE LOCKS, so stale baked ones are stripped once */
   if(!state.roadNotesCleaned){
@@ -3208,7 +3230,7 @@ function defaultRoad(){
     else if(lv === 70 || lv === 90){ kind = "roll-mythic"; }
     else if(lv % 10 === 0){ kind = "roll-epic"; }
     else if(lv % 5 === 0){ kind = "roll-medium"; }
-    else if(lv % 2 === 0){ kind = "roll-easy"; }
+    else if(lv === 3 || lv === 7){ kind = "roll-easy"; } /* two early tastes of the gacha — then rolls must be earned */
     else { kind = "sp"; val = "2"; }
     out.push({id: uid(), level: lv, kind: kind, value: val});
   }
@@ -3598,7 +3620,8 @@ var I18N_RU = {
   "Time tracked with the quest focus timer — press ⏱ on a quest card before you start working.":"Время по таймеру фокуса — нажмите ⏱ на карточке квеста перед началом работы.",
   "🌟 LIFE DREAM":"🌟 МЕЧТА ЖИЗНИ","On the 1st of every month, The System grades your previous month.":"1-го числа каждого месяца Система оценивает ваш прошедший месяц.",
   /* rewards page */
-  "Fully complete a quest (hit its completion target) to earn a roll. Linked quests give a roll for their crate; unlinked quests give a roll usable on any crate of that tier. Rolls wait here until you USE them — then a random prize from the crate is revealed.":"Полностью выполните квест (достигните его цели), чтобы заработать ролл. Привязанные квесты дают ролл для своего ящика; непривязанные — ролл для любого ящика этого уровня. Роллы ждут здесь, пока вы не нажмёте ИСПОЛЬЗОВАТЬ — тогда откроется случайный приз из ящика.",
+  "Rolls are rare by design — the System stakes them only on real campaigns: fully complete a MEDIUM+ quest with target 5+, conquer an EPIC+ quest, or hold a 7-day Daily Quest streak (30 days = LEGENDARY). Linked quests give a roll for their crate; unlinked ones for any crate of that tier. Rolls wait here until you USE them — then a random prize is revealed.":"Роллы редки по замыслу — Система ставит их только на настоящие кампании: полностью выполните квест уровня MEDIUM+ с целью 5+, покорите квест EPIC+ или удержите 7-дневную серию Ежедневного квеста (30 дней = LEGENDARY). Привязанные квесты дают ролл для своего ящика; непривязанные — для любого ящика этого уровня. Роллы ждут здесь, пока вы не нажмёте ИСПОЛЬЗОВАТЬ — тогда откроется случайный приз.",
+  "full clear — no roll: the System stakes rolls only on MEDIUM+ campaigns with target 5+, or EPIC+ quests.":"полное выполнение — без ролла: Система ставит роллы только на кампании MEDIUM+ с целью 5+ или квесты EPIC+.",
   "Storage is empty. Fully complete a quest (reach its completion target) to earn a roll.":"Хранилище пусто. Полностью выполните квест (достигните цели), чтобы заработать ролл.",
   "ANALYZING DROP...":"АНАЛИЗ ДОБЫЧИ...","ITEM DROP":"ВЫПАЛ ПРЕДМЕТ",
   /* empty notes */
@@ -5041,23 +5064,33 @@ function completeQuest(id){
       sysToast("🏆 Enshrined in the Hall of Honor: " + q.name);
     }
     else q.progress = 0; /* recurring quests start a new cycle */
-    var col = q.link ? colById(q.link) : null;
-    var ticket = makeRollTicket(q.tier, col ? col.id : "", q.name);
-    state.storage.push(ticket);
-    var rollDesc = col
-      ? TIER_LABEL[q.tier] + " roll for crate [" + col.emoji + " " + col.name + "]"
-      : TIER_LABEL[q.tier] + " roll (any " + TIER_LABEL[q.tier] + " crate)";
-    if(q.freq === "challenge"){
-      announce("🔥 CHALLENGE CONQUERED 🔥",
-        "[" + q.name + "]\n\n" + target + " days in a row. The streak held. You did not break.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE, Hunter.",
-        "🔥", "STORE IT");
-      addBadge("🔥", "Challenge: " + q.name);
+    /* Rolls are STAKED, not showered: only real campaigns earn one —
+       an EPIC+ quest, or a MEDIUM+ quest whose target is 5 or more.
+       Easy quests and tiny targets pay XP, never rolls. */
+    var tierRank = {easy:0, medium:1, epic:2, mythic:3, legendary:4}[q.tier] || 0;
+    var rollEarned = tierRank >= 2 || (tierRank >= 1 && target >= 5);
+    if(rollEarned){
+      var col = q.link ? colById(q.link) : null;
+      var ticket = makeRollTicket(q.tier, col ? col.id : "", q.name);
+      state.storage.push(ticket);
+      var rollDesc = col
+        ? TIER_LABEL[q.tier] + " roll for crate [" + col.emoji + " " + col.name + "]"
+        : TIER_LABEL[q.tier] + " roll (any " + TIER_LABEL[q.tier] + " crate)";
+      if(q.freq === "challenge"){
+        announce("🔥 CHALLENGE CONQUERED 🔥",
+          "[" + q.name + "]\n\n" + target + " days in a row. The streak held. You did not break.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE, Hunter.",
+          "🔥", "STORE IT");
+        addBadge("🔥", "Challenge: " + q.name);
+      } else {
+        announce("🎟 QUEST FULLY COMPLETED 🎟",
+          "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nRolls are rare by design — you EARNED this one.\nOpen REWARDS and use it whenever you wish, Hunter.",
+          "🎟", "STORE IT");
+      }
+      toast("+" + xpEarn + " XP • roll stored" + (xpEarn === 0 ? " • ⛓ PENALTY: XP frozen" : ""), "gold", "FULL CLEAR");
     } else {
-      announce("🎟 QUEST FULLY COMPLETED 🎟",
-        "[" + q.name + "]\n\nCompleted " + target + " / " + target + " times.\n\nREWARD ACQUIRED:\n+1 " + rollDesc + "\n\nThe roll has been placed in your STORAGE.\nOpen REWARDS and use it whenever you wish, Hunter.",
-        "🎟", "STORE IT");
+      if(q.freq === "challenge") addBadge("🔥", "Challenge: " + q.name);
+      toast("+" + xpEarn + " XP • " + tr("full clear — no roll: the System stakes rolls only on MEDIUM+ campaigns with target 5+, or EPIC+ quests."), "gold", "FULL CLEAR");
     }
-    toast("+" + xpEarn + " XP • roll stored" + (xpEarn === 0 ? " • ⛓ PENALTY: XP frozen" : ""), "gold", "FULL CLEAR");
   } else if(q.freq === "challenge"){
     toast("Day " + q.progress + " / " + target + " — keep the streak alive! +" + xpEarn + " XP" + (xpEarn === 0 ? " (⛓ penalty active)" : ""), "gold", "CHALLENGE");
   } else {
@@ -7505,9 +7538,21 @@ function completePackageItem(id){
     if(pk.streak > pk.bestStreak) pk.bestStreak = pk.streak;
     pk.lastFullDay = pd;
     pk.completedDates.push(pd);
-    state.storage.push(makeRollTicket("medium", "", "Daily Quest package"));
+    /* rolls are weekly trophies now, not daily change: every 7th consecutive
+       perfect day earns an EPIC roll; day 30 of an unbroken run, a LEGENDARY */
+    var rollLine = "";
+    if(pk.streak > 0 && pk.streak % 30 === 0){
+      state.storage.push(makeRollTicket("legendary", "", "30-day mandate streak"));
+      rollLine = "\n🎟 30 DAYS UNBROKEN — +1 LEGENDARY roll (sent to STORAGE).";
+    } else if(pk.streak > 0 && pk.streak % 7 === 0){
+      state.storage.push(makeRollTicket("epic", "", "7-day mandate streak"));
+      rollLine = "\n🎟 " + pk.streak + "-day streak — +1 EPIC roll (sent to STORAGE).";
+    } else {
+      var toNext = 7 - (pk.streak % 7);
+      rollLine = "\n🎟 Next roll: " + toNext + " more perfect day" + (toNext>1?"s":"") + " (rolls are weekly trophies, not daily change).";
+    }
     announce("DAILY QUEST COMPLETE",
-      "All mandate quests have been cleared.\n\nReward: +60 XP, +1 MEDIUM roll (sent to STORAGE).\nStreak: " + pk.streak + " day" + (pk.streak>1?"s":"") + ".\n\nThe System acknowledges your discipline, Hunter.",
+      "All mandate quests have been cleared.\n\nReward: +60 XP." + rollLine + "\nStreak: " + pk.streak + " day" + (pk.streak>1?"s":"") + ".\n\nThe System acknowledges your discipline, Hunter.",
       "📦", "CLAIM");
     var ms = [3,7,14,30,100];
     for(var m=0;m<ms.length;m++) if(pk.streak === ms[m]) addBadge("📦", ms[m] + " Day Mandate");
