@@ -1017,6 +1017,15 @@ main section{animation:pagein .28s ease}
       <div id="firstSteps"></div>
       <div id="punishHome"></div>
       <div class="panel">
+        <div class="panel-title">🧭 SYSTEM MENTOR</div>
+        <div id="mentorInsights"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="120" placeholder="Ask the Mentor: how to improve focus, sleep, reading…">
+          <button class="btn primary" id="mentorAsk">ASK</button>
+        </div>
+        <div id="mentorAnswer" style="margin-top:10px"></div>
+      </div>
+      <div class="panel">
         <div class="panel-title">DAILY QUEST — SYSTEM MANDATE</div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <span class="pkg-timer">&#9203; RESETS IN <b id="pkgTimer">--:--:--</b></span>
@@ -1078,9 +1087,7 @@ main section{animation:pagein .28s ease}
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-title">🎒 INVENTORY — SKILLS, EQUIPMENT &amp; FOOD</div>
-        <div class="empty-note" style="margin-bottom:8px">Collected automatically from the Level Road and from crate rolls (skill/equip prizes). Tap an item to USE it or remove it; arm items on quests with the 🎒 button for bonuses. Manage items and bonuses in ADMIN → MANAGE INVENTORY.</div>
+      <div class="panel" style="display:none">
         <div class="chip-list" id="skillsList"></div>
       </div>
 
@@ -1368,6 +1375,22 @@ main section{animation:pagein .28s ease}
           <input class="inp" id="goalTarget" type="number" min="1" step="0.01" style="width:120px;flex:0 0 auto" placeholder="Target">
           <button class="btn primary" id="goalAddBtn">ADD GOAL</button>
         </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🛍 STORE — THINGS I WANT</div>
+        <div class="empty-note" style="margin-bottom:10px">Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.</div>
+        <div id="storeList"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <select class="sel" id="wishEmoji" style="width:74px;flex:0 0 auto"></select>
+          <input class="inp" id="wishName" style="flex:1;min-width:120px" maxlength="50" placeholder="e.g. New headphones">
+          <input class="inp" id="wishPrice" type="number" min="0" step="0.01" style="width:110px;flex:0 0 auto" placeholder="Price">
+        </div>
+        <div class="adm-row" style="margin-top:8px">
+          <select class="sel" id="wishGoal" style="flex:1;min-width:130px"></select>
+          <button class="btn primary" id="wishAddBtn">ADD TO STORE</button>
+        </div>
+        <button class="btn" id="storeShelfBtn" style="width:100%;margin-top:10px">🗄 PURCHASED SHELF</button>
+        <div id="storeShelf" style="display:none;margin-top:10px"></div>
       </div>
       <div class="panel">
         <div class="panel-title">📒 TRANSACTIONS</div>
@@ -1702,8 +1725,8 @@ main section{animation:pagein .28s ease}
     <div class="seg" id="qmStat"></div>
     <label class="form-lbl">Link to Reward Collection</label>
     <select class="sel" id="qmLink"></select>
-    <label class="form-lbl">🎒 Attach Skill / Equipment (consumed on completion, fires its bonus)</label>
-    <select class="sel" id="qmArm"></select>
+    <label class="form-lbl" style="display:none">🎒 Attach Skill / Equipment (consumed on completion, fires its bonus)</label>
+    <select class="sel" id="qmArm" style="display:none"></select>
     <label class="form-lbl" id="qmTargetLbl">Completions to Fully Complete (earns 1 roll)</label>
     <input class="inp" id="qmTarget" type="number" min="1" max="999" value="7">
     <div id="qmSchedWrap" style="display:none">
@@ -2092,6 +2115,8 @@ function initCloud(){
   try{
     if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
     fbAuth = firebase.auth();
+    /* stay signed in across app restarts — no re-login every time */
+    try{ fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
     fbDb = firebase.database();
     cloudAvailable = true;
     setupAuthListener();
@@ -3105,6 +3130,7 @@ function migrateState(){
   if(!state.budget.transactions) state.budget.transactions = [];
   if(!state.budget.goals) state.budget.goals = [];
   if(!state.budget.currency) state.budget.currency = "$";
+  if(!state.budget.wishlist) state.budget.wishlist = [];
   /* money manager upgrade: older transactions get a category */
   for(var bt=0; bt<state.budget.transactions.length; bt++){
     if(!state.budget.transactions[bt].cat) state.budget.transactions[bt].cat = "other";
@@ -3205,7 +3231,7 @@ function migrateState(){
     }
   }
 }
-var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","skill","equip","food","title","quest","slot-quest","slot-goal","note"];
+var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","title","quest","slot-quest","slot-goal","note"];
 var ROAD_KIND_LABEL = {
   "roll-easy":"🎟 EASY ROLL","roll-medium":"🎟 MEDIUM ROLL","roll-epic":"🎟 EPIC ROLL",
   "roll-mythic":"🎟 MYTHIC ROLL","roll-legendary":"🎟 LEGENDARY ROLL",
@@ -3771,6 +3797,25 @@ var I18N_RU = {
   "STATS section":"Раздел СТАТИСТИКА","REWARDS section":"Раздел НАГРАДЫ","INVENTORY section":"Раздел ИНВЕНТАРЬ",
   "HALL OF HONOR section":"Раздел ЗАЛ ПОЧЁТА","CLAN section":"Раздел КЛАН","BUDGET section":"Раздел БЮДЖЕТ",
   "Finalize the Day":"Завершить день","Focus Timer":"Таймер фокуса","Chasing After Dreams":"В погоне за мечтами",
+  /* store + mentor */
+  "🛍 STORE — THINGS I WANT":"🛍 МАГАЗИН — ЧТО Я ХОЧУ",
+  "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Ваш личный магазин. Добавьте то, что хотите купить. Когда баланс (или связанная цель) покроет цену, кнопка КУПИТЬ загорится — покупка запишет расход и переместит вещь на полку купленного.",
+  "No linked goal":"Без связанной цели","ADD TO STORE":"ДОБАВИТЬ В МАГАЗИН",
+  "🗄 PURCHASED SHELF":"🗄 ПОЛКА КУПЛЕННОГО","Your store is empty. Add the first thing you're working toward.":"Магазин пуст. Добавьте первое, к чему стремитесь.",
+  "BUY":"КУПИТЬ","SAVING…":"КОПИМ…","bought ":"куплено ","Nothing purchased yet.":"Пока ничего не куплено.",
+  "Name the thing you want.":"Назовите желаемое.","Enter a price above zero.":"Введите цену больше нуля.",
+  "Buy this now? ":"Купить это сейчас? ","well spent — you saved for this and earned it. Enjoy it, Hunter.":"потрачено с умом — вы копили и заслужили это. Наслаждайтесь, Охотник.",
+  "🛍 PURCHASED":"🛍 КУПЛЕНО","ENJOY IT":"НАСЛАЖДАЙТЕСЬ",
+  "🧭 SYSTEM MENTOR":"🧭 СИСТЕМНЫЙ НАСТАВНИК","ASK":"СПРОСИТЬ",
+  "Your weakest attribute is ":"Ваш самый слабый атрибут — ",
+  " Assign your next quest to it — balanced hunters last longer than lopsided ones.":" Назначьте ему следующий квест — сбалансированные охотники держатся дольше однобоких.",
+  " of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.":" из последних 7 дней были пустыми. Пропасть между тем, кто вы есть, и тем, кем хотите стать, строится из таких дней. Закройте хотя бы один квест сегодня.",
+  "Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.":"Семь дней, ноль пропусков. Именно так куётся дисциплина — не разрывайте цепь.",
+  "Under 30 minutes of tracked focus this week. Deep work is a muscle — press ⏱ before a task and protect the time.":"Меньше 30 минут отслеженного фокуса за неделю. Глубокая работа — это мышца: нажмите ⏱ перед задачей и защитите время.",
+  "All your quests are EASY. Growth lives just past comfort — raise one quest to MEDIUM and feel the difference.":"Все ваши квесты ЛЁГКИЕ. Рост живёт сразу за зоной комфорта — поднимите один квест до СРЕДНЕГО и почувствуйте разницу.",
+  "You're on a steady path, Hunter. Keep showing up — ask me anything about building a skill or habit below.":"Вы на верном пути, Охотник. Продолжайте появляться — спросите меня о развитии навыка или привычки ниже.",
+  "Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.":"Спросите, как что-то улучшить — фокус, сон, язык, прыжки, накопления — и я дам вам настоящий план.",
+  "I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.":"Готового плана для этого пока нет — но метод всегда один: сделайте это ежедневным квестом, начните с абсурдно малого, не пропускайте дважды подряд и отслеживайте серию здесь. Превратите то, о чём спросили, в квест, и пусть Система несёт вас.",
   /* feature-unlock guides */
   "BEGIN":"НАЧАТЬ",
   "STATS UNLOCKED":"СТАТИСТИКА ОТКРЫТА",
@@ -5761,7 +5806,6 @@ function questCard(q){
   if(adjustableToday(q)) h += '<button class="mini-btn" data-act="adjust" data-id="' + q.id + '" title="Adjust today\'s completion (half / undo)">⋯</button>';
   var timing = state.activeTimer && state.activeTimer.id === q.id;
   h += '<button class="mini-btn" data-act="timer" data-id="' + q.id + '" title="' + (timing ? "Stop the timer" : "Start a focus timer for this quest") + '">' + (timing ? "⏹" : "⏱") + '</button>';
-  if(!doneNow) h += '<button class="mini-btn" data-act="arm" data-id="' + q.id + '" title="Use a skill or equipment on this quest for a bonus">' + (q.armed ? "✨" : "🎒") + '</button>';
   h += '<button class="mini-btn" data-act="edit" data-id="' + q.id + '" title="Edit">✎</button>';
   if(!q.system) h += '<button class="mini-btn" data-act="del" data-id="' + q.id + '" title="Delete">🗑</button>';
   h += '</div></div></div>';
@@ -7740,9 +7784,89 @@ function renderFirstSteps(){
   };
 }
 
+/* ---------------- System Mentor (data-driven coach + knowledge base) ---------------- */
+function mentorInsights(){
+  var out = [], t = todayStr();
+  /* weakest attribute */
+  var sk = ["INT","STR","CON","END"], weak = sk[0];
+  for(var i=1;i<sk.length;i++) if(state.stats[sk[i]] < state.stats[weak]) weak = sk[i];
+  var strong = sk[0];
+  for(var j=1;j<sk.length;j++) if(state.stats[sk[j]] > state.stats[strong]) strong = sk[j];
+  if(state.stats[weak] < state.stats[strong]){
+    out.push({ico:"⚖️", text:tr("Your weakest attribute is ") + STAT_NAME[weak] + " (" + state.stats[weak] + "). " + tr("Assign your next quest to it — balanced hunters last longer than lopsided ones.")});
+  }
+  /* recent empty days */
+  var empty = 0;
+  for(var d=1; d<=7; d++){ var h = state.history[addDays(t,-d)]; if(!h || !h.count) empty++; }
+  if(empty >= 3) out.push({ico:"🌑", text:empty + tr(" of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.")});
+  else if(empty === 0) out.push({ico:"🔥", text:tr("Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.")});
+  /* focus time */
+  var fmin = 0; for(var f=0; f<7; f++) fmin += (state.timeHistory[addDays(t,-f)] || 0);
+  fmin = Math.round(fmin/60);
+  if(fmin < 30 && state.level >= (remoteSystemLocks && remoteSystemLocks.timer !== undefined ? remoteSystemLocks.timer : 0))
+    out.push({ico:"⏱", text:tr("Under 30 minutes of tracked focus this week. Deep work is a muscle — press ⏱ before a task and protect the time.")});
+  /* quests all easy */
+  var real = state.quests.filter(function(q){ return !q.system && q.freq !== "longterm"; });
+  if(real.length >= 2 && real.every(function(q){ return q.tier === "easy"; }))
+    out.push({ico:"📈", text:tr("All your quests are EASY. Growth lives just past comfort — raise one quest to MEDIUM and feel the difference.")});
+  if(out.length === 0) out.push({ico:"🧭", text:tr("You're on a steady path, Hunter. Keep showing up — ask me anything about building a skill or habit below.")});
+  return out.slice(0, 3);
+}
+/* built-in knowledge base — real, concise coaching by topic keywords */
+var MENTOR_KB = [
+  {k:["jump","vertical","dunk","higher"], a:"To jump higher: (1) build legs with squats and calf raises 3×/week, (2) train explosive power with box jumps and broad jumps, (3) strengthen your core, (4) stretch hip flexors daily. Progress is slow but real — add a STR quest 'Explosive legs' and track it."},
+  {k:["listen","listening","hear","comprehen"], a:"To improve listening (language or focus): (1) daily active listening — podcasts or audio at a level that stretches you, (2) shadowing: repeat what you hear out loud, (3) take notes without pausing, (4) rewatch without subtitles. 20 focused minutes daily beats 3 passive hours. Make it an INT quest."},
+  {k:["read","reading","book","faster"], a:"To read more and faster: (1) fixed daily slot, even 10 pages, (2) stop subvocalizing — glide your eyes in chunks, (3) preview headings first, (4) summarize each chapter in one sentence. Set a daily reading quest with a target of 30 to build the streak."},
+  {k:["focus","concentrat","distract","attention"], a:"To improve focus: (1) one task, phone in another room, (2) 25-minute timed sprints (use the ⏱ Focus Timer here), (3) a 5-minute break between them, (4) note distractions instead of chasing them. Focus is trained, not born."},
+  {k:["sleep","tired","insomnia","rest"], a:"To sleep better: (1) same wake time every day, even weekends, (2) no screens 60 min before bed, (3) cool, dark room, (4) no caffeine after 2pm. Sleep is when your body cashes in the day's work — protect it. Try the 🌙 Finalize the Day ritual before bed."},
+  {k:["procrastin","lazy","motivat","start"], a:"To beat procrastination: (1) shrink the task — commit to just 2 minutes, (2) motivation follows action, not the reverse, (3) remove friction (lay out what you need the night before), (4) let the streak become the reason. The System punishes empty days for exactly this reason."},
+  {k:["discipline","consistent","habit","routine"], a:"To build discipline: (1) same action, same time, every day until it's automatic, (2) never miss twice in a row, (3) make the cue obvious and the reward immediate, (4) track it visibly — that's what this whole System is for. Small and daily beats big and rare."},
+  {k:["english","language","fluent","speak"], a:"To learn a language faster: (1) daily input you enjoy (shows, music), (2) speak from day one, mistakes included, (3) learn phrases, not isolated words, (4) 20 min daily beats a weekend cram. Make separate INT quests for listening, speaking and vocabulary."},
+  {k:["strong","muscle","gym","workout","fit"], a:"To get stronger: (1) progressive overload — add a little each week, (2) compound lifts (squat, push, pull, hinge), (3) protein and sleep do half the work, (4) consistency over intensity. Set a STR quest with a 7-day target and don't break it."},
+  {k:["money","save","budget","spend","rich"], a:"To handle money: (1) track every expense (the BUDGET section does this), (2) pay your savings goal first, then spend, (3) wait 24h before any want — add it to your STORE and let the balance decide, (4) small consistent saving compounds. Discipline with time becomes discipline with money."},
+  {k:["stress","anxiety","calm","overwhelm"], a:"To manage stress: (1) slow breathing — 4 in, 6 out, for two minutes, (2) write the worry down to get it out of your head, (3) move your body daily, (4) break the mountain into one next step. Use the 🌙 Finalize the Day questions to unload the day."},
+  {k:["confiden","shy","fear","comfort"], a:"To build confidence: (1) do one uncomfortable thing daily — that's a CON quest, (2) keep small promises to yourself; self-trust is the root of confidence, (3) prepare, then act before you feel ready, (4) collect evidence of your wins (the Hall of Honor does this)."}
+];
+function mentorAnswer(q){
+  q = (q || "").toLowerCase();
+  if(!q.trim()) return tr("Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.");
+  var best = null, bestScore = 0;
+  for(var i=0;i<MENTOR_KB.length;i++){
+    var score = 0;
+    for(var j=0;j<MENTOR_KB[i].k.length;j++) if(q.indexOf(MENTOR_KB[i].k[j]) !== -1) score++;
+    if(score > bestScore){ bestScore = score; best = MENTOR_KB[i]; }
+  }
+  if(best) return tr(best.a);
+  return tr("I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.");
+}
+function renderMentor(){
+  var ins = document.getElementById("mentorInsights");
+  if(!ins) return;
+  var data = mentorInsights(), h = "";
+  for(var i=0;i<data.length;i++){
+    h += '<div class="save-goal" style="margin-bottom:8px;display:flex;gap:10px;align-items:flex-start">'
+      + '<span style="font-size:1.2rem;flex:0 0 auto">' + data[i].ico + '</span>'
+      + '<span class="q-desc" style="margin:0">' + esc(data[i].text) + '</span></div>';
+  }
+  ins.innerHTML = h;
+}
+
+document.getElementById("mentorAsk").addEventListener("click", function(){
+  var q = document.getElementById("mentorQ").value;
+  document.getElementById("mentorAnswer").innerHTML =
+    '<div class="save-goal" style="display:flex;gap:10px;align-items:flex-start">'
+    + '<span style="font-size:1.2rem;flex:0 0 auto">🧭</span>'
+    + '<span class="q-desc" style="margin:0">' + esc(mentorAnswer(q)) + '</span></div>';
+  sfx("open");
+});
+document.getElementById("mentorQ").addEventListener("keydown", function(e){
+  if(e.key === "Enter") document.getElementById("mentorAsk").click();
+});
+
 /* ---------------- render: home dashboard ---------------- */
 function renderHome(){
   renderHeroArt();
+  renderMentor();
   renderFirstSteps();
   renderPunishBanners();
   var r = rankForLevel(state.level);
@@ -7976,7 +8100,98 @@ function renderBudget(){
     }
     tl.innerHTML = th;
   }
+  renderStore();
 }
+function goalById(id){ for(var i=0;i<state.budget.goals.length;i++) if(state.budget.goals[i].id===id) return state.budget.goals[i]; return null; }
+function renderStore(){
+  /* the want-list store: buy when balance or a linked goal can cover the price */
+  var em = document.getElementById("wishEmoji");
+  if(em && !em.options.length) em.innerHTML = emojiOptions("🛍️");
+  var gs = document.getElementById("wishGoal");
+  if(gs){
+    var goh = '<option value="">' + esc(tr("No linked goal")) + '</option>';
+    for(var g=0;g<state.budget.goals.length;g++) goh += '<option value="' + state.budget.goals[g].id + '">🎯 ' + esc(state.budget.goals[g].name) + '</option>';
+    gs.innerHTML = goh;
+  }
+  var bal = budgetBalance();
+  var wl = (state.budget.wishlist || []).filter(function(w){ return !w.bought; });
+  var list = document.getElementById("storeList");
+  if(wl.length === 0){
+    list.innerHTML = '<div class="empty-note">' + esc(tr("Your store is empty. Add the first thing you're working toward.")) + '</div>';
+  } else {
+    var h = "";
+    for(var i=0;i<wl.length;i++){
+      var w = wl[i];
+      var goal = w.goalId ? goalById(w.goalId) : null;
+      var have = goal ? (goal.saved || 0) : bal;
+      var can = have >= w.price;
+      var pct = w.price > 0 ? Math.min(100, Math.round(have / w.price * 100)) : 100;
+      h += '<div class="save-goal' + (can ? " done" : "") + '" style="margin-bottom:9px">'
+        + '<div class="sg-top"><span class="sg-name">' + (w.emoji || "🛍️") + ' ' + esc(w.name) + '</span>'
+        + '<span class="sg-amt">' + money(w.price) + '</span></div>'
+        + (w.note ? '<div class="q-desc" style="margin:3px 0">' + esc(w.note) + '</div>' : '')
+        + '<div class="bar" style="height:8px;margin:6px 0"><div class="bar-fill" style="width:' + pct + '%"></div></div>'
+        + '<div class="sg-actions"><span class="sg-pct">' + (goal ? "🎯 " : "") + money(have) + " / " + money(w.price) + ' · ' + pct + '%</span>'
+        + '<button class="btn ' + (can ? "gold" : "") + '" style="padding:7px 14px;font-size:.72rem"' + (can ? "" : " disabled") + ' data-buy="' + w.id + '">' + esc(can ? tr("BUY") : tr("SAVING…")) + '</button>'
+        + '<button class="mini-btn" data-wishdel="' + w.id + '" title="Remove">🗑</button></div>'
+        + '</div>';
+    }
+    list.innerHTML = h;
+  }
+  document.getElementById("storeShelfBtn").textContent = tr("🗄 PURCHASED SHELF") + " (" + (state.budget.wishlist || []).filter(function(w){ return w.bought; }).length + ")";
+  var shelf = document.getElementById("storeShelf");
+  if(shelf.style.display !== "none"){
+    var bought = (state.budget.wishlist || []).filter(function(w){ return w.bought; }).reverse();
+    var sh = "";
+    for(var b=0;b<bought.length;b++){
+      sh += '<div class="tx-row" style="opacity:.7"><span class="tx-cat">' + (bought[b].emoji || "🛍️") + '</span>'
+        + '<div class="tx-main"><div class="tx-note">' + esc(bought[b].name) + '</div>'
+        + '<div class="tx-date">' + esc(tr("bought ")) + (bought[b].boughtAt ? niceDate(bought[b].boughtAt) : "") + ' · ' + money(bought[b].price) + '</div></div>'
+        + '<span class="tag" style="opacity:.7">✓</span></div>';
+    }
+    shelf.innerHTML = sh || '<div class="empty-note">' + esc(tr("Nothing purchased yet.")) + '</div>';
+  }
+}
+document.getElementById("wishAddBtn").addEventListener("click", function(){
+  var name = document.getElementById("wishName").value.trim();
+  var price = parseFloat(document.getElementById("wishPrice").value);
+  if(!name){ toast(tr("Name the thing you want."), "err"); return; }
+  if(!(price > 0)){ toast(tr("Enter a price above zero."), "err"); return; }
+  state.budget.wishlist.push({id: uid(), emoji: document.getElementById("wishEmoji").value || "🛍️",
+    name: name, price: Math.round(price*100)/100, note: "", goalId: document.getElementById("wishGoal").value || "",
+    bought: false, added: todayStr()});
+  document.getElementById("wishName").value = ""; document.getElementById("wishPrice").value = "";
+  sfx("coin"); save(); renderStore();
+});
+document.getElementById("storeShelfBtn").addEventListener("click", function(){
+  var s = document.getElementById("storeShelf");
+  s.style.display = s.style.display === "none" ? "" : "none";
+  renderStore();
+});
+document.getElementById("storeList").addEventListener("click", function(e){
+  var buy = e.target.closest("button[data-buy]");
+  if(buy){
+    var w = null, id = buy.getAttribute("data-buy");
+    for(var i=0;i<state.budget.wishlist.length;i++) if(state.budget.wishlist[i].id===id) w = state.budget.wishlist[i];
+    if(!w) return;
+    var goal = w.goalId ? goalById(w.goalId) : null;
+    if(!confirm(tr("Buy this now? ") + "「" + w.name + " — " + money(w.price) + "」")) return;
+    if(goal){ goal.saved = Math.max(0, Math.round((goal.saved - w.price)*100)/100); if(goal.saved < goal.target) goal.done = false; }
+    /* log it as a real expense so the budget stays honest */
+    state.budget.transactions.push({id: uid(), type:"out", amount: w.price, note: w.name, date: todayStr(), cat:"shopping"});
+    state.budget.transactions.sort(function(a,b){ return (a.date||"") < (b.date||"") ? -1 : ((a.date||"") > (b.date||"") ? 1 : 0); });
+    w.bought = true; w.boughtAt = todayStr();
+    sfx("reward"); save(); renderBudget();
+    announce("🛍 PURCHASED", "[" + w.emoji + " " + w.name + "]\n\n" + money(w.price) + " " + tr("well spent — you saved for this and earned it. Enjoy it, Hunter."), "🛍", tr("ENJOY IT"));
+    return;
+  }
+  var del = e.target.closest("button[data-wishdel]");
+  if(del){
+    var did = del.getAttribute("data-wishdel");
+    state.budget.wishlist = state.budget.wishlist.filter(function(x){ return x.id !== did; });
+    save(); renderStore();
+  }
+});
 document.getElementById("budgetCurrency").addEventListener("change", function(){
   state.budget.currency = this.value;
   save(); renderBudget();
