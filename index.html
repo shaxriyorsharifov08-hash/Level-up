@@ -1016,7 +1016,7 @@ main section{animation:pagein .28s ease}
 
       <div id="firstSteps"></div>
       <div id="punishHome"></div>
-      <div class="panel">
+      <div class="panel" id="mentorPanel">
         <div class="panel-title">🧭 SYSTEM MENTOR</div>
         <div id="mentorInsights"></div>
         <div class="adm-row" style="margin-top:10px">
@@ -1376,7 +1376,7 @@ main section{animation:pagein .28s ease}
           <button class="btn primary" id="goalAddBtn">ADD GOAL</button>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel" id="storePanel">
         <div class="panel-title">🛍 STORE — THINGS I WANT</div>
         <div class="empty-note" style="margin-bottom:10px">Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.</div>
         <div id="storeList"></div>
@@ -3835,6 +3835,11 @@ var I18N_RU = {
   "STATS section":"Раздел СТАТИСТИКА","REWARDS section":"Раздел НАГРАДЫ","INVENTORY section":"Раздел ИНВЕНТАРЬ",
   "HALL OF HONOR section":"Раздел ЗАЛ ПОЧЁТА","CLAN section":"Раздел КЛАН","BUDGET section":"Раздел БЮДЖЕТ",
   "Finalize the Day":"Завершить день","Focus Timer":"Таймер фокуса","Chasing After Dreams":"В погоне за мечтами",
+  "Store (wishlist)":"Магазин (список желаний)","System Mentor":"Системный наставник",
+  "STORE UNLOCKED":"МАГАЗИН ОТКРЫТ",
+  "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"МАГАЗИН теперь открыт (страница БЮДЖЕТ).\n\nДобавляйте то, что действительно хотите купить, с ценой. Когда баланс — или связанная цель накопления — покроет её, кнопка КУПИТЬ загорится. Покупка запишет расход и поставит вещь на полку заслуженного. Желание превращается в цель, а не в порыв.",
+  "SYSTEM MENTOR UNLOCKED":"СИСТЕМНЫЙ НАСТАВНИК ОТКРЫТ",
+  "The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"СИСТЕМНЫЙ НАСТАВНИК теперь открыт (страница ГЛАВНАЯ).\n\nВаш наставник читает ваши реальные данные и указывает на слабые места — отстающий атрибут, пустые дни, мало времени фокуса. Спросите, как что-то улучшить (фокус, сон, язык, прыжки, накопления), и он даст конкретный план, всегда возвращая к одному: сделай это ежедневным квестом.",
   /* store + mentor */
   "🛍 STORE — THINGS I WANT":"🛍 МАГАЗИН — ЧТО Я ХОЧУ",
   "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Ваш личный магазин. Добавьте то, что хотите купить. Когда баланс (или связанная цель) покроет цену, кнопка КУПИТЬ загорится — покупка запишет расход и переместит вещь на полку купленного.",
@@ -4057,7 +4062,9 @@ var FEATURES = [
   {key:"budget",    type:"section",  name:"BUDGET section",         def:15},
   {key:"finalize",  type:"function", name:"Finalize the Day",       def:0},
   {key:"timer",     type:"function", name:"Focus Timer",            def:0},
-  {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0}
+  {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0},
+  {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
+  {key:"mentor",    type:"function", name:"System Mentor",          def:0}
 ];
 var LOCKABLE_PAGES = ["stats","rewards","inventory","honor","guild","budget"];
 /* short guides shown the moment a feature is unlocked on the story path */
@@ -4070,7 +4077,9 @@ var FEATURE_GUIDE = {
   budget:    {ico:"💰", title:"BUDGET UNLOCKED", body:"The BUDGET section is now open.\n\nA money manager inside the System: log income and expenses with categories, watch your monthly balance, and set savings goals with progress bars. Discipline with time becomes discipline with money."},
   finalize:  {ico:"🌙", title:"FINALIZE THE DAY UNLOCKED", body:"The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (PROFILE → Pages of the Hunter)."},
   timer:     {ico:"⏱", title:"FOCUS TIMER UNLOCKED", body:"The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work."},
-  dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."}
+  dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."},
+  store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
+  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."}
 };
 function announceFeatureUnlocks(lv){
   for(var i=0;i<FEATURES.length;i++){
@@ -7878,6 +7887,12 @@ function mentorAnswer(q){
   return tr("I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.");
 }
 function renderMentor(){
+  var mp = document.getElementById("mentorPanel");
+  if(mp){
+    var sealedM = featureRemoved("mentor") || featureSealedLv("mentor");
+    mp.style.display = (sealedM && !adminMode) ? "none" : "";
+    if(sealedM && !adminMode) return;
+  }
   var ins = document.getElementById("mentorInsights");
   if(!ins) return;
   var data = mentorInsights(), h = "";
@@ -8143,6 +8158,12 @@ function renderBudget(){
 function goalById(id){ for(var i=0;i<state.budget.goals.length;i++) if(state.budget.goals[i].id===id) return state.budget.goals[i]; return null; }
 function renderStore(){
   /* the want-list store: buy when balance or a linked goal can cover the price */
+  var sp = document.getElementById("storePanel");
+  if(sp){
+    var sealedS = featureRemoved("store") || featureSealedLv("store");
+    sp.style.display = (sealedS && !adminMode) ? "none" : "";
+    if(sealedS && !adminMode) return;
+  }
   var em = document.getElementById("wishEmoji");
   if(em && !em.options.length) em.innerHTML = emojiOptions("🛍️");
   var gs = document.getElementById("wishGoal");
