@@ -956,11 +956,11 @@ main section{animation:pagein .28s ease}
 <!-- entrance: USER (big) / admin (small) -->
 <div id="entranceOv">
   <div class="ent-box">
-    <div class="ent-logo">LEVEL UP<small>HUNTER SYSTEM</small></div>
+    <div class="ent-logo" id="entLogo">LEVEL UP<small>HUNTER SYSTEM</small></div>
     <div id="entMain">
       <div class="ent-sub">Turn your life into the game. Who enters?</div>
       <button class="ent-user" id="entUserBtn">⚔️ USER</button>
-      <button class="ent-admin" id="entAdminBtn">🛡 ADMIN</button>
+      <button class="ent-admin" id="entAdminBtn" style="display:none">🛡 ADMIN</button>
       <div><button class="ent-back" id="entClose" style="display:none">✕ close</button></div>
     </div>
     <div id="entUser" style="display:none">
@@ -1547,7 +1547,7 @@ main section{animation:pagein .28s ease}
           <div class="empty-note" id="cloudRemoteInfo" style="margin-top:8px"></div>
           <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
         </div>
-        <button class="btn" id="openAdminLogin" style="margin-top:12px;width:100%;opacity:.8">🛡 ADMIN LOGIN</button>
+        <button class="btn" id="openAdminLogin" style="margin-top:12px;width:100%;opacity:.8;display:none">🛡 ADMIN LOGIN</button>
       </div>
 
       <div class="panel">
@@ -2527,6 +2527,42 @@ function showEntrance(){
 }
 function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); applyModeClasses(); }
 document.getElementById("entClose").addEventListener("click", hideEntrance);
+/* ---- the hidden ADMIN DOOR ----
+   The admin login is invisible to everyone. The owner reveals it with a
+   secret gesture — 7 quick taps on the LEVEL UP logo — and once revealed on
+   a device it is remembered there (device-local, never synced to others). */
+function adminDoorUnlocked(){ try{ return localStorage.getItem("lu_admin_door") === "1"; }catch(e){ return false; } }
+function applyAdminDoor(){
+  var on = adminDoorUnlocked();
+  var eb = document.getElementById("entAdminBtn");
+  var sb = document.getElementById("openAdminLogin");
+  if(eb) eb.style.display = on ? "" : "none";
+  if(sb) sb.style.display = on ? "" : "none";
+}
+function unlockAdminDoor(){
+  try{ localStorage.setItem("lu_admin_door", "1"); }catch(e){}
+  applyAdminDoor();
+}
+(function(){
+  var taps = 0, timer = null;
+  function onLogoTap(){
+    if(adminDoorUnlocked()) return;
+    taps++;
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(function(){ taps = 0; }, 2500);
+    if(taps >= 7){
+      taps = 0;
+      unlockAdminDoor();
+      sfx("reward");
+      toast(tr("🛡 Admin door revealed on this device."), "gold", "ADMIN");
+    }
+  }
+  var el = document.getElementById("entLogo");
+  if(el) el.addEventListener("click", onLogoTap);
+  var hl = document.querySelector("header .logo");
+  if(hl) hl.addEventListener("click", onLogoTap);
+})();
+applyAdminDoor();
 document.getElementById("openAdminLogin").addEventListener("click", function(){
   showEntrance();
   entStep("admin");
@@ -2566,6 +2602,7 @@ function applyModeClasses(){
 function enterAdminMode(){
   if(adminMode) return;
   adminMode = true;
+  unlockAdminDoor(); /* this is the owner's device — keep the door visible here */
   document.body.classList.add("admin-mode");
   document.body.classList.remove("play-only");
   var hs = document.querySelector("header .logo small");
@@ -3751,6 +3788,7 @@ var I18N_RU = {
   "Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).":"Прогресс гостя хранится только на этом устройстве. Войти можно позже в любой момент (АДМИН → ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ).",
   "System Administrator access":"Доступ системного администратора","Admin email":"Email администратора","Password":"Пароль",
   "🛡 ADMIN LOGIN":"🛡 ВХОД АДМИНИСТРАТОРА","✕ close":"✕ закрыть",
+  "🛡 Admin door revealed on this device.":"🛡 Дверь администратора открыта на этом устройстве.",
   "🛡 LOGIN":"🛡 ВОЙТИ","← back":"← назад",
   "Enter the admin email and password.":"Введите email и пароль администратора.",
   "No connection — admin login needs internet.":"Нет соединения — вход администратора требует интернета.",
