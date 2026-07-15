@@ -279,6 +279,10 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
   background:rgba(251,191,36,.08);color:var(--legendary);font-weight:700;font-size:.9rem;
   box-shadow:0 0 14px rgba(251,191,36,.2);display:flex;align-items:center;gap:8px}
 
+.rank-prog{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;background:rgba(9,10,26,.55)}
+.rank-prog-top{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;flex-wrap:wrap}
+.rank-prog-top b{color:var(--legendary);font-family:'Orbitron',monospace}
+.rank-prog-note{font-size:.72rem;color:var(--dim);margin-top:8px;line-height:1.5}
 .stat-row{display:grid;grid-template-columns:64px 1fr 44px 34px;gap:10px;align-items:center;margin-bottom:12px}
 .stat-key{font-family:'Orbitron',monospace;font-weight:700;font-size:.85rem}
 .stat-INT{color:#00d1ff}.stat-STR{color:#ef4444}.stat-VIT{color:#22c55e}.stat-WIS{color:#a855f7}.stat-END{color:#fbbf24}.stat-CON{color:#22c55e}
@@ -1409,8 +1413,8 @@ main section{animation:pagein .28s ease}
         <ul>
           <li><b>Earning XP:</b> complete quests. Harder tiers pay more — EASY 15 · MEDIUM 35 · EPIC 75 · MYTHIC 140 · LEGENDARY 250 XP. Clearing the whole Daily Quest package adds a +60 XP bonus.</li>
           <li><b>Leveling:</b> when the XP bar fills, you level up and receive <b>+3 stat points</b> plus whatever the Level Road grants at that level.</li>
-          <li><b>Ranks:</b> E → D (Lv.5) → C (Lv.10) → B (Lv.15) → A (Lv.20) → S (Lv.30) → NATIONAL (Lv.50). Rank-ups bring titles, badges, a special Rank Trial quest, and your hero art evolves.</li>
-          <li><b>Stats:</b> INT · STR · CON · END. Each quest trains the stat you assign it. Spend unallocated points on PROFILE. Every 5 levels the System checks your weakest stat and assigns a corrective quest.</li>
+          <li><b>Ranks (earned by POWER, not level):</b> your rank is set by your total attributes (INT+STR+CON+END). E→D→C→B→A→S→NATIONAL as your power crosses 34, 58, 96, 150, 230, 340. Rank-ups bring titles, badges, a Rank Trial quest, and evolving hero art.</li>
+          <li><b>Stats &amp; how to earn points:</b> complete a quest and it pours training into the attribute you assigned it — EASY 1, MEDIUM 2, EPIC 3, MYTHIC 4, LEGENDARY 5 points. Each +1 attribute costs more training as your rank rises (E:2 → D:4 → C:7 → B:11 → A:16 → S:23 → N:32), so higher ranks are genuinely hard-won. Watch each stat's bar on PROFILE fill toward its next point. Leveling grants a spare point to allocate anywhere.</li>
         </ul>
       </div>
       <div class="panel guide">
@@ -1945,14 +1949,16 @@ var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 /* Rank ladder over the 100-level road. Adaptation is quick (E→D with the
    first big unlock at 10), then each rank is a real era of the journey. */
 var RANKS = [
-  {key:"E", label:"E",  cls:"rank-E", minLevel:1,  name:"E-Rank Hunter"},
-  {key:"D", label:"D",  cls:"rank-D", minLevel:10, name:"D-Rank Hunter"},
-  {key:"C", label:"C",  cls:"rank-C", minLevel:25, name:"C-Rank Hunter"},
-  {key:"B", label:"B",  cls:"rank-B", minLevel:40, name:"B-Rank Hunter"},
-  {key:"A", label:"A",  cls:"rank-A", minLevel:60, name:"A-Rank Hunter"},
-  {key:"S", label:"S",  cls:"rank-S", minLevel:80, name:"S-Rank Hunter"},
-  {key:"N", label:"NAT'L", cls:"rank-N", minLevel:95, name:"National Level Hunter"}
+  {key:"E", label:"E",  cls:"rank-E", minStats:20,  cost:2,  name:"E-Rank Hunter"},
+  {key:"D", label:"D",  cls:"rank-D", minStats:34,  cost:4,  name:"D-Rank Hunter"},
+  {key:"C", label:"C",  cls:"rank-C", minStats:58,  cost:7,  name:"C-Rank Hunter"},
+  {key:"B", label:"B",  cls:"rank-B", minStats:96,  cost:11, name:"B-Rank Hunter"},
+  {key:"A", label:"A",  cls:"rank-A", minStats:150, cost:16, name:"A-Rank Hunter"},
+  {key:"S", label:"S",  cls:"rank-S", minStats:230, cost:23, name:"S-Rank Hunter"},
+  {key:"N", label:"NAT'L", cls:"rank-N", minStats:340, cost:32, name:"National Level Hunter"}
 ];
+/* training points a full quest clear pours into its attribute, by tier */
+var STAT_TIER_PTS = {easy:1, medium:2, epic:3, mythic:4, legendary:5};
 var EMOJIS = ["⚔️","💪","🏋️","🏃","🧘","📚","📖","✍️","🧠","💻","🎨","🎸","🎹","🎧","🍎","🥗","💧","😴","🧹","🧺","🚿","🦷","🐕","🌱","☀️","🌙","⭐","🔥","⚡","💎","🗡️","🏹","🛡️","🪄","👑","🏆","🎯","🎮","🎁","🧩","💰","🪙","📵","🚭","🍀","🥇",
   /* movies & shows */ "🎬","🎥","📽️","🎞️","🍿","📺","🎭","🎟️","🎫",
   /* emotions */ "😀","😂","😊","🥰","😎","🤩","🥳","😌","🤗","😭","😡","😱","🤔","🤯","😇","🥶","💀","👻",
@@ -2006,6 +2012,8 @@ function defaultState(){
     hunterName:"Hunter",
     level:1, xp:0, totalXp:0, statPoints:0,
     stats:{INT:5,STR:5,CON:5,END:5},
+    statProg:{INT:0,STR:0,CON:0,END:0}, /* training toward the next attribute point */
+    lastRankKey:"E",     /* last rank seen, for attribute-driven rank-up detection */
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
     storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
@@ -3221,6 +3229,13 @@ function migrateState(){
     state.questSlots = qs3;
     state.goalCapWeekly = gc3;
   }
+  /* attribute-driven rank: sync lastRankKey to the hunter's real rank so the
+     switch from level-based ranks doesn't fire a bogus promotion */
+  if(!state.statProg) state.statProg = {INT:0,STR:0,CON:0,END:0};
+  if(!state.rankModelV2){
+    state.rankModelV2 = true;
+    state.lastRankKey = rankForStats(totalStats()).key;
+  }
   /* roll scarcity rebalance: the road stops raining easy rolls — existing
      default roads are re-seeded once (an admin-published template is kept) */
   if(!state.rollRebalance){
@@ -3836,6 +3851,10 @@ var I18N_RU = {
   "HALL OF HONOR section":"Раздел ЗАЛ ПОЧЁТА","CLAN section":"Раздел КЛАН","BUDGET section":"Раздел БЮДЖЕТ",
   "Finalize the Day":"Завершить день","Focus Timer":"Таймер фокуса","Chasing After Dreams":"В погоне за мечтами",
   "Store (wishlist)":"Магазин (список желаний)","System Mentor":"Системный наставник",
+  /* attribute-driven rank */
+  "POWER":"СИЛА","Next rank ":"След. ранг "," more power":" силы","MAX RANK — National":"МАКС. РАНГ — Национальный",
+  "Each attribute point now costs ":"Каждое очко атрибута теперь стоит "," training at your rank. Complete quests to train the attribute you assigned them — harder tiers pour more.":" тренировки на вашем ранге. Выполняйте квесты, чтобы качать назначенный им атрибут — сложные уровни дают больше.",
+  "training to next point":"тренировки до следующего очка",
   "STORE UNLOCKED":"МАГАЗИН ОТКРЫТ",
   "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"МАГАЗИН теперь открыт (страница БЮДЖЕТ).\n\nДобавляйте то, что действительно хотите купить, с ценой. Когда баланс — или связанная цель накопления — покроет её, кнопка КУПИТЬ загорится. Покупка запишет расход и поставит вещь на полку заслуженного. Желание превращается в цель, а не в порыв.",
   "SYSTEM MENTOR UNLOCKED":"СИСТЕМНЫЙ НАСТАВНИК ОТКРЫТ",
@@ -4211,11 +4230,50 @@ document.getElementById("fab").addEventListener("click", function(){
    Lv99→100 ≈ a strong week+. Total journey ≈ a year of daily discipline. */
 var MAX_LEVEL = 100;
 function xpForLevel(lv){ return 100 + Math.floor(Math.pow(lv, 1.7)); }
-function rankForLevel(lv){
+/* rank is now earned through ATTRIBUTES, not level. Your total power
+   (INT+STR+CON+END) sets your rank; each attribute point costs more
+   training as you climb, so higher ranks are genuinely hard-won. */
+function totalStats(){ return state.stats.INT + state.stats.STR + state.stats.CON + state.stats.END; }
+function rankForStats(total){
   var r = RANKS[0];
-  for(var i=0;i<RANKS.length;i++){ if(lv >= RANKS[i].minLevel) r = RANKS[i]; }
+  for(var i=0;i<RANKS.length;i++){ if(total >= RANKS[i].minStats) r = RANKS[i]; }
   return r;
 }
+function currentRank(){ return rankForStats(totalStats()); }
+function statPointCost(){ return currentRank().cost; }
+function nextRankInfo(){
+  var cur = currentRank();
+  for(var i=0;i<RANKS.length;i++){
+    if(RANKS[i].minStats > totalStats()) return {rank:RANKS[i], need:RANKS[i].minStats - totalStats(), from:cur};
+  }
+  return null; /* already National */
+}
+/* pour training into an attribute; converts to +1 points as the rank-scaled
+   cost is met (carrying any remainder). Returns points gained. */
+function trainStat(stat, pts){
+  if(!stat || state.stats[stat] === undefined) return 0;
+  if(!state.statProg) state.statProg = {INT:0,STR:0,CON:0,END:0};
+  state.statProg[stat] = (state.statProg[stat] || 0) + pts;
+  var gained = 0, guard = 0;
+  while(state.statProg[stat] >= statPointCost() && guard < 50){
+    state.statProg[stat] -= statPointCost();
+    state.stats[stat]++;
+    gained++; guard++;
+  }
+  if(gained) checkStatRankUp();
+  return gained;
+}
+function checkStatRankUp(){
+  var nowKey = currentRank().key;
+  if(!state.lastRankKey){ state.lastRankKey = nowKey; return; }
+  if(nowKey === state.lastRankKey) return;
+  var oldIdx = 0, newIdx = 0;
+  for(var i=0;i<RANKS.length;i++){ if(RANKS[i].key === state.lastRankKey) oldIdx = i; if(RANKS[i].key === nowKey) newIdx = i; }
+  var prev = RANKS[oldIdx];
+  state.lastRankKey = nowKey;
+  if(newIdx > oldIdx) onRankUp(prev, RANKS[newIdx]);
+}
+function rankForLevel(lv){ return currentRank(); } /* legacy shim — rank is attribute-based now */
 function gainXP(amount){
   amount = Math.max(0, Math.round(amount));
   if(amount > 0 && state.xpDebt > 0){
@@ -4235,20 +4293,15 @@ function gainXP(amount){
   var leveled = false;
   while(state.level < MAX_LEVEL && state.xp >= xpForLevel(state.level)){
     state.xp -= xpForLevel(state.level);
-    var oldRank = rankForLevel(state.level);
     state.level++;
-    state.statPoints += 3;
+    state.statPoints += 1;
     leveled = true;
     sfx("levelup");
     var roadLines = grantLevelRewards(state.level);
-    sysToast("LEVEL UP! You are now level " + state.level + ". +3 stat points.");
-    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+3 stat points have been granted."
-      + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : "")
-      + "\nAllocate them wisely, Hunter.", "⚡", "CONTINUE");
-    var newRank = rankForLevel(state.level);
-    if(newRank.key !== oldRank.key){
-      onRankUp(oldRank, newRank);
-    } else if(state.level % 5 === 0 && state.level > state.lastSystemCheckLevel){
+    sysToast("LEVEL UP! You are now level " + state.level + ". +1 stat point.");
+    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+1 stat point granted — but rank is earned through your attributes, not your level. Train them by completing quests."
+      + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : ""), "⚡", "CONTINUE");
+    if(state.level % 5 === 0 && state.level > state.lastSystemCheckLevel){
       state.lastSystemCheckLevel = state.level;
       systemAnalyze("Level " + state.level + " milestone reached.");
     }
@@ -5167,10 +5220,13 @@ function completeQuest(id){
   if(q.freq === "challenge") q.progress = q.streak; /* challenge progress IS the unbroken streak */
   else q.progress = (q.progress || 0) + 1;
   recordHistory(0, 1);
-  /* stat bonus */
+  /* attribute training — harder quests pour more, but each point costs
+     more as your rank rises (see trainStat / statPointCost) */
   if(q.stat && state.stats[q.stat] !== undefined){
-    state.stats[q.stat]++;
-    sysToast("+1 " + q.stat + " (" + STAT_NAME[q.stat] + ")");
+    var pts = STAT_TIER_PTS[q.tier] || 1;
+    var gained = trainStat(q.stat, pts);
+    if(gained > 0) sysToast("+" + gained + " " + q.stat + " (" + STAT_NAME[q.stat] + ")");
+    else sysToast("⚔ +" + pts + " " + q.stat + " training — " + (statPointCost() - (state.statProg[q.stat] || 0)) + " more to the next point");
   }
   /* item bonus effects */
   if(usedItem){
@@ -5533,15 +5589,28 @@ function renderProfile(){
     spB.style.display = "flex";
     document.getElementById("spTxt").textContent = state.statPoints + " unallocated stat point" + (state.statPoints>1?"s":"") + " — spend them below!";
   } else spB.style.display = "none";
-  /* stats */
-  var html = "";
+  /* rank progress: total power (attribute sum) → next rank */
+  var cost = statPointCost();
+  var nr = nextRankInfo();
+  var rankLine = '<div class="rank-prog"><div class="rank-prog-top"><span>⚔ ' + esc(tr("POWER")) + ' <b>' + totalStats() + '</b></span>'
+    + '<span>' + (nr ? esc(tr("Next rank ")) + nr.rank.label + ": " + nr.need + " " + esc(tr("more power")) : "🏅 " + esc(tr("MAX RANK — National"))) + '</span></div>';
+  if(nr){
+    var span = nr.rank.minStats - (currentRank().minStats);
+    var into = totalStats() - currentRank().minStats;
+    var rpct = span > 0 ? Math.min(100, Math.round(into / span * 100)) : 100;
+    rankLine += '<div class="bar" style="height:8px;margin-top:6px"><div class="bar-fill" style="width:' + rpct + '%"></div></div>';
+  }
+  rankLine += '<div class="rank-prog-note">' + esc(tr("Each attribute point now costs ")) + cost + esc(tr(" training at your rank. Complete quests to train the attribute you assigned them — harder tiers pour more.")) + '</div></div>';
+  /* stats: bar shows TRAINING toward the next point, value shown alongside */
+  var html = rankLine;
   for(var i=0;i<STATS.length;i++){
     var k = STATS[i];
     var v = state.stats[k];
-    var pct = Math.min(100, v);
+    var prog = (state.statProg && state.statProg[k]) || 0;
+    var ppct = cost > 0 ? Math.min(100, Math.round(prog / cost * 100)) : 0;
     html += '<div class="stat-row">'
       + '<span class="stat-key stat-' + k + '">' + k + '</span>'
-      + '<div class="bar stat-bar"><div class="bar-fill sf-' + k + '" style="width:' + pct + '%"></div></div>'
+      + '<div class="bar stat-bar" title="' + prog + ' / ' + cost + ' ' + esc(tr("training to next point")) + '"><div class="bar-fill sf-' + k + '" style="width:' + ppct + '%"></div></div>'
       + '<span class="stat-val">' + v + '</span>'
       + '<button class="stat-plus" data-stat="' + k + '"' + (state.statPoints<=0?" disabled":"") + ' title="Allocate point">+</button>'
       + '</div>';
@@ -5626,8 +5695,9 @@ document.getElementById("statsPanel").addEventListener("click", function(e){
   var k = b.getAttribute("data-stat");
   state.stats[k]++;
   state.statPoints--;
+  checkStatRankUp();
   sysToast("+1 " + k + " allocated. " + STAT_NAME[k] + " is now " + state.stats[k] + ".");
-  save(); renderProfile(); 
+  save(); renderProfile();
 });
 /* dossier fields save on change */
 document.getElementById("page-profile").addEventListener("change", function(e){
@@ -6135,11 +6205,10 @@ function renderForecast(){
   cards.push({v: niceDate(dNext), l:"Level " + (state.level + 1) + " Reached"});
   var d5 = forecastDate(xpUntilLevel(state.level + 5), pace);
   cards.push({v: niceDate(d5), l:"Level " + (state.level + 5) + " Reached"});
-  var nextRank = null;
-  for(var r=0;r<RANKS.length;r++){ if(RANKS[r].minLevel > state.level){ nextRank = RANKS[r]; break; } }
-  if(nextRank){
-    var dr = forecastDate(xpUntilLevel(nextRank.minLevel), pace);
-    cards.push({v: niceDate(dr), l:"Rank " + nextRank.label + " (" + nextRank.name.replace(" Hunter","") + ")"});
+  /* rank now comes from attributes, not level — show power-to-next-rank */
+  var nr2 = nextRankInfo();
+  if(nr2){
+    cards.push({v:"+" + nr2.need + " ⚔", l:"Power to Rank " + nr2.rank.label});
   } else {
     cards.push({v:"MAX", l:"Rank — already at the peak"});
   }
@@ -7660,8 +7729,8 @@ function completePackageItem(id){
   state.totalCompleted++;
   recordHistory(0, 1);
   if(item.stat && state.stats[item.stat] !== undefined){
-    state.stats[item.stat]++;
-    sysToast("+1 " + item.stat + " — " + item.name + " cleared.");
+    var g = trainStat(item.stat, 1);
+    sysToast((g > 0 ? "+" + g + " " + item.stat : "⚔ +1 " + item.stat + " training") + " — " + item.name + " cleared.");
   }
   var allDone = true;
   for(var j=0;j<pk.items.length;j++) if(!pk.items[j].done) allDone = false;
