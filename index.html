@@ -962,7 +962,7 @@ main section{animation:pagein .28s ease}
   background:rgba(5,7,20,.62);border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(4px)}
 .w-hud b{color:var(--blue)}
 body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438}
-#worldEnter{position:absolute;left:50%;bottom:18px;z-index:4;display:none;align-items:center;gap:8px;
+#worldEnter{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;z-index:4;display:none;align-items:center;gap:8px;
   padding:13px 22px;border-radius:14px;cursor:pointer;border:0;color:#fff;
   font-family:'Orbitron',monospace;font-weight:800;font-size:.78rem;letter-spacing:.06em;
   background:linear-gradient(135deg,var(--purple),var(--blue));box-shadow:var(--glow);
@@ -1000,6 +1000,33 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
   background:rgba(0,209,255,.14);color:var(--blue)}
 .lvl-tag.task{background:rgba(251,191,36,.15);color:var(--legendary)}
 .lrn-body{white-space:pre-wrap;line-height:1.65;font-size:.88rem;color:var(--text)}
+
+/* ---------- THE OATH ---------- */
+#oathOv{position:fixed;inset:0;z-index:420;display:none;align-items:flex-start;justify-content:center;
+  background:radial-gradient(900px 600px at 50% -10%,rgba(124,97,255,.16),transparent 60%),rgba(2,3,10,.96);
+  backdrop-filter:blur(7px);padding:20px;overflow-y:auto}
+#oathOv.show{display:flex}
+.oath-box{width:100%;max-width:560px;margin:auto;border-radius:18px;border:1px solid var(--line);
+  background:linear-gradient(160deg,rgba(14,18,42,.99),rgba(5,7,18,.99));padding:26px 22px;
+  box-shadow:var(--glow);animation:annin .35s cubic-bezier(.2,.9,.3,1.2)}
+.oath-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.35rem;letter-spacing:.28em;
+  text-align:center;color:var(--blue);text-shadow:var(--glowblue);margin-bottom:4px}
+.oath-sub{text-align:center;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.3em;
+  color:var(--dim);margin-bottom:18px}
+.oath-pre{white-space:pre-wrap;line-height:1.7;font-size:.86rem;color:var(--text);
+  border-left:2px solid var(--purple);padding-left:14px;margin-bottom:22px}
+.oath-q{margin-bottom:20px}
+.oath-qn{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.06em;color:var(--text)}
+.oath-hint{font-size:.74rem;color:var(--dim);line-height:1.55;margin:5px 0 8px}
+.oath-count{font-size:.66rem;color:var(--dim);text-align:right;margin-top:4px}
+.oath-count.ok{color:#22c55e}
+.oath-warn{font-size:.74rem;color:var(--legendary);line-height:1.55;margin-top:12px;min-height:18px}
+.oath-rec{white-space:pre-wrap;line-height:1.6;font-size:.85rem;font-style:italic;color:var(--text);
+  border-left:2px solid var(--blue);padding-left:12px;margin:10px 0 16px}
+.oath-rq{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.14em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:5px}
+.oath-seal{font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.12em;color:var(--blue);
+  text-align:right;margin-top:6px}
 </style>
 </head>
 <body>
@@ -1030,6 +1057,21 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
       <div class="empty-note" id="entAdmMsg" style="min-height:18px"></div>
       <button class="ent-back" id="entAdminBack">← back</button>
     </div>
+  </div>
+</div>
+
+<!-- THE OATH: sworn once, in the hunter's own words, before the System opens -->
+<div id="oathOv">
+  <div class="oath-box">
+    <div class="oath-title">THE OATH</div>
+    <div class="oath-sub" id="oathSubTitle">BEFORE THE SYSTEM OPENS</div>
+    <div class="oath-pre" id="oathPre"></div>
+    <div id="oathFields"></div>
+    <label class="form-lbl">Sign it — type your name</label>
+    <input class="inp" id="oathSign" maxlength="40" autocomplete="off" placeholder="Your name">
+    <div class="oath-warn" id="oathWarn"></div>
+    <button class="btn primary" id="oathSeal" disabled style="width:100%;margin-top:14px">⚔ SEAL THE OATH</button>
+    <div style="text-align:center"><button class="ent-back" id="oathLater" style="display:none">← keep the old oath</button></div>
   </div>
 </div>
 
@@ -1138,6 +1180,11 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
           </div>
         </div>
         <div class="sp-banner" id="spBanner" style="display:none">&#10024; <span id="spTxt"></span></div>
+      </div>
+
+      <div class="panel" id="oathPanel">
+        <div class="panel-title">⚔ THE OATH</div>
+        <div id="oathPanelBody"></div>
       </div>
 
       <div class="panel">
@@ -1825,6 +1872,18 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- customize navigation -->
+<!-- the oath, read back -->
+<div class="modal" id="oathViewModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-title">⚔ THE OATH</div>
+    <div id="oathViewBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="oathViewClose">CLOSE</button>
+      <button class="btn danger" id="oathAmend">✎ AMEND THE OATH</button>
+    </div>
+  </div>
+</div>
+
 <!-- learn & grow: a single level -->
 <div class="modal" id="lrnModal">
   <div class="modal-box" style="max-width:520px">
@@ -2139,6 +2198,7 @@ function defaultState(){
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     world:{map:"city", x:1000, y:470, seen:false}, /* which map the hunter is on, and where they stand */
+    oath:null,           /* THE OATH: the hunter's own words, quoted back at them forever */
     learn:{done:{}, links:{}, cat:"discipline"}, /* LEARN & GROW: "cat:index" -> ISO date, and user video links */
     budget:{currency:"$", transactions:[], goals:[]},
     skills:[],           /* earned from the level road */
@@ -2621,7 +2681,11 @@ function showEntrance(){
   /* re-opened later (e.g. for admin login): allow closing without choosing */
   document.getElementById("entClose").style.display = state && state.entryChoice ? "" : "none";
 }
-function hideEntrance(){ document.getElementById("entranceOv").classList.remove("show"); applyModeClasses(); }
+function hideEntrance(){
+  document.getElementById("entranceOv").classList.remove("show");
+  applyModeClasses();
+  maybeOath(); /* the gate is open — now the System asks who just walked in */
+}
 document.getElementById("entClose").addEventListener("click", hideEntrance);
 /* ---- the hidden ADMIN DOOR ----
    The admin login is invisible to everyone. The owner reveals it with a
@@ -4113,15 +4177,26 @@ function sysToast(msg){ toast(msg, "sys", "SYSTEM NOTIFICATION"); }
 /* ---------------- announcements (queued fullscreen) ---------------- */
 var annQueue = [];
 var annOpen = false;
+var annCurrent = null; /* what is on screen right now, so the Oath can park it */
 function announce(title, body, ico, btnText, author){
   annQueue.push({title:title, body:body, ico:ico || "❗", btn:btnText || "ACCEPT", author:author || ""});
   if(!annOpen) nextAnnounce();
 }
+/* jumps the queue — for the direct answer to something the hunter just did */
+function announceFirst(title, body, ico, btnText){
+  annQueue.unshift({title:title, body:body, ico:ico || "❗", btn:btnText || "ACCEPT", author:""});
+  if(!annOpen) nextAnnounce();
+}
 function nextAnnounce(){
   var ov = document.getElementById("announceOv");
-  if(annQueue.length === 0){ annOpen = false; ov.classList.remove("show"); return; }
+  /* nothing speaks over the Oath — announcements wait behind it and resume
+     the moment it is sealed */
+  var oo = document.getElementById("oathOv");
+  if(oo && oo.classList.contains("show")){ annOpen = false; ov.classList.remove("show"); return; }
+  if(annQueue.length === 0){ annOpen = false; annCurrent = null; ov.classList.remove("show"); return; }
   annOpen = true;
   var a = annQueue.shift();
+  annCurrent = a;
   sfx("system");
   var icoEl = document.getElementById("annIco");
   if(a.ico === "__flame__"){
@@ -4391,7 +4466,8 @@ function gainXP(amount){
     var roadLines = grantLevelRewards(state.level);
     sysToast("LEVEL UP! You are now level " + state.level + ". +1 stat point.");
     announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+1 stat point granted — but rank is earned through your attributes, not your level. Train them by completing quests."
-      + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : ""), "⚡", "CONTINUE");
+      + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : "")
+      + oathLine("become"), "⚡", "CONTINUE");
     if(state.level % 5 === 0 && state.level > state.lastSystemCheckLevel){
       state.lastSystemCheckLevel = state.level;
       systemAnalyze("Level " + state.level + " milestone reached.");
@@ -4407,7 +4483,8 @@ function gainXP(amount){
 }
 function onRankUp(oldRank, newRank){
   announce("RANK UP: " + oldRank.key + " → " + newRank.label,
-    "The Hunter Association has re-evaluated your power.\n\nYou are now recognized as a " + newRank.name + ".\nThe gates ahead grow darker... and richer.",
+    "The Hunter Association has re-evaluated your power.\n\nYou are now recognized as a " + newRank.name + ".\nThe gates ahead grow darker... and richer."
+    + oathLine("become"),
     "🏅", "ACKNOWLEDGE");
   addTitle(newRank.name);
   addBadge("🏅", newRank.key + " Rank");
@@ -4592,7 +4669,8 @@ function checkPunishments(){
   if(newDebt > 0){
     state.xpDebt = (state.xpDebt || 0) + newDebt;
     announce("💸 XP DEBT INCURRED",
-      missed + " silent day" + (missed>1?"s":"") + " detected. Nothing was completed.\n\nSomewhere, the person you promised to become waited all day.\nNobody came.\n\nDebt added: " + newDebt + " XP.\nTotal debt: " + state.xpDebt + " XP.\n\nHalf of every XP gain will be seized until the debt is repaid, Hunter.",
+      missed + " silent day" + (missed>1?"s":"") + " detected. Nothing was completed.\n\nSomewhere, the person you promised to become waited all day.\nNobody came.\n\nDebt added: " + newDebt + " XP.\nTotal debt: " + state.xpDebt + " XP.\n\nHalf of every XP gain will be seized until the debt is repaid, Hunter."
+      + oathLine("running"),
       "💸", "UNDERSTOOD");
   }
   /* 2) lockdown: two consecutive empty days seal 2 random quests for a week */
@@ -4611,7 +4689,8 @@ function checkPunishments(){
     }
     if(names.length){
       announce("⛔ QUEST LOCKDOWN ⛔",
-        "Two days of total absence detected.\n\nYou didn't fail loudly. You just... disappeared.\nThat is how most dreams actually die — quietly, two days at a time.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter.",
+        "Two days of total absence detected.\n\nYou didn't fail loudly. You just... disappeared.\nThat is how most dreams actually die — quietly, two days at a time.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter."
+        + oathLine("quit"),
         "⛔", "ACCEPT PUNISHMENT");
     }
   }
@@ -4622,7 +4701,8 @@ function checkPunishments(){
       var tpl = PENALTY_TASKS[Math.floor(Math.random() * PENALTY_TASKS.length)];
       state.penaltyTask = {icon:tpl.icon, name:tpl.name, desc:tpl.desc, day:pd};
       announce("⛓ PENALTY QUEST ⛓",
-        "Yesterday's Daily Quest was not completed.\n\nYesterday you had 24 hours. The 4 mandate quests needed less than one.\nYou gave that hour to something you don't even remember now.\n\nThe System has opened the Penalty Zone:\n[" + tpl.name + "]\n" + tpl.desc + "\n\n⚠ ALL XP GAIN IS FROZEN until the penalty is served.\nFind the red banner and confirm when it is done.",
+        "Yesterday's Daily Quest was not completed.\n\nYesterday you had 24 hours. The 4 mandate quests needed less than one.\nYou gave that hour to something you don't even remember now.\n\nThe System has opened the Penalty Zone:\n[" + tpl.name + "]\n" + tpl.desc + "\n\n⚠ ALL XP GAIN IS FROZEN until the penalty is served.\nFind the red banner and confirm when it is done."
+        + oathLine("failed"),
         "⛓", "ENTER THE PENALTY ZONE");
     }
     state.lastPenaltyDay = pd;
@@ -5665,6 +5745,7 @@ function renderHeader(){
   }
 }
 function renderProfile(){
+  renderOathPanel();
   var r = rankForLevel(state.level);
   var pr = document.getElementById("profRank");
   pr.className = "rank-badge big " + r.cls + (r.key==="N" ? " nat" : "");
@@ -8005,7 +8086,11 @@ function mentorInsights(){
   /* recent empty days */
   var empty = 0;
   for(var d=1; d<=7; d++){ var h = state.history[addDays(t,-d)]; if(!h || !h.count) empty++; }
-  if(empty >= 3) out.push({ico:"🌑", text:empty + tr(" of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.")});
+  if(empty >= 3){
+    /* their own words beat anything the System could invent */
+    if(oathSworn() && state.oath.words) out.push({ico:"⚔", text:'You told me to say this: "' + state.oath.words + '"'});
+    else out.push({ico:"🌑", text:empty + tr(" of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.")});
+  }
   else if(empty === 0) out.push({ico:"🔥", text:tr("Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.")});
   /* focus time */
   var fmin = 0; for(var f=0; f<7; f++) fmin += (state.timeHistory[addDays(t,-f)] || 0);
@@ -8531,6 +8616,173 @@ document.getElementById("savingsList").addEventListener("click", function(e){
 });
 
 /* ---------------- render dispatcher ---------------- */
+/* ================= THE OATH =================
+   Sworn once, in the hunter's own words, before the System opens. The System
+   never invents motivation for them again — at every moment that matters it
+   quotes them back to themselves. Nothing here leaves the device except
+   through their own account. */
+var OATH_MIN = 20;
+var OATH_Q = [
+  {k:"running", n:"What are you running from?",
+   h:"Name the life you refuse to live. Be specific — not \"being lazy\", but the exact picture that frightens you.",
+   p:"In five years I refuse to still be…"},
+  {k:"failed", n:"What have you already failed at?",
+   h:"Name a promise to yourself that you have broken. The System will remind you of it. That is the point.",
+   p:"I promised myself I would…"},
+  {k:"become", n:"Who will you be?",
+   h:"Write it as a fact, not a hope. \"I am\" — never \"I want to be\".",
+   p:"I am someone who…"},
+  {k:"words", n:"What do I say to you when you want to quit?",
+   h:"Write the exact words you would need to hear at 23:40 on a day you did nothing. The System will use them, word for word.",
+   p:"Get up. You…"}
+];
+var OATH_PRE = "Before the System opens, it needs to know who is entering.\n\n"
+  + "These answers are not a form. The System will quote them back to you — on the night you break a streak, on the day you rise a rank, and every single time you consider quitting.\n\n"
+  + "Nobody else reads this. It stays on your device, and in your own account if you sign in.\n\n"
+  + "Write them so that they will hurt when you need them to.";
+var oathAmending = false, oathTimer = null;
+/* asked after the gate opens, and delayed so a cloud save (which may already
+   carry an oath) has landed before the System decides it is missing */
+function maybeOath(delay){
+  if(oathTimer) clearTimeout(oathTimer);
+  oathTimer = setTimeout(function(){
+    oathTimer = null;
+    if(oathNeeded() && !document.getElementById("oathOv").classList.contains("show")) showOath(false);
+  }, delay === undefined ? 1200 : delay);
+}
+function oathSworn(){ return !!(state && state.oath && state.oath.sworn); }
+function oathNeeded(){
+  return !!state && !adminMode && !!state.entryChoice && !oathSworn();
+}
+function renderOathForm(){
+  var o = (oathAmending && state.oath) ? state.oath : {};
+  var h = "";
+  for(var i=0;i<OATH_Q.length;i++){
+    var q = OATH_Q[i];
+    h += '<div class="oath-q">'
+      +   '<div class="oath-qn">' + (i + 1) + ". " + esc(q.n) + '</div>'
+      +   '<div class="oath-hint">' + esc(q.h) + '</div>'
+      +   '<textarea class="ta oath-in" data-k="' + q.k + '" maxlength="400" placeholder="' + esc(q.p) + '">'
+      +     esc(o[q.k] || "") + '</textarea>'
+      +   '<div class="oath-count" data-c="' + q.k + '"></div>'
+      + '</div>';
+  }
+  document.getElementById("oathFields").innerHTML = h;
+  document.getElementById("oathPre").textContent = OATH_PRE;
+  document.getElementById("oathSign").value = (oathAmending && state.oath) ? (state.oath.signed || "") : (state.hunterName || "");
+  document.getElementById("oathSubTitle").textContent = oathAmending ? "AMENDING A SWORN OATH" : "BEFORE THE SYSTEM OPENS";
+  document.getElementById("oathSeal").textContent = oathAmending ? "⚔ RE-SWEAR" : "⚔ SEAL THE OATH";
+  document.getElementById("oathLater").style.display = oathAmending ? "" : "none";
+  oathCheck();
+}
+function oathCheck(){
+  var ins = document.querySelectorAll(".oath-in"), ok = true, i;
+  for(i=0;i<ins.length;i++){
+    var v = ins[i].value.trim(), k = ins[i].getAttribute("data-k");
+    var lbl = document.querySelector('[data-c="' + k + '"]');
+    var need = OATH_MIN - v.length;
+    if(lbl){
+      lbl.textContent = need > 0 ? (need + " more characters") : "✔";
+      lbl.className = "oath-count" + (need > 0 ? "" : " ok");
+    }
+    if(need > 0) ok = false;
+  }
+  if(document.getElementById("oathSign").value.trim().length < 2) ok = false;
+  document.getElementById("oathSeal").disabled = !ok;
+  document.getElementById("oathWarn").textContent = ok
+    ? (oathAmending ? "Re-swearing does not erase the old oath. The System keeps every version." : "Once sealed, these words belong to the System.")
+    : "";
+  return ok;
+}
+function showOath(amend){
+  oathAmending = !!amend;
+  renderOathForm();
+  /* nothing speaks over the Oath: park whatever the System was saying and let
+     it finish speaking once the oath is sealed */
+  if(annOpen){
+    if(annCurrent) annQueue.unshift(annCurrent);
+    annCurrent = null;
+    annOpen = false;
+    document.getElementById("announceOv").classList.remove("show");
+  }
+  document.getElementById("oathOv").classList.add("show");
+}
+function sealOath(){
+  if(!oathCheck()) return;
+  var ins = document.querySelectorAll(".oath-in"), rec = {}, i;
+  for(i=0;i<ins.length;i++) rec[ins[i].getAttribute("data-k")] = ins[i].value.trim();
+  rec.signed = document.getElementById("oathSign").value.trim();
+  var prev = (state.oath && state.oath.prev) ? state.oath.prev.slice() : [];
+  if(oathAmending && state.oath && state.oath.sworn){
+    prev.push({running:state.oath.running, failed:state.oath.failed, become:state.oath.become,
+               words:state.oath.words, signed:state.oath.signed, sworn:state.oath.sworn});
+  }
+  rec.prev = prev;
+  /* the FIRST swearing date is the one the System quotes forever */
+  rec.sworn = (state.oath && state.oath.sworn) ? state.oath.sworn : todayStr();
+  rec.amended = oathAmending ? todayStr() : "";
+  state.oath = rec;
+  save();
+  document.getElementById("oathOv").classList.remove("show");
+  sfx("levelup");
+  announceFirst("⚔ THE OATH IS SEALED",
+    "Sworn by " + rec.signed + " on " + rec.sworn + ".\n\n"
+    + "From this moment the System stops inventing reasons for you. When you are about to quit, it will say what you just told it to say:\n\n\""
+    + rec.words + "\"\n\nGo and become the person you just described.",
+    "⚔", "I SWEAR IT");
+  renderAll();
+}
+/* the System speaking with the hunter's own voice, at the moment it lands hardest */
+function oathLine(kind){
+  if(!oathSworn()) return "";
+  var o = state.oath;
+  if(kind === "quit"    && o.words)   return "\n\n— YOU TOLD THE SYSTEM TO SAY THIS, ON " + o.sworn + " —\n\"" + o.words + "\"";
+  if(kind === "become"  && o.become)  return "\n\n— ON " + o.sworn + " YOU SWORE —\n\"" + o.become + "\"";
+  if(kind === "failed"  && o.failed)  return "\n\n— YOU HAVE BROKEN A PROMISE BEFORE. ON " + o.sworn + " YOU WROTE —\n\"" + o.failed + "\"";
+  if(kind === "running" && o.running) return "\n\n— THE LIFE YOU SWORE TO ESCAPE, " + o.sworn + " —\n\"" + o.running + "\"";
+  return "";
+}
+function oathBodyHtml(){
+  if(!oathSworn()) return '<div class="empty-note">No oath has been sworn on this account yet.</div>';
+  var o = state.oath, h = "", i;
+  for(i=0;i<OATH_Q.length;i++){
+    if(!o[OATH_Q[i].k]) continue;
+    h += '<div class="oath-rq">' + esc(OATH_Q[i].n) + '</div>'
+      +  '<div class="oath-rec">"' + esc(o[OATH_Q[i].k]) + '"</div>';
+  }
+  h += '<div class="oath-seal">— ' + esc(o.signed || state.hunterName) + ", " + esc(o.sworn) + "</div>";
+  if(o.amended) h += '<div class="oath-count">amended ' + esc(o.amended)
+    + (o.prev && o.prev.length ? " &middot; " + o.prev.length + " earlier version" + (o.prev.length > 1 ? "s" : "") + " kept" : "") + "</div>";
+  return h;
+}
+function openOathView(){
+  document.getElementById("oathViewBody").innerHTML = oathBodyHtml();
+  document.getElementById("oathAmend").style.display = oathSworn() ? "" : "none";
+  document.getElementById("oathViewModal").classList.add("show");
+}
+function renderOathPanel(){
+  var el = document.getElementById("oathPanelBody");
+  if(!el) return;
+  el.innerHTML = oathBodyHtml()
+    + '<div style="margin-top:12px"><button class="btn" id="oathPanelEdit">'
+    + (oathSworn() ? "✎ AMEND THE OATH" : "⚔ SWEAR THE OATH") + "</button></div>";
+  var b = document.getElementById("oathPanelEdit");
+  if(b) b.addEventListener("click", function(){ showOath(oathSworn()); });
+}
+document.getElementById("oathFields").addEventListener("input", oathCheck);
+document.getElementById("oathSign").addEventListener("input", oathCheck);
+document.getElementById("oathSeal").addEventListener("click", sealOath);
+document.getElementById("oathLater").addEventListener("click", function(){
+  document.getElementById("oathOv").classList.remove("show");
+});
+document.getElementById("oathViewClose").addEventListener("click", function(){
+  document.getElementById("oathViewModal").classList.remove("show");
+});
+document.getElementById("oathAmend").addEventListener("click", function(){
+  document.getElementById("oathViewModal").classList.remove("show");
+  showOath(true);
+});
+
 /* ================= OPEN WORLD — the hub city =================
    A top-down, walkable world. Every building is a door into a section of the
    System. Everything is drawn with canvas primitives — no image assets — so
@@ -8555,7 +8807,10 @@ var CITY_NODES = [
   {page:"guide",     ico:"🔖", name:"LIBRARY",       x:620,  y:1090, w:290, h:190, a:"#1f4d54", b:"#5fd8e6"},
   {page:"honor",     ico:"🏆", name:"HALL OF HONOR", x:1070, y:1090, w:290, h:190, a:"#6b5a12", b:"#ffe066"},
   {page:"story",     ico:"📖", name:"STORY GATE",    x:1520, y:1090, w:290, h:190, a:"#4a2a6b", b:"#d0a2ff"},
-  {page:"admin",     ico:"⚙",        name:"SETTINGS",      x:900,  y:880,  w:200, h:140, a:"#2c3350", b:"#8fa2cf"}
+  {page:"admin",     ico:"⚙",        name:"SETTINGS",      x:900,  y:880,  w:200, h:140, a:"#2c3350", b:"#8fa2cf"},
+  /* the monument in the plaza: the place where the hunter swore */
+  {ico:"⚔", name:"OATH STONE", prompt:"⚔ READ YOUR OATH", x:1090, y:390, w:100, h:100,
+   a:"#2a2f4d", b:"#6f7bb0", go:{oath:true}}
 ];
 WMAPS.city = {
   kind:"city", name:"HUNTER DISTRICT", w:2000, h:1500,
@@ -8699,6 +8954,7 @@ function worldEnterNode(b){
   var g = b.go || {};
   if(b.map){ worldTravel(b.map); return; }
   if(g.map){ worldTravel(g.map, g.at); return; }
+  if(g.oath){ oathSworn() ? openOathView() : showOath(false); return; }
   if(g.cat){ learnFix(); state.learn.cat = g.cat; }
   worldSave();
   switchPage(g.page || b.page);
@@ -9383,6 +9639,7 @@ worldRestore();       /* put the hunter back where they were standing in the wor
 switchPage("world");  /* the game now opens in the hub city, not on a menu */
 renderTimerPill(); /* resume a running session after reload */
 updateFinalizeBtn();
+maybeOath(); /* hunters who were here before the Oath existed are asked on this open */
 /* entrance gate: shown until the hunter chooses USER (Google/guest) or ADMIN.
    A signed-in session closes it automatically the moment auth restores. */
 if(!state.entryChoice) showEntrance();

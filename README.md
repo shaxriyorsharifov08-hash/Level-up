@@ -191,6 +191,34 @@ Videos are **not hosted** — that would need a paid server. Instead each video 
 
 To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text.
 
+## 4d. THE OATH — the hunter's own words, used against them
+
+Before the System opens, every hunter answers four questions **in their own words** and signs them:
+
+1. What are you running from?
+2. What have you already failed at?
+3. Who will you be?
+4. **What do I say to you when you want to quit?** — they write the exact words; the System uses them verbatim.
+
+Each answer needs at least 20 characters and the oath **cannot be skipped**. Existing hunters are asked once, on their next open. Everything is stored in `state.oath` — on the device, and in their own Firebase account if signed in. Nobody else can read it.
+
+**The point is not the form. It is where the words come back.** `oathLine(kind)` returns the hunter's own sentence, and it is appended to:
+
+| Moment | What it quotes |
+|---|---|
+| XP debt from silent days | *the life they swore to escape* |
+| Quest lockdown (two empty days) | *the words they told the System to say when they want to quit* |
+| Penalty quest | *the promise they admitted to breaking before* |
+| Level up | *who they swore they would be* |
+| Rank up | *who they swore they would be* |
+| Mentor, after 3+ empty days in a week | *their own anti-quitting words, instead of generic advice* |
+
+Nothing speaks over the Oath: any System announcement already on screen is parked and resumes the moment the oath is sealed.
+
+The oath can be re-sworn (PROFILE → THE OATH, or the ⚔ OATH STONE monument in the city plaza). **Re-swearing never erases the original** — the first `sworn` date is what the System keeps quoting, and every earlier version is kept in `state.oath.prev`.
+
+To change the questions, edit `OATH_Q` (`k` is the storage key, `n` the question, `h` the hint, `p` the placeholder) and `OATH_PRE` for the opening text. Adding a question means adding a matching case to `oathLine()` if you want it quoted anywhere.
+
 ## 5. Features you may want to adjust later
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.
