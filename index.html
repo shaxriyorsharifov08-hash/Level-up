@@ -952,6 +952,54 @@ main section{animation:pagein .28s ease}
 .fs-row.done{opacity:.55}
 .fs-row .fs-mark{font-size:1rem;flex:0 0 auto}
 .fs-row.done .fs-mark{color:var(--easy)}
+/* ---------- OPEN WORLD (the hub city you walk) ---------- */
+#worldStage{position:relative;width:100%;height:calc(100vh - 210px);min-height:340px;max-height:780px;
+  border:1px solid var(--line);border-radius:16px;overflow:hidden;touch-action:none;user-select:none;
+  background:#05060f;box-shadow:var(--glow),inset 0 0 40px rgba(0,0,0,.55)}
+#worldCv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.w-hud{position:absolute;left:12px;top:12px;z-index:3;pointer-events:none;
+  font-family:'Orbitron',monospace;font-size:.64rem;letter-spacing:.08em;line-height:1.5;color:var(--text);
+  background:rgba(5,7,20,.62);border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(4px)}
+.w-hud b{color:var(--blue)}
+body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438}
+#worldEnter{position:absolute;left:50%;bottom:18px;z-index:4;display:none;align-items:center;gap:8px;
+  padding:13px 22px;border-radius:14px;cursor:pointer;border:0;color:#fff;
+  font-family:'Orbitron',monospace;font-weight:800;font-size:.78rem;letter-spacing:.06em;
+  background:linear-gradient(135deg,var(--purple),var(--blue));box-shadow:var(--glow);
+  animation:wpulse 1.7s ease-in-out infinite}
+#worldEnter.show{display:inline-flex}
+#worldEnter.locked{background:linear-gradient(135deg,#3b4060,#22263c);box-shadow:none;color:var(--dim);animation:none}
+@keyframes wpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+.w-tip{text-align:center;color:var(--dim);font-size:.72rem;margin-top:10px;line-height:1.6}
+
+/* ---------- LEARN & GROW ---------- */
+.lrn-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px}
+.lrn-cat{position:relative;text-align:left;padding:14px;border-radius:14px;cursor:pointer;color:var(--text);
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+.lrn-cat:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.lrn-cat.active{border-color:var(--blue);box-shadow:var(--glowblue)}
+.lrn-ico{font-size:1.6rem;line-height:1}
+.lrn-name{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.08em;margin:7px 0 3px}
+.lrn-meta{font-size:.7rem;color:var(--dim)}
+.lrn-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.09);margin-top:8px;overflow:hidden}
+.lrn-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+.lvl-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;margin-bottom:10px;
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);transition:.15s}
+.lvl-row.open{cursor:pointer}
+.lvl-row.open:hover{border-color:var(--blue)}
+.lvl-row.done{border-color:rgba(34,197,94,.45)}
+.lvl-row.locked{opacity:.45}
+.lvl-num{width:40px;height:40px;flex:0 0 40px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:.82rem;background:rgba(124,97,255,.18);color:var(--text)}
+.lvl-row.done .lvl-num{background:rgba(34,197,94,.2);color:#22c55e}
+.lvl-t{flex:1;min-width:0}
+.lvl-title{font-weight:700;font-size:.9rem}
+.lvl-sub{font-size:.71rem;color:var(--dim);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.lvl-tag{font-size:.58rem;letter-spacing:.11em;font-family:'Orbitron',monospace;padding:3px 7px;border-radius:6px;
+  background:rgba(0,209,255,.14);color:var(--blue)}
+.lvl-tag.task{background:rgba(251,191,36,.15);color:var(--legendary)}
+.lrn-body{white-space:pre-wrap;line-height:1.65;font-size:.88rem;color:var(--text)}
 </style>
 </head>
 <body>
@@ -1001,8 +1049,31 @@ main section{animation:pagein .28s ease}
   <button id="finalizeBtn" style="display:none">🌙 FINALIZE THE DAY</button>
 
   <main>
+    <!-- ============ WORLD — the walkable hub city ============ -->
+    <section id="page-world">
+      <div id="worldStage">
+        <canvas id="worldCv"></canvas>
+        <div class="w-hud" id="worldHud"></div>
+        <button id="worldEnter"></button>
+      </div>
+      <div class="w-tip" id="worldTip">Hold and drag anywhere on the world to walk &nbsp;•&nbsp; WASD / arrow keys on a computer &nbsp;•&nbsp; walk to a door to enter</div>
+    </section>
+
+    <!-- ============ LEARN &amp; GROW ============ -->
+    <section id="page-learn" style="display:none">
+      <div class="panel">
+        <div class="panel-title">🌱 LEARN &amp; GROW</div>
+        <div class="empty-note" style="margin-bottom:12px">Four roads of growth. Every level opens only after the one before it is finished — no skipping, no shortcuts.</div>
+        <div class="lrn-cats" id="lrnCats"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" id="lrnLadderTitle">PATH</div>
+        <div id="lrnLadder"></div>
+      </div>
+    </section>
+
     <!-- ============ HOME / DASHBOARD ============ -->
-    <section id="page-home">
+    <section id="page-home" style="display:none">
       <div class="panel">
         <div class="hero">
           <div class="hero-art" id="heroArt"></div>
@@ -1754,6 +1825,21 @@ main section{animation:pagein .28s ease}
 </div>
 
 <!-- customize navigation -->
+<!-- learn & grow: a single level -->
+<div class="modal" id="lrnModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-title" id="lrnMTitle">LEVEL</div>
+    <div class="lrn-body" id="lrnMBody"></div>
+    <div id="lrnMVideo" style="margin-top:14px"></div>
+    <label class="form-lbl" id="lrnMLinkLbl">Your video link (optional — saved on this device)</label>
+    <input class="inp" id="lrnMLink" type="url" placeholder="https://youtube.com/watch?v=...">
+    <div class="modal-actions">
+      <button class="btn" id="lrnMClose">CLOSE</button>
+      <button class="btn primary" id="lrnMDone">✔ COMPLETE LEVEL</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="navModal">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-title">✎ CUSTOMIZE NAVIGATION</div>
@@ -2052,6 +2138,8 @@ function defaultState(){
     journal:{},          /* finalize-the-day reflections: date -> {learn, changed, tomorrow} */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
+    world:{x:1000, y:470, seen:false},   /* open-world hub: where the hunter is standing */
+    learn:{done:{}, links:{}, cat:"discipline"}, /* LEARN & GROW: "cat:index" -> ISO date, and user video links */
     budget:{currency:"$", transactions:[], goals:[]},
     skills:[],           /* earned from the level road */
     equipment:[],
@@ -2626,7 +2714,7 @@ function exitAdminMode(){
   var hs = document.querySelector("header .logo small");
   if(hs) hs.textContent = tr("HUNTER SYSTEM");
   applyModeClasses();
-  switchPage("home");
+  switchPage("world");
   renderNav(); renderAll();
 }
 
@@ -4052,11 +4140,11 @@ function nextAnnounce(){
 document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
-var currentPage = "home";
-var PAGES = ["home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
-var NAV_ICON = {home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
-var NAV_LABEL = {home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
-var NAV_ORDER = ["home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var currentPage = "world";
+var PAGES = ["world","learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var NAV_ICON = {world:"🌍", learn:"🌱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {world:"WORLD", learn:"LEARN", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
+var NAV_ORDER = ["world","learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
   if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
@@ -4073,6 +4161,7 @@ function reconcileNav(){
    it to 0 (always open) or to -1 (REMOVED from the game entirely).
    HOME, PROFILE, QUESTS, STORY, GUIDE and SETTINGS can never be gated. */
 var FEATURES = [
+  {key:"learn",     type:"section",  name:"LEARN & GROW section",   def:0},
   {key:"stats",     type:"section",  name:"STATS section",          def:4},
   {key:"rewards",   type:"section",  name:"REWARDS section",        def:6},
   {key:"inventory", type:"section",  name:"INVENTORY section",      def:6},
@@ -4085,9 +4174,10 @@ var FEATURES = [
   {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
   {key:"mentor",    type:"function", name:"System Mentor",          def:0}
 ];
-var LOCKABLE_PAGES = ["stats","rewards","inventory","honor","guild","budget"];
+var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget"];
 /* short guides shown the moment a feature is unlocked on the story path */
 var FEATURE_GUIDE = {
+  learn:     {ico:"🌱", title:"LEARN & GROW UNLOCKED", body:"The ACADEMY is now open (LEARN & GROW).\n\nFour roads: DISCIPLINE, EDUCATION, PHYSICAL and EMOTIONAL. Each is a ladder — a lesson, then a real task, then the next lesson. A level stays sealed until the one before it is finished.\n\nThis is where you are taught, not just tracked."},
   stats:     {ico:"📊", title:"STATS UNLOCKED", body:"The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the +1% menu."},
   rewards:   {ico:"🎁", title:"REWARDS UNLOCKED", body:"The REWARDS section is now open.\n\nBuild reward crates — you decide the prizes (a treat, an episode, an hour of gaming). Fully completing hard quests earns rare ROLLS; spend a roll on a crate and the System reveals a random prize, gacha-style.\n\nRolls are precious — earn them, then enjoy what you've won."},
   inventory: {ico:"📦", title:"INVENTORY UNLOCKED", body:"The INVENTORY section is now open.\n\nEvery prize you win from a crate waits here until you actually use it in real life. Press USE when you spend it — it moves to your ARCHIVE as a permanent record of a reward you earned and enjoyed."},
@@ -4175,6 +4265,7 @@ function switchPage(p){
   } else {
     fab.classList.remove("show");
   }
+  if(p === "world") worldStart(); else worldStop();
   renderAll();
   window.scrollTo(0,0);
   if(p === "story"){
@@ -8440,8 +8531,620 @@ document.getElementById("savingsList").addEventListener("click", function(e){
 });
 
 /* ---------------- render dispatcher ---------------- */
+/* ================= OPEN WORLD — the hub city =================
+   A top-down, walkable world. Every building is a door into a section of the
+   System. Everything is drawn with canvas primitives — no image assets — so
+   the app stays a single file and still opens instantly on a phone. */
+var WORLD_W = 2000, WORLD_H = 1500;
+var BUILDINGS = [
+  {page:"learn",     ico:"🌱", name:"ACADEMY",       x:170,  y:150,  w:290, h:190, a:"#1d6f5c", b:"#2ee6b0"},
+  {page:"stats",     ico:"🏋",  name:"TRAINING YARD", x:620,  y:150,  w:290, h:190, a:"#7a2b32", b:"#ff6b6b"},
+  {page:"guild",     ico:"⚔",        name:"CLAN HALL",     x:1070, y:150,  w:290, h:190, a:"#23406e", b:"#5aa9ff"},
+  {page:"profile",   ico:"🧬", name:"HUNTER TOWER",  x:1520, y:150,  w:290, h:190, a:"#5b2a7a", b:"#c98cff"},
+  {page:"budget",    ico:"🏦", name:"TREASURY",      x:170,  y:620,  w:290, h:190, a:"#6b5310", b:"#ffd166"},
+  {page:"quests",    ico:"📜", name:"QUEST BOARD",   x:620,  y:620,  w:290, h:190, a:"#6b4420", b:"#ffb15c"},
+  {page:"rewards",   ico:"🎁", name:"REWARD VAULT",  x:1070, y:620,  w:290, h:190, a:"#6d2352", b:"#ff8ad4"},
+  {page:"inventory", ico:"📦", name:"ARMORY",        x:1520, y:620,  w:290, h:190, a:"#39415e", b:"#9fb0d9"},
+  {page:"home",      ico:"🏠", name:"SANCTUARY",     x:170,  y:1090, w:290, h:190, a:"#3d2a75", b:"#a78bfa"},
+  {page:"guide",     ico:"🔖", name:"LIBRARY",       x:620,  y:1090, w:290, h:190, a:"#1f4d54", b:"#5fd8e6"},
+  {page:"honor",     ico:"🏆", name:"HALL OF HONOR", x:1070, y:1090, w:290, h:190, a:"#6b5a12", b:"#ffe066"},
+  {page:"story",     ico:"📖", name:"STORY GATE",    x:1520, y:1090, w:290, h:190, a:"#4a2a6b", b:"#d0a2ff"},
+  {page:"admin",     ico:"⚙",        name:"SETTINGS",      x:900,  y:880,  w:200, h:140, a:"#2c3350", b:"#8fa2cf"}
+];
+var wPlayer = {x:1000, y:470, dir:1, moving:false, anim:0};
+var wCam = {x:0, y:0}, wView = {w:0, h:0}, wScale = 1;
+var wCv = null, wCtx = null, wRAF = null, wLast = 0, wNear = null, wSavedAt = "";
+var wKeys = {up:0, down:0, left:0, right:0};
+var wJoy = {on:false, id:null, ox:0, oy:0, dx:0, dy:0};
+
+function wRR(c, x, y, w, h, r){
+  if(w < 2*r) r = w/2;
+  if(h < 2*r) r = h/2;
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.arcTo(x+w, y,   x+w, y+h, r);
+  c.arcTo(x+w, y+h, x,   y+h, r);
+  c.arcTo(x,   y+h, x,   y,   r);
+  c.arcTo(x,   y,   x+w, y,   r);
+  c.closePath();
+}
+function wTheme(){
+  var cs = getComputedStyle(document.body);
+  var light = (document.body.getAttribute("data-theme") || "shadow") === "blossom";
+  return {
+    acc:  (cs.getPropertyValue("--purple") || "#7c61ff").trim(),
+    blu:  (cs.getPropertyValue("--blue") || "#00d1ff").trim(),
+    light: light,
+    g1:   light ? "#fbeaf3" : "#0b0e20",
+    g2:   light ? "#f0d7e6" : "#05070f",
+    road: light ? "rgba(255,255,255,.9)" : "rgba(130,150,255,.07)",
+    line: light ? "rgba(190,120,165,.30)" : "rgba(130,150,255,.10)",
+    ink:  light ? "#3b2438" : "#dfe4ff"
+  };
+}
+function worldEl(){
+  if(!wCv){
+    wCv = document.getElementById("worldCv");
+    wCtx = wCv ? wCv.getContext("2d") : null;
+  }
+  return wCv;
+}
+function worldResize(){
+  if(!worldEl()) return;
+  var st = document.getElementById("worldStage");
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  wView.w = st.clientWidth || 320;
+  wView.h = st.clientHeight || 380;
+  wCv.width = Math.round(wView.w * dpr);
+  wCv.height = Math.round(wView.h * dpr);
+  wCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  /* keep roughly 1100 world-units of height on screen: close enough to feel
+     like a character, wide enough to see the next block and where to walk */
+  wScale = Math.max(0.34, Math.min(1.05, wView.h / 1100));
+}
+/* rooms the hunter can see — a feature the Administrator removed has no building */
+function worldRooms(){
+  var out = [];
+  for(var i=0;i<BUILDINGS.length;i++) if(!featureRemoved(BUILDINGS[i].page)) out.push(BUILDINGS[i]);
+  return out;
+}
+function worldSolid(x, y){
+  var hw = 14, hh = 10, r = worldRooms();
+  for(var i=0;i<r.length;i++){
+    var b = r[i];
+    if(x + hw > b.x && x - hw < b.x + b.w && y + hh > b.y && y - hh < b.y + b.h) return true;
+  }
+  return false;
+}
+function worldDoorZone(b){ return {x:b.x + b.w/2 - 54, y:b.y + b.h - 8, w:108, h:70}; }
+function worldNearest(){
+  var r = worldRooms();
+  for(var i=0;i<r.length;i++){
+    var d = worldDoorZone(r[i]);
+    if(wPlayer.x > d.x && wPlayer.x < d.x + d.w && wPlayer.y > d.y && wPlayer.y < d.y + d.h) return r[i];
+  }
+  return null;
+}
+function worldPrompt(){
+  var btn = document.getElementById("worldEnter");
+  if(!btn) return;
+  if(!wNear){ btn.classList.remove("show"); return; }
+  var lv = sectionLockLevel(wNear.page);
+  btn.classList.add("show");
+  if(lv){ btn.classList.add("locked"); btn.textContent = "🔒 " + wNear.name + " — LV." + lv; }
+  else  { btn.classList.remove("locked"); btn.textContent = "ENTER " + wNear.ico + " " + wNear.name; }
+}
+function worldUpdate(dt){
+  var ax = 0, ay = 0;
+  if(wKeys.left)  ax -= 1;
+  if(wKeys.right) ax += 1;
+  if(wKeys.up)    ay -= 1;
+  if(wKeys.down)  ay += 1;
+  if(wJoy.on){ ax += wJoy.dx; ay += wJoy.dy; }
+  var m = Math.sqrt(ax*ax + ay*ay);
+  if(m > 1){ ax /= m; ay /= m; m = 1; }
+  wPlayer.moving = m > 0.10;
+  if(wPlayer.moving){
+    if(ax > 0.18) wPlayer.dir = 1;
+    else if(ax < -0.18) wPlayer.dir = -1;
+    var sp = 240 * dt;
+    var nx = wPlayer.x + ax * sp;
+    if(!worldSolid(nx, wPlayer.y)) wPlayer.x = nx;
+    var ny = wPlayer.y + ay * sp;
+    if(!worldSolid(wPlayer.x, ny)) wPlayer.y = ny;
+    wPlayer.x = Math.max(26, Math.min(WORLD_W - 26, wPlayer.x));
+    wPlayer.y = Math.max(40, Math.min(WORLD_H - 26, wPlayer.y));
+    wPlayer.anim += dt;
+  }
+  var near = worldNearest();
+  if(near !== wNear){ wNear = near; worldPrompt(); }
+}
+function worldCamera(){
+  var vw = wView.w / wScale, vh = wView.h / wScale;
+  wCam.x = vw >= WORLD_W ? (WORLD_W - vw) / 2 : Math.max(0, Math.min(WORLD_W - vw, wPlayer.x - vw/2));
+  wCam.y = vh >= WORLD_H ? (WORLD_H - vh) / 2 : Math.max(0, Math.min(WORLD_H - vh, wPlayer.y - vh/2));
+}
+function worldDrawGround(c, t){
+  var g = c.createLinearGradient(0, 0, 0, WORLD_H);
+  g.addColorStop(0, t.g1);
+  g.addColorStop(1, t.g2);
+  c.fillStyle = g;
+  c.fillRect(0, 0, WORLD_W, WORLD_H);
+  /* the avenues between the blocks */
+  var hy = [75, 480, 950, 1390], vx = [85, 540, 990, 1440, 1905], i;
+  c.fillStyle = t.road;
+  for(i=0;i<hy.length;i++) c.fillRect(0, hy[i] - 56, WORLD_W, 112);
+  for(i=0;i<vx.length;i++) c.fillRect(vx[i] - 56, 0, 112, WORLD_H);
+  /* lane markings */
+  c.strokeStyle = t.line;
+  c.lineWidth = 3;
+  c.setLineDash([26, 22]);
+  for(i=0;i<hy.length;i++){ c.beginPath(); c.moveTo(0, hy[i]); c.lineTo(WORLD_W, hy[i]); c.stroke(); }
+  for(i=0;i<vx.length;i++){ c.beginPath(); c.moveTo(vx[i], 0); c.lineTo(vx[i], WORLD_H); c.stroke(); }
+  c.setLineDash([]);
+  /* outer wall of the district */
+  c.strokeStyle = t.acc;
+  c.lineWidth = 7;
+  c.globalAlpha = .5;
+  wRR(c, 4, 4, WORLD_W - 8, WORLD_H - 8, 26);
+  c.stroke();
+  c.globalAlpha = 1;
+}
+function worldDrawBuilding(c, b, t){
+  var lock = sectionLockLevel(b.page), i, j;
+  c.fillStyle = "rgba(0,0,0,.42)";
+  wRR(c, b.x + 6, b.y + 13, b.w, b.h, 16); c.fill();
+  var g = c.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+  g.addColorStop(0, b.b);
+  g.addColorStop(1, b.a);
+  c.fillStyle = g;
+  wRR(c, b.x, b.y, b.w, b.h, 16); c.fill();
+  c.fillStyle = "rgba(0,0,0,.30)";
+  wRR(c, b.x, b.y, b.w, 44, 16); c.fill();
+  /* windows */
+  c.fillStyle = lock ? "rgba(255,255,255,.10)" : "rgba(255,255,255,.30)";
+  var cols = Math.max(2, Math.floor(b.w / 78)), step = (b.w - 40) / cols;
+  for(i=0;i<cols;i++){
+    for(j=0;j<(b.h > 160 ? 2 : 1);j++){
+      wRR(c, b.x + 22 + i * step, b.y + 62 + j * 44, Math.min(34, step - 12), 26, 6);
+      c.fill();
+    }
+  }
+  /* the door */
+  var dx = b.x + b.w/2 - 27, dy = b.y + b.h - 56;
+  c.fillStyle = "rgba(0,0,0,.5)";
+  wRR(c, dx, dy, 54, 56, 8); c.fill();
+  if(!lock){
+    c.save();
+    c.shadowColor = t.blu;
+    c.shadowBlur = 20;
+    c.strokeStyle = t.blu;
+    c.lineWidth = 2.5;
+    wRR(c, dx, dy, 54, 56, 8); c.stroke();
+    c.restore();
+  }
+  c.strokeStyle = "rgba(255,255,255,.20)";
+  c.lineWidth = 2;
+  wRR(c, b.x, b.y, b.w, b.h, 16); c.stroke();
+  /* text is sized against the zoom so signs stay readable at every distance */
+  var uf = 1 / wScale;
+  c.textAlign = "center";
+  if(lock){
+    c.fillStyle = "rgba(3,4,12,.60)";
+    wRR(c, b.x, b.y, b.w, b.h, 16); c.fill();
+    c.font = Math.round(28 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
+    c.fillText("🔒", b.x + b.w/2, b.y + b.h/2 + 4);
+    c.fillStyle = "#ffd166";
+    c.font = "700 " + Math.round(15 * uf) + "px Orbitron,monospace";
+    c.fillText("LV." + lock, b.x + b.w/2, b.y + b.h/2 + 30 * uf);
+  }
+  /* the sign above the roof */
+  c.font = Math.round(24 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
+  c.fillStyle = t.ink;
+  c.fillText(b.ico, b.x + b.w/2, b.y - 26 * uf);
+  c.font = "700 " + Math.round(13 * uf) + "px Orbitron,monospace";
+  c.fillText(b.name, b.x + b.w/2, b.y - 8 * uf);
+}
+function worldDrawPlayer(c, t){
+  var p = wPlayer;
+  var sw = p.moving ? Math.sin(p.anim * 11) : 0;
+  var y  = p.y - (p.moving ? Math.abs(Math.sin(p.anim * 11)) * 2 : 0);
+  var x  = p.x;
+  c.fillStyle = "rgba(0,0,0,.40)";
+  c.beginPath(); c.ellipse(p.x, p.y + 4, 16, 6, 0, 0, Math.PI*2); c.fill();
+  c.fillStyle = "#1b2140";
+  wRR(c, x - 10 + sw*3, y - 15, 8, 17, 3); c.fill();
+  wRR(c, x + 2  - sw*3, y - 15, 8, 17, 3); c.fill();
+  c.fillStyle = t.acc;
+  wRR(c, x - 15, y - 44, 30, 33, 10); c.fill();
+  c.fillStyle = t.blu;
+  c.beginPath(); c.arc(x + p.dir*3, y - 29, 4, 0, Math.PI*2); c.fill();
+  c.fillStyle = "#f2c9a0";
+  c.beginPath(); c.arc(x, y - 54, 11, 0, Math.PI*2); c.fill();
+  c.fillStyle = t.acc;
+  c.beginPath(); c.arc(x, y - 57, 12.5, Math.PI, 0); c.fill();
+  wRR(c, x - 12.5, y - 59, 25, 8, 3); c.fill();
+  c.fillStyle = "#0b1030";
+  c.beginPath(); c.arc(x + p.dir*3 - 3.4, y - 52, 1.8, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(x + p.dir*3 + 3.4, y - 52, 1.8, 0, Math.PI*2); c.fill();
+  c.textAlign = "center";
+  c.fillStyle = t.ink;
+  c.font = "700 " + Math.round(11 / wScale) + "px Orbitron,monospace";
+  c.fillText((state.hunterName || "HUNTER").toUpperCase().slice(0, 14), x, y - 72);
+}
+function worldDrawJoy(c){
+  if(!wJoy.on) return;
+  c.save();
+  c.globalAlpha = .5;
+  c.strokeStyle = "rgba(255,255,255,.55)";
+  c.lineWidth = 3;
+  c.beginPath(); c.arc(wJoy.ox, wJoy.oy, 46, 0, Math.PI*2); c.stroke();
+  c.fillStyle = "rgba(255,255,255,.40)";
+  c.beginPath(); c.arc(wJoy.ox + wJoy.dx*32, wJoy.oy + wJoy.dy*32, 20, 0, Math.PI*2); c.fill();
+  c.restore();
+}
+function worldDrawMap(c, t){
+  var mw = 94, mh = 71, mx = wView.w - mw - 12, my = 12, i;
+  c.save();
+  c.fillStyle = t.light ? "rgba(255,255,255,.8)" : "rgba(4,6,18,.68)";
+  wRR(c, mx, my, mw, mh, 8); c.fill();
+  c.strokeStyle = t.acc;
+  c.lineWidth = 1;
+  c.stroke();
+  var r = worldRooms();
+  for(i=0;i<r.length;i++){
+    var b = r[i];
+    c.fillStyle = sectionLockLevel(b.page) ? "rgba(140,140,160,.45)" : b.b;
+    c.fillRect(mx + b.x/WORLD_W*mw, my + b.y/WORLD_H*mh,
+               Math.max(2, b.w/WORLD_W*mw), Math.max(2, b.h/WORLD_H*mh));
+  }
+  c.fillStyle = t.blu;
+  c.beginPath(); c.arc(mx + wPlayer.x/WORLD_W*mw, my + wPlayer.y/WORLD_H*mh, 2.8, 0, Math.PI*2); c.fill();
+  c.restore();
+}
+function worldFrame(ts){
+  wRAF = requestAnimationFrame(worldFrame);
+  if(currentPage !== "world" || !wCtx) return;
+  var dt = (ts - wLast) / 1000;
+  wLast = ts;
+  if(!(dt > 0)) dt = 0;
+  if(dt > 0.05) dt = 0.05;
+  worldUpdate(dt);
+  worldCamera();
+  var c = wCtx, t = wTheme(), i;
+  c.clearRect(0, 0, wView.w, wView.h);
+  c.save();
+  c.scale(wScale, wScale);
+  c.translate(-wCam.x, -wCam.y);
+  worldDrawGround(c, t);
+  var r = worldRooms();
+  for(i=0;i<r.length;i++) worldDrawBuilding(c, r[i], t);
+  worldDrawPlayer(c, t);
+  c.restore();
+  worldDrawJoy(c);
+  worldDrawMap(c, t);
+}
+function renderWorldHud(){
+  var el = document.getElementById("worldHud");
+  if(!el || !state) return;
+  el.innerHTML = esc((state.hunterName || "Hunter").toUpperCase()) + "<br>LV.<b>"
+    + state.level + "</b> &nbsp;" + esc(currentRank().key) + "-RANK";
+}
+function worldRestore(){
+  if(state && state.world && typeof state.world.x === "number"){
+    wPlayer.x = state.world.x;
+    wPlayer.y = state.world.y;
+  }
+  if(worldSolid(wPlayer.x, wPlayer.y)){ wPlayer.x = 1000; wPlayer.y = 470; }
+}
+function worldSave(){
+  if(!state) return;
+  var key = Math.round(wPlayer.x) + ":" + Math.round(wPlayer.y);
+  if(key === wSavedAt) return;
+  wSavedAt = key;
+  if(!state.world) state.world = {x:1000, y:470, seen:true};
+  state.world.x = Math.round(wPlayer.x);
+  state.world.y = Math.round(wPlayer.y);
+  save();
+}
+function worldStart(){
+  if(!worldEl()) return;
+  worldResize();
+  renderWorldHud();
+  wNear = worldNearest();
+  worldPrompt();
+  if(wRAF) return;
+  wLast = performance.now();
+  wRAF = requestAnimationFrame(worldFrame);
+}
+function worldStop(){
+  if(wRAF){ cancelAnimationFrame(wRAF); wRAF = null; }
+  worldSave();
+}
+(function worldInput(){
+  var st = document.getElementById("worldStage");
+  if(!st) return;
+  function pos(e){
+    var r = st.getBoundingClientRect();
+    return {x:e.clientX - r.left, y:e.clientY - r.top};
+  }
+  st.addEventListener("pointerdown", function(e){
+    if(e.target && e.target.id === "worldEnter") return;
+    var p = pos(e);
+    wJoy.on = true; wJoy.id = e.pointerId;
+    wJoy.ox = p.x; wJoy.oy = p.y; wJoy.dx = 0; wJoy.dy = 0;
+    try{ st.setPointerCapture(e.pointerId); }catch(err){}
+    e.preventDefault();
+  });
+  st.addEventListener("pointermove", function(e){
+    if(!wJoy.on || e.pointerId !== wJoy.id) return;
+    var p = pos(e), max = 46;
+    var dx = p.x - wJoy.ox, dy = p.y - wJoy.oy;
+    var d = Math.sqrt(dx*dx + dy*dy);
+    if(d > max){ dx = dx / d * max; dy = dy / d * max; }
+    wJoy.dx = dx / max; wJoy.dy = dy / max;
+    e.preventDefault();
+  });
+  function stop(e){
+    if(wJoy.id !== null && e.pointerId !== wJoy.id) return;
+    wJoy.on = false; wJoy.id = null; wJoy.dx = 0; wJoy.dy = 0;
+  }
+  st.addEventListener("pointerup", stop);
+  st.addEventListener("pointercancel", stop);
+  document.getElementById("worldEnter").addEventListener("click", function(){
+    if(!wNear) return;
+    var lv = sectionLockLevel(wNear.page);
+    if(lv){ toast(tr("Sealed by the System. Reach Level ") + lv + tr(" to unlock this section."), "err"); return; }
+    sfx("open");
+    worldSave();
+    switchPage(wNear.page);
+  });
+  document.addEventListener("keydown", function(e){
+    if(currentPage !== "world") return;
+    var tg = e.target && e.target.tagName;
+    if(tg === "INPUT" || tg === "TEXTAREA" || tg === "SELECT") return;
+    var k = (e.key || "").toLowerCase();
+    if(k === "arrowup"    || k === "w") wKeys.up = 1;
+    else if(k === "arrowdown"  || k === "s") wKeys.down = 1;
+    else if(k === "arrowleft"  || k === "a") wKeys.left = 1;
+    else if(k === "arrowright" || k === "d") wKeys.right = 1;
+    else if(k === "e" || k === "enter"){
+      var b = document.getElementById("worldEnter");
+      if(wNear && b) b.click();
+      return;
+    } else return;
+    e.preventDefault();
+  });
+  document.addEventListener("keyup", function(e){
+    var k = (e.key || "").toLowerCase();
+    if(k === "arrowup"    || k === "w") wKeys.up = 0;
+    else if(k === "arrowdown"  || k === "s") wKeys.down = 0;
+    else if(k === "arrowleft"  || k === "a") wKeys.left = 0;
+    else if(k === "arrowright" || k === "d") wKeys.right = 0;
+  });
+  window.addEventListener("resize", function(){ if(currentPage === "world") worldResize(); });
+})();
+
+/* ================= LEARN & GROW =================
+   Four roads. Each is a ladder of levels: a lesson to watch, then a real task
+   built on it. A level stays sealed until the one before it is finished. */
+var LEARN_CATS = [
+  {key:"discipline", ico:"🔥", name:"DISCIPLINE", stat:"CON", desc:"Acting when you do not feel like it."},
+  {key:"education",  ico:"📚", name:"EDUCATION",  stat:"INT", desc:"Learning how to actually learn."},
+  {key:"physical",   ico:"💪", name:"PHYSICAL",   stat:"STR", desc:"The body carries everything else."},
+  {key:"emotional",  ico:"🧠", name:"EMOTIONAL",  stat:"END", desc:"Ruling your reactions, not obeying them."}
+];
+var LEARN_PATH = {
+  discipline: [
+    {t:"video", n:"What Discipline Actually Is", q:"what is self discipline explained",
+     d:"Discipline is not anger at yourself. It is the ability to keep a promise you made to yourself when the feeling that made the promise is gone.\n\nWatch a lesson on what self-discipline really means, then answer one question honestly: which promise to yourself have you broken most often?"},
+    {t:"task",  n:"The Three-Day Vow",
+     d:"Pick ONE action. Small, specific, boring. Ten push-ups. One page. Bed by 23:00.\n\nDo it three days in a row. No exceptions, no negotiation, no 'tomorrow twice'. If you break it, the count restarts.\n\nMark this level complete only when you have three clean days behind you."},
+    {t:"video", n:"Motivation Is a Liar", q:"why motivation fails discipline systems",
+     d:"Motivation is a mood. Moods leave. People who build anything great are not more motivated than you — they simply removed the decision.\n\nLearn why systems beat feelings, then decide the exact time and place your action happens tomorrow."},
+    {t:"task",  n:"Kill One Comfort",
+     d:"Choose one comfort that is eating you: the snooze button, the feed before sleep, the sugar in the evening, gaming past midnight.\n\nRemove it completely for seven days. Not reduce. Remove.\n\nWrite the comfort down before you start, so you cannot quietly rewrite the rule halfway."},
+    {t:"video", n:"The Two-Minute Entry", q:"two minute rule habits explained",
+     d:"The hardest part is never the work. It is starting the work.\n\nLearn the two-minute entry: shrink the first step until refusing it is absurd. Put on the shoes. Open the book. Write one sentence. The body follows the entry."},
+    {t:"task",  n:"Fixed Hour — Five Days",
+     d:"Choose one hour of the morning. Wake at that hour five days in a row — weekend included. No snooze.\n\nA hunter who cannot control the first decision of the day does not control the day."},
+    {t:"video", n:"Discipline Under Pressure", q:"how to stay disciplined when life gets hard",
+     d:"Anyone is disciplined on a good day. The test is the bad day: no sleep, bad news, no energy.\n\nLearn how to build a minimum version of every habit — the version you do even when everything is wrong. That version is what actually keeps the streak alive."},
+    {t:"task",  n:"Eat the Frog — Seven Days",
+     d:"Every morning for seven days, do the task you least want to do FIRST — before your phone, before anything easy.\n\nWrite it down the night before. Kill it in the morning. The rest of the day becomes downhill."},
+    {t:"video", n:"Identity Over Rules", q:"identity based habits explained",
+     d:"Rules break under pressure. Identity does not.\n\n'I am trying to run' loses to 'I am a runner'. Learn how repeated action rewrites who you believe you are — and why that is the only permanent version of discipline."},
+    {t:"task",  n:"The Thirty-Day Vow",
+     d:"One action. Thirty days. No missed day.\n\nMake it something you can do on your worst day in under fifteen minutes — and make it something that changes you if repeated for a year.\n\nThis is the final gate of this road. Come back and seal it when it is done."}
+  ],
+  education: [
+    {t:"video", n:"How Learning Actually Works", q:"science of learning how memory works",
+     d:"Re-reading feels like learning and is almost worthless. Your brain keeps what it has to fight to retrieve.\n\nLearn how memory is actually built, and why the comfortable study methods you were taught are the weakest ones."},
+    {t:"task",  n:"Choose Your Domain",
+     d:"Pick ONE thing to become genuinely good at in the next twelve months. A language, a science, code, a craft.\n\nWrite it down as a sentence: 'By <date> I will be able to <specific ability>.'\n\nOne domain. Not five. Scattered effort produces nothing."},
+    {t:"video", n:"Active Recall and Spaced Repetition", q:"active recall spaced repetition explained",
+     d:"Two methods beat every other study technique ever measured: testing yourself, and spacing the tests out over time.\n\nLearn how they work, then never open a highlighter again without asking what you are actually retrieving."},
+    {t:"task",  n:"Build a Twenty-Card Deck",
+     d:"Take your domain. Build twenty question-and-answer cards — paper or an app, it does not matter.\n\nQuestion on one side, answer on the other. Then test yourself on all twenty without looking.\n\nComplete this level when you can pass all twenty from memory."},
+    {t:"video", n:"Deep Work: Focus as a Skill", q:"deep work focus explained",
+     d:"Focus is not a personality trait. It is a muscle that has been destroyed in most people by constant interruption.\n\nLearn what deep work is, why shallow work feels productive and produces nothing, and how long real concentration takes to rebuild."},
+    {t:"task",  n:"One Fifty-Minute Session",
+     d:"Phone in another room. No tabs, no music with words, no 'quick check'.\n\nFifty minutes on your domain. Use the FOCUS TIMER on a quest so the System records it.\n\nIf you break focus, the session does not count. Start again."},
+    {t:"video", n:"Reading With a Weapon", q:"how to read a book effectively and remember",
+     d:"Most people read to finish. That is entertainment, not education.\n\nLearn to read with a question in your hand: what am I trying to answer? Mark, argue, summarise from memory at the end of each chapter."},
+    {t:"task",  n:"Finish One Real Thing",
+     d:"One book, one course, one module — finished completely. Not sampled, not 'mostly'.\n\nThen write half a page from memory: what it claimed, what you disagree with, what you will do differently.\n\nUnfinished knowledge is not knowledge."},
+    {t:"video", n:"Teach to Master", q:"feynman technique explained",
+     d:"You do not understand something until you can explain it to someone who knows nothing, without jargon, without notes.\n\nLearn the Feynman technique — and use it as your exam for everything you claim to know."},
+    {t:"task",  n:"Teach It to Someone",
+     d:"Take the most important idea from your domain and teach it to a real person for ten minutes. A friend, a sibling, a camera.\n\nEvery place you stumble is a hole in your knowledge. Go fill it, then teach it again."}
+  ],
+  physical: [
+    {t:"video", n:"Your Body Is the Vehicle", q:"how exercise changes your brain",
+     d:"Every plan you have — study, work, money, character — runs on a body. Neglect it and the whole system runs slow.\n\nLearn what training actually does to your brain, your mood, and your capacity to concentrate."},
+    {t:"task",  n:"The Baseline Test",
+     d:"Measure where you truly are today, with numbers, and write them down:\n\n• Max push-ups in one set\n• Max plank hold, in seconds\n• Time for one kilometre\n\nNo excuses about the numbers being low. You cannot beat a record you never recorded."},
+    {t:"video", n:"Progressive Overload", q:"progressive overload explained beginner",
+     d:"The body only changes when it is asked to do slightly more than last time. Slightly. Repeatedly.\n\nLearn how to add load, reps or time without wrecking yourself — and why 'go until you die' on day one is how people quit by day four."},
+    {t:"task",  n:"Seven Days of Movement",
+     d:"Seven consecutive days with at least twenty minutes of deliberate movement. Walk, run, lift, swim, train.\n\nRest days are earned after consistency exists. Right now you have none, so there are none."},
+    {t:"video", n:"Sleep Is Training", q:"why sleep matters for performance",
+     d:"You do not grow in the gym. You grow while asleep. Cutting sleep to 'get more done' is borrowing from tomorrow's brain at a punishing rate.\n\nLearn what a short night actually costs you — focus, mood, willpower, recovery."},
+    {t:"task",  n:"Seven Nights, One Window",
+     d:"Choose a sleep window — for example 23:00 to 07:00. Hold it for seven nights, within thirty minutes.\n\nNo screens for the last thirty minutes. Track it. This one level will change more than any workout on this road."},
+    {t:"video", n:"Fuel", q:"nutrition basics protein carbs fats explained",
+     d:"You cannot train your way out of what you eat. Learn the basics — protein, carbohydrate, fat, water — without the supplement marketing.\n\nOne rule to keep: if it comes in a wrapper with a cartoon on it, it is not fuel."},
+    {t:"task",  n:"Fourteen Days, No Liquid Sugar",
+     d:"Fourteen days: no soda, no energy drinks, no sweetened coffee. Water, tea, plain coffee, milk.\n\nIt is the single easiest large change available to you, which is exactly why refusing it tells you something."},
+    {t:"video", n:"Endurance and the Second Wind", q:"how to build cardio endurance beginner",
+     d:"The first wall you hit in a run is almost never your body. It is your mind negotiating.\n\nLearn how endurance is built — slow, boring, aerobic volume — and what actually happens when you push past the first refusal."},
+    {t:"task",  n:"Beat Your Baseline",
+     d:"Return to the three numbers from Level 2 and beat every one of them.\n\nMore push-ups. Longer plank. Faster kilometre.\n\nProof, not feelings. Seal this level only when all three are beaten."}
+  ],
+  emotional: [
+    {t:"video", n:"Emotions Are Data, Not Orders", q:"how emotions work psychology explained",
+     d:"An emotion is information about your situation. It is not an instruction you are required to obey.\n\nLearn where emotions come from and why the gap between feeling something and doing something is where your entire character lives."},
+    {t:"task",  n:"Name It — Seven Days",
+     d:"For seven days, three times a day, stop and name what you feel in one precise word. Not 'bad'. Anxious. Ashamed. Envious. Restless. Bored.\n\nWrite them down. Naming a feeling accurately drops its power over you — this is measurable, not mysticism."},
+    {t:"video", n:"The Gap Between Trigger and Response", q:"how to control emotional reactions",
+     d:"Someone insults you. Something fails. The reaction feels instant — it is not. There is a gap, and it can be widened with training.\n\nLearn the techniques that widen it: the pause, the breath, the delay before answering."},
+    {t:"task",  n:"One Week Without Reacting",
+     d:"Seven days. When something angers or hurts you, you do not respond for ten minutes. No message sent, no argument, no slammed door.\n\nAfter ten minutes, decide what a person you respect would do — then do that."},
+    {t:"video", n:"Envy, Comparison and the Feed", q:"social media comparison and mental health",
+     d:"You are comparing your ordinary day to a thousand people's best moments. No mind survives that undamaged.\n\nLearn what constant comparison does to motivation and self-worth, and why envy is a signal pointing at something you actually want."},
+    {t:"task",  n:"Three Days Off the Feed",
+     d:"Seventy-two hours: no short-form video, no scrolling feeds. Messaging people directly is allowed.\n\nExpect boredom, irritation, and reaching for the phone with no reason. Watch it happen without obeying it. That is the whole exercise."},
+    {t:"video", n:"Gratitude Without Delusion", q:"gratitude practice science explained",
+     d:"Real gratitude is not pretending things are fine. It is refusing to be blind to what is already working while you fight for what is not.\n\nLearn why the practice measurably shifts mood — and how to do it without lying to yourself."},
+    {t:"task",  n:"Three Honest Pages",
+     d:"Sit down and write three pages by hand. No audience, no editing, no beauty. Everything you are avoiding thinking about.\n\nThen read it once, and decide one single action it demands from you. Do that action."},
+    {t:"video", n:"Falling Without Quitting", q:"how to build resilience after failure",
+     d:"You will break a streak. You will fail a goal. The difference between people is never whether they fall — it is how many hours pass before they stand up.\n\nLearn what resilience is actually made of: meaning, self-honesty, and a rehearsed return plan."},
+    {t:"task",  n:"The Return",
+     d:"Take something you already abandoned — a habit, a goal, a skill, an apology you never made.\n\nReturn to it. Today. One real step, not a plan to plan.\n\nThe final gate of this road is not a new beginning. It is proving you can come back."}
+  ]
+};
+function learnCat(key){
+  for(var i=0;i<LEARN_CATS.length;i++) if(LEARN_CATS[i].key === key) return LEARN_CATS[i];
+  return LEARN_CATS[0];
+}
+function learnFix(){
+  if(!state.learn) state.learn = {done:{}, links:{}, cat:"discipline"};
+  if(!state.learn.done)  state.learn.done = {};
+  if(!state.learn.links) state.learn.links = {};
+  if(!LEARN_PATH[state.learn.cat]) state.learn.cat = "discipline";
+}
+function learnKey(cat, i){ return cat + ":" + i; }
+function learnDone(cat, i){ return !!(state.learn && state.learn.done && state.learn.done[learnKey(cat, i)]); }
+function learnCleared(cat){
+  var path = LEARN_PATH[cat] || [], n = 0;
+  for(var i=0;i<path.length;i++) if(learnDone(cat, i)) n++;
+  return n;
+}
+function learnXp(i){ return 40 + i * 12; }
+function learnPts(i){ return 2 + Math.floor(i / 3); }
+function renderLearn(){
+  learnFix();
+  var cur = state.learn.cat, i, h = "";
+  for(i=0;i<LEARN_CATS.length;i++){
+    var c = LEARN_CATS[i], total = LEARN_PATH[c.key].length, done = learnCleared(c.key);
+    h += '<button class="lrn-cat' + (c.key === cur ? " active" : "") + '" data-cat="' + c.key + '">'
+      +   '<div class="lrn-ico">' + c.ico + '</div>'
+      +   '<div class="lrn-name">' + c.name + '</div>'
+      +   '<div class="lrn-meta">' + done + " / " + total + " levels &middot; " + c.stat + '</div>'
+      +   '<div class="lrn-bar"><i style="width:' + Math.round(done / total * 100) + '%"></i></div>'
+      + '</button>';
+  }
+  document.getElementById("lrnCats").innerHTML = h;
+  var cc = learnCat(cur), path = LEARN_PATH[cur];
+  document.getElementById("lrnLadderTitle").innerHTML = cc.ico + " " + cc.name + " &mdash; " + esc(cc.desc);
+  var out = "";
+  for(i=0;i<path.length;i++){
+    var lv = path[i];
+    var isDone = learnDone(cur, i);
+    var open = i === 0 || learnDone(cur, i - 1);
+    out += '<div class="lvl-row ' + (isDone ? "done" : (open ? "open" : "locked")) + '" data-lv="' + i + '">'
+      +    '<div class="lvl-num">' + (isDone ? "✔" : (open ? (i + 1) : "🔒")) + '</div>'
+      +    '<div class="lvl-t"><div class="lvl-title">' + esc(lv.n) + '</div>'
+      +      '<div class="lvl-sub"><span class="lvl-tag' + (lv.t === "task" ? " task" : "") + '">'
+      +        (lv.t === "task" ? "TASK" : "VIDEO") + '</span><span>+' + learnXp(i) + " XP &middot; +"
+      +        learnPts(i) + " " + cc.stat + '</span></div></div></div>';
+  }
+  document.getElementById("lrnLadder").innerHTML = out;
+}
+var lrnOpen = {cat:"", i:-1};
+function openLearnLevel(cat, i){
+  learnFix();
+  var path = LEARN_PATH[cat];
+  if(!path || !path[i]) return;
+  if(i > 0 && !learnDone(cat, i - 1)){
+    toast(tr("Finish the level before this one first."), "err");
+    return;
+  }
+  var lv = path[i], cc = learnCat(cat), k = learnKey(cat, i);
+  lrnOpen = {cat:cat, i:i};
+  document.getElementById("lrnMTitle").textContent = cc.ico + " " + cc.name + " — LEVEL " + (i + 1);
+  document.getElementById("lrnMBody").textContent = lv.n + "\n\n" + lv.d;
+  var link = state.learn.links[k] || "";
+  var isVideo = lv.t === "video";
+  var vh = "";
+  if(isVideo){
+    var url = link || ("https://www.youtube.com/results?search_query=" + encodeURIComponent(lv.q));
+    vh = '<a class="btn primary" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="'
+       + esc(url) + '">▶ ' + (link ? "WATCH YOUR VIDEO" : "FIND THE LESSON") + '</a>';
+    if(!link) vh += '<div class="empty-note" style="margin-top:8px">No link saved yet — this opens a YouTube search for this lesson. Paste the video you chose below and it stays pinned to this level.</div>';
+  }
+  document.getElementById("lrnMVideo").innerHTML = vh;
+  document.getElementById("lrnMLink").style.display = isVideo ? "" : "none";
+  document.getElementById("lrnMLinkLbl").style.display = isVideo ? "" : "none";
+  document.getElementById("lrnMLink").value = link;
+  var d = document.getElementById("lrnMDone");
+  d.disabled = learnDone(cat, i);
+  d.textContent = learnDone(cat, i) ? "✔ ALREADY CLEARED" : "✔ COMPLETE LEVEL";
+  document.getElementById("lrnModal").classList.add("show");
+}
+function completeLearnLevel(){
+  var cat = lrnOpen.cat, i = lrnOpen.i;
+  if(!cat || i < 0 || learnDone(cat, i)) return;
+  learnFix();
+  var cc = learnCat(cat), path = LEARN_PATH[cat], lv = path[i];
+  var link = (document.getElementById("lrnMLink").value || "").trim();
+  if(link) state.learn.links[learnKey(cat, i)] = link;
+  state.learn.done[learnKey(cat, i)] = todayStr();
+  trainStat(cc.stat, learnPts(i));
+  sfx("complete");
+  document.getElementById("lrnModal").classList.remove("show");
+  gainXP(learnXp(i)); /* saves */
+  var next = path[i + 1];
+  announce(cc.ico + " " + cc.name + " — LEVEL " + (i + 1) + " CLEARED",
+    lv.n + "\n\n+" + learnXp(i) + " XP  ·  +" + learnPts(i) + " " + cc.stat + " training"
+    + (next ? "\n\nNEXT: " + next.n : "\n\nThis entire road is finished. " + cc.name + " is no longer something you are trying to have — it is something you built."),
+    "🌱", "CONTINUE");
+  renderLearn();
+}
+document.getElementById("lrnCats").addEventListener("click", function(e){
+  var b = e.target.closest(".lrn-cat");
+  if(!b) return;
+  learnFix();
+  state.learn.cat = b.getAttribute("data-cat");
+  save();
+  renderLearn();
+});
+document.getElementById("lrnLadder").addEventListener("click", function(e){
+  var r = e.target.closest(".lvl-row");
+  if(!r) return;
+  if(r.classList.contains("locked")){ toast(tr("Finish the level before this one first."), "err"); return; }
+  openLearnLevel(state.learn.cat, +r.getAttribute("data-lv"));
+});
+document.getElementById("lrnMClose").addEventListener("click", function(){
+  document.getElementById("lrnModal").classList.remove("show");
+});
+document.getElementById("lrnMDone").addEventListener("click", completeLearnLevel);
+
 function renderAll(){
   renderHeader();
+  if(currentPage === "world"){ renderWorldHud(); return; }
+  if(currentPage === "learn"){ renderLearn(); return; }
   if(currentPage === "home") renderHome();
   else if(currentPage === "profile") renderProfile();
   else if(currentPage === "quests") renderQuests();
@@ -8529,7 +9232,8 @@ checkPunishments();
 checkMonthlyReport();
 checkStoryUnlocks();
 renderAll();
-switchPage("home");
+worldRestore();       /* put the hunter back where they were standing in the world */
+switchPage("world");  /* the game now opens in the hub city, not on a menu */
 renderTimerPill(); /* resume a running session after reload */
 updateFinalizeBtn();
 /* entrance gate: shown until the hunter chooses USER (Google/guest) or ADMIN.

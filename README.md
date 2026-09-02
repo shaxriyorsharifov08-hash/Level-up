@@ -130,6 +130,38 @@ Logging in as admin (any email/password account) is treated as an administrator 
 
 ---
 
+## 4b. THE WORLD — the walkable hub city
+
+The app no longer opens on a menu. It opens on a **top-down world you walk**, like a game lobby.
+
+- Movement: **hold and drag anywhere** on the world (a floating joystick appears under your thumb, Brawl-Stars style), or **WASD / arrow keys** on a computer. **E** or **Enter** opens the door you are standing at.
+- Each **building is a section** of the System. Walk to a building's **south-facing door** (the glowing one at the bottom) and an `ENTER` button appears.
+- A section that is still sealed shows a **🔒 and the level needed** on the building itself — the door refuses you until you have earned it. This uses the exact same lock system as before (ADMIN CONSOLE → SECTION LOCKS), so nothing about progression changed.
+- A section the Administrator **removed** has no building at all.
+- The **minimap** (top right) shows the whole district and where you are standing.
+- Your position is saved — you come back where you left.
+
+The city grid, in `index.html`, is the `BUILDINGS` array. To move a room, change its `x`/`y`; to recolor it, change `a` (dark) and `b` (light). To add a room you also need a matching `page-<name>` section and an entry in `PAGES` / `NAV_ORDER` / `NAV_ICON` / `NAV_LABEL`.
+
+Everything in the world is **drawn with code** — there are no image files. That is deliberate: the app stays one file and opens instantly on a phone.
+
+The old **+1% dock still works** and reaches every section directly. The world is a new way in, not a cage.
+
+## 4c. LEARN & GROW — the four roads
+
+A teaching section, not a tracking section (ACADEMY building, or the 🌱 tab).
+
+Four categories — **DISCIPLINE (CON)**, **EDUCATION (INT)**, **PHYSICAL (STR)**, **EMOTIONAL (END)** — each a ladder of **10 levels** that alternates:
+
+- a **VIDEO** level (a written lesson plus a button that opens a YouTube search for exactly that topic), and
+- a **TASK** level built on the lesson before it — a real action in the real world, sometimes running for 7, 14 or 30 days.
+
+**A level stays sealed until the level before it is completed.** Completing one grants XP and attribute training that grow as you climb (Level 1 = +40 XP / +2 points, Level 10 = +148 XP / +5 points).
+
+Videos are **not hosted** — that would need a paid server. Instead each video level opens a YouTube search for the lesson topic, and you can **paste your own link** into the level to pin the exact video there forever (saved per device, under `state.learn.links`).
+
+To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text.
+
 ## 5. Features you may want to adjust later
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.
