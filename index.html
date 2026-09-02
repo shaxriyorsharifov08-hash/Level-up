@@ -2138,7 +2138,7 @@ function defaultState(){
     journal:{},          /* finalize-the-day reflections: date -> {learn, changed, tomorrow} */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
-    world:{x:1000, y:470, seen:false},   /* open-world hub: where the hunter is standing */
+    world:{map:"city", x:1000, y:470, seen:false}, /* which map the hunter is on, and where they stand */
     learn:{done:{}, links:{}, cat:"discipline"}, /* LEARN & GROW: "cat:index" -> ISO date, and user video links */
     budget:{currency:"$", transactions:[], goals:[]},
     skills:[],           /* earned from the level road */
@@ -8535,9 +8535,15 @@ document.getElementById("savingsList").addEventListener("click", function(e){
    A top-down, walkable world. Every building is a door into a section of the
    System. Everything is drawn with canvas primitives — no image assets — so
    the app stays a single file and still opens instantly on a phone. */
-var WORLD_W = 2000, WORLD_H = 1500;
-var BUILDINGS = [
-  {page:"learn",     ico:"🌱", name:"ACADEMY",       x:170,  y:150,  w:290, h:190, a:"#1d6f5c", b:"#2ee6b0"},
+/* Every walkable place is a MAP in WMAPS. A map has nodes (solid things you
+   can enter through a door) and walls (solid things you cannot). A node's
+   "go" says what its door does: open a section page, or travel to another
+   map. Adding a new interior is now just another entry in WMAPS. */
+var WMAPS = {};
+var wMap = "city";
+function curMap(){ return WMAPS[wMap] || WMAPS.city; }
+var CITY_NODES = [
+  {page:"learn",     ico:"🌱", name:"ACADEMY",       x:170,  y:150,  w:290, h:190, a:"#1d6f5c", b:"#2ee6b0", map:"academy"},
   {page:"stats",     ico:"🏋",  name:"TRAINING YARD", x:620,  y:150,  w:290, h:190, a:"#7a2b32", b:"#ff6b6b"},
   {page:"guild",     ico:"⚔",        name:"CLAN HALL",     x:1070, y:150,  w:290, h:190, a:"#23406e", b:"#5aa9ff"},
   {page:"profile",   ico:"🧬", name:"HUNTER TOWER",  x:1520, y:150,  w:290, h:190, a:"#5b2a7a", b:"#c98cff"},
@@ -8551,6 +8557,28 @@ var BUILDINGS = [
   {page:"story",     ico:"📖", name:"STORY GATE",    x:1520, y:1090, w:290, h:190, a:"#4a2a6b", b:"#d0a2ff"},
   {page:"admin",     ico:"⚙",        name:"SETTINGS",      x:900,  y:880,  w:200, h:140, a:"#2c3350", b:"#8fa2cf"}
 ];
+WMAPS.city = {
+  kind:"city", name:"HUNTER DISTRICT", w:2000, h:1500,
+  spawn:{x:1000, y:470}, nodes:CITY_NODES, walls:[]
+};
+/* THE ACADEMY — the first interior. Four stations, one per road of growth. */
+WMAPS.academy = {
+  kind:"room", name:"THE ACADEMY", w:800, h:1050, fit:true,
+  spawn:{x:400, y:830},
+  nodes:[
+    {ico:"🔥", name:"DISCIPLINE", x:110, y:120, w:180, h:115, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
+    {ico:"📚", name:"EDUCATION",  x:510, y:120, w:180, h:115, a:"#1f4d7a", b:"#5aa9ff", go:{page:"learn", cat:"education"}},
+    {ico:"💪", name:"PHYSICAL",   x:110, y:500, w:180, h:115, a:"#7a2b32", b:"#ff6b6b", go:{page:"learn", cat:"physical"}},
+    {ico:"🧠", name:"EMOTIONAL",  x:510, y:500, w:180, h:115, a:"#4a2a6b", b:"#c98cff", go:{page:"learn", cat:"emotional"}},
+    {ico:"🚪", name:"EXIT", prompt:"🚪 LEAVE THE ACADEMY", x:300, y:1010, w:200, h:40,
+     a:"#2c3350", b:"#8fa2cf", face:"n", go:{map:"city", at:{x:315, y:378}}}
+  ],
+  walls:[
+    {x:0, y:0, w:800, h:40}, {x:0, y:1010, w:800, h:40},
+    {x:0, y:0, w:40, h:1050}, {x:760, y:0, w:40, h:1050},
+    {x:320, y:330, w:160, h:100, desk:true}   /* the study table in the middle */
+  ]
+};
 var wPlayer = {x:1000, y:470, dir:1, moving:false, anim:0};
 var wCam = {x:0, y:0}, wView = {w:0, h:0}, wScale = 1;
 var wCv = null, wCtx = null, wRAF = null, wLast = 0, wNear = null, wSavedAt = "";
@@ -8598,25 +8626,36 @@ function worldResize(){
   wCv.width = Math.round(wView.w * dpr);
   wCv.height = Math.round(wView.h * dpr);
   wCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  /* keep roughly 1100 world-units of height on screen: close enough to feel
-     like a character, wide enough to see the next block and where to walk */
-  wScale = Math.max(0.34, Math.min(1.05, wView.h / 1100));
+  var m = curMap();
+  if(m.fit){
+    /* an interior shows all of its doors at once — fit the whole room */
+    wScale = Math.max(0.25, Math.min(1.4, Math.min(wView.w / (m.w + 50), wView.h / (m.h + 50))));
+  } else {
+    /* outdoors: keep roughly 1100 world-units of height on screen — close enough
+       to feel like a character, wide enough to see the next block and where to walk */
+    wScale = Math.max(0.34, Math.min(1.05, wView.h / 1100));
+  }
 }
-/* rooms the hunter can see — a feature the Administrator removed has no building */
+/* nodes the hunter can see — a feature the Administrator removed has no door */
 function worldRooms(){
-  var out = [];
-  for(var i=0;i<BUILDINGS.length;i++) if(!featureRemoved(BUILDINGS[i].page)) out.push(BUILDINGS[i]);
+  var n = curMap().nodes, out = [];
+  for(var i=0;i<n.length;i++) if(!(n[i].page && featureRemoved(n[i].page))) out.push(n[i]);
   return out;
 }
+function wHits(b, x, y, hw, hh){
+  return x + hw > b.x && x - hw < b.x + b.w && y + hh > b.y && y - hh < b.y + b.h;
+}
 function worldSolid(x, y){
-  var hw = 14, hh = 10, r = worldRooms();
-  for(var i=0;i<r.length;i++){
-    var b = r[i];
-    if(x + hw > b.x && x - hw < b.x + b.w && y + hh > b.y && y - hh < b.y + b.h) return true;
-  }
+  var hw = 14, hh = 10, i, r = worldRooms(), wl = curMap().walls || [];
+  for(i=0;i<r.length;i++)  if(wHits(r[i], x, y, hw, hh)) return true;
+  for(i=0;i<wl.length;i++) if(wHits(wl[i], x, y, hw, hh)) return true;
   return false;
 }
-function worldDoorZone(b){ return {x:b.x + b.w/2 - 54, y:b.y + b.h - 8, w:108, h:70}; }
+/* the door is on the south face unless the node says otherwise */
+function worldDoorZone(b){
+  if(b.face === "n") return {x:b.x + b.w/2 - 54, y:b.y - 62, w:108, h:70};
+  return {x:b.x + b.w/2 - 54, y:b.y + b.h - 8, w:108, h:70};
+}
 function worldNearest(){
   var r = worldRooms();
   for(var i=0;i<r.length;i++){
@@ -8629,10 +8668,40 @@ function worldPrompt(){
   var btn = document.getElementById("worldEnter");
   if(!btn) return;
   if(!wNear){ btn.classList.remove("show"); return; }
-  var lv = sectionLockLevel(wNear.page);
+  var lv = wNear.page ? sectionLockLevel(wNear.page) : 0;
   btn.classList.add("show");
   if(lv){ btn.classList.add("locked"); btn.textContent = "🔒 " + wNear.name + " — LV." + lv; }
-  else  { btn.classList.remove("locked"); btn.textContent = "ENTER " + wNear.ico + " " + wNear.name; }
+  else  { btn.classList.remove("locked"); btn.textContent = wNear.prompt || ("ENTER " + wNear.ico + " " + wNear.name); }
+}
+/* walking through a door: another map, or a section of the System */
+function worldTravel(key, at){
+  var m = WMAPS[key];
+  if(!m) return;
+  wMap = key;
+  var sp = at || m.spawn || {x:m.w/2, y:m.h/2};
+  wPlayer.x = sp.x;
+  wPlayer.y = sp.y;
+  wNear = null;
+  wSavedAt = "";
+  if(state.world){ state.world.map = key; }
+  worldSave();
+  worldResize();
+  wNear = worldNearest();
+  worldPrompt();
+  renderWorldHud();
+  sysToast(m.name);
+}
+function worldEnterNode(b){
+  if(!b) return;
+  var lv = b.page ? sectionLockLevel(b.page) : 0;
+  if(lv){ toast(tr("Sealed by the System. Reach Level ") + lv + tr(" to unlock this section."), "err"); return; }
+  sfx("open");
+  var g = b.go || {};
+  if(b.map){ worldTravel(b.map); return; }
+  if(g.map){ worldTravel(g.map, g.at); return; }
+  if(g.cat){ learnFix(); state.learn.cat = g.cat; }
+  worldSave();
+  switchPage(g.page || b.page);
 }
 function worldUpdate(dt){
   var ax = 0, ay = 0;
@@ -8652,46 +8721,120 @@ function worldUpdate(dt){
     if(!worldSolid(nx, wPlayer.y)) wPlayer.x = nx;
     var ny = wPlayer.y + ay * sp;
     if(!worldSolid(wPlayer.x, ny)) wPlayer.y = ny;
-    wPlayer.x = Math.max(26, Math.min(WORLD_W - 26, wPlayer.x));
-    wPlayer.y = Math.max(40, Math.min(WORLD_H - 26, wPlayer.y));
+    var m = curMap();
+    wPlayer.x = Math.max(26, Math.min(m.w - 26, wPlayer.x));
+    wPlayer.y = Math.max(40, Math.min(m.h - 26, wPlayer.y));
     wPlayer.anim += dt;
   }
   var near = worldNearest();
   if(near !== wNear){ wNear = near; worldPrompt(); }
 }
 function worldCamera(){
-  var vw = wView.w / wScale, vh = wView.h / wScale;
-  wCam.x = vw >= WORLD_W ? (WORLD_W - vw) / 2 : Math.max(0, Math.min(WORLD_W - vw, wPlayer.x - vw/2));
-  wCam.y = vh >= WORLD_H ? (WORLD_H - vh) / 2 : Math.max(0, Math.min(WORLD_H - vh, wPlayer.y - vh/2));
+  var m = curMap(), vw = wView.w / wScale, vh = wView.h / wScale;
+  wCam.x = vw >= m.w ? (m.w - vw) / 2 : Math.max(0, Math.min(m.w - vw, wPlayer.x - vw/2));
+  wCam.y = vh >= m.h ? (m.h - vh) / 2 : Math.max(0, Math.min(m.h - vh, wPlayer.y - vh/2));
 }
 function worldDrawGround(c, t){
-  var g = c.createLinearGradient(0, 0, 0, WORLD_H);
+  var m = curMap(), i;
+  var g = c.createLinearGradient(0, 0, 0, m.h);
   g.addColorStop(0, t.g1);
   g.addColorStop(1, t.g2);
   c.fillStyle = g;
-  c.fillRect(0, 0, WORLD_W, WORLD_H);
+  c.fillRect(0, 0, m.w, m.h);
+  if(m.kind === "room"){ worldDrawRoom(c, t, m); return; }
   /* the avenues between the blocks */
-  var hy = [75, 480, 950, 1390], vx = [85, 540, 990, 1440, 1905], i;
+  var hy = [75, 480, 950, 1390], vx = [85, 540, 990, 1440, 1905];
   c.fillStyle = t.road;
-  for(i=0;i<hy.length;i++) c.fillRect(0, hy[i] - 56, WORLD_W, 112);
-  for(i=0;i<vx.length;i++) c.fillRect(vx[i] - 56, 0, 112, WORLD_H);
+  for(i=0;i<hy.length;i++) c.fillRect(0, hy[i] - 56, m.w, 112);
+  for(i=0;i<vx.length;i++) c.fillRect(vx[i] - 56, 0, 112, m.h);
   /* lane markings */
   c.strokeStyle = t.line;
   c.lineWidth = 3;
   c.setLineDash([26, 22]);
-  for(i=0;i<hy.length;i++){ c.beginPath(); c.moveTo(0, hy[i]); c.lineTo(WORLD_W, hy[i]); c.stroke(); }
-  for(i=0;i<vx.length;i++){ c.beginPath(); c.moveTo(vx[i], 0); c.lineTo(vx[i], WORLD_H); c.stroke(); }
+  for(i=0;i<hy.length;i++){ c.beginPath(); c.moveTo(0, hy[i]); c.lineTo(m.w, hy[i]); c.stroke(); }
+  for(i=0;i<vx.length;i++){ c.beginPath(); c.moveTo(vx[i], 0); c.lineTo(vx[i], m.h); c.stroke(); }
   c.setLineDash([]);
   /* outer wall of the district */
   c.strokeStyle = t.acc;
   c.lineWidth = 7;
   c.globalAlpha = .5;
-  wRR(c, 4, 4, WORLD_W - 8, WORLD_H - 8, 26);
+  wRR(c, 4, 4, m.w - 8, m.h - 8, 26);
   c.stroke();
   c.globalAlpha = 1;
 }
+/* an interior: tiled floor, a rug of light under the centre, then stone walls */
+function worldDrawRoom(c, t, m){
+  var i, j, TS = 100;
+  c.strokeStyle = t.line;
+  c.lineWidth = 2;
+  for(i=TS;i<m.w;i+=TS){ c.beginPath(); c.moveTo(i, 0); c.lineTo(i, m.h); c.stroke(); }
+  for(j=TS;j<m.h;j+=TS){ c.beginPath(); c.moveTo(0, j); c.lineTo(m.w, j); c.stroke(); }
+  var rg = c.createRadialGradient(m.w/2, m.h/2, 40, m.w/2, m.h/2, m.w/2);
+  rg.addColorStop(0, t.light ? "rgba(255,255,255,.75)" : "rgba(124,97,255,.16)");
+  rg.addColorStop(1, "rgba(0,0,0,0)");
+  c.fillStyle = rg;
+  c.fillRect(0, 0, m.w, m.h);
+  var wl = m.walls || [];
+  for(i=0;i<wl.length;i++){
+    var s = wl[i];
+    c.fillStyle = s.desk ? "#4a3a22" : (t.light ? "#e6cfe0" : "#161a33");
+    wRR(c, s.x, s.y, s.w, s.h, s.desk ? 10 : 4);
+    c.fill();
+    c.strokeStyle = s.desk ? "rgba(255,220,150,.35)" : t.acc;
+    c.lineWidth = s.desk ? 3 : 2;
+    c.stroke();
+    if(s.desk){
+      c.fillStyle = "rgba(255,255,255,.16)";
+      wRR(c, s.x + 16, s.y + 14, s.w - 32, 26, 5);
+      c.fill();
+    }
+  }
+}
+/* a station inside a room: a lit archway with its own progress read-out */
+function worldDrawStation(c, b, t){
+  var uf = 1 / wScale;
+  c.fillStyle = "rgba(0,0,0,.42)";
+  wRR(c, b.x + 5, b.y + 10, b.w, b.h, 12); c.fill();
+  var g = c.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+  g.addColorStop(0, b.b);
+  g.addColorStop(1, b.a);
+  c.fillStyle = g;
+  wRR(c, b.x, b.y, b.w, b.h, 12); c.fill();
+  /* the portal mouth */
+  var px = b.x + b.w/2 - 34, py = b.y + b.h - 62;
+  c.fillStyle = "rgba(0,0,0,.55)";
+  wRR(c, px, py, 68, 62, 9); c.fill();
+  c.save();
+  c.shadowColor = t.blu;
+  c.shadowBlur = 22;
+  c.strokeStyle = t.blu;
+  c.lineWidth = 3;
+  wRR(c, px, py, 68, 62, 9); c.stroke();
+  c.restore();
+  c.strokeStyle = "rgba(255,255,255,.22)";
+  c.lineWidth = 2;
+  wRR(c, b.x, b.y, b.w, b.h, 12); c.stroke();
+  c.textAlign = "center";
+  c.fillStyle = t.ink;
+  c.font = Math.round(26 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
+  c.fillText(b.ico, b.x + b.w/2, b.y - 28 * uf);
+  c.font = "700 " + Math.round(13 * uf) + "px Orbitron,monospace";
+  c.fillText(b.name, b.x + b.w/2, b.y - 10 * uf);
+  /* how far this road has been walked — a room always fits the screen, so this
+     text is sized in world units and scales with the viewport by itself */
+  var cat = b.go && b.go.cat;
+  if(cat && LEARN_PATH[cat]){
+    var total = LEARN_PATH[cat].length, done = learnCleared(cat);
+    c.fillStyle = "rgba(0,0,0,.5)";
+    wRR(c, b.x + b.w/2 - 52, b.y + 10, 104, 40, 12); c.fill();
+    c.fillStyle = done >= total ? "#22c55e" : "#ffffff";
+    c.font = "700 28px Orbitron,monospace";
+    c.fillText(done + " / " + total, b.x + b.w/2, b.y + 38);
+  }
+}
 function worldDrawBuilding(c, b, t){
-  var lock = sectionLockLevel(b.page), i, j;
+  if(curMap().kind === "room"){ worldDrawStation(c, b, t); return; }
+  var lock = b.page ? sectionLockLevel(b.page) : 0, i, j;
   c.fillStyle = "rgba(0,0,0,.42)";
   wRR(c, b.x + 6, b.y + 13, b.w, b.h, 16); c.fill();
   var g = c.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
@@ -8784,6 +8927,7 @@ function worldDrawJoy(c){
   c.restore();
 }
 function worldDrawMap(c, t){
+  if(curMap().fit) return; /* the whole room is already on screen — no minimap needed */
   var mw = 94, mh = 71, mx = wView.w - mw - 12, my = 12, i;
   c.save();
   c.fillStyle = t.light ? "rgba(255,255,255,.8)" : "rgba(4,6,18,.68)";
@@ -8791,15 +8935,15 @@ function worldDrawMap(c, t){
   c.strokeStyle = t.acc;
   c.lineWidth = 1;
   c.stroke();
-  var r = worldRooms();
+  var m = curMap(), r = worldRooms();
   for(i=0;i<r.length;i++){
     var b = r[i];
-    c.fillStyle = sectionLockLevel(b.page) ? "rgba(140,140,160,.45)" : b.b;
-    c.fillRect(mx + b.x/WORLD_W*mw, my + b.y/WORLD_H*mh,
-               Math.max(2, b.w/WORLD_W*mw), Math.max(2, b.h/WORLD_H*mh));
+    c.fillStyle = (b.page && sectionLockLevel(b.page)) ? "rgba(140,140,160,.45)" : b.b;
+    c.fillRect(mx + b.x/m.w*mw, my + b.y/m.h*mh,
+               Math.max(2, b.w/m.w*mw), Math.max(2, b.h/m.h*mh));
   }
   c.fillStyle = t.blu;
-  c.beginPath(); c.arc(mx + wPlayer.x/WORLD_W*mw, my + wPlayer.y/WORLD_H*mh, 2.8, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(mx + wPlayer.x/m.w*mw, my + wPlayer.y/m.h*mh, 2.8, 0, Math.PI*2); c.fill();
   c.restore();
 }
 function worldFrame(ts){
@@ -8828,21 +8972,31 @@ function renderWorldHud(){
   var el = document.getElementById("worldHud");
   if(!el || !state) return;
   el.innerHTML = esc((state.hunterName || "Hunter").toUpperCase()) + "<br>LV.<b>"
-    + state.level + "</b> &nbsp;" + esc(currentRank().key) + "-RANK";
+    + state.level + "</b> &nbsp;" + esc(currentRank().key) + "-RANK<br><b>"
+    + esc(curMap().name) + "</b>";
 }
 function worldRestore(){
-  if(state && state.world && typeof state.world.x === "number"){
-    wPlayer.x = state.world.x;
-    wPlayer.y = state.world.y;
+  if(state && state.world){
+    if(state.world.map && WMAPS[state.world.map]) wMap = state.world.map;
+    if(typeof state.world.x === "number"){
+      wPlayer.x = state.world.x;
+      wPlayer.y = state.world.y;
+    }
   }
-  if(worldSolid(wPlayer.x, wPlayer.y)){ wPlayer.x = 1000; wPlayer.y = 470; }
+  var m = curMap();
+  if(wPlayer.x < 0 || wPlayer.y < 0 || wPlayer.x > m.w || wPlayer.y > m.h || worldSolid(wPlayer.x, wPlayer.y)){
+    var sp = m.spawn || {x:m.w/2, y:m.h/2};
+    wPlayer.x = sp.x;
+    wPlayer.y = sp.y;
+  }
 }
 function worldSave(){
   if(!state) return;
-  var key = Math.round(wPlayer.x) + ":" + Math.round(wPlayer.y);
+  var key = wMap + ":" + Math.round(wPlayer.x) + ":" + Math.round(wPlayer.y);
   if(key === wSavedAt) return;
   wSavedAt = key;
-  if(!state.world) state.world = {x:1000, y:470, seen:true};
+  if(!state.world) state.world = {x:1000, y:470, map:"city", seen:true};
+  state.world.map = wMap;
   state.world.x = Math.round(wPlayer.x);
   state.world.y = Math.round(wPlayer.y);
   save();
@@ -8891,14 +9045,7 @@ function worldStop(){
   }
   st.addEventListener("pointerup", stop);
   st.addEventListener("pointercancel", stop);
-  document.getElementById("worldEnter").addEventListener("click", function(){
-    if(!wNear) return;
-    var lv = sectionLockLevel(wNear.page);
-    if(lv){ toast(tr("Sealed by the System. Reach Level ") + lv + tr(" to unlock this section."), "err"); return; }
-    sfx("open");
-    worldSave();
-    switchPage(wNear.page);
-  });
+  document.getElementById("worldEnter").addEventListener("click", function(){ worldEnterNode(wNear); });
   document.addEventListener("keydown", function(e){
     if(currentPage !== "world") return;
     var tg = e.target && e.target.tagName;

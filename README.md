@@ -141,7 +141,36 @@ The app no longer opens on a menu. It opens on a **top-down world you walk**, li
 - The **minimap** (top right) shows the whole district and where you are standing.
 - Your position is saved — you come back where you left.
 
-The city grid, in `index.html`, is the `BUILDINGS` array. To move a room, change its `x`/`y`; to recolor it, change `a` (dark) and `b` (light). To add a room you also need a matching `page-<name>` section and an entry in `PAGES` / `NAV_ORDER` / `NAV_ICON` / `NAV_LABEL`.
+### How maps work (this is the important part for editing)
+
+Every walkable place — the city and every interior — is an entry in **`WMAPS`** in `index.html`:
+
+| Field | Meaning |
+|---|---|
+| `kind` | `"city"` (streets + buildings) or `"room"` (tiled floor + stations) |
+| `w`, `h` | size of the map in world units |
+| `fit` | `true` = zoom so the whole room is on screen at once (interiors); leave out for outdoor maps, which scroll with the camera |
+| `spawn` | `{x,y}` where you appear when you arrive |
+| `nodes` | the things with doors — each has `x,y,w,h`, `ico`, `name`, colors `a` (dark) / `b` (light), and a `go` |
+| `walls` | solid blocks you cannot enter (`desk:true` draws it as furniture) |
+
+A node's **`go`** decides what its door does:
+- `go:{page:"quests"}` — open that section
+- `go:{page:"learn", cat:"discipline"}` — open a section already switched to that road
+- `go:{map:"academy"}` — walk into another map
+- `go:{map:"city", at:{x,y}}` — walk out, landing at an exact spot
+- `face:"n"` puts the door on the **north** side instead of the south (used for exits set into the bottom wall)
+- `prompt:"..."` overrides the button text (so an exit says *LEAVE*, not *ENTER*)
+
+City nodes also carry `page`, which is what the lock system checks.
+
+**Adding a whole new interior is now one `WMAPS` entry plus a `go:{map:"..."}` on the building that leads to it.** Nothing else needs to change.
+
+### THE ACADEMY (the first interior)
+
+Walking into the ACADEMY building no longer opens a menu — it puts you **inside a room**. Four stations, one per road (🔥 DISCIPLINE, 📚 EDUCATION, 💪 PHYSICAL, 🧠 EMOTIONAL), each showing **how many levels of that road you have cleared** right on the station. Walk into one and LEARN & GROW opens on that road. The 🚪 door in the south wall returns you to the city, standing outside the Academy where you came in.
+
+Which map you are standing in is saved (`state.world.map`), so closing the app inside the Academy reopens inside the Academy.
 
 Everything in the world is **drawn with code** — there are no image files. That is deliberate: the app stays one file and opens instantly on a phone.
 
