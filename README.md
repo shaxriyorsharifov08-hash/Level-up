@@ -141,6 +141,25 @@ The app no longer opens on a menu. It opens on a **top-down world you walk**, li
 - The **minimap** (top right) shows the whole district and where you are standing.
 - Your position is saved — you come back where you left.
 
+### The city is organised by INTENT, not by feature
+
+Every building answers **one sentence a real person says out loud** — the sentence is written under its sign. The old sections became the **rooms inside** them.
+
+| Building | The sentence it answers | Rooms inside |
+|---|---|---|
+| 🌱 ACADEMY | *"I want to become someone"* | Discipline · Education · Physical · Emotional |
+| 🏋 TRAINING YARD | *"I want to train my body"* | Interval Timer · Daily Package · Body & Stats · Challenges |
+| 🏦 TREASURY | *"I want control of my money"* | Budget · Reward Vault · Armory |
+| 🏠 SANCTUARY | *"Who am I becoming?"* | The Oath · Profile · Story Path · Manual · Settings |
+| 📜 QUEST BOARD | *"What did I commit to?"* | — opens QUESTS directly |
+| ⚔ CLAN HALL | *"I don't want to do this alone"* | — opens CLAN directly |
+| 🏆 HALL OF HONOR | *"I want proof of what I've done"* | — opens HONOR directly |
+| ⚔ OATH STONE | the monument where you swore | reads your oath back |
+
+**Buildings are never sealed. Rooms are.** You walk into the Treasury and see which vaults you have not earned yet, with the level written on them. This uses the same lock system as before (ADMIN CONSOLE → SECTION LOCKS) — nothing about progression changed.
+
+**The architecture rule:** the city is where you go to **start** something; the dock is where you go to **do** it. Anything touched every day stays one tap away — that is why the +1% dock now opens with WORLD · HOME · QUESTS · LEARN · TIMER. Existing hunters get this order once, automatically (`state.navIntentV2`); renamed and hidden tabs are preserved, and you can reorder again any time in SETTINGS → RENAME & REORDER TABS.
+
 ### How maps work (this is the important part for editing)
 
 Every walkable place — the city and every interior — is an entry in **`WMAPS`** in `index.html`:
@@ -189,7 +208,17 @@ Four categories — **DISCIPLINE (CON)**, **EDUCATION (INT)**, **PHYSICAL (STR)*
 
 Videos are **not hosted** — that would need a paid server. Instead each video level opens a YouTube search for the lesson topic, and you can **paste your own link** into the level to pin the exact video there forever (saved per device, under `state.learn.links`).
 
-To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text.
+**A lesson must produce action, or it is just motivation followed by nothing.** Every TASK level has an **⚔ ACCEPT** button that creates a **real quest in your log** — a daily quest for its full length (a 3-day vow becomes a 3-day quest, the 30-day vow a 30-day one), or a one-time goal if it is a single-sitting task. The System assigns it, so **it never spends a quest slot** and works from Level 1. The level itself is sealed until you come back and say it is genuinely done, and the quest stays in your log afterwards so you can keep it as a habit or delete it.
+
+To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text, `dur` is how many days a task's quest should run.
+
+## 4e. THE INTERVAL TIMER
+
+TRAINING YARD → ⏱ INTERVAL TIMER (or the ⏱ TIMER tab). Rounds of work and rest, for the body — **distinct from the Focus Timer**, which measures one long unbroken session on a quest.
+
+Presets: TABATA (20/10×8), HIIT (40/20×10), EMOM (60/0×10), STRENGTH (45/90×5), or CUSTOM. Work is clamped to a 5-second minimum, rounds to 99.
+
+Finishing a session **logs the work time into the same `timeHistory` the STATS page charts**, trains END, and grants XP proportional to the time worked (capped at 120). Nothing here is decoration — the System counts every round.
 
 ## 4d. THE OATH — the hunter's own words, used against them
 

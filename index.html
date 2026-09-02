@@ -1001,6 +1001,28 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 .lvl-tag.task{background:rgba(251,191,36,.15);color:var(--legendary)}
 .lrn-body{white-space:pre-wrap;line-height:1.65;font-size:.88rem;color:var(--text)}
 
+/* ---------- INTERVAL TIMER ---------- */
+.iv-dial{position:relative;width:100%;max-width:280px;margin:0 auto 6px;aspect-ratio:1/1;
+  display:flex;align-items:center;justify-content:center}
+.iv-dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.iv-mid{position:relative;text-align:center}
+.iv-phase{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:.24em;color:var(--dim)}
+.iv-time{font-family:'Orbitron',monospace;font-weight:900;font-size:2.9rem;line-height:1.1;color:var(--text)}
+.iv-round{font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--blue);margin-top:2px}
+.iv-dial.work .iv-time{color:#ff6b6b}
+.iv-dial.rest .iv-time{color:#22c55e}
+.iv-dial.done .iv-time{color:var(--legendary)}
+.iv-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.iv-pre{padding:8px 12px;border-radius:10px;cursor:pointer;font-family:'Orbitron',monospace;
+  font-size:.68rem;letter-spacing:.06em;color:var(--text);
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line)}
+.iv-pre.active{border-color:var(--blue);box-shadow:var(--glowblue);color:var(--blue)}
+.iv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.iv-grid label{display:block;font-size:.66rem;font-weight:700;letter-spacing:.1em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:5px}
+.iv-actions{display:flex;gap:10px}
+.iv-actions .btn{flex:1}
+
 /* ---------- THE OATH ---------- */
 #oathOv{position:fixed;inset:0;z-index:420;display:none;align-items:flex-start;justify-content:center;
   background:radial-gradient(900px 600px at 50% -10%,rgba(124,97,255,.16),transparent 60%),rgba(2,3,10,.96);
@@ -1111,6 +1133,42 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
       <div class="panel">
         <div class="panel-title" id="lrnLadderTitle">PATH</div>
         <div id="lrnLadder"></div>
+      </div>
+    </section>
+
+    <!-- ============ INTERVAL TIMER ============ -->
+    <section id="page-interval" style="display:none">
+      <div class="panel">
+        <div class="panel-title">⏱ INTERVAL TIMER</div>
+        <div class="empty-note" style="margin-bottom:14px">Rounds of work and rest. For training the body — the ⏱ on a quest card is for one long focused session; this is for intervals.</div>
+        <div class="iv-dial" id="ivDial">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"
+                    stroke-linecap="round" id="ivArc" stroke-dasharray="283" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="iv-mid">
+            <div class="iv-phase" id="ivPhase">READY</div>
+            <div class="iv-time" id="ivTime">00:00</div>
+            <div class="iv-round" id="ivRound"></div>
+          </div>
+        </div>
+        <div class="iv-actions" style="margin:16px 0 6px">
+          <button class="btn primary" id="ivStart">▶ START</button>
+          <button class="btn" id="ivReset">■ RESET</button>
+        </div>
+        <div class="empty-note" id="ivTotal" style="text-align:center"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">SESSION</div>
+        <div class="iv-presets" id="ivPresets"></div>
+        <div class="iv-grid">
+          <div><label>Work (sec)</label><input class="inp" id="ivWork" type="number" min="5" max="3600" value="30"></div>
+          <div><label>Rest (sec)</label><input class="inp" id="ivRest" type="number" min="0" max="3600" value="15"></div>
+          <div><label>Rounds</label><input class="inp" id="ivRounds" type="number" min="1" max="99" value="8"></div>
+        </div>
+        <div class="empty-note" id="ivPlan"></div>
       </div>
     </section>
 
@@ -1890,6 +1948,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
     <div class="modal-title" id="lrnMTitle">LEVEL</div>
     <div class="lrn-body" id="lrnMBody"></div>
     <div id="lrnMVideo" style="margin-top:14px"></div>
+    <div id="lrnMQuest" style="margin-top:14px"></div>
     <label class="form-lbl" id="lrnMLinkLbl">Your video link (optional — saved on this device)</label>
     <input class="inp" id="lrnMLink" type="url" placeholder="https://youtube.com/watch?v=...">
     <div class="modal-actions">
@@ -2197,6 +2256,8 @@ function defaultState(){
     journal:{},          /* finalize-the-day reflections: date -> {learn, changed, tomorrow} */
     notify:{on:false, time:"20:00", lastFired:""},  /* daily quest reminder */
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
+    navIntentV2:false,   /* must default false: load() fills missing keys from here,
+                            so a true default would skip the migration on old saves */
     world:{map:"city", x:1000, y:470, seen:false}, /* which map the hunter is on, and where they stand */
     oath:null,           /* THE OATH: the hunter's own words, quoted back at them forever */
     learn:{done:{}, links:{}, cat:"discipline"}, /* LEARN & GROW: "cat:index" -> ISO date, and user video links */
@@ -4216,13 +4277,26 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "world";
-var PAGES = ["world","learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
-var NAV_ICON = {world:"🌍", learn:"🌱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
-var NAV_LABEL = {world:"WORLD", learn:"LEARN", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
-var NAV_ORDER = ["world","learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var PAGES = ["world","learn","interval","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var NAV_ICON = {world:"🌍", learn:"🌱", interval:"⏱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {world:"WORLD", learn:"LEARN", interval:"TIMER", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
+/* daily loop first — the things touched every single day are never more than
+   one tap away; everything else is reached by walking the city */
+var NAV_ORDER = ["world","home","quests","learn","interval","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
   if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
+  /* one-time reorder to the intent layout: daily loop first. Labels the hunter
+     renamed and tabs they hid are preserved; they can reorder again any time. */
+  if(!state.navIntentV2){
+    state.navIntentV2 = true;
+    var by = {};
+    for(var m=0;m<state.navConfig.length;m++) by[state.navConfig[m].page] = state.navConfig[m];
+    var reordered = [];
+    for(var n=0;n<NAV_ORDER.length;n++) if(by[NAV_ORDER[n]]) reordered.push(by[NAV_ORDER[n]]);
+    for(var o=0;o<state.navConfig.length;o++) if(reordered.indexOf(state.navConfig[o]) === -1) reordered.push(state.navConfig[o]);
+    state.navConfig = reordered;
+  }
   var seen = {};
   state.navConfig = state.navConfig.filter(function(c){
     if(!NAV_ICON[c.page] || seen[c.page]) return false;
@@ -8616,6 +8690,150 @@ document.getElementById("savingsList").addEventListener("click", function(e){
 });
 
 /* ---------------- render dispatcher ---------------- */
+/* ================= INTERVAL TIMER =================
+   Rounds of work and rest, for training the body. Distinct from the Focus
+   Timer, which measures one long unbroken session. Time spent here is logged
+   into the same timeHistory the STATS page charts. */
+var IV_PRESETS = [
+  {n:"TABATA",  w:20, r:10, c:8},
+  {n:"HIIT",    w:40, r:20, c:10},
+  {n:"EMOM",    w:60, r:0,  c:10},
+  {n:"STRENGTH",w:45, r:90, c:5},
+  {n:"CUSTOM",  w:0,  r:0,  c:0}
+];
+var iv = {on:false, phase:"ready", round:1, endsAt:0, left:0, tick:null, worked:0, cfg:null};
+function ivCfg(){
+  return {
+    w: Math.max(5, Math.min(3600, +document.getElementById("ivWork").value || 30)),
+    r: Math.max(0, Math.min(3600, +document.getElementById("ivRest").value || 0)),
+    c: Math.max(1, Math.min(99,  +document.getElementById("ivRounds").value || 1))
+  };
+}
+function ivFmt(s){
+  s = Math.max(0, Math.ceil(s));
+  var m = Math.floor(s / 60);
+  var ss = s % 60;
+  return (m < 10 ? "0" : "") + m + ":" + (ss < 10 ? "0" : "") + ss;
+}
+function renderIvPresets(){
+  var c = ivCfg(), h = "";
+  for(var i=0;i<IV_PRESETS.length;i++){
+    var p = IV_PRESETS[i];
+    var on = p.c ? (p.w === c.w && p.r === c.r && p.c === c.c) : false;
+    h += '<button class="iv-pre' + (on ? " active" : "") + '" data-p="' + i + '">' + p.n
+      + (p.c ? '<div style="font-size:.58rem;color:var(--dim);letter-spacing:.04em;margin-top:3px">'
+               + p.w + "s / " + p.r + "s × " + p.c + "</div>" : "") + "</button>";
+  }
+  document.getElementById("ivPresets").innerHTML = h;
+  var total = c.c * c.w + Math.max(0, c.c - 1) * c.r;
+  document.getElementById("ivPlan").textContent =
+    c.c + " rounds · " + c.w + "s work · " + c.r + "s rest · total " + ivFmt(total);
+}
+function renderIv(){
+  var d = document.getElementById("ivDial");
+  if(!d) return;
+  var cfg = iv.cfg || ivCfg();
+  var full = iv.phase === "rest" ? cfg.r : cfg.w;
+  var left = iv.on ? Math.max(0, (iv.endsAt - Date.now()) / 1000) : (iv.phase === "done" ? 0 : cfg.w);
+  d.className = "iv-dial " + (iv.phase === "work" ? "work" : iv.phase === "rest" ? "rest" : iv.phase === "done" ? "done" : "");
+  d.style.color = iv.phase === "rest" ? "#22c55e" : iv.phase === "done" ? "#fbbf24" : "#ff6b6b";
+  document.getElementById("ivTime").textContent = ivFmt(left);
+  document.getElementById("ivPhase").textContent =
+    iv.phase === "work" ? "WORK" : iv.phase === "rest" ? "REST" : iv.phase === "done" ? "COMPLETE" : "READY";
+  document.getElementById("ivRound").textContent =
+    iv.phase === "ready" ? (cfg.c + " ROUNDS") : ("ROUND " + Math.min(iv.round, cfg.c) + " / " + cfg.c);
+  var frac = full > 0 ? (left / full) : 0;
+  document.getElementById("ivArc").setAttribute("stroke-dashoffset", String(283 * (1 - Math.max(0, Math.min(1, frac)))));
+  document.getElementById("ivStart").textContent = iv.on ? "❚❚ PAUSE" : (iv.phase === "ready" || iv.phase === "done" ? "▶ START" : "▶ RESUME");
+  document.getElementById("ivTotal").textContent = iv.worked > 0 ? ("Worked this session: " + ivFmt(iv.worked)) : "";
+}
+function ivStop(){
+  if(iv.tick){ clearInterval(iv.tick); iv.tick = null; }
+  iv.on = false;
+}
+function ivReset(){
+  ivStop();
+  iv.phase = "ready"; iv.round = 1; iv.left = 0; iv.worked = 0; iv.cfg = null;
+  renderIvPresets();
+  renderIv();
+}
+function ivAdvance(){
+  var cfg = iv.cfg;
+  if(iv.phase === "work"){
+    iv.worked += cfg.w;
+    if(iv.round >= cfg.c){ ivFinish(); return; }
+    if(cfg.r > 0){ iv.phase = "rest"; iv.endsAt = Date.now() + cfg.r * 1000; sfx("close"); }
+    else { iv.round++; iv.endsAt = Date.now() + cfg.w * 1000; sfx("pkg"); }
+  } else {
+    iv.round++;
+    iv.phase = "work";
+    iv.endsAt = Date.now() + cfg.w * 1000;
+    sfx("pkg");
+  }
+  renderIv();
+}
+function ivFinish(){
+  var cfg = iv.cfg;
+  ivStop();
+  iv.phase = "done";
+  renderIv();
+  sfx("levelup");
+  /* the work counts: logged into the same history STATS charts */
+  var secs = iv.worked;
+  if(secs > 0){
+    var t = todayStr();
+    state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
+    var gained = trainStat("END", Math.max(1, Math.round(secs / 120)));
+    gainXP(Math.min(120, Math.round(secs / 20))); /* saves */
+    announce("⏱ SESSION COMPLETE",
+      cfg.c + " rounds finished.\n\nWork time: " + ivFmt(secs)
+      + "\n+" + Math.min(120, Math.round(secs / 20)) + " XP  ·  +" + Math.max(1, Math.round(secs / 120)) + " END training"
+      + (gained ? "\n\n⚡ END attribute increased." : "")
+      + "\n\nLogged to your focus history. Nothing here was decoration — the System counted every round.",
+      "⏱", "DONE");
+  }
+}
+function ivStart(){
+  if(iv.on){ /* pause */
+    iv.left = Math.max(0, (iv.endsAt - Date.now()) / 1000);
+    ivStop();
+    renderIv();
+    return;
+  }
+  if(iv.phase === "ready" || iv.phase === "done"){
+    iv.cfg = ivCfg();
+    iv.phase = "work"; iv.round = 1; iv.worked = 0;
+    iv.endsAt = Date.now() + iv.cfg.w * 1000;
+    sfx("pkg");
+  } else {
+    iv.endsAt = Date.now() + iv.left * 1000; /* resume */
+  }
+  iv.on = true;
+  iv.tick = setInterval(function(){
+    if(!iv.on) return;
+    if(Date.now() >= iv.endsAt) ivAdvance();
+    else renderIv();
+  }, 200);
+  renderIv();
+}
+document.getElementById("ivStart").addEventListener("click", ivStart);
+document.getElementById("ivReset").addEventListener("click", ivReset);
+document.getElementById("ivPresets").addEventListener("click", function(e){
+  var b = e.target.closest(".iv-pre");
+  if(!b) return;
+  var p = IV_PRESETS[+b.getAttribute("data-p")];
+  if(!p || !p.c) return; /* CUSTOM: leave the fields alone */
+  ivReset();
+  document.getElementById("ivWork").value = p.w;
+  document.getElementById("ivRest").value = p.r;
+  document.getElementById("ivRounds").value = p.c;
+  renderIvPresets();
+  renderIv();
+});
+document.getElementById("ivWork").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
+document.getElementById("ivRest").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
+document.getElementById("ivRounds").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
+
 /* ================= THE OATH =================
    Sworn once, in the hunter's own words, before the System opens. The System
    never invents motivation for them again — at every moment that matters it
@@ -8794,37 +9012,80 @@ document.getElementById("oathAmend").addEventListener("click", function(){
 var WMAPS = {};
 var wMap = "city";
 function curMap(){ return WMAPS[wMap] || WMAPS.city; }
+/* The city is organised by INTENT, not by feature. Every building answers one
+   sentence a real person actually says out loud; the old sections became the
+   rooms inside them. Buildings themselves are never sealed — you walk in and
+   see which rooms you have not earned yet. */
 var CITY_NODES = [
-  {page:"learn",     ico:"🌱", name:"ACADEMY",       x:170,  y:150,  w:290, h:190, a:"#1d6f5c", b:"#2ee6b0", map:"academy"},
-  {page:"stats",     ico:"🏋",  name:"TRAINING YARD", x:620,  y:150,  w:290, h:190, a:"#7a2b32", b:"#ff6b6b"},
-  {page:"guild",     ico:"⚔",        name:"CLAN HALL",     x:1070, y:150,  w:290, h:190, a:"#23406e", b:"#5aa9ff"},
-  {page:"profile",   ico:"🧬", name:"HUNTER TOWER",  x:1520, y:150,  w:290, h:190, a:"#5b2a7a", b:"#c98cff"},
-  {page:"budget",    ico:"🏦", name:"TREASURY",      x:170,  y:620,  w:290, h:190, a:"#6b5310", b:"#ffd166"},
-  {page:"quests",    ico:"📜", name:"QUEST BOARD",   x:620,  y:620,  w:290, h:190, a:"#6b4420", b:"#ffb15c"},
-  {page:"rewards",   ico:"🎁", name:"REWARD VAULT",  x:1070, y:620,  w:290, h:190, a:"#6d2352", b:"#ff8ad4"},
-  {page:"inventory", ico:"📦", name:"ARMORY",        x:1520, y:620,  w:290, h:190, a:"#39415e", b:"#9fb0d9"},
-  {page:"home",      ico:"🏠", name:"SANCTUARY",     x:170,  y:1090, w:290, h:190, a:"#3d2a75", b:"#a78bfa"},
-  {page:"guide",     ico:"🔖", name:"LIBRARY",       x:620,  y:1090, w:290, h:190, a:"#1f4d54", b:"#5fd8e6"},
-  {page:"honor",     ico:"🏆", name:"HALL OF HONOR", x:1070, y:1090, w:290, h:190, a:"#6b5a12", b:"#ffe066"},
-  {page:"story",     ico:"📖", name:"STORY GATE",    x:1520, y:1090, w:290, h:190, a:"#4a2a6b", b:"#d0a2ff"},
-  {page:"admin",     ico:"⚙",        name:"SETTINGS",      x:900,  y:880,  w:200, h:140, a:"#2c3350", b:"#8fa2cf"},
+  {ico:"🌱", name:"ACADEMY",       sub:"I want to become someone",       x:170,  y:150,  w:290, h:190, a:"#1d6f5c", b:"#2ee6b0", map:"academy"},
+  {ico:"🏋",  name:"TRAINING YARD", sub:"I want to train my body",        x:620,  y:150,  w:290, h:190, a:"#7a2b32", b:"#ff6b6b", map:"training"},
+  {ico:"🏦", name:"TREASURY",      sub:"I want control of my money",     x:1070, y:150,  w:290, h:190, a:"#6b5310", b:"#ffd166", map:"treasury"},
+  {ico:"🏠", name:"SANCTUARY",     sub:"Who am I becoming?",             x:1520, y:150,  w:290, h:190, a:"#3d2a75", b:"#a78bfa", map:"sanctuary"},
+  {page:"quests", ico:"📜", name:"QUEST BOARD",   sub:"What did I commit to?",     x:170,  y:560,  w:290, h:190, a:"#6b4420", b:"#ffb15c"},
+  {page:"guild",  ico:"⚔",        name:"CLAN HALL",     sub:"I don't want to do this alone", x:620,  y:560,  w:290, h:190, a:"#23406e", b:"#5aa9ff"},
+  {page:"honor",  ico:"🏆", name:"HALL OF HONOR", sub:"I want proof of what I've done", x:1070, y:560,  w:290, h:190, a:"#6b5a12", b:"#ffe066"},
   /* the monument in the plaza: the place where the hunter swore */
-  {ico:"⚔", name:"OATH STONE", prompt:"⚔ READ YOUR OATH", x:1090, y:390, w:100, h:100,
+  {ico:"⚔", name:"OATH STONE", prompt:"⚔ READ YOUR OATH", x:1565, y:600, w:110, h:110,
    a:"#2a2f4d", b:"#6f7bb0", go:{oath:true}}
 ];
 WMAPS.city = {
-  kind:"city", name:"HUNTER DISTRICT", w:2000, h:1500,
-  spawn:{x:1000, y:470}, nodes:CITY_NODES, walls:[]
+  kind:"city", name:"HUNTER DISTRICT", w:2000, h:900,
+  spawn:{x:1000, y:450}, nodes:CITY_NODES, walls:[]
+};
+/* every interior uses the same shape: fit the whole room on screen, doors on
+   the south face, one exit set into the bottom wall */
+function roomWalls(){
+  return [
+    {x:0, y:0, w:800, h:40}, {x:0, y:1010, w:800, h:40},
+    {x:0, y:0, w:40, h:1050}, {x:760, y:0, w:40, h:1050}
+  ];
+}
+function roomExit(at){
+  return {ico:"🚪", name:"EXIT", prompt:"🚪 BACK TO THE CITY", x:300, y:1010, w:200, h:40,
+          a:"#2c3350", b:"#8fa2cf", face:"n", go:{map:"city", at:at}};
+}
+WMAPS.training = {
+  kind:"room", name:"TRAINING YARD", w:800, h:1050, fit:true, spawn:{x:400, y:830},
+  nodes:[
+    {ico:"⏱", name:"INTERVAL TIMER", x:110, y:120, w:180, h:115, a:"#7a2b32", b:"#ff6b6b", go:{page:"interval"}},
+    {ico:"💪", name:"DAILY PACKAGE",  x:510, y:120, w:180, h:115, a:"#6b4420", b:"#ffb15c", go:{page:"home"}},
+    {page:"stats", ico:"📊", name:"BODY & STATS", x:110, y:500, w:180, h:115, a:"#1f4d7a", b:"#5aa9ff", go:{page:"stats"}},
+    {ico:"📜", name:"CHALLENGES",    x:510, y:500, w:180, h:115, a:"#5b2a7a", b:"#c98cff", go:{page:"quests"}},
+    roomExit({x:765, y:378})
+  ],
+  walls:roomWalls().concat([{x:320, y:330, w:160, h:100, desk:true}])
+};
+WMAPS.treasury = {
+  kind:"room", name:"TREASURY", w:800, h:1050, fit:true, spawn:{x:400, y:830},
+  nodes:[
+    {page:"budget",    ico:"💰", name:"BUDGET",       x:110, y:120, w:180, h:115, a:"#6b5310", b:"#ffd166", go:{page:"budget"}},
+    {page:"rewards",   ico:"🎁", name:"REWARD VAULT", x:510, y:120, w:180, h:115, a:"#6d2352", b:"#ff8ad4", go:{page:"rewards"}},
+    {page:"inventory", ico:"📦", name:"ARMORY",       x:310, y:500, w:180, h:115, a:"#39415e", b:"#9fb0d9", go:{page:"inventory"}},
+    roomExit({x:1215, y:378})
+  ],
+  walls:roomWalls()
+};
+WMAPS.sanctuary = {
+  kind:"room", name:"SANCTUARY", w:800, h:1050, fit:true, spawn:{x:620, y:940},
+  nodes:[
+    {ico:"⚔", name:"THE OATH",   x:110, y:120, w:180, h:115, a:"#2a2f4d", b:"#6f7bb0", go:{oath:true}},
+    {ico:"🧬", name:"PROFILE",    x:510, y:120, w:180, h:115, a:"#5b2a7a", b:"#c98cff", go:{page:"profile"}},
+    {ico:"📖", name:"STORY PATH", x:110, y:430, w:180, h:115, a:"#4a2a6b", b:"#d0a2ff", go:{page:"story"}},
+    {ico:"🔖", name:"MANUAL",     x:510, y:430, w:180, h:115, a:"#1f4d54", b:"#5fd8e6", go:{page:"guide"}},
+    {ico:"⚙",        name:"SETTINGS",   x:310, y:740, w:180, h:115, a:"#2c3350", b:"#8fa2cf", go:{page:"admin"}},
+    roomExit({x:1665, y:378})
+  ],
+  walls:roomWalls()
 };
 /* THE ACADEMY — the first interior. Four stations, one per road of growth. */
 WMAPS.academy = {
   kind:"room", name:"THE ACADEMY", w:800, h:1050, fit:true,
   spawn:{x:400, y:830},
   nodes:[
-    {ico:"🔥", name:"DISCIPLINE", x:110, y:120, w:180, h:115, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
-    {ico:"📚", name:"EDUCATION",  x:510, y:120, w:180, h:115, a:"#1f4d7a", b:"#5aa9ff", go:{page:"learn", cat:"education"}},
-    {ico:"💪", name:"PHYSICAL",   x:110, y:500, w:180, h:115, a:"#7a2b32", b:"#ff6b6b", go:{page:"learn", cat:"physical"}},
-    {ico:"🧠", name:"EMOTIONAL",  x:510, y:500, w:180, h:115, a:"#4a2a6b", b:"#c98cff", go:{page:"learn", cat:"emotional"}},
+    {page:"learn", ico:"🔥", name:"DISCIPLINE", x:110, y:120, w:180, h:115, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
+    {page:"learn", ico:"📚", name:"EDUCATION",  x:510, y:120, w:180, h:115, a:"#1f4d7a", b:"#5aa9ff", go:{page:"learn", cat:"education"}},
+    {page:"learn", ico:"💪", name:"PHYSICAL",   x:110, y:500, w:180, h:115, a:"#7a2b32", b:"#ff6b6b", go:{page:"learn", cat:"physical"}},
+    {page:"learn", ico:"🧠", name:"EMOTIONAL",  x:510, y:500, w:180, h:115, a:"#4a2a6b", b:"#c98cff", go:{page:"learn", cat:"emotional"}},
     {ico:"🚪", name:"EXIT", prompt:"🚪 LEAVE THE ACADEMY", x:300, y:1010, w:200, h:40,
      a:"#2c3350", b:"#8fa2cf", face:"n", go:{map:"city", at:{x:315, y:378}}}
   ],
@@ -8862,7 +9123,8 @@ function wTheme(){
     g2:   light ? "#f0d7e6" : "#05070f",
     road: light ? "rgba(255,255,255,.9)" : "rgba(130,150,255,.07)",
     line: light ? "rgba(190,120,165,.30)" : "rgba(130,150,255,.10)",
-    ink:  light ? "#3b2438" : "#dfe4ff"
+    ink:  light ? "#3b2438" : "#dfe4ff",
+    dim:  (cs.getPropertyValue("--dim") || "#8b92c9").trim()
   };
 }
 function worldEl(){
@@ -8999,7 +9261,7 @@ function worldDrawGround(c, t){
   c.fillRect(0, 0, m.w, m.h);
   if(m.kind === "room"){ worldDrawRoom(c, t, m); return; }
   /* the avenues between the blocks */
-  var hy = [75, 480, 950, 1390], vx = [85, 540, 990, 1440, 1905];
+  var hy = [75, 450, 830], vx = [85, 540, 990, 1440, 1905];
   c.fillStyle = t.road;
   for(i=0;i<hy.length;i++) c.fillRect(0, hy[i] - 56, m.w, 112);
   for(i=0;i<vx.length;i++) c.fillRect(vx[i] - 56, 0, 112, m.h);
@@ -9048,7 +9310,7 @@ function worldDrawRoom(c, t, m){
 }
 /* a station inside a room: a lit archway with its own progress read-out */
 function worldDrawStation(c, b, t){
-  var uf = 1 / wScale;
+  var uf = 1 / wScale, lock = b.page ? sectionLockLevel(b.page) : 0;
   c.fillStyle = "rgba(0,0,0,.42)";
   wRR(c, b.x + 5, b.y + 10, b.w, b.h, 12); c.fill();
   var g = c.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
@@ -9060,17 +9322,30 @@ function worldDrawStation(c, b, t){
   var px = b.x + b.w/2 - 34, py = b.y + b.h - 62;
   c.fillStyle = "rgba(0,0,0,.55)";
   wRR(c, px, py, 68, 62, 9); c.fill();
-  c.save();
-  c.shadowColor = t.blu;
-  c.shadowBlur = 22;
-  c.strokeStyle = t.blu;
-  c.lineWidth = 3;
-  wRR(c, px, py, 68, 62, 9); c.stroke();
-  c.restore();
+  if(!lock){
+    c.save();
+    c.shadowColor = t.blu;
+    c.shadowBlur = 22;
+    c.strokeStyle = t.blu;
+    c.lineWidth = 3;
+    wRR(c, px, py, 68, 62, 9); c.stroke();
+    c.restore();
+  }
   c.strokeStyle = "rgba(255,255,255,.22)";
   c.lineWidth = 2;
   wRR(c, b.x, b.y, b.w, b.h, 12); c.stroke();
   c.textAlign = "center";
+  /* a room you have not earned yet, seen from inside the building */
+  if(lock){
+    c.fillStyle = "rgba(3,4,12,.62)";
+    wRR(c, b.x, b.y, b.w, b.h, 12); c.fill();
+    c.fillStyle = "#ffffff";
+    c.font = "34px system-ui,Segoe UI Emoji,sans-serif";
+    c.fillText("🔒", b.x + b.w/2, b.y + b.h/2 + 2);
+    c.fillStyle = "#ffd166";
+    c.font = "700 26px Orbitron,monospace";
+    c.fillText("LV." + lock, b.x + b.w/2, b.y + b.h/2 + 34);
+  }
   c.fillStyle = t.ink;
   c.font = Math.round(26 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
   c.fillText(b.ico, b.x + b.w/2, b.y - 28 * uf);
@@ -9137,12 +9412,19 @@ function worldDrawBuilding(c, b, t){
     c.font = "700 " + Math.round(15 * uf) + "px Orbitron,monospace";
     c.fillText("LV." + lock, b.x + b.w/2, b.y + b.h/2 + 30 * uf);
   }
-  /* the sign above the roof */
+  /* the sign above the roof — and the sentence the building answers */
   c.font = Math.round(24 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
   c.fillStyle = t.ink;
-  c.fillText(b.ico, b.x + b.w/2, b.y - 26 * uf);
+  c.fillText(b.ico, b.x + b.w/2, b.y - (b.sub ? 40 : 26) * uf);
   c.font = "700 " + Math.round(13 * uf) + "px Orbitron,monospace";
-  c.fillText(b.name, b.x + b.w/2, b.y - 8 * uf);
+  c.fillText(b.name, b.x + b.w/2, b.y - (b.sub ? 22 : 8) * uf);
+  if(b.sub){
+    c.fillStyle = t.dim || t.ink;
+    c.globalAlpha = .75;
+    c.font = "italic " + Math.round(11 * uf) + "px system-ui,sans-serif";
+    c.fillText('"' + b.sub + '"', b.x + b.w/2, b.y - 6 * uf);
+    c.globalAlpha = 1;
+  }
 }
 function worldDrawPlayer(c, t){
   var p = wPlayer;
@@ -9341,89 +9623,89 @@ var LEARN_PATH = {
   discipline: [
     {t:"video", n:"What Discipline Actually Is", q:"what is self discipline explained",
      d:"Discipline is not anger at yourself. It is the ability to keep a promise you made to yourself when the feeling that made the promise is gone.\n\nWatch a lesson on what self-discipline really means, then answer one question honestly: which promise to yourself have you broken most often?"},
-    {t:"task",  n:"The Three-Day Vow",
+    {t:"task", dur:3, n:"The Three-Day Vow",
      d:"Pick ONE action. Small, specific, boring. Ten push-ups. One page. Bed by 23:00.\n\nDo it three days in a row. No exceptions, no negotiation, no 'tomorrow twice'. If you break it, the count restarts.\n\nMark this level complete only when you have three clean days behind you."},
     {t:"video", n:"Motivation Is a Liar", q:"why motivation fails discipline systems",
      d:"Motivation is a mood. Moods leave. People who build anything great are not more motivated than you — they simply removed the decision.\n\nLearn why systems beat feelings, then decide the exact time and place your action happens tomorrow."},
-    {t:"task",  n:"Kill One Comfort",
+    {t:"task", dur:7, n:"Kill One Comfort",
      d:"Choose one comfort that is eating you: the snooze button, the feed before sleep, the sugar in the evening, gaming past midnight.\n\nRemove it completely for seven days. Not reduce. Remove.\n\nWrite the comfort down before you start, so you cannot quietly rewrite the rule halfway."},
     {t:"video", n:"The Two-Minute Entry", q:"two minute rule habits explained",
      d:"The hardest part is never the work. It is starting the work.\n\nLearn the two-minute entry: shrink the first step until refusing it is absurd. Put on the shoes. Open the book. Write one sentence. The body follows the entry."},
-    {t:"task",  n:"Fixed Hour — Five Days",
+    {t:"task", dur:5, n:"Fixed Hour — Five Days",
      d:"Choose one hour of the morning. Wake at that hour five days in a row — weekend included. No snooze.\n\nA hunter who cannot control the first decision of the day does not control the day."},
     {t:"video", n:"Discipline Under Pressure", q:"how to stay disciplined when life gets hard",
      d:"Anyone is disciplined on a good day. The test is the bad day: no sleep, bad news, no energy.\n\nLearn how to build a minimum version of every habit — the version you do even when everything is wrong. That version is what actually keeps the streak alive."},
-    {t:"task",  n:"Eat the Frog — Seven Days",
+    {t:"task", dur:7, n:"Eat the Frog — Seven Days",
      d:"Every morning for seven days, do the task you least want to do FIRST — before your phone, before anything easy.\n\nWrite it down the night before. Kill it in the morning. The rest of the day becomes downhill."},
     {t:"video", n:"Identity Over Rules", q:"identity based habits explained",
      d:"Rules break under pressure. Identity does not.\n\n'I am trying to run' loses to 'I am a runner'. Learn how repeated action rewrites who you believe you are — and why that is the only permanent version of discipline."},
-    {t:"task",  n:"The Thirty-Day Vow",
+    {t:"task", dur:30, n:"The Thirty-Day Vow",
      d:"One action. Thirty days. No missed day.\n\nMake it something you can do on your worst day in under fifteen minutes — and make it something that changes you if repeated for a year.\n\nThis is the final gate of this road. Come back and seal it when it is done."}
   ],
   education: [
     {t:"video", n:"How Learning Actually Works", q:"science of learning how memory works",
      d:"Re-reading feels like learning and is almost worthless. Your brain keeps what it has to fight to retrieve.\n\nLearn how memory is actually built, and why the comfortable study methods you were taught are the weakest ones."},
-    {t:"task",  n:"Choose Your Domain",
+    {t:"task", dur:1, n:"Choose Your Domain",
      d:"Pick ONE thing to become genuinely good at in the next twelve months. A language, a science, code, a craft.\n\nWrite it down as a sentence: 'By <date> I will be able to <specific ability>.'\n\nOne domain. Not five. Scattered effort produces nothing."},
     {t:"video", n:"Active Recall and Spaced Repetition", q:"active recall spaced repetition explained",
      d:"Two methods beat every other study technique ever measured: testing yourself, and spacing the tests out over time.\n\nLearn how they work, then never open a highlighter again without asking what you are actually retrieving."},
-    {t:"task",  n:"Build a Twenty-Card Deck",
+    {t:"task", dur:1, n:"Build a Twenty-Card Deck",
      d:"Take your domain. Build twenty question-and-answer cards — paper or an app, it does not matter.\n\nQuestion on one side, answer on the other. Then test yourself on all twenty without looking.\n\nComplete this level when you can pass all twenty from memory."},
     {t:"video", n:"Deep Work: Focus as a Skill", q:"deep work focus explained",
      d:"Focus is not a personality trait. It is a muscle that has been destroyed in most people by constant interruption.\n\nLearn what deep work is, why shallow work feels productive and produces nothing, and how long real concentration takes to rebuild."},
-    {t:"task",  n:"One Fifty-Minute Session",
+    {t:"task", dur:1, n:"One Fifty-Minute Session",
      d:"Phone in another room. No tabs, no music with words, no 'quick check'.\n\nFifty minutes on your domain. Use the FOCUS TIMER on a quest so the System records it.\n\nIf you break focus, the session does not count. Start again."},
     {t:"video", n:"Reading With a Weapon", q:"how to read a book effectively and remember",
      d:"Most people read to finish. That is entertainment, not education.\n\nLearn to read with a question in your hand: what am I trying to answer? Mark, argue, summarise from memory at the end of each chapter."},
-    {t:"task",  n:"Finish One Real Thing",
+    {t:"task", dur:14, n:"Finish One Real Thing",
      d:"One book, one course, one module — finished completely. Not sampled, not 'mostly'.\n\nThen write half a page from memory: what it claimed, what you disagree with, what you will do differently.\n\nUnfinished knowledge is not knowledge."},
     {t:"video", n:"Teach to Master", q:"feynman technique explained",
      d:"You do not understand something until you can explain it to someone who knows nothing, without jargon, without notes.\n\nLearn the Feynman technique — and use it as your exam for everything you claim to know."},
-    {t:"task",  n:"Teach It to Someone",
+    {t:"task", dur:1, n:"Teach It to Someone",
      d:"Take the most important idea from your domain and teach it to a real person for ten minutes. A friend, a sibling, a camera.\n\nEvery place you stumble is a hole in your knowledge. Go fill it, then teach it again."}
   ],
   physical: [
     {t:"video", n:"Your Body Is the Vehicle", q:"how exercise changes your brain",
      d:"Every plan you have — study, work, money, character — runs on a body. Neglect it and the whole system runs slow.\n\nLearn what training actually does to your brain, your mood, and your capacity to concentrate."},
-    {t:"task",  n:"The Baseline Test",
+    {t:"task", dur:1, n:"The Baseline Test",
      d:"Measure where you truly are today, with numbers, and write them down:\n\n• Max push-ups in one set\n• Max plank hold, in seconds\n• Time for one kilometre\n\nNo excuses about the numbers being low. You cannot beat a record you never recorded."},
     {t:"video", n:"Progressive Overload", q:"progressive overload explained beginner",
      d:"The body only changes when it is asked to do slightly more than last time. Slightly. Repeatedly.\n\nLearn how to add load, reps or time without wrecking yourself — and why 'go until you die' on day one is how people quit by day four."},
-    {t:"task",  n:"Seven Days of Movement",
+    {t:"task", dur:7, n:"Seven Days of Movement",
      d:"Seven consecutive days with at least twenty minutes of deliberate movement. Walk, run, lift, swim, train.\n\nRest days are earned after consistency exists. Right now you have none, so there are none."},
     {t:"video", n:"Sleep Is Training", q:"why sleep matters for performance",
      d:"You do not grow in the gym. You grow while asleep. Cutting sleep to 'get more done' is borrowing from tomorrow's brain at a punishing rate.\n\nLearn what a short night actually costs you — focus, mood, willpower, recovery."},
-    {t:"task",  n:"Seven Nights, One Window",
+    {t:"task", dur:7, n:"Seven Nights, One Window",
      d:"Choose a sleep window — for example 23:00 to 07:00. Hold it for seven nights, within thirty minutes.\n\nNo screens for the last thirty minutes. Track it. This one level will change more than any workout on this road."},
     {t:"video", n:"Fuel", q:"nutrition basics protein carbs fats explained",
      d:"You cannot train your way out of what you eat. Learn the basics — protein, carbohydrate, fat, water — without the supplement marketing.\n\nOne rule to keep: if it comes in a wrapper with a cartoon on it, it is not fuel."},
-    {t:"task",  n:"Fourteen Days, No Liquid Sugar",
+    {t:"task", dur:14, n:"Fourteen Days, No Liquid Sugar",
      d:"Fourteen days: no soda, no energy drinks, no sweetened coffee. Water, tea, plain coffee, milk.\n\nIt is the single easiest large change available to you, which is exactly why refusing it tells you something."},
     {t:"video", n:"Endurance and the Second Wind", q:"how to build cardio endurance beginner",
      d:"The first wall you hit in a run is almost never your body. It is your mind negotiating.\n\nLearn how endurance is built — slow, boring, aerobic volume — and what actually happens when you push past the first refusal."},
-    {t:"task",  n:"Beat Your Baseline",
+    {t:"task", dur:1, n:"Beat Your Baseline",
      d:"Return to the three numbers from Level 2 and beat every one of them.\n\nMore push-ups. Longer plank. Faster kilometre.\n\nProof, not feelings. Seal this level only when all three are beaten."}
   ],
   emotional: [
     {t:"video", n:"Emotions Are Data, Not Orders", q:"how emotions work psychology explained",
      d:"An emotion is information about your situation. It is not an instruction you are required to obey.\n\nLearn where emotions come from and why the gap between feeling something and doing something is where your entire character lives."},
-    {t:"task",  n:"Name It — Seven Days",
+    {t:"task", dur:7, n:"Name It — Seven Days",
      d:"For seven days, three times a day, stop and name what you feel in one precise word. Not 'bad'. Anxious. Ashamed. Envious. Restless. Bored.\n\nWrite them down. Naming a feeling accurately drops its power over you — this is measurable, not mysticism."},
     {t:"video", n:"The Gap Between Trigger and Response", q:"how to control emotional reactions",
      d:"Someone insults you. Something fails. The reaction feels instant — it is not. There is a gap, and it can be widened with training.\n\nLearn the techniques that widen it: the pause, the breath, the delay before answering."},
-    {t:"task",  n:"One Week Without Reacting",
+    {t:"task", dur:7, n:"One Week Without Reacting",
      d:"Seven days. When something angers or hurts you, you do not respond for ten minutes. No message sent, no argument, no slammed door.\n\nAfter ten minutes, decide what a person you respect would do — then do that."},
     {t:"video", n:"Envy, Comparison and the Feed", q:"social media comparison and mental health",
      d:"You are comparing your ordinary day to a thousand people's best moments. No mind survives that undamaged.\n\nLearn what constant comparison does to motivation and self-worth, and why envy is a signal pointing at something you actually want."},
-    {t:"task",  n:"Three Days Off the Feed",
+    {t:"task", dur:3, n:"Three Days Off the Feed",
      d:"Seventy-two hours: no short-form video, no scrolling feeds. Messaging people directly is allowed.\n\nExpect boredom, irritation, and reaching for the phone with no reason. Watch it happen without obeying it. That is the whole exercise."},
     {t:"video", n:"Gratitude Without Delusion", q:"gratitude practice science explained",
      d:"Real gratitude is not pretending things are fine. It is refusing to be blind to what is already working while you fight for what is not.\n\nLearn why the practice measurably shifts mood — and how to do it without lying to yourself."},
-    {t:"task",  n:"Three Honest Pages",
+    {t:"task", dur:1, n:"Three Honest Pages",
      d:"Sit down and write three pages by hand. No audience, no editing, no beauty. Everything you are avoiding thinking about.\n\nThen read it once, and decide one single action it demands from you. Do that action."},
     {t:"video", n:"Falling Without Quitting", q:"how to build resilience after failure",
      d:"You will break a streak. You will fail a goal. The difference between people is never whether they fall — it is how many hours pass before they stand up.\n\nLearn what resilience is actually made of: meaning, self-honesty, and a rehearsed return plan."},
-    {t:"task",  n:"The Return",
+    {t:"task", dur:1, n:"The Return",
      d:"Take something you already abandoned — a habit, a goal, a skill, an apology you never made.\n\nReturn to it. Today. One real step, not a plan to plan.\n\nThe final gate of this road is not a new beginning. It is proving you can come back."}
   ]
 };
@@ -9435,7 +9717,40 @@ function learnFix(){
   if(!state.learn) state.learn = {done:{}, links:{}, cat:"discipline"};
   if(!state.learn.done)  state.learn.done = {};
   if(!state.learn.links) state.learn.links = {};
+  if(!state.learn.quests) state.learn.quests = {}; /* level key -> the quest it created */
   if(!LEARN_PATH[state.learn.cat]) state.learn.cat = "discipline";
+}
+/* A lesson that ends in applause and nothing else is the "motivation, then
+   nothing" trap. Accepting a task turns it into a real quest in the daily
+   log. It is assigned by the System, so it never spends a quest slot. */
+function learnQuestOf(cat, i){
+  learnFix();
+  var id = state.learn.quests[learnKey(cat, i)];
+  return id ? questById(id) : null;
+}
+function acceptLearnTask(cat, i){
+  learnFix();
+  var path = LEARN_PATH[cat];
+  if(!path || !path[i] || path[i].t !== "task") return;
+  if(learnQuestOf(cat, i)) return; /* already accepted */
+  var lv = path[i], cc = learnCat(cat);
+  var days = Math.max(1, lv.dur || 7);
+  var tier = i >= 8 ? "epic" : (i >= 5 ? "medium" : "easy");
+  var desc = cc.name + " — Level " + (i + 1) + " of the Academy.\n\n" + lv.d;
+  var q = makeQuest(cc.ico, lv.n, desc, days > 1 ? "daily" : "longterm", [],
+                    tier, cc.stat, "", true, days);
+  state.quests.push(q);
+  state.learn.quests[learnKey(cat, i)] = q.id;
+  save();
+  sfx("complete");
+  announceFirst("⚔ TASK ACCEPTED",
+    lv.n + "\n\n" + (days > 1
+      ? "It is now a daily quest in your log, for " + days + " days. The Academy does not clap for you — it assigns."
+      : "It is now a one-time goal in your log.")
+    + "\n\nCome back and seal this level when it is genuinely done.",
+    cc.ico, "TO THE QUEST LOG");
+  renderLearn();
+  if(document.getElementById("lrnModal").classList.contains("show")) openLearnLevel(cat, i);
 }
 function learnKey(cat, i){ return cat + ":" + i; }
 function learnDone(cat, i){ return !!(state.learn && state.learn.done && state.learn.done[learnKey(cat, i)]); }
@@ -9471,7 +9786,9 @@ function renderLearn(){
       +    '<div class="lvl-t"><div class="lvl-title">' + esc(lv.n) + '</div>'
       +      '<div class="lvl-sub"><span class="lvl-tag' + (lv.t === "task" ? " task" : "") + '">'
       +        (lv.t === "task" ? "TASK" : "VIDEO") + '</span><span>+' + learnXp(i) + " XP &middot; +"
-      +        learnPts(i) + " " + cc.stat + '</span></div></div></div>';
+      +        learnPts(i) + " " + cc.stat + '</span>'
+      +        (learnQuestOf(cur, i) && !isDone ? '<span class="lvl-tag">⚔ IN YOUR QUESTS</span>' : "")
+      +      '</div></div></div>';
   }
   document.getElementById("lrnLadder").innerHTML = out;
 }
@@ -9498,6 +9815,23 @@ function openLearnLevel(cat, i){
     if(!link) vh += '<div class="empty-note" style="margin-top:8px">No link saved yet — this opens a YouTube search for this lesson. Paste the video you chose below and it stays pinned to this level.</div>';
   }
   document.getElementById("lrnMVideo").innerHTML = vh;
+  /* a task is not finished by reading it — it becomes a real quest first */
+  var qh = "";
+  if(lv.t === "task"){
+    var aq = learnQuestOf(cat, i), days = Math.max(1, lv.dur || 7);
+    if(aq){
+      qh = '<div class="empty-note">⚔ Accepted — <b>' + esc(aq.name) + '</b> is in your quest log'
+         + (aq.freq === "daily" ? " (" + aq.target + " days, " + (aq.progress || 0) + " done)" : "")
+         + ". Seal this level when it is genuinely finished.</div>";
+    } else if(!learnDone(cat, i)){
+      qh = '<button class="btn primary" id="lrnMAccept" style="width:100%">⚔ ACCEPT — ADD TO MY QUESTS'
+         + (days > 1 ? " (" + days + " DAYS)" : "") + "</button>"
+         + '<div class="empty-note" style="margin-top:8px">The System assigns this one, so it costs you no quest slot.</div>';
+    }
+  }
+  document.getElementById("lrnMQuest").innerHTML = qh;
+  var ab = document.getElementById("lrnMAccept");
+  if(ab) ab.addEventListener("click", function(){ acceptLearnTask(cat, i); });
   document.getElementById("lrnMLink").style.display = isVideo ? "" : "none";
   document.getElementById("lrnMLinkLbl").style.display = isVideo ? "" : "none";
   document.getElementById("lrnMLink").value = link;
@@ -9518,9 +9852,10 @@ function completeLearnLevel(){
   sfx("complete");
   document.getElementById("lrnModal").classList.remove("show");
   gainXP(learnXp(i)); /* saves */
-  var next = path[i + 1];
+  var next = path[i + 1], kept = learnQuestOf(cat, i);
   announce(cc.ico + " " + cc.name + " — LEVEL " + (i + 1) + " CLEARED",
     lv.n + "\n\n+" + learnXp(i) + " XP  ·  +" + learnPts(i) + " " + cc.stat + " training"
+    + (kept ? "\n\n⚔ \"" + kept.name + "\" stays in your quest log. Keep it if it became a habit worth having; delete it if it is finished." : "")
     + (next ? "\n\nNEXT: " + next.n : "\n\nThis entire road is finished. " + cc.name + " is no longer something you are trying to have — it is something you built."),
     "🌱", "CONTINUE");
   renderLearn();
@@ -9548,6 +9883,7 @@ function renderAll(){
   renderHeader();
   if(currentPage === "world"){ renderWorldHud(); return; }
   if(currentPage === "learn"){ renderLearn(); return; }
+  if(currentPage === "interval"){ renderIvPresets(); renderIv(); return; }
   if(currentPage === "home") renderHome();
   else if(currentPage === "profile") renderProfile();
   else if(currentPage === "quests") renderQuests();
