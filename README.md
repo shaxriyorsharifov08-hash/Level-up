@@ -169,6 +169,7 @@ Every walkable place — the city and every interior — is an entry in **`WMAPS
 | `kind` | `"city"` (streets + buildings) or `"room"` (tiled floor + stations) |
 | `w`, `h` | size of the map in world units |
 | `fit` | `true` = zoom so the whole room is on screen at once (interiors); leave out for outdoor maps, which scroll with the camera |
+| `iso` | `true` = draw this map in **isometric 2.5D** (solid boxes with height and shaded faces) instead of flat top-down. Per-map, so maps can be converted one at a time |
 | `spawn` | `{x,y}` where you appear when you arrive |
 | `nodes` | the things with doors — each has `x,y,w,h`, `ico`, `name`, colors `a` (dark) / `b` (light), and a `go` |
 | `walls` | solid blocks you cannot enter (`desk:true` draws it as furniture) |
@@ -192,6 +193,20 @@ Walking into the ACADEMY building no longer opens a menu — it puts you **insid
 Which map you are standing in is saved (`state.world.map`), so closing the app inside the Academy reopens inside the Academy.
 
 Everything in the world is **drawn with code** — there are no image files. That is deliberate: the app stays one file and opens instantly on a phone.
+
+### Isometric maps (`iso:true`)
+
+THE ACADEMY is drawn in **isometric 2.5D**: rooms and doors are solid boxes with a lit top, two shaded side faces, and a glowing doorway on the south face. This is real depth, not a filter.
+
+**It is only a rendering change.** The world stays a plain flat grid — collision, door zones, travel and saved positions are all still ordinary `x`/`y` and know nothing about the projection. That is why a map can be switched over with a single `iso:true` and nothing else breaks.
+
+Three things the projection has to get right, all handled in `index.html`:
+
+- **Steering.** Input is rotated back into world space (`ISO_KX`/`ISO_KY`), so dragging right walks the hunter right on screen instead of diagonally.
+- **Depth.** Objects are sorted back-to-front so the hunter passes behind far rooms and in front of near ones. The two back walls are drawn before that pass — a single sort key cannot place a wall spanning the whole room — and the low south/east trim after it.
+- **Signs.** Labels are collected and drawn in a second pass, otherwise a box drawn later paints over the sign of the one before it.
+
+`ISO_KY` versus `ISO_KX` is the camera pitch. Classic 2:1 isometric is `KY = KX/2`, which on a tall phone squashes the room into a ribbon; `0.38` keeps the solid-box look while filling the screen. The rest of the world is still top-down — set `iso:true` on another map when you want it converted.
 
 The old **+1% dock still works** and reaches every section directly. The world is a new way in, not a cage.
 

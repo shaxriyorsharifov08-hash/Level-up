@@ -9078,21 +9078,26 @@ WMAPS.sanctuary = {
   walls:roomWalls()
 };
 /* THE ACADEMY — the first interior. Four stations, one per road of growth. */
+/* THE ACADEMY is the first ISOMETRIC map. Everything below is still plain
+   world coordinates — collision, doors and travel do not know or care about
+   the projection. Only the drawing and the camera change. */
 WMAPS.academy = {
-  kind:"room", name:"THE ACADEMY", w:800, h:1050, fit:true,
-  spawn:{x:400, y:830},
+  kind:"room", name:"THE ACADEMY", w:600, h:680, fit:true, iso:true,
+  spawn:{x:430, y:545}, /* clear of the exit door zone and its sign */
   nodes:[
-    {page:"learn", ico:"🔥", name:"DISCIPLINE", x:110, y:120, w:180, h:115, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
-    {page:"learn", ico:"📚", name:"EDUCATION",  x:510, y:120, w:180, h:115, a:"#1f4d7a", b:"#5aa9ff", go:{page:"learn", cat:"education"}},
-    {page:"learn", ico:"💪", name:"PHYSICAL",   x:110, y:500, w:180, h:115, a:"#7a2b32", b:"#ff6b6b", go:{page:"learn", cat:"physical"}},
-    {page:"learn", ico:"🧠", name:"EMOTIONAL",  x:510, y:500, w:180, h:115, a:"#4a2a6b", b:"#c98cff", go:{page:"learn", cat:"emotional"}},
-    {ico:"🚪", name:"EXIT", prompt:"🚪 LEAVE THE ACADEMY", x:300, y:1010, w:200, h:40,
+    {page:"learn", ico:"🔥", name:"DISCIPLINE", x:80,  y:95,  w:155, h:95, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
+    {page:"learn", ico:"📚", name:"EDUCATION",  x:365, y:95,  w:155, h:95, a:"#1f4d7a", b:"#5aa9ff", go:{page:"learn", cat:"education"}},
+    {page:"learn", ico:"💪", name:"PHYSICAL",   x:80,  y:330, w:155, h:95, a:"#7a2b32", b:"#ff6b6b", go:{page:"learn", cat:"physical"}},
+    {page:"learn", ico:"🧠", name:"EMOTIONAL",  x:365, y:330, w:155, h:95, a:"#4a2a6b", b:"#c98cff", go:{page:"learn", cat:"emotional"}},
+    {ico:"🚪", name:"EXIT", prompt:"🚪 LEAVE THE ACADEMY", x:200, y:640, w:200, h:40,
      a:"#2c3350", b:"#8fa2cf", face:"n", go:{map:"city", at:{x:315, y:378}}}
   ],
   walls:[
-    {x:0, y:0, w:800, h:40}, {x:0, y:1010, w:800, h:40},
-    {x:0, y:0, w:40, h:1050}, {x:760, y:0, w:40, h:1050},
-    {x:320, y:330, w:160, h:100, desk:true}   /* the study table in the middle */
+    {x:0, y:0, w:600, h:40, tall:true},   /* north wall — drawn, you see its inside face */
+    {x:0, y:0, w:40, h:680, tall:true},   /* west wall */
+    {x:0, y:640, w:600, h:40},            /* south + east stay low so they never hide the room */
+    {x:560, y:0, w:40, h:680},
+    {x:240, y:260, w:120, h:80, desk:true} /* the study table in the middle */
   ]
 };
 var wPlayer = {x:1000, y:470, dir:1, moving:false, anim:0};
@@ -9101,6 +9106,56 @@ var wCv = null, wCtx = null, wRAF = null, wLast = 0, wNear = null, wSavedAt = ""
 var wKeys = {up:0, down:0, left:0, right:0};
 var wJoy = {on:false, id:null, ox:0, oy:0, dx:0, dy:0};
 
+/* ---- isometric projection ----
+   World stays a plain flat grid. These only change how it is DRAWN: a world
+   point becomes a screen point, and boxes get a height so they read as solid.
+   Nothing about collision, doors or travel goes through here. */
+/* KY vs KX is the camera pitch: classic 2:1 iso is KY = KX/2, which on a tall
+   phone leaves the room a thin ribbon. 0.38 keeps the solid-box look while
+   filling the screen. */
+var ISO_KX = 0.42, ISO_KY = 0.38, ISO_HEAD = 120;
+function projX(x, y){ return (x - y) * ISO_KX; }
+function projY(x, y){ return (x + y) * ISO_KY; }
+/* the drawable box of a map, in view units — top-down maps are the map itself */
+function mapBox(m){
+  if(!m.iso) return {x:0, y:0, w:m.w, h:m.h};
+  return {x:-m.h * ISO_KX, y:-ISO_HEAD,
+          w:(m.w + m.h) * ISO_KX, h:(m.w + m.h) * ISO_KY + ISO_HEAD};
+}
+function shade(hex, f){
+  var n = parseInt(hex.slice(1), 16);
+  return "rgb(" + Math.min(255, Math.round(((n >> 16) & 255) * f)) + ","
+                + Math.min(255, Math.round(((n >> 8) & 255) * f)) + ","
+                + Math.min(255, Math.round((n & 255) * f)) + ")";
+}
+/* a solid box standing on the world floor: two visible faces plus a lid */
+function isoBox(c, o, hgt, top, right, left){
+  var p = {
+    A:{x:projX(o.x, o.y), y:projY(o.x, o.y)},                     /* back   */
+    B:{x:projX(o.x + o.w, o.y), y:projY(o.x + o.w, o.y)},         /* right  */
+    C:{x:projX(o.x + o.w, o.y + o.h), y:projY(o.x + o.w, o.y + o.h)}, /* front */
+    D:{x:projX(o.x, o.y + o.h), y:projY(o.x, o.y + o.h)}          /* left   */
+  };
+  c.fillStyle = right;
+  c.beginPath();
+  c.moveTo(p.B.x, p.B.y); c.lineTo(p.C.x, p.C.y);
+  c.lineTo(p.C.x, p.C.y - hgt); c.lineTo(p.B.x, p.B.y - hgt);
+  c.closePath(); c.fill();
+  c.fillStyle = left;   /* this is the SOUTH face — the one the door sits on */
+  c.beginPath();
+  c.moveTo(p.D.x, p.D.y); c.lineTo(p.C.x, p.C.y);
+  c.lineTo(p.C.x, p.C.y - hgt); c.lineTo(p.D.x, p.D.y - hgt);
+  c.closePath(); c.fill();
+  c.fillStyle = top;
+  c.beginPath();
+  c.moveTo(p.A.x, p.A.y - hgt); c.lineTo(p.B.x, p.B.y - hgt);
+  c.lineTo(p.C.x, p.C.y - hgt); c.lineTo(p.D.x, p.D.y - hgt);
+  c.closePath(); c.fill();
+  c.strokeStyle = "rgba(255,255,255,.16)";
+  c.lineWidth = 1.4;
+  c.stroke();
+  return p;
+}
 function wRR(c, x, y, w, h, r){
   if(w < 2*r) r = w/2;
   if(h < 2*r) r = h/2;
@@ -9143,10 +9198,10 @@ function worldResize(){
   wCv.width = Math.round(wView.w * dpr);
   wCv.height = Math.round(wView.h * dpr);
   wCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  var m = curMap();
+  var m = curMap(), box = mapBox(m);
   if(m.fit){
     /* an interior shows all of its doors at once — fit the whole room */
-    wScale = Math.max(0.25, Math.min(1.4, Math.min(wView.w / (m.w + 50), wView.h / (m.h + 50))));
+    wScale = Math.max(0.25, Math.min(1.4, Math.min(wView.w / (box.w + 50), wView.h / (box.h + 50))));
   } else {
     /* outdoors: keep roughly 1100 world-units of height on screen — close enough
        to feel like a character, wide enough to see the next block and where to walk */
@@ -9228,9 +9283,21 @@ function worldUpdate(dt){
   if(wKeys.up)    ay -= 1;
   if(wKeys.down)  ay += 1;
   if(wJoy.on){ ax += wJoy.dx; ay += wJoy.dy; }
-  var m = Math.sqrt(ax*ax + ay*ay);
-  if(m > 1){ ax /= m; ay /= m; m = 1; }
-  wPlayer.moving = m > 0.10;
+  var map = curMap();
+  /* the hunter steers by what they SEE. On an isometric map that means the
+     input has to be rotated back into world space, or dragging right would
+     walk them diagonally. */
+  if(map.iso && (ax || ay)){
+    var wx = (ax / ISO_KX + ay / ISO_KY) / 2;
+    var wy = (ay / ISO_KY - ax / ISO_KX) / 2;
+    var norm = Math.sqrt(wx*wx + wy*wy) || 1;
+    var keep = Math.min(1, Math.sqrt(ax*ax + ay*ay));
+    ax = wx / norm * keep;
+    ay = wy / norm * keep;
+  }
+  var mag = Math.sqrt(ax*ax + ay*ay);
+  if(mag > 1){ ax /= mag; ay /= mag; mag = 1; }
+  wPlayer.moving = mag > 0.10;
   if(wPlayer.moving){
     if(ax > 0.18) wPlayer.dir = 1;
     else if(ax < -0.18) wPlayer.dir = -1;
@@ -9239,18 +9306,20 @@ function worldUpdate(dt){
     if(!worldSolid(nx, wPlayer.y)) wPlayer.x = nx;
     var ny = wPlayer.y + ay * sp;
     if(!worldSolid(wPlayer.x, ny)) wPlayer.y = ny;
-    var m = curMap();
-    wPlayer.x = Math.max(26, Math.min(m.w - 26, wPlayer.x));
-    wPlayer.y = Math.max(40, Math.min(m.h - 26, wPlayer.y));
+    wPlayer.x = Math.max(26, Math.min(map.w - 26, wPlayer.x));
+    wPlayer.y = Math.max(40, Math.min(map.h - 26, wPlayer.y));
     wPlayer.anim += dt;
   }
   var near = worldNearest();
   if(near !== wNear){ wNear = near; worldPrompt(); }
 }
 function worldCamera(){
-  var m = curMap(), vw = wView.w / wScale, vh = wView.h / wScale;
-  wCam.x = vw >= m.w ? (m.w - vw) / 2 : Math.max(0, Math.min(m.w - vw, wPlayer.x - vw/2));
-  wCam.y = vh >= m.h ? (m.h - vh) / 2 : Math.max(0, Math.min(m.h - vh, wPlayer.y - vh/2));
+  var m = curMap(), b = mapBox(m);
+  var vw = wView.w / wScale, vh = wView.h / wScale;
+  var px = m.iso ? projX(wPlayer.x, wPlayer.y) : wPlayer.x;
+  var py = m.iso ? projY(wPlayer.x, wPlayer.y) : wPlayer.y;
+  wCam.x = vw >= b.w ? b.x + (b.w - vw) / 2 : Math.max(b.x, Math.min(b.x + b.w - vw, px - vw/2));
+  wCam.y = vh >= b.h ? b.y + (b.h - vh) / 2 : Math.max(b.y, Math.min(b.y + b.h - vh, py - vh/2));
 }
 function worldDrawGround(c, t){
   var m = curMap(), i;
@@ -9484,6 +9553,156 @@ function worldDrawMap(c, t){
   c.beginPath(); c.arc(mx + wPlayer.x/m.w*mw, my + wPlayer.y/m.h*mh, 2.8, 0, Math.PI*2); c.fill();
   c.restore();
 }
+/* ---- the isometric renderer ---- */
+function isoFloor(c, t, m){
+  var i;
+  var A = {x:projX(0, 0), y:projY(0, 0)}, B = {x:projX(m.w, 0), y:projY(m.w, 0)};
+  var C = {x:projX(m.w, m.h), y:projY(m.w, m.h)}, D = {x:projX(0, m.h), y:projY(0, m.h)};
+  var g = c.createLinearGradient(0, A.y, 0, C.y);
+  g.addColorStop(0, t.g1);
+  g.addColorStop(1, t.g2);
+  c.fillStyle = g;
+  c.beginPath();
+  c.moveTo(A.x, A.y); c.lineTo(B.x, B.y); c.lineTo(C.x, C.y); c.lineTo(D.x, D.y);
+  c.closePath(); c.fill();
+  c.save();
+  c.clip();
+  c.strokeStyle = t.line;
+  c.lineWidth = 1.5;
+  for(i=0;i<=m.w;i+=100){
+    c.beginPath(); c.moveTo(projX(i, 0), projY(i, 0)); c.lineTo(projX(i, m.h), projY(i, m.h)); c.stroke();
+  }
+  for(i=0;i<=m.h;i+=100){
+    c.beginPath(); c.moveTo(projX(0, i), projY(0, i)); c.lineTo(projX(m.w, i), projY(m.w, i)); c.stroke();
+  }
+  var rg = c.createRadialGradient((A.x + C.x)/2, (A.y + C.y)/2, 20, (A.x + C.x)/2, (A.y + C.y)/2, (B.x - D.x)/2);
+  rg.addColorStop(0, t.light ? "rgba(255,255,255,.7)" : "rgba(124,97,255,.18)");
+  rg.addColorStop(1, "rgba(0,0,0,0)");
+  c.fillStyle = rg;
+  c.fill();
+  c.restore();
+}
+function isoWall(c, o, t){
+  if(o.desk){
+    isoBox(c, o, 34, "#6b5433", shade("#4a3a22", 0.85), shade("#4a3a22", 0.6));
+    return;
+  }
+  var base = t.light ? "#e6cfe0" : "#171c37";
+  isoBox(c, o, o.tall ? 96 : 12, shade(base, 1.25), shade(base, 0.95), shade(base, 0.7));
+}
+function isoNode(c, b, t){
+  var lock = b.page ? sectionLockLevel(b.page) : 0;
+  var hgt = b.name === "EXIT" ? 54 : 84;
+  var top = lock ? shade(b.b, 0.45) : b.b;
+  var p = isoBox(c, b, hgt, top, shade(top, 0.72), shade(top, 0.5));
+  /* the door lives on the SOUTH face — the left face in this projection */
+  var t1 = 0.30, t2 = 0.70, dh = hgt * 0.66;
+  var d1 = {x:p.D.x + (p.C.x - p.D.x) * t1, y:p.D.y + (p.C.y - p.D.y) * t1};
+  var d2 = {x:p.D.x + (p.C.x - p.D.x) * t2, y:p.D.y + (p.C.y - p.D.y) * t2};
+  c.fillStyle = "rgba(0,0,0,.62)";
+  c.beginPath();
+  c.moveTo(d1.x, d1.y); c.lineTo(d2.x, d2.y);
+  c.lineTo(d2.x, d2.y - dh); c.lineTo(d1.x, d1.y - dh);
+  c.closePath(); c.fill();
+  if(!lock){
+    c.save();
+    c.shadowColor = t.blu;
+    c.shadowBlur = 16;
+    c.strokeStyle = t.blu;
+    c.lineWidth = 2.2;
+    c.stroke();
+    c.restore();
+  }
+  var midX = (p.A.x + p.C.x) / 2, topY = p.A.y - hgt;
+  if(lock){
+    c.textAlign = "center";
+    c.fillStyle = "#ffffff";
+    c.font = "30px system-ui,Segoe UI Emoji,sans-serif";
+    c.fillText("🔒", midX, topY + 34);
+    c.fillStyle = "#ffd166";
+    c.font = "700 20px Orbitron,monospace";
+    c.fillText("LV." + lock, midX, topY + 58);
+  } else if(b.go && b.go.cat && LEARN_PATH[b.go.cat]){
+    var total = LEARN_PATH[b.go.cat].length, done = learnCleared(b.go.cat);
+    c.textAlign = "center";
+    c.fillStyle = "rgba(0,0,0,.5)";
+    wRR(c, midX - 44, topY + 14, 88, 32, 10); c.fill();
+    c.fillStyle = done >= total ? "#22c55e" : "#ffffff";
+    c.font = "700 22px Orbitron,monospace";
+    c.fillText(done + " / " + total, midX, topY + 37);
+  }
+  /* signs are collected and drawn in a second pass — in a depth-sorted scene a
+     box drawn later would otherwise paint over the sign of the one before it */
+  isoLabels.push({x:midX, y:topY, ico:b.ico, name:b.name});
+}
+var isoLabels = [];
+function isoDrawLabels(c, t){
+  var uf = 1 / wScale, i;
+  c.textAlign = "center";
+  for(i=0;i<isoLabels.length;i++){
+    var L = isoLabels[i];
+    c.font = "700 " + Math.round(12 * uf) + "px Orbitron,monospace";
+    var w = c.measureText(L.name).width;
+    c.fillStyle = t.light ? "rgba(255,255,255,.72)" : "rgba(4,6,18,.62)";
+    wRR(c, L.x - w/2 - 8 * uf, L.y - 20 * uf, w + 16 * uf, 16 * uf, 5 * uf);
+    c.fill();
+    c.fillStyle = t.ink;
+    c.fillText(L.name, L.x, L.y - 8 * uf);
+    c.font = Math.round(22 * uf) + "px system-ui,Segoe UI Emoji,sans-serif";
+    c.fillText(L.ico, L.x, L.y - 26 * uf);
+  }
+  isoLabels.length = 0;
+}
+function isoPlayer(c, t){
+  var p = wPlayer;
+  var sx = projX(p.x, p.y), sy = projY(p.x, p.y);
+  var sw = p.moving ? Math.sin(p.anim * 11) : 0;
+  var y = sy - (p.moving ? Math.abs(Math.sin(p.anim * 11)) * 2 : 0);
+  c.fillStyle = "rgba(0,0,0,.42)";
+  c.beginPath(); c.ellipse(sx, sy + 2, 17, 8, 0, 0, Math.PI*2); c.fill();
+  c.fillStyle = "#1b2140";
+  wRR(c, sx - 10 + sw*3, y - 15, 8, 17, 3); c.fill();
+  wRR(c, sx + 2  - sw*3, y - 15, 8, 17, 3); c.fill();
+  c.fillStyle = t.acc;
+  wRR(c, sx - 15, y - 44, 30, 33, 10); c.fill();
+  c.fillStyle = t.blu;
+  c.beginPath(); c.arc(sx + p.dir*3, y - 29, 4, 0, Math.PI*2); c.fill();
+  c.fillStyle = "#f2c9a0";
+  c.beginPath(); c.arc(sx, y - 54, 11, 0, Math.PI*2); c.fill();
+  c.fillStyle = t.acc;
+  c.beginPath(); c.arc(sx, y - 57, 12.5, Math.PI, 0); c.fill();
+  wRR(c, sx - 12.5, y - 59, 25, 8, 3); c.fill();
+  c.fillStyle = "#0b1030";
+  c.beginPath(); c.arc(sx + p.dir*3 - 3.4, y - 52, 1.8, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(sx + p.dir*3 + 3.4, y - 52, 1.8, 0, Math.PI*2); c.fill();
+  c.textAlign = "center";
+  c.fillStyle = t.ink;
+  c.font = "700 " + Math.round(11 / wScale) + "px Orbitron,monospace";
+  c.fillText((state.hunterName || "HUNTER").toUpperCase().slice(0, 14), sx, y - 72);
+}
+function worldDrawIso(c, t, m){
+  var i, wl = m.walls || [], items = [];
+  isoFloor(c, t, m);
+  /* the two back walls are always behind everything, so they are drawn before
+     the depth-sorted pass rather than inside it — a single sort key cannot
+     place a wall that spans the whole room */
+  for(i=0;i<wl.length;i++) if(wl[i].tall) isoWall(c, wl[i], t);
+  var r = worldRooms();
+  for(i=0;i<r.length;i++) items.push({k:"node", o:r[i]});
+  for(i=0;i<wl.length;i++) if(!wl[i].tall && wl[i].desk) items.push({k:"wall", o:wl[i]});
+  items.push({k:"player", o:{x:wPlayer.x - 14, y:wPlayer.y - 10, w:28, h:20}});
+  items.sort(function(a, b){
+    return (a.o.x + a.o.w + a.o.y + a.o.h) - (b.o.x + b.o.w + b.o.y + b.o.h);
+  });
+  for(i=0;i<items.length;i++){
+    if(items[i].k === "player") isoPlayer(c, t);
+    else if(items[i].k === "node") isoNode(c, items[i].o, t);
+    else isoWall(c, items[i].o, t);
+  }
+  /* the low front trim last: it is nearest the camera and too short to hide anything */
+  for(i=0;i<wl.length;i++) if(!wl[i].tall && !wl[i].desk) isoWall(c, wl[i], t);
+  isoDrawLabels(c, t);
+}
 function worldFrame(ts){
   wRAF = requestAnimationFrame(worldFrame);
   if(currentPage !== "world" || !wCtx) return;
@@ -9493,15 +9712,19 @@ function worldFrame(ts){
   if(dt > 0.05) dt = 0.05;
   worldUpdate(dt);
   worldCamera();
-  var c = wCtx, t = wTheme(), i;
+  var c = wCtx, t = wTheme(), i, m2 = curMap();
   c.clearRect(0, 0, wView.w, wView.h);
   c.save();
   c.scale(wScale, wScale);
   c.translate(-wCam.x, -wCam.y);
-  worldDrawGround(c, t);
-  var r = worldRooms();
-  for(i=0;i<r.length;i++) worldDrawBuilding(c, r[i], t);
-  worldDrawPlayer(c, t);
+  if(m2.iso){
+    worldDrawIso(c, t, m2);
+  } else {
+    worldDrawGround(c, t);
+    var r = worldRooms();
+    for(i=0;i<r.length;i++) worldDrawBuilding(c, r[i], t);
+    worldDrawPlayer(c, t);
+  }
   c.restore();
   worldDrawJoy(c);
   worldDrawMap(c, t);

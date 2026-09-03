@@ -34,6 +34,7 @@ And a room/section must also pass all three of these:
 | Lessons must produce action, not just motivation | 2026-09-02 — Academy tasks become real System quests |
 | Order sections by intent, not by feature | 2026-09-02 — 7 intent buildings, sections became rooms |
 | Interval timer with rounds (distinct from the focus timer) | 2026-09-02 — TRAINING YARD |
+| Isometric 2.5D world | 2026-09-02 — THE ACADEMY, as a per-map `iso:true` flag |
 
 ---
 
@@ -46,11 +47,11 @@ And a room/section must also pass all three of these:
 
 ## Raw — captured, not yet triaged
 
-- Isometric 2.5D projection for the world (buildings with visible height). Real 3D via WebGL was rejected: it breaks offline, breaks cheap phones, and would be a rewrite rather than an upgrade.
 - NPCs in the world — a quest-giver at the board, a mentor in the Academy. Makes a world feel alive more than better graphics do.
 - Buildings visibly under construction until unlocked, instead of a padlock.
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
-- More interiors: Treasury, Sanctuary, Clan Hall, Hall of Honor as walkable rooms rather than direct page links.
+- More interiors: Clan Hall and Hall of Honor as walkable rooms rather than direct page links.
+- Convert the remaining maps to isometric (`iso:true` on each) once the Academy has been judged in real use.
 
 ---
 
