@@ -307,6 +307,32 @@ In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full 
 
 The interval engine is one engine with two faces (`iv.ui` is `"iv"` for the TRAINING YARD page or `"qv"` for the quest window), so only one session can run at a time — which is also the truth about doing interval work. A session started inside a quest keeps running and still logs correctly if you close the window.
 
+## 4h. RANK — eligibility is not promotion
+
+Rank used to be a pure function of your attribute total, which made it **buyable**: bank stat points, spend them all at once, and wake up an A-Rank without ever having done what an A-Rank does. Three things changed.
+
+**1. Attributes only make you ELIGIBLE.** The rank you hold is stored in `state.rank` and is *granted*, never computed. Reaching a threshold opens a **RANK EVALUATION** (PROFILE → ⚖ RANK EVALUATION), and you must press REQUEST EVALUATION with every condition satisfied. **A rank, once earned, is never taken back** — losing attributes cannot demote you.
+
+**2. The evaluation is about what you sustained**, not what you accumulated. `RANK_TRIALS` in `index.html` holds the conditions per rank:
+
+| Rank | Streak | Cleared | Finalized | Academy | Focus | Reports | Honors |
+|---|---|---|---|---|---|---|---|
+| D | 7 | 20 | — | — | — | — | — |
+| C | 14 | 60 | 5 | 4 | 3h | — | — |
+| B | 21 | 150 | 15 | 10 | 10h | 1 | 1 |
+| A | 30 | 300 | 30 | 20 | 30h | 3 | 3 |
+| S | 60 | 600 | 60 | 30 | 80h | 8 | 8 |
+| NAT'L | 100 | 1200 | 120 | 40 | 200h | 15 | 20 |
+
+Every rank also demands a **clean record** — no XP debt outstanding, no penalty active. Edit `RANK_TRIALS` to retune any of it.
+
+**3. Stat points stopped flooding in.** Two sources were inflating them:
+
+- one free point **every level** → now **every third level**
+- the story road paid **+2 SP on most levels** (~144 points across the climb) → now **+1**
+
+Across 99 levels that is **243 attribute points before, 105 after**. Existing saves are migrated once (`roadSpV3`), and **only the untouched default value of 2 is halved** — a road the Administrator edited keeps whatever they chose, and levels already claimed are unaffected.
+
 ## 5. Features you may want to adjust later
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.

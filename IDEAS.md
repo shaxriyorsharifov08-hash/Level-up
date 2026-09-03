@@ -39,6 +39,7 @@ And a room/section must also pass all three of these:
 | Finalize asks about interesting things and mistakes, not lessons | 2026-09-02 |
 | Mandatory written weekly / monthly / annual reports with deadlines | 2026-09-02 — STATS → REPORTS |
 | Per-quest full-screen record with its own interval timer | 2026-09-02 — tap any quest card |
+| Rank must be earned, not bought with banked stat points | 2026-09-02 — RANK EVALUATION + stat point deflation |
 
 ---
 

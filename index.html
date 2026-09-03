@@ -1026,6 +1026,18 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 .iv-actions{display:flex;gap:10px}
 .iv-actions .btn{flex:1}
 
+.rk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rk-arrow{color:var(--dim);font-size:1.1rem}
+.rk-count{margin-left:auto;font-family:'Orbitron',monospace;font-size:.8rem;color:var(--blue)}
+.rk-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;margin-bottom:6px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:.82rem}
+.rk-row.ok{border-color:rgba(34,197,94,.45)}
+.rk-mark{flex:0 0 auto;width:18px;text-align:center;color:#ef4444;font-weight:900}
+.rk-row.ok .rk-mark{color:#22c55e}
+.rk-label{flex:1;min-width:0}
+.rk-val{font-family:'Orbitron',monospace;font-size:.74rem;color:var(--dim);white-space:nowrap}
+.rk-row.ok .rk-val{color:#22c55e}
+
 /* ---------- REPORTS ---------- */
 .rep-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;margin-bottom:10px;
   background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line)}
@@ -1287,6 +1299,12 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
           </div>
         </div>
         <div class="sp-banner" id="spBanner" style="display:none">&#10024; <span id="spTxt"></span></div>
+      </div>
+
+      <div class="panel" id="rankTrialPanel">
+        <div class="panel-title">⚖ RANK EVALUATION</div>
+        <div class="empty-note" style="margin-bottom:12px">Attributes make you <b>eligible</b>. They do not promote you. The Association weighs what you have actually sustained — and a rank, once earned, is never taken back.</div>
+        <div id="rankTrialBody"></div>
       </div>
 
       <div class="panel" id="oathPanel">
@@ -2337,6 +2355,9 @@ function defaultState(){
     stats:{INT:5,STR:5,CON:5,END:5},
     statProg:{INT:0,STR:0,CON:0,END:0}, /* training toward the next attribute point */
     lastRankKey:"E",     /* last rank seen, for attribute-driven rank-up detection */
+    rank:"",             /* the rank the Association has actually GRANTED (earned, never lost) */
+    rankNoticed:"",      /* the rank whose evaluation opening has already been announced */
+    roadSpV3:true,       /* new saves are already on the reduced road payout */
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
     storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
@@ -3498,7 +3519,7 @@ function migrateState(){
       if(lv % 10 === 0) kind = "roll-epic";
       else if(lv % 5 === 0) kind = "roll-medium";
       else if(lv % 2 === 0) kind = "roll-easy";
-      else { kind = "sp"; val = "2"; }
+      else { kind = "sp"; val = "1"; }
       state.levelRewards.push({id: uid(), level: lv, kind: kind, value: val});
     }
     state.claimedLevels = [];
@@ -3506,6 +3527,16 @@ function migrateState(){
     for(var cl=2; cl<=state.level; cl++) state.claimedLevels.push(cl);
   }
   if(!state.claimedLevels) state.claimedLevels = [];
+  /* Rank was buyable because the road paid +2 attribute points on most levels.
+     Only the untouched default value is halved — a road the Administrator
+     edited keeps whatever they chose. Levels already claimed are unaffected. */
+  if(!state.roadSpV3){
+    state.roadSpV3 = true;
+    for(var rsp=0; rsp<state.levelRewards.length; rsp++){
+      var rw3 = state.levelRewards[rsp];
+      if(rw3.kind === "sp" && +rw3.value === 2) rw3.value = "1";
+    }
+  }
   if(!state.budget) state.budget = {currency:"$", transactions:[], goals:[]};
   if(!state.budget.transactions) state.budget.transactions = [];
   if(!state.budget.goals) state.budget.goals = [];
@@ -3537,6 +3568,16 @@ function migrateState(){
     state.roadSeeded2 = true;
     state.levelRewards = defaultRoad();
     if(!state.claimedLevels) state.claimedLevels = [];
+  /* Rank was buyable because the road paid +2 attribute points on most levels.
+     Only the untouched default value is halved — a road the Administrator
+     edited keeps whatever they chose. Levels already claimed are unaffected. */
+  if(!state.roadSpV3){
+    state.roadSpV3 = true;
+    for(var rsp=0; rsp<state.levelRewards.length; rsp++){
+      var rw3 = state.levelRewards[rsp];
+      if(rw3.kind === "sp" && +rw3.value === 2) rw3.value = "1";
+    }
+  }
     for(var cl2=2; cl2<=Math.min(state.level, 100); cl2++){
       if(state.claimedLevels.indexOf(cl2) === -1) state.claimedLevels.push(cl2);
     }
@@ -3550,6 +3591,16 @@ function migrateState(){
     state.limitsInit3 = true;
     if(!state.roadTemplateId) state.levelRewards = defaultRoad(); /* adopt the v3 road (admin template wins if present) */
     if(!state.claimedLevels) state.claimedLevels = [];
+  /* Rank was buyable because the road paid +2 attribute points on most levels.
+     Only the untouched default value is halved — a road the Administrator
+     edited keeps whatever they chose. Levels already claimed are unaffected. */
+  if(!state.roadSpV3){
+    state.roadSpV3 = true;
+    for(var rsp=0; rsp<state.levelRewards.length; rsp++){
+      var rw3 = state.levelRewards[rsp];
+      if(rw3.kind === "sp" && +rw3.value === 2) rw3.value = "1";
+    }
+  }
     for(var cl3=2; cl3<=Math.min(state.level, 100); cl3++){
       if(state.claimedLevels.indexOf(cl3) === -1) state.claimedLevels.push(cl3);
     }
@@ -3578,6 +3629,16 @@ function migrateState(){
     if(!state.roadTemplateId){
       state.levelRewards = defaultRoad();
       if(!state.claimedLevels) state.claimedLevels = [];
+  /* Rank was buyable because the road paid +2 attribute points on most levels.
+     Only the untouched default value is halved — a road the Administrator
+     edited keeps whatever they chose. Levels already claimed are unaffected. */
+  if(!state.roadSpV3){
+    state.roadSpV3 = true;
+    for(var rsp=0; rsp<state.levelRewards.length; rsp++){
+      var rw3 = state.levelRewards[rsp];
+      if(rw3.kind === "sp" && +rw3.value === 2) rw3.value = "1";
+    }
+  }
       for(var cl5=2; cl5<=Math.min(state.level, 100); cl5++){
         if(state.claimedLevels.indexOf(cl5) === -1) state.claimedLevels.push(cl5);
       }
@@ -3644,7 +3705,7 @@ function defaultRoad(){
     else if(lv % 10 === 0){ kind = "roll-epic"; }
     else if(lv % 5 === 0){ kind = "roll-medium"; }
     else if(lv === 3 || lv === 7){ kind = "roll-easy"; } /* two early tastes of the gacha — then rolls must be earned */
-    else { kind = "sp"; val = "2"; }
+    else { kind = "sp"; val = "1"; } /* was 2 — the road alone was handing out ~144 attribute points across the climb */
     out.push({id: uid(), level: lv, kind: kind, value: val});
   }
   return out;
@@ -4601,14 +4662,18 @@ function rankForStats(total){
   for(var i=0;i<RANKS.length;i++){ if(total >= RANKS[i].minStats) r = RANKS[i]; }
   return r;
 }
-function currentRank(){ return rankForStats(totalStats()); }
+function currentRank(){
+  /* the rank you have been GRANTED, not the one your numbers allow. An older
+     save is stamped with whatever it had already reached, so nobody is demoted
+     by this change. */
+  if(!state.rank) state.rank = rankForStats(totalStats()).key;
+  return RANKS[rankIdx(state.rank)];
+}
 function statPointCost(){ return currentRank().cost; }
 function nextRankInfo(){
-  var cur = currentRank();
-  for(var i=0;i<RANKS.length;i++){
-    if(RANKS[i].minStats > totalStats()) return {rank:RANKS[i], need:RANKS[i].minStats - totalStats(), from:cur};
-  }
-  return null; /* already National */
+  var cur = currentRank(), nxt = nextRankTarget();
+  if(!nxt) return null; /* already National */
+  return {rank:nxt, need:Math.max(0, nxt.minStats - totalStats()), from:cur};
 }
 /* pour training into an attribute; converts to +1 points as the rank-scaled
    cost is met (carrying any remainder). Returns points gained. */
@@ -4625,15 +4690,147 @@ function trainStat(stat, pts){
   if(gained) checkStatRankUp();
   return gained;
 }
+/* ================= RANK EVALUATION =================
+   Rank used to be a pure function of your attribute total, which made it
+   buyable: bank stat points, spend them, wake up an A-Rank without having
+   done anything an A-Rank does. Attributes now only make you ELIGIBLE. The
+   Association still has to evaluate you, and the evaluation is about what you
+   have actually done and sustained. A rank, once earned, is never taken back. */
+var RANK_TRIALS = {
+  D:{streak:7,   cleared:20,   learn:0,  reports:0,  focusH:0,   honors:0,  journal:0},
+  C:{streak:14,  cleared:60,   learn:4,  reports:0,  focusH:3,   honors:0,  journal:5},
+  B:{streak:21,  cleared:150,  learn:10, reports:1,  focusH:10,  honors:1,  journal:15},
+  A:{streak:30,  cleared:300,  learn:20, reports:3,  focusH:30,  honors:3,  journal:30},
+  S:{streak:60,  cleared:600,  learn:30, reports:8,  focusH:80,  honors:8,  journal:60},
+  N:{streak:100, cleared:1200, learn:40, reports:15, focusH:200, honors:20, journal:120}
+};
+function rankIdx(key){
+  for(var i=0;i<RANKS.length;i++) if(RANKS[i].key === key) return i;
+  return 0;
+}
+function rkActiveStreak(){
+  var t = todayStr(), n = 0, i;
+  var start = (state.history[t] && state.history[t].count > 0) ? 0 : 1;
+  for(i=start;i<500;i++){
+    var h = state.history[addDays(t, -i)];
+    if(h && h.count > 0) n++; else break;
+  }
+  return n;
+}
+function rkCleared(){
+  var n = 0, k;
+  for(k in state.history) if(state.history[k] && state.history[k].count) n += state.history[k].count;
+  return n;
+}
+function rkFocusHours(){
+  var s = 0, k;
+  for(k in state.timeHistory) s += state.timeHistory[k] || 0;
+  return Math.floor(s / 3600);
+}
+function rkReports(){
+  var n = 0, k;
+  for(k in (state.reports || {})) if(!state.reports[k].late) n++;
+  return n;
+}
+function rkLearn(){ return state.learn && state.learn.done ? Object.keys(state.learn.done).length : 0; }
+function rkHonors(){ return (state.honors || []).length; }
+function rkJournal(){ return state.journal ? Object.keys(state.journal).length : 0; }
+function eligibleRank(){ return rankForStats(totalStats()); }
+function nextRankTarget(){
+  var i = rankIdx(currentRank().key);
+  return i + 1 < RANKS.length ? RANKS[i + 1] : null;
+}
+/* every condition the Association weighs, with the hunter's live numbers */
+function trialChecks(rank){
+  var t = RANK_TRIALS[rank.key] || {}, out = [];
+  out.push({label:"Total attributes",          need:rank.minStats, have:totalStats()});
+  if(t.streak)  out.push({label:"Consecutive active days", need:t.streak,  have:rkActiveStreak()});
+  if(t.cleared) out.push({label:"Quests cleared, all time", need:t.cleared, have:rkCleared()});
+  if(t.journal) out.push({label:"Days finalized",           need:t.journal, have:rkJournal()});
+  if(t.learn)   out.push({label:"ACADEMY levels cleared",   need:t.learn,   have:rkLearn()});
+  if(t.focusH)  out.push({label:"Hours of focused work",    need:t.focusH,  have:rkFocusHours()});
+  if(t.reports) out.push({label:"Reports filed on time",    need:t.reports, have:rkReports()});
+  if(t.honors)  out.push({label:"Entries in the Hall of Honor", need:t.honors, have:rkHonors()});
+  out.push({label:"Clean record — no XP debt, no penalty", need:1,
+            have:((state.xpDebt || 0) > 0 || state.penaltyTask) ? 0 : 1, bool:true});
+  for(var i=0;i<out.length;i++) out[i].ok = out[i].have >= out[i].need;
+  return out;
+}
+function trialPassed(rank){
+  var c = trialChecks(rank);
+  for(var i=0;i<c.length;i++) if(!c[i].ok) return false;
+  return true;
+}
+/* called whenever attributes move: never promotes, only opens the door */
 function checkStatRankUp(){
-  var nowKey = currentRank().key;
-  if(!state.lastRankKey){ state.lastRankKey = nowKey; return; }
-  if(nowKey === state.lastRankKey) return;
-  var oldIdx = 0, newIdx = 0;
-  for(var i=0;i<RANKS.length;i++){ if(RANKS[i].key === state.lastRankKey) oldIdx = i; if(RANKS[i].key === nowKey) newIdx = i; }
-  var prev = RANKS[oldIdx];
-  state.lastRankKey = nowKey;
-  if(newIdx > oldIdx) onRankUp(prev, RANKS[newIdx]);
+  currentRank(); /* stamps state.rank on an older save without demoting anyone */
+  var nxt = nextRankTarget();
+  if(!nxt) return;
+  if(rankIdx(eligibleRank().key) < rankIdx(nxt.key)) return; /* not eligible yet */
+  if(state.rankNoticed === nxt.key) return;
+  state.rankNoticed = nxt.key;
+  save();
+  announce("⚖ EVALUATION AVAILABLE — " + nxt.label,
+    "Your attributes now reach " + nxt.name + ".\n\nThat is not the same as being one.\n\n"
+    + "The Hunter Association does not promote on numbers. It has opened an EVALUATION, and it will look at what you have actually sustained — your streak, your cleared quests, your studied levels, your filed reports, your record.\n\n"
+    + "Open PROFILE → RANK EVALUATION to see exactly what is still missing."
+    + oathLine("become"),
+    "⚖", "SHOW ME");
+  if(currentPage === "profile") renderProfile();
+}
+function requestEvaluation(){
+  var nxt = nextRankTarget();
+  if(!nxt){ toast(tr("You already hold the highest rank."), "err"); return; }
+  if(rankIdx(eligibleRank().key) < rankIdx(nxt.key)){
+    toast(tr("Your attributes do not yet reach ") + nxt.name + ".", "err");
+    return;
+  }
+  if(!trialPassed(nxt)){ toast(tr("The evaluation is not satisfied yet."), "err"); return; }
+  var prev = currentRank();
+  state.rank = nxt.key;
+  state.lastRankKey = nxt.key;
+  state.rankNoticed = "";
+  save();
+  sfx("levelup");
+  onRankUp(prev, nxt);
+  renderHeader();
+  renderProfile();
+}
+function renderRankTrial(){
+  var el = document.getElementById("rankTrialBody");
+  if(!el || !state) return;
+  var cur = currentRank(), nxt = nextRankTarget();
+  if(!nxt){
+    el.innerHTML = '<div class="empty-note">You hold ' + esc(cur.name) + ' — the highest rank the Association recognises. There is nothing above you but your own record.</div>';
+    return;
+  }
+  var eligible = rankIdx(eligibleRank().key) >= rankIdx(nxt.key);
+  var checks = trialChecks(nxt), h = "", i, passed = 0;
+  for(i=0;i<checks.length;i++) if(checks[i].ok) passed++;
+  h += '<div class="rk-head"><span class="rank-badge ' + cur.cls + '">' + esc(cur.label) + '</span>'
+     + '<span class="rk-arrow">→</span><span class="rank-badge ' + nxt.cls + '">' + esc(nxt.label) + '</span>'
+     + '<span class="rk-count">' + passed + " / " + checks.length + '</span></div>';
+  h += '<div class="empty-note" style="margin:10px 0 12px">'
+     + (eligible
+        ? "Your attributes qualify. The Association now weighs what you have <b>done</b>."
+        : "Attributes alone will not promote you — and they are not enough yet either.")
+     + '</div>';
+  for(i=0;i<checks.length;i++){
+    var c = checks[i];
+    var have = c.bool ? (c.have ? "clean" : "outstanding") : c.have;
+    var need = c.bool ? "" : (" / " + c.need);
+    h += '<div class="rk-row ' + (c.ok ? "ok" : "") + '">'
+      +   '<span class="rk-mark">' + (c.ok ? "✔" : "✕") + '</span>'
+      +   '<span class="rk-label">' + esc(c.label) + '</span>'
+      +   '<span class="rk-val">' + esc(String(have)) + esc(need) + '</span></div>';
+  }
+  var can = eligible && passed === checks.length;
+  h += '<button class="btn ' + (can ? "primary" : "") + '" id="rkRequest" style="width:100%;margin-top:14px"'
+     + (can ? "" : " disabled") + '>'
+     + (can ? "⚖ REQUEST EVALUATION" : "⚖ EVALUATION NOT SATISFIED") + "</button>";
+  el.innerHTML = h;
+  var b = document.getElementById("rkRequest");
+  if(b) b.addEventListener("click", requestEvaluation);
 }
 function rankForLevel(lv){ return currentRank(); } /* legacy shim — rank is attribute-based now */
 function gainXP(amount){
@@ -4656,12 +4853,17 @@ function gainXP(amount){
   while(state.level < MAX_LEVEL && state.xp >= xpForLevel(state.level)){
     state.xp -= xpForLevel(state.level);
     state.level++;
-    state.statPoints += 1;
+    /* one free point EVERY level was the whole inflation: 35 levels became 35
+       attribute points became a rank. Every third level now. */
+    var freePt = (state.level % 3 === 0) ? 1 : 0;
+    state.statPoints += freePt;
     leveled = true;
     sfx("levelup");
     var roadLines = grantLevelRewards(state.level);
-    sysToast("LEVEL UP! You are now level " + state.level + ". +1 stat point.");
-    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n+1 stat point granted — but rank is earned through your attributes, not your level. Train them by completing quests."
+    sysToast("LEVEL UP! You are now level " + state.level + (freePt ? ". +1 stat point." : "."));
+    announce("LEVEL UP!", "You have reached Level " + state.level + ".\n\n"
+      + (freePt ? "+1 stat point granted (one every third level).\n\n" : "No stat point this level — they come every third level.\n\n")
+      + "Levels do not make you a higher rank. Attributes only make you eligible; the Association evaluates what you have actually done."
       + (roadLines.length ? "\n\n🗺 LEVEL ROAD REWARDS:\n" + roadLines.join("\n") : "")
       + oathLine("become"), "⚡", "CONTINUE");
     if(state.level % 5 === 0 && state.level > state.lastSystemCheckLevel){
@@ -6273,6 +6475,7 @@ function renderHeader(){
   }
 }
 function renderProfile(){
+  renderRankTrial();
   renderOathPanel();
   var r = rankForLevel(state.level);
   var pr = document.getElementById("profRank");
