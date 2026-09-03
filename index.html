@@ -957,6 +957,9 @@ main section{animation:pagein .28s ease}
   border:1px solid var(--line);border-radius:16px;overflow:hidden;touch-action:none;user-select:none;
   background:#05060f;box-shadow:var(--glow),inset 0 0 40px rgba(0,0,0,.55)}
 #worldCv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#worldGl{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none}
+#worldGl.on{display:block}
+#worldStage.gl #worldCv{background:transparent}
 .w-hud{position:absolute;left:12px;top:12px;z-index:3;pointer-events:none;
   font-family:'Orbitron',monospace;font-size:.64rem;letter-spacing:.08em;line-height:1.5;color:var(--text);
   background:rgba(5,7,20,.62);border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(4px)}
@@ -1116,6 +1119,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
     <!-- ============ WORLD — the walkable hub city ============ -->
     <section id="page-world">
       <div id="worldStage">
+        <canvas id="worldGl"></canvas>
         <canvas id="worldCv"></canvas>
         <div class="w-hud" id="worldHud"></div>
         <button id="worldEnter"></button>
@@ -9082,7 +9086,7 @@ WMAPS.sanctuary = {
    world coordinates — collision, doors and travel do not know or care about
    the projection. Only the drawing and the camera change. */
 WMAPS.academy = {
-  kind:"room", name:"THE ACADEMY", w:600, h:680, fit:true, iso:true,
+  kind:"room", name:"THE ACADEMY", w:600, h:680, fit:true, iso:true, r3d:true,
   spawn:{x:430, y:545}, /* clear of the exit door zone and its sign */
   nodes:[
     {page:"learn", ico:"🔥", name:"DISCIPLINE", x:80,  y:95,  w:155, h:95, a:"#7a3312", b:"#ff8a3d", go:{page:"learn", cat:"discipline"}},
@@ -9258,6 +9262,7 @@ function worldTravel(key, at){
   if(state.world){ state.world.map = key; }
   worldSave();
   worldResize();
+  g3Sync();
   wNear = worldNearest();
   worldPrompt();
   renderWorldHud();
@@ -9287,7 +9292,9 @@ function worldUpdate(dt){
   /* the hunter steers by what they SEE. On an isometric map that means the
      input has to be rotated back into world space, or dragging right would
      walk them diagonally. */
-  if(map.iso && (ax || ay)){
+  /* only when the map is actually DRAWN isometrically — the 3D camera is
+     axis-aligned, so there the raw input is already correct */
+  if(map.iso && !g3Active() && (ax || ay)){
     var wx = (ax / ISO_KX + ay / ISO_KY) / 2;
     var wy = (ay / ISO_KY - ax / ISO_KX) / 2;
     var norm = Math.sqrt(wx*wx + wy*wy) || 1;
@@ -9308,6 +9315,7 @@ function worldUpdate(dt){
     if(!worldSolid(wPlayer.x, ny)) wPlayer.y = ny;
     wPlayer.x = Math.max(26, Math.min(map.w - 26, wPlayer.x));
     wPlayer.y = Math.max(40, Math.min(map.h - 26, wPlayer.y));
+    wPlayer.lastDx = ax; wPlayer.lastDy = ay; /* which way the 3D model faces */
     wPlayer.anim += dt;
   }
   var near = worldNearest();
@@ -9553,6 +9561,398 @@ function worldDrawMap(c, t){
   c.beginPath(); c.arc(mx + wPlayer.x/m.w*mw, my + wPlayer.y/m.h*mh, 2.8, 0, Math.PI*2); c.fill();
   c.restore();
 }
+/* ================= REAL 3D (opt-in per map, lazy, always fallible) =========
+   A map with r3d:true is drawn as an actual WebGL interior. Three.js is
+   fetched only when such a map is entered, so the app's front door never waits
+   on the network — and if the fetch fails, or the device has no WebGL, the
+   map silently falls back to the isometric renderer and everything still
+   works. As with iso, the world stays a flat grid: collision, doors and travel
+   are untouched, this only decides how the room is drawn. */
+var THREE_SRC = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+var G3 = {state:"idle", map:"", scene:null, cam:null, ren:null, hero:null, signs:[], lights:[], warned:false};
+var G3S = 0.05; /* world units -> metres */
+function g3Supported(){
+  try{
+    var cv = document.createElement("canvas");
+    return !!(window.WebGLRenderingContext && (cv.getContext("webgl") || cv.getContext("experimental-webgl")));
+  }catch(e){ return false; }
+}
+function g3Load(){
+  if(window.THREE){ G3.state = "ready"; return; } /* already present — nothing to fetch */
+  if(G3.state === "ready" || G3.state === "loading" || G3.state === "failed") return;
+  if(!g3Supported()){ G3.state = "failed"; return; }
+  G3.state = "loading";
+  var s = document.createElement("script");
+  s.src = THREE_SRC;
+  s.async = true;
+  s.onload = function(){
+    G3.state = window.THREE ? "ready" : "failed";
+    if(G3.state === "ready" && currentPage === "world" && curMap().r3d) g3Build(curMap());
+  };
+  s.onerror = function(){
+    G3.state = "failed";
+    if(!G3.warned){ G3.warned = true; toast(tr("3D unavailable offline — showing the flat view."), "err"); }
+  };
+  document.head.appendChild(s);
+}
+function g3Active(){ return G3.state === "ready" && G3.scene && G3.map === wMap; }
+function g3Dispose(){
+  if(G3.scene){
+    G3.scene.traverse(function(o){
+      if(o.geometry) o.geometry.dispose();
+      if(o.material){
+        var mm = o.material.length ? o.material : [o.material];
+        for(var i=0;i<mm.length;i++){ if(mm[i].map) mm[i].map.dispose(); mm[i].dispose(); }
+      }
+    });
+  }
+  G3.scene = null; G3.hero = null; G3.signs = []; G3.map = "";
+  var gl = document.getElementById("worldGl");
+  if(gl) gl.classList.remove("on");
+  var st = document.getElementById("worldStage");
+  if(st) st.classList.remove("gl");
+}
+/* a canvas-textured billboard: signs, progress and locks, always readable */
+function g3Sign(w, h, draw){
+  var cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  draw(cv.getContext("2d"), w, h);
+  var tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  return sp;
+}
+function g3StationSign(b){
+  var lock = b.page ? sectionLockLevel(b.page) : 0;
+  var sub = "";
+  if(lock) sub = "LOCKED — LV." + lock;
+  else if(b.go && b.go.cat && LEARN_PATH[b.go.cat]) sub = learnCleared(b.go.cat) + " / " + LEARN_PATH[b.go.cat].length;
+  return g3Sign(512, 192, function(c, w, h){
+    c.clearRect(0, 0, w, h);
+    c.fillStyle = "rgba(4,6,18,.74)";
+    c.beginPath();
+    c.moveTo(24, 8); c.lineTo(w - 24, 8); c.lineTo(w - 8, h/2); c.lineTo(w - 24, h - 8);
+    c.lineTo(24, h - 8); c.lineTo(8, h/2); c.closePath(); c.fill();
+    c.strokeStyle = lock ? "#8b92c9" : b.b;
+    c.lineWidth = 4; c.stroke();
+    c.textAlign = "center";
+    c.font = "58px system-ui,Segoe UI Emoji,sans-serif";
+    c.fillStyle = "#fff";
+    c.fillText(b.ico, w/2, 72);
+    c.font = "700 42px Orbitron,monospace";
+    c.fillStyle = lock ? "#8b92c9" : "#ffffff";
+    c.fillText(b.name, w/2, 124);
+    if(sub){
+      c.font = "700 34px Orbitron,monospace";
+      c.fillStyle = lock ? "#ffd166" : b.b;
+      c.fillText(sub, w/2, 168);
+    }
+  });
+}
+/* any failure inside the 3D layer must cost the hunter nothing: the map falls
+   back to the flat renderer, which is always there */
+function g3Fail(where, e){
+  G3.state = "failed";
+  g3Dispose();
+  if(!G3.warned){
+    G3.warned = true;
+    toast(tr("3D could not start here — showing the flat view."), "err");
+  }
+  if(window.console && console.warn) console.warn("3D disabled (" + where + "):", e);
+}
+function g3Build(m){
+  if(G3.state !== "ready" || !window.THREE) return;
+  try{ g3BuildInner(m); }catch(e){ g3Fail("build", e); }
+}
+function g3BuildInner(m){
+  g3Dispose();
+  var W = m.w * G3S, D = m.h * G3S, i;
+  var toX = function(x){ return x * G3S - W/2; };
+  var toZ = function(y){ return y * G3S - D/2; };
+  var sc = new THREE.Scene();
+  var cs = getComputedStyle(document.body);
+  var accent = new THREE.Color((cs.getPropertyValue("--purple") || "#7c61ff").trim());
+  var blue   = new THREE.Color((cs.getPropertyValue("--blue") || "#00d1ff").trim());
+  var light  = (document.body.getAttribute("data-theme") || "shadow") === "blossom";
+  var bg = light ? 0xf3e3ee : 0x05070f;
+  sc.background = new THREE.Color(bg);
+  sc.fog = new THREE.Fog(bg, W * 0.9, W * 2.6);
+
+  /* ---- the floor: polished stone with an inlaid border ---- */
+  var floorMat = new THREE.MeshStandardMaterial({
+    color: light ? 0xe9dbe6 : 0x171b33, roughness:0.55, metalness:0.15
+  });
+  var floor = new THREE.Mesh(new THREE.BoxGeometry(W, 0.4, D), floorMat);
+  floor.position.y = -0.2;
+  sc.add(floor);
+  var inlay = new THREE.Mesh(new THREE.BoxGeometry(W - 4, 0.06, D - 4),
+    new THREE.MeshStandardMaterial({color:accent, roughness:0.4, metalness:0.5,
+      emissive:accent, emissiveIntensity:light ? 0.05 : 0.16}));
+  inlay.position.y = 0.03;
+  sc.add(inlay);
+  var carpet = new THREE.Mesh(new THREE.BoxGeometry(W - 9, 0.05, D - 9),
+    new THREE.MeshStandardMaterial({color: light ? 0xffffff : 0x0d1024, roughness:0.9}));
+  carpet.position.y = 0.06;
+  sc.add(carpet);
+
+  /* ---- walls: tall on three sides, a low parapet at the front so the
+         camera always sees in, with a real doorway cut for the exit ---- */
+  var wallMat = new THREE.MeshStandardMaterial({color: light ? 0xdcc8db : 0x1d2242, roughness:0.85});
+  var trimMat = new THREE.MeshStandardMaterial({color: light ? 0xc9a9c6 : 0x2b3160, roughness:0.6, metalness:0.3});
+  var TH = 0.7, HI = 9, LO = 3.2;
+  function wall(px, py, pz, sx, sy, sz, mat){
+    var w = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat || wallMat);
+    w.position.set(px, py, pz);
+    sc.add(w);
+    return w;
+  }
+  wall(0, HI/2, -D/2, W, HI, TH);                 /* north */
+  wall(-W/2, HI/2, 0, TH, HI, D);                 /* west  */
+  wall(W/2, HI/2, 0, TH, HI, D);                  /* east  */
+  /* south parapet, split around the exit doorway */
+  var ex = null;
+  for(i=0;i<m.nodes.length;i++) if(m.nodes[i].name === "EXIT") ex = m.nodes[i];
+  var gapL = ex ? toX(ex.x) : -3, gapR = ex ? toX(ex.x + ex.w) : 3;
+  var leftW = gapL - (-W/2), rightW = (W/2) - gapR;
+  if(leftW > 0.2)  wall(-W/2 + leftW/2, LO/2, D/2, leftW, LO, TH);
+  if(rightW > 0.2) wall(gapR + rightW/2, LO/2, D/2, rightW, LO, TH);
+  /* the doorway frame */
+  var doorMat = new THREE.MeshStandardMaterial({color:blue, emissive:blue, emissiveIntensity:0.9, roughness:0.3});
+  wall(gapL, 2.1, D/2, 0.5, 4.2, TH + 0.2, trimMat);
+  wall(gapR, 2.1, D/2, 0.5, 4.2, TH + 0.2, trimMat);
+  wall((gapL + gapR)/2, 4.3, D/2, gapR - gapL + 0.5, 0.45, TH + 0.2, doorMat);
+  /* cornice along the tall walls */
+  wall(0, HI - 0.4, -D/2 + 0.1, W, 0.5, TH + 0.3, trimMat);
+  wall(-W/2 + 0.1, HI - 0.4, 0, TH + 0.3, 0.5, D, trimMat);
+  wall(W/2 - 0.1, HI - 0.4, 0, TH + 0.3, 0.5, D, trimMat);
+
+  /* ---- columns down both sides, like a real hall ---- */
+  var colMat = new THREE.MeshStandardMaterial({color: light ? 0xefe2ee : 0x252b52, roughness:0.7});
+  var colGeo = new THREE.CylinderGeometry(0.55, 0.65, HI - 0.8, 12);
+  var capGeo = new THREE.BoxGeometry(1.7, 0.5, 1.7);
+  for(i=0;i<4;i++){
+    var cz = -D/2 + 5 + i * ((D - 10) / 3);
+    [-W/2 + 2.2, W/2 - 2.2].forEach(function(cx){
+      var col = new THREE.Mesh(colGeo, colMat);
+      col.position.set(cx, (HI - 0.8)/2, cz);
+      sc.add(col);
+      var cap = new THREE.Mesh(capGeo, trimMat);
+      cap.position.set(cx, HI - 0.9, cz);
+      sc.add(cap);
+      var base = new THREE.Mesh(capGeo, trimMat);
+      base.position.set(cx, 0.25, cz);
+      sc.add(base);
+    });
+  }
+
+  /* ---- bookshelves along the north wall ---- */
+  var shelfMat = new THREE.MeshStandardMaterial({color:0x3a2a1c, roughness:0.9});
+  for(i=0;i<5;i++){
+    var sx2 = -W/2 + 5 + i * ((W - 10) / 4);
+    var shelf = new THREE.Mesh(new THREE.BoxGeometry(3.4, 4.4, 1.1), shelfMat);
+    shelf.position.set(sx2, 2.2, -D/2 + 1.2);
+    sc.add(shelf);
+    for(var r2=0;r2<3;r2++){
+      var books = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.9, 0.5),
+        new THREE.MeshStandardMaterial({color:[0x8a4b3a, 0x3a5a8a, 0x6a8a3a][r2], roughness:0.8}));
+      books.position.set(sx2, 0.9 + r2 * 1.35, -D/2 + 0.9);
+      sc.add(books);
+    }
+  }
+
+  /* ---- lighting ---- */
+  sc.add(new THREE.AmbientLight(0xffffff, light ? 0.85 : 0.42));
+  sc.add(new THREE.HemisphereLight(0xaab4ff, 0x201828, light ? 0.7 : 0.55));
+  var key = new THREE.DirectionalLight(0xffffff, light ? 0.6 : 0.5);
+  key.position.set(W * 0.4, 18, D * 0.5);
+  sc.add(key);
+  var chand = new THREE.PointLight(0xffe0b0, light ? 0.5 : 1.1, W * 1.4, 2);
+  chand.position.set(0, HI - 2.2, 0);
+  sc.add(chand);
+  var orb = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12),
+    new THREE.MeshStandardMaterial({color:0xffe0b0, emissive:0xffe0b0, emissiveIntensity:1.4}));
+  orb.position.copy(chand.position);
+  sc.add(orb);
+
+  /* ---- the study table in the middle ---- */
+  var wl = m.walls || [];
+  for(i=0;i<wl.length;i++){
+    if(!wl[i].desk) continue;
+    var d = wl[i], dw = d.w * G3S, dd = d.h * G3S;
+    var dx = toX(d.x + d.w/2), dz = toZ(d.y + d.h/2);
+    var topM = new THREE.MeshStandardMaterial({color:0x6b5433, roughness:0.5, metalness:0.2});
+    var tabletop = new THREE.Mesh(new THREE.BoxGeometry(dw, 0.25, dd), topM);
+    tabletop.position.set(dx, 1.5, dz);
+    sc.add(tabletop);
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(s){
+      var leg = new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.5, 0.28),
+        new THREE.MeshStandardMaterial({color:0x4a3a22, roughness:0.9}));
+      leg.position.set(dx + s[0] * (dw/2 - 0.4), 0.75, dz + s[1] * (dd/2 - 0.4));
+      sc.add(leg);
+    });
+    var lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10),
+      new THREE.MeshStandardMaterial({color:0xffd166, emissive:0xffd166, emissiveIntensity:1.6}));
+    lamp.position.set(dx, 2.0, dz);
+    sc.add(lamp);
+    var lampL = new THREE.PointLight(0xffd166, 0.9, 12, 2);
+    lampL.position.copy(lamp.position);
+    sc.add(lampL);
+  }
+
+  /* ---- the four stations, as lit archways you walk into ---- */
+  var nodes = worldRooms();
+  for(i=0;i<nodes.length;i++){
+    var b = nodes[i];
+    if(b.name === "EXIT") continue;
+    var bw = b.w * G3S, bd = b.h * G3S;
+    var cx2 = toX(b.x + b.w/2), cz2 = toZ(b.y + b.h/2);
+    var lock = b.page ? sectionLockLevel(b.page) : 0;
+    var col = new THREE.Color(b.b), dark = new THREE.Color(b.a);
+    if(lock){ col.multiplyScalar(0.35); dark.multiplyScalar(0.45); }
+    var plat = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.4, bd),
+      new THREE.MeshStandardMaterial({color:dark, roughness:0.7}));
+    plat.position.set(cx2, 0.2, cz2);
+    sc.add(plat);
+    var backW = new THREE.Mesh(new THREE.BoxGeometry(bw, 5.2, 0.5),
+      new THREE.MeshStandardMaterial({color:col, roughness:0.6, metalness:0.2}));
+    backW.position.set(cx2, 2.7, cz2 - bd/2 + 0.25);
+    sc.add(backW);
+    [-1, 1].forEach(function(s){
+      var pil = new THREE.Mesh(new THREE.BoxGeometry(0.55, 5.0, 0.55),
+        new THREE.MeshStandardMaterial({color:dark, roughness:0.7}));
+      pil.position.set(cx2 + s * (bw/2 - 0.3), 2.5, cz2 + bd/2 - 0.3);
+      sc.add(pil);
+    });
+    var lintel = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.7, 0.7),
+      new THREE.MeshStandardMaterial({color:col, roughness:0.5, metalness:0.3}));
+    lintel.position.set(cx2, 5.0, cz2 + bd/2 - 0.3);
+    sc.add(lintel);
+    /* the doorway itself, glowing when it is open to you */
+    var portal = new THREE.Mesh(new THREE.PlaneGeometry(bw * 0.55, 3.6),
+      new THREE.MeshBasicMaterial({color: lock ? 0x11131f : col, transparent:true,
+        opacity: lock ? 0.85 : 0.55, side:THREE.DoubleSide}));
+    portal.position.set(cx2, 1.85, cz2 + bd/2 - 0.34);
+    sc.add(portal);
+    if(!lock){
+      var pl = new THREE.PointLight(col, 1.5, 14, 2);
+      pl.position.set(cx2, 2.6, cz2 + bd/2 + 1.2);
+      sc.add(pl);
+    }
+    var sign = g3StationSign(b);
+    sign.scale.set(bw * 0.92, bw * 0.92 * 0.375, 1);
+    sign.position.set(cx2, 6.6, cz2 + bd/2 - 0.2);
+    sc.add(sign);
+    G3.signs.push({node:b, sprite:sign});
+  }
+
+  /* ---- the hunter ---- */
+  var hero = new THREE.Group();
+  var skin = new THREE.MeshStandardMaterial({color:0xf2c9a0, roughness:0.8});
+  var cloth = new THREE.MeshStandardMaterial({color:accent, roughness:0.6, metalness:0.15});
+  var boot = new THREE.MeshStandardMaterial({color:0x1b2140, roughness:0.9});
+  var legL = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.85, 0.28), boot);
+  legL.position.set(-0.17, 0.42, 0);
+  var legR = legL.clone();
+  legR.position.x = 0.17;
+  hero.add(legL); hero.add(legR);
+  var torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.95, 0.42), cloth);
+  torso.position.y = 1.32;
+  hero.add(torso);
+  var core = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8),
+    new THREE.MeshStandardMaterial({color:blue, emissive:blue, emissiveIntensity:1.6}));
+  core.position.set(0, 1.36, 0.23);
+  hero.add(core);
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.29, 14, 12), skin);
+  head.position.y = 2.02;
+  hero.add(head);
+  var hood = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2), cloth);
+  hood.position.y = 2.04;
+  hero.add(hood);
+  var shadow = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16),
+    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.35}));
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.08;
+  hero.add(shadow);
+  hero.userData = {legL:legL, legR:legR, torso:torso, head:head, hood:hood, core:core};
+  sc.add(hero);
+  var heroLight = new THREE.PointLight(0xffffff, 0.5, 9, 2);
+  heroLight.position.set(0, 2.6, 1.5);
+  hero.add(heroLight);
+
+  var cam = new THREE.PerspectiveCamera(46, 1, 0.1, 400);
+  var ren = G3.ren;
+  if(!ren){
+    ren = new THREE.WebGLRenderer({canvas:document.getElementById("worldGl"), antialias:true});
+    ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    if(THREE.sRGBEncoding) ren.outputEncoding = THREE.sRGBEncoding; /* else colours render washed out */
+    G3.ren = ren;
+  }
+  G3.scene = sc; G3.cam = cam; G3.hero = hero; G3.map = wMap;
+  document.getElementById("worldGl").classList.add("on");
+  document.getElementById("worldStage").classList.add("gl");
+  g3Resize();
+}
+function g3Resize(){
+  if(!G3.ren || !G3.cam) return;
+  var st = document.getElementById("worldStage");
+  var w = st.clientWidth || 320, h = st.clientHeight || 380;
+  G3.ren.setSize(w, h, false);
+  G3.cam.aspect = w / h;
+  G3.cam.updateProjectionMatrix();
+}
+function g3RefreshSigns(){
+  if(!g3Active()) return;
+  for(var i=0;i<G3.signs.length;i++){
+    var s = G3.signs[i];
+    var fresh = g3StationSign(s.node);
+    if(s.sprite.material.map) s.sprite.material.map.dispose();
+    s.sprite.material.map = fresh.material.map;
+    s.sprite.material.needsUpdate = true;
+    fresh.material.dispose();
+  }
+}
+/* keep the 3D layer matched to whichever map the hunter is standing on */
+function g3Sync(){
+  var m = curMap();
+  if(m.r3d){
+    if(G3.state === "idle") g3Load();
+    if(G3.state === "ready"){
+      if(G3.map !== wMap) g3Build(m);
+      else { g3Resize(); g3RefreshSigns(); }
+    }
+    return;
+  }
+  if(G3.scene) g3Dispose(); /* left the 3D map — free the GPU memory */
+}
+function g3Frame(m, dt){
+  try{ g3FrameInner(m, dt); }catch(e){ g3Fail("frame", e); }
+}
+function g3FrameInner(m, dt){
+  var W = m.w * G3S, D = m.h * G3S;
+  var px = wPlayer.x * G3S - W/2, pz = wPlayer.y * G3S - D/2;
+  var h = G3.hero, u = h.userData;
+  h.position.set(px, 0, pz);
+  /* face the way they walk, and swing the legs while they do */
+  if(wPlayer.moving){
+    /* guard the zero: walking due east has lastDy === 0, and "|| 1" would
+       turn that into a 45-degree lie about which way they are facing */
+    if(wPlayer.lastDx || wPlayer.lastDy) h.rotation.y = Math.atan2(wPlayer.lastDx, wPlayer.lastDy);
+    var sw = Math.sin(wPlayer.anim * 11) * 0.55;
+    u.legL.rotation.x = sw;
+    u.legR.rotation.x = -sw;
+    u.torso.position.y = 1.32 + Math.abs(Math.sin(wPlayer.anim * 11)) * 0.05;
+  } else {
+    u.legL.rotation.x *= 0.8;
+    u.legR.rotation.x *= 0.8;
+    u.torso.position.y += (1.32 - u.torso.position.y) * 0.2;
+  }
+  /* third person, clamped so the camera never backs through a wall */
+  var cz = Math.min(pz + 15, D/2 - 1.5);
+  var cx = Math.max(-W/2 + 2, Math.min(W/2 - 2, px));
+  G3.cam.position.set(cx, 11.5, cz);
+  G3.cam.lookAt(px, 2.2, pz - 2);
+  G3.ren.render(G3.scene, G3.cam);
+}
 /* ---- the isometric renderer ---- */
 function isoFloor(c, t, m){
   var i;
@@ -9714,6 +10114,13 @@ function worldFrame(ts){
   worldCamera();
   var c = wCtx, t = wTheme(), i, m2 = curMap();
   c.clearRect(0, 0, wView.w, wView.h);
+  /* a real-3D map draws through WebGL; the 2D canvas above it carries only the
+     joystick. If 3D is not ready (or never will be) the flat renderer runs. */
+  if(m2.r3d && g3Active()){
+    g3Frame(m2, dt);
+    worldDrawJoy(c);
+    return;
+  }
   c.save();
   c.scale(wScale, wScale);
   c.translate(-wCam.x, -wCam.y);
@@ -9765,6 +10172,7 @@ function worldSave(){
 function worldStart(){
   if(!worldEl()) return;
   worldResize();
+  g3Sync();
   renderWorldHud();
   wNear = worldNearest();
   worldPrompt();
@@ -9830,7 +10238,7 @@ function worldStop(){
     else if(k === "arrowleft"  || k === "a") wKeys.left = 0;
     else if(k === "arrowright" || k === "d") wKeys.right = 0;
   });
-  window.addEventListener("resize", function(){ if(currentPage === "world") worldResize(); });
+  window.addEventListener("resize", function(){ if(currentPage === "world"){ worldResize(); g3Resize(); } });
 })();
 
 /* ================= LEARN & GROW =================

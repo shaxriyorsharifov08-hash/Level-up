@@ -35,6 +35,7 @@ And a room/section must also pass all three of these:
 | Order sections by intent, not by feature | 2026-09-02 — 7 intent buildings, sections became rooms |
 | Interval timer with rounds (distinct from the focus timer) | 2026-09-02 — TRAINING YARD |
 | Isometric 2.5D world | 2026-09-02 — THE ACADEMY, as a per-map `iso:true` flag |
+| Real 3D (WebGL) | 2026-09-02 — THE ACADEMY, per-map `r3d:true`, lazy-loaded with iso as the fallback |
 
 ---
 
@@ -59,7 +60,7 @@ And a room/section must also pass all three of these:
 
 | Idea | Why not |
 |---|---|
-| Make it look like GTA / Roblox (real 3D) | 3D engines need asset pipelines and teams. Would break offline (the whole front door depends on a CDN library), break old phones, and require rewriting the world layer. Isometric 2.5D gets most of the visual gain at none of the cost. |
+| Make the WHOLE world real 3D | Would make the app's front door depend on a CDN fetch, so a bad connection means a blank screen where the city should be. **Revised 2026-09-02:** scoped to a single interior with the flat renderer as an automatic fallback, this objection does not hold — THE ACADEMY is now real 3D. Photorealism is still out: there is no 3D artist and no model files, so the architecture is generated in code. |
 | "Combine all features of every app — habit breaker, running, sport, study, finance, everything" | Unbounded scope is how solo projects die. The app already has budgeting, quests, focus timing, clans, ranks and journaling. Features are not the differentiator; the content and the voice are. |
 | A separate SELF-IMPROVEMENT building with a "be disciplined" room | Duplicates the Academy's Discipline road. One home per intent. |
 | Separate rooms for workout plans / challenges / physical stats | Already exist as the Daily Package, quest tiers and STATS. The problem was findability, not absence — building duplicates would have made it worse. |

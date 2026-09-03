@@ -170,6 +170,7 @@ Every walkable place — the city and every interior — is an entry in **`WMAPS
 | `w`, `h` | size of the map in world units |
 | `fit` | `true` = zoom so the whole room is on screen at once (interiors); leave out for outdoor maps, which scroll with the camera |
 | `iso` | `true` = draw this map in **isometric 2.5D** (solid boxes with height and shaded faces) instead of flat top-down. Per-map, so maps can be converted one at a time |
+| `r3d` | `true` = draw this map in **real 3D** (WebGL). Keep `iso:true` alongside it — that is the fallback whenever 3D cannot run |
 | `spawn` | `{x,y}` where you appear when you arrive |
 | `nodes` | the things with doors — each has `x,y,w,h`, `ico`, `name`, colors `a` (dark) / `b` (light), and a `go` |
 | `walls` | solid blocks you cannot enter (`desk:true` draws it as furniture) |
@@ -205,6 +206,22 @@ Three things the projection has to get right, all handled in `index.html`:
 - **Steering.** Input is rotated back into world space (`ISO_KX`/`ISO_KY`), so dragging right walks the hunter right on screen instead of diagonally.
 - **Depth.** Objects are sorted back-to-front so the hunter passes behind far rooms and in front of near ones. The two back walls are drawn before that pass — a single sort key cannot place a wall spanning the whole room — and the low south/east trim after it.
 - **Signs.** Labels are collected and drawn in a second pass, otherwise a box drawn later paints over the sign of the one before it.
+
+### Real 3D maps (`r3d:true`)
+
+THE ACADEMY is rendered as an actual WebGL interior: stone floor with an inlaid border, tall walls with a cornice, columns down both sides, bookshelves along the north wall, a lit study table, and four archway stations you walk into. A third-person camera follows the hunter.
+
+**Three.js is only fetched when a 3D map is entered** (`THREE_SRC`, ~600 KB), so the app's front door never waits on the network. It is layered so that 3D can never cost you the room:
+
+- CDN unreachable (offline) → falls back to the isometric renderer
+- device has no WebGL → falls back
+- anything throws while building or drawing the scene → `g3Fail()` frees the scene, disables 3D for the session, and falls back
+
+That is why an `r3d` map keeps `iso:true` as well. Leaving the map disposes the scene and frees GPU memory; returning rebuilds it.
+
+The camera is axis-aligned (world x → screen right, world y → into the screen), so input is **not** rotated on a 3D map — only on a map actually drawn isometrically. The world stays a flat grid throughout; collision, doors, travel and saved positions never change.
+
+To convert another map: add `r3d:true` next to its `iso:true`. The room, its stations, locks and progress read straight from the same `WMAPS` entry — no separate 3D model list to maintain.
 
 `ISO_KY` versus `ISO_KX` is the camera pitch. Classic 2:1 isometric is `KY = KX/2`, which on a tall phone squashes the room into a ribbon; `0.38` keeps the solid-box look while filling the screen. The rest of the world is still top-down — set `iso:true` on another map when you want it converted.
 
