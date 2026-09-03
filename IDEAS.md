@@ -36,6 +36,9 @@ And a room/section must also pass all three of these:
 | Interval timer with rounds (distinct from the focus timer) | 2026-09-02 — TRAINING YARD |
 | Isometric 2.5D world | 2026-09-02 — THE ACADEMY, as a per-map `iso:true` flag |
 | Real 3D (WebGL) | 2026-09-02 — THE ACADEMY, per-map `r3d:true`, lazy-loaded with iso as the fallback |
+| Finalize asks about interesting things and mistakes, not lessons | 2026-09-02 |
+| Mandatory written weekly / monthly / annual reports with deadlines | 2026-09-02 — STATS → REPORTS |
+| Per-quest full-screen record with its own interval timer | 2026-09-02 — tap any quest card |
 
 ---
 
@@ -51,6 +54,7 @@ And a room/section must also pass all three of these:
 - NPCs in the world — a quest-giver at the board, a mentor in the Academy. Makes a world feel alive more than better graphics do.
 - Buildings visibly under construction until unlocked, instead of a padlock.
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
+- The STATS page itself is still "awful" — the per-quest window solved *finding a single task's record*, but the whole-hunter view has not been redesigned yet.
 - More interiors: Clan Hall and Hall of Honor as walkable rooms rather than direct page links.
 - Convert the remaining maps to isometric (`iso:true` on each) once the Academy has been judged in real use.
 

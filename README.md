@@ -280,9 +280,37 @@ The oath can be re-sworn (PROFILE → THE OATH, or the ⚔ OATH STONE monument i
 
 To change the questions, edit `OATH_Q` (`k` is the storage key, `n` the question, `h` the hint, `p` the placeholder) and `OATH_PRE` for the opening text. Adding a question means adding a matching case to `oathLine()` if you want it quoted anywhere.
 
+## 4f. REPORTS — written by you, and mandatory
+
+STATS → 📋 REPORTS. The System already grades your month automatically; these are the other half — **what you write, in your own words, when a period closes**.
+
+| Report | Opens | Deadline |
+|---|---|---|
+| 🗓 WEEKLY | the Monday after the week ends | **1 day** |
+| 📅 MONTHLY | the 1st of the next month | **3 days** |
+| 🏛 ANNUAL | 1 January | **7 days** |
+
+Before you write, the System hands you the numbers it already has for that period — quests cleared, XP, active days, focused hours — so the report is for what the numbers *do not* show. Minimum 40 characters.
+
+**Missing a deadline costs XP debt** (40 weekly, 120 monthly, 300 annual), announced by the System and never charged twice for the same period. A missed report can still be filed; the record permanently says LATE, and a late filing earns no XP. Filing on time pays 30 / 80 / 200.
+
+**No report is ever demanded retroactively.** `state.reportsSince` is stamped the first time the feature runs, so a hunter who was already playing is never billed for weeks that closed before the rule existed.
+
+## 4g. ONE QUEST, FULL SCREEN
+
+In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full screen with everything the System knows about that one habit:
+
+- current streak, best streak, total times cleared, how many of the last 30 days, progress toward the next reward, total time logged
+- a **12-week grid** — one square per day, lit on days you cleared it — and a plain sentence saying whether you are rising, slipping or holding against the previous 30 days
+- **its own interval timer**, whose rounds are saved with that quest (`q.iv`). Finishing a session logs the time **against that quest**, and satisfies a ⏱ TIMER QUEST
+- every completion date on record, newest first
+
+The interval engine is one engine with two faces (`iv.ui` is `"iv"` for the TRAINING YARD page or `"qv"` for the quest window), so only one session can run at a time — which is also the truth about doing interval work. A session started inside a quest keeps running and still logs correctly if you close the window.
+
 ## 5. Features you may want to adjust later
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.
+- **Finalize the Day** now asks three things: *what interesting thing happened*, *what mistake did you make and how will you fix it*, and *what you expect from tomorrow*. Pages written under the old questions (learned / changed me) still display correctly in PROFILE → Pages of the Hunter — nothing written is ever lost.
 - **Notifications**: ADMIN → 🔔 NOTIFICATIONS. A daily reminder fires at the chosen time if quests are unfinished. It works while the app is open in a tab or installed on the home screen; it is *local* (no push server), so a fully-closed phone browser won't ring — that is a platform limit, not a bug.
 - **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **+1%** button opens/closes the menu.
 - **The progression model (single mode)** — every hunter climbs the same story path to **Level 100**:
