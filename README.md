@@ -333,6 +333,16 @@ Every rank also demands a **clean record** — no XP debt outstanding, no penalt
 
 Across 99 levels that is **243 attribute points before, 105 after**. Existing saves are migrated once (`roadSpV3`), and **only the untouched default value of 2 is halved** — a road the Administrator edited keeps whatever they chose, and levels already claimed are unaffected.
 
+## 4i. Reliability rules (do not remove these)
+
+Three defects found in an audit, each proven with a test before it was fixed:
+
+- **Icon and emoji fields are free text and are rendered as HTML.** A quest icon of `<img src=x onerror=...>` used to execute. Every icon/emoji is now passed through `esc()` at render. **If you add a new place that prints `q.icon`, `col.emoji` or `it.emoji`, wrap it in `esc()`.**
+- **A save that fails must never be silent.** `localStorage.setItem` was wrapped in `try{}catch(e){}` with an empty catch, so a full quota meant the hunter kept playing while nothing was written. `save()` now detects the failure and raises a full-screen warning telling them to export a backup. Never restore the empty catch.
+- **One uncaught error used to kill the app.** `window.onerror` and `unhandledrejection` now show a red recovery bar with RELOAD, instead of a frozen screen with no way back.
+
+Known and not yet addressed: after two years of daily use the save reaches roughly **600 KB** and every single action rewrites the whole blob (~25 ms on the main thread). It fits inside the ~5 MB browser limit, but old `history`, `streakHistory` and `completions` entries should eventually be pruned or summarised.
+
 ## 5. Features you may want to adjust later
 
 - **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.

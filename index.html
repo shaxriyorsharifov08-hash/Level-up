@@ -2436,7 +2436,12 @@ function save(){
   var takeSnap = !!idb && state.lastSnapshotDay !== t;
   if(takeSnap) state.lastSnapshotDay = t;
   var json = JSON.stringify(state);
-  try{ localStorage.setItem(SKEY, json); }catch(e){}
+  /* A silent save failure is the worst bug this app can have: the hunter keeps
+     playing, believing a year of records is being kept, and it is not. */
+  var stored = false;
+  try{ localStorage.setItem(SKEY, json); stored = true; }catch(e){ stored = false; }
+  if(!stored) onSaveFailed(json);
+  else if(saveBroken){ saveBroken = false; sysToast(tr("Storage recovered — your progress is being saved again.")); }
   idbPut("kv", "state", json);
   /* tiny snapshot for the background-reminder service worker */
   try{
@@ -5143,6 +5148,41 @@ document.getElementById("honestySwear").addEventListener("click", function(){
   renderAll();
 });
 
+/* ---------------- storage failure + crash net ----------------
+   Two things a daily-use app must never do: lose data quietly, or die on one
+   uncaught error with no way back. */
+var saveBroken = false, fatalShown = false;
+function onSaveFailed(json){
+  if(saveBroken) return; /* one warning, not one per action */
+  saveBroken = true;
+  var kb = Math.round((json || "").length / 1024);
+  announce("💾 PROGRESS IS NOT BEING SAVED",
+    "This device refused to store your save (about " + kb + " KB). It is almost always a full browser storage quota, or private-browsing mode.\n\n"
+    + "Your progress is still in memory and still in the System vault, but it will NOT survive closing the app.\n\n"
+    + "Do this now: SETTINGS → 💾 EXPORT JSON BACKUP. Then free browser storage, or import the backup on another device.",
+    "💾", "I UNDERSTAND");
+}
+function luFatal(err){
+  if(fatalShown) return;
+  fatalShown = true;
+  var msg = "";
+  try{ msg = (err && (err.stack || err.message)) ? String(err.stack || err.message).slice(0, 300) : String(err); }catch(e){ msg = "unknown"; }
+  try{
+    var bar = document.createElement("div");
+    bar.setAttribute("style", "position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:14px 16px;"
+      + "background:#2a0d12;border-top:2px solid #ef4444;color:#ffdede;font:13px/1.5 system-ui,sans-serif");
+    bar.innerHTML = "<b>The System hit an error.</b> Your save is untouched — reload to continue."
+      + '<div style="opacity:.7;font-size:11px;margin:6px 0 10px;word-break:break-word">' + esc(msg) + "</div>"
+      + '<button id="luReload" style="padding:9px 16px;border-radius:9px;border:0;background:#ef4444;color:#fff;font-weight:700">RELOAD</button>'
+      + ' <button id="luDismiss" style="padding:9px 16px;border-radius:9px;border:1px solid #ef4444;background:transparent;color:#ffdede">DISMISS</button>';
+    document.body.appendChild(bar);
+    document.getElementById("luReload").addEventListener("click", function(){ location.reload(); });
+    document.getElementById("luDismiss").addEventListener("click", function(){ bar.remove(); fatalShown = false; });
+  }catch(e){}
+}
+window.addEventListener("error", function(e){ luFatal(e.error || e.message); });
+window.addEventListener("unhandledrejection", function(e){ luFatal(e.reason); });
+
 /* ---------------- finalize the day (evening reflection ritual) ---------------- */
 function updateFinalizeBtn(){
   var btn = document.getElementById("finalizeBtn");
@@ -6779,7 +6819,7 @@ function questCard(q){
   var timerReady = !q.needTimer || q.lastTimedOn === tNow || (state.activeTimer && state.activeTimer.id === q.id);
   var col = q.link ? colById(q.link) : null;
   var h = '<div class="quest-card tb-' + q.tier + (doneNow?" done-today":"") + '" data-qid="' + q.id + '" title="Open this quest\'s full record">';
-  h += '<div class="q-ico">' + q.icon + '</div>';
+  h += '<div class="q-ico">' + esc(q.icon) + '</div>';
   h += '<div class="q-main"><div class="q-name">' + esc(q.name);
   if(q.system) h += ' <span class="tag tag-sys">⚡ SYSTEM</span>';
   h += '</div>';
@@ -6995,7 +7035,7 @@ function renderRewards(){
       var pct = totalN ? Math.round(ownedN / totalN * 100) : 0;
       h += '<div class="col-card' + (col.complete?" complete":"") + '">';
       h += '<div class="col-top"><div style="flex:1;min-width:0">';
-      h += '<div class="col-name">' + col.emoji + ' ' + esc(col.name) + (col.complete?' <span class="tag tag-legendary">✓ COMPLETE</span>':'') + '</div>';
+      h += '<div class="col-name">' + esc(col.emoji) + ' ' + esc(col.name) + (col.complete?' <span class="tag tag-legendary">✓ COMPLETE</span>':'') + '</div>';
       if(col.title) h += '<div class="col-title-tag">👑 Title: ' + esc(col.title) + '</div>';
       h += '</div><div class="mini-row">';
       h += '<button class="mini-btn" data-cact="edit" data-id="' + col.id + '" title="Edit">✎</button>';
@@ -7004,7 +7044,7 @@ function renderRewards(){
       h += '<div class="pieces">';
       for(var p=0;p<col.items.length;p++){
         var it = col.items[p];
-        if(it.owned) h += '<span class="piece owned" title="' + esc(it.name) + '">' + it.emoji + '</span>';
+        if(it.owned) h += '<span class="piece owned" title="' + esc(it.name) + '">' + esc(it.emoji) + '</span>';
         else h += '<span class="piece mystery" title="Mystery prize — win it with a roll">?</span>';
       }
       h += '</div>';
@@ -7594,7 +7634,7 @@ function renderAdmin(){
   var qh = "";
   for(var i=0;i<state.quests.length;i++){
     var q = state.quests[i];
-    qh += '<div class="adm-list-item"><span class="ali-name">' + q.icon + ' ' + esc(q.name)
+    qh += '<div class="adm-list-item"><span class="ali-name">' + esc(q.icon) + ' ' + esc(q.name)
       + (q.system ? ' <span class="tag tag-sys">SYS</span>' : '') + '</span>'
       + '<span class="mini-row">'
       + '<button class="mini-btn" data-aact="qedit" data-id="' + q.id + '">✎</button>'
@@ -7605,7 +7645,7 @@ function renderAdmin(){
   var chh = "";
   for(var j=0;j<state.collections.length;j++){
     var col = state.collections[j];
-    chh += '<div class="adm-list-item"><span class="ali-name">' + col.emoji + ' ' + esc(col.name) + ' (' + colOwned(col) + '/' + colTotal(col) + ')</span>'
+    chh += '<div class="adm-list-item"><span class="ali-name">' + esc(col.emoji) + ' ' + esc(col.name) + ' (' + colOwned(col) + '/' + colTotal(col) + ')</span>'
       + '<span class="mini-row">'
       + '<button class="mini-btn" data-aact="cedit" data-id="' + col.id + '">✎</button>'
       + '<button class="mini-btn" data-aact="cdel" data-id="' + col.id + '">🗑</button>'
@@ -8224,7 +8264,7 @@ function fillLinkOptions(selected){
   for(var i=0;i<state.collections.length;i++){
     var c = state.collections[i];
     h += '<option value="' + c.id + '"' + (c.id===selected?" selected":"") + '>'
-      + c.emoji + ' ' + esc(c.name) + ' [' + TIER_LABEL[c.tier] + ']</option>';
+      + esc(c.emoji) + ' ' + esc(c.name) + ' [' + TIER_LABEL[c.tier] + ']</option>';
   }
   sel.innerHTML = h;
 }

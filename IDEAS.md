@@ -40,6 +40,7 @@ And a room/section must also pass all three of these:
 | Mandatory written weekly / monthly / annual reports with deadlines | 2026-09-02 — STATS → REPORTS |
 | Per-quest full-screen record with its own interval timer | 2026-09-02 — tap any quest card |
 | Rank must be earned, not bought with banked stat points | 2026-09-02 — RANK EVALUATION + stat point deflation |
+| Audit fixes: HTML injection via icon fields, silent save loss, no crash recovery | 2026-09-02 |
 
 ---
 
@@ -55,6 +56,9 @@ And a room/section must also pass all three of these:
 - NPCs in the world — a quest-giver at the board, a mentor in the Academy. Makes a world feel alive more than better graphics do.
 - Buildings visibly under construction until unlocked, instead of a padlock.
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
+- **Prune the save.** Two years of use = ~600 KB rewritten on every action (~25 ms, main thread). Summarise `history`/`streakHistory` older than ~1 year and cap `q.completions`.
+- **91 form inputs have no associated `<label for=...>`**, and there are no `aria-live` regions, so toasts and System announcements are invisible to screen readers.
+- **No automated tests in the repo.** Everything is verified by throwaway Playwright scripts that live outside it; a `tests/` folder would catch regressions on every edit.
 - The STATS page itself is still "awful" — the per-quest window solved *finding a single task's record*, but the whole-hunter view has not been redesigned yet.
 - More interiors: Clan Hall and Hall of Honor as walkable rooms rather than direct page links.
 - Convert the remaining maps to isometric (`iso:true` on each) once the Academy has been judged in real use.
