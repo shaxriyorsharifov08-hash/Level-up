@@ -41,6 +41,20 @@ The file is large, so don't paste all of it. Instead:
 - Describe the bug and paste only the **relevant section** (search the file for the panel title or button text you see on screen — the code is right next to it).
 - Tell the AI these project rules: *single `index.html`, no template literals (no backticks) in JS, data is stored in localStorage under key `leveluphunter_v1`, never rename that key, never remove `save()` calls.*
 
+### 2b. The tests will tell you if you broke it
+
+`index.html` is one very large file, so every hand edit is a risk. **36 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+
+1. Commit your change.
+2. Repo → **Actions** tab → newest run.
+3. ✅ you did not break anything the tests know about. ❌ open it and read the `Expected` / `Received` line; it names the file and line.
+
+A ❌ is not a disaster: your commit is in git, so revert it from **History** or fix and commit again.
+
+They cover: the app booting at all, HTML injection through icon fields, a failed save being noticed, an old save keeping its fields, rank not being buyable, report deadlines, every world door leading somewhere real, and 3D falling back to flat. Full list and how to add your own: **`tests/README.md`**.
+
+On a computer: `npm install && npx playwright install chromium && npm test`. The tests open `index.html` from disk in a throwaway browser profile with the network blocked, so **they can never touch your real save** and never depend on a CDN being up.
+
 ---
 
 ## 3. Files in this repo
@@ -52,6 +66,9 @@ The file is large, so don't paste all of it. Instead:
 | `sw.js` | Old service worker turned into a kill switch. Keep it — it cleans up old installs |
 | `manifest.webmanifest` | PWA identity (name, icons, colors) for "Add to Home screen" |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons |
+| `tests/` | The safety net — see **section 2b** below. Not part of the app; the live site ignores it |
+| `package.json`, `playwright.config.js` | Only used to run the tests |
+| `.github/workflows/tests.yml` | Runs the tests on GitHub after every commit |
 
 ---
 
