@@ -41,7 +41,9 @@ And a room/section must also pass all three of these:
 | Per-quest full-screen record with its own interval timer | 2026-09-02 — tap any quest card |
 | Rank must be earned, not bought with banked stat points | 2026-09-02 — RANK EVALUATION + stat point deflation |
 | Audit fixes: HTML injection via icon fields, silent save loss, no crash recovery | 2026-09-02 |
-| Automated test suite + CI on every push | 2026-09-02 — 36 tests, `tests/`, GitHub Actions |
+| Automated test suite + CI on every push | 2026-09-02 — 51 tests, `tests/`, GitHub Actions |
+| Prune the save so mechanical rows cannot grow without limit | 2026-09-02 — `pruneState()`, archive folding |
+| Accessible names everywhere + live regions | 2026-09-02 — `a11yFix()` with a MutationObserver |
 
 ---
 
@@ -57,8 +59,7 @@ And a room/section must also pass all three of these:
 - NPCs in the world — a quest-giver at the board, a mentor in the Academy. Makes a world feel alive more than better graphics do.
 - Buildings visibly under construction until unlocked, instead of a padlock.
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
-- **Prune the save.** Two years of use = ~600 KB rewritten on every action (~25 ms, main thread). Summarise `history`/`streakHistory` older than ~1 year and cap `q.completions`.
-- **91 form inputs have no associated `<label for=...>`**, and there are no `aria-live` regions, so toasts and System announcements are invisible to screen readers.
+- **Focus is not trapped inside modals** — a keyboard or screen-reader user can tab out of an open dialog into the page behind it.
 - The STATS page itself is still "awful" — the per-quest window solved *finding a single task's record*, but the whole-hunter view has not been redesigned yet.
 - More interiors: Clan Hall and Hall of Honor as walkable rooms rather than direct page links.
 - Convert the remaining maps to isometric (`iso:true` on each) once the Academy has been judged in real use.

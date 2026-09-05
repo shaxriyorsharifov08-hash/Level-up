@@ -1115,7 +1115,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 <canvas id="particles"></canvas>
 
 <!-- entrance: USER (big) / admin (small) -->
-<div id="entranceOv">
+<div id="entranceOv" role="dialog" aria-modal="true" aria-label="Entrance">
   <div class="ent-box">
     <div class="ent-logo" id="entLogo">LEVEL UP<small>HUNTER SYSTEM</small></div>
     <div id="entMain">
@@ -1143,7 +1143,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- THE OATH: sworn once, in the hunter's own words, before the System opens -->
-<div id="oathOv">
+<div id="oathOv" role="dialog" aria-modal="true" aria-label="The Oath">
   <div class="oath-box">
     <div class="oath-title">THE OATH</div>
     <div class="oath-sub" id="oathSubTitle">BEFORE THE SYSTEM OPENS</div>
@@ -1175,9 +1175,9 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
   <main>
     <!-- ============ WORLD — the walkable hub city ============ -->
     <section id="page-world">
-      <div id="worldStage">
+      <div id="worldStage" role="application" aria-label="Walkable world">
         <canvas id="worldGl"></canvas>
-        <canvas id="worldCv"></canvas>
+        <canvas id="worldCv" role="img" aria-label="The hunter district. Use the section menu button if you prefer not to walk."></canvas>
         <div class="w-hud" id="worldHud"></div>
         <button id="worldEnter"></button>
       </div>
@@ -1397,6 +1397,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
         <div class="empty-note" style="margin-bottom:12px">You write these, not the System. Every closed week, month and year must be reported — <b>1 day</b> to file a weekly, <b>3 days</b> a monthly, <b>7 days</b> an annual. Miss the deadline and it costs XP.</div>
         <div id="repList"></div>
       </div>
+      <div class="empty-note" id="archiveNote" style="display:none;margin-bottom:14px"></div>
       <div class="filters" id="timeFilters">
         <button class="f-chip" data-range="7">LAST 7 DAYS</button>
         <button class="f-chip" data-range="30">LAST 30 DAYS</button>
@@ -1926,10 +1927,10 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
     <button id="timerStopBtn" class="tp-btn tp-stop" aria-label="Finish and log">■</button>
   </div>
 </div>
-<div id="toasts"></div>
+<div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <!-- fullscreen announcement -->
-<div class="overlay" id="announceOv">
+<div class="overlay" id="announceOv" role="alertdialog" aria-modal="true" aria-live="assertive" aria-labelledby="annTitle" aria-describedby="annBody">
   <div class="ann-box">
     <div class="ann-tag">&#9888; SYSTEM &#9888;</div>
     <div class="ann-ico" id="annIco">&#10071;</div>
@@ -1956,7 +1957,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- quest modal -->
-<div class="modal" id="questModal">
+<div class="modal" id="questModal" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-title" id="qmTitle">NEW QUEST</div>
     <label class="form-lbl">Icon</label>
@@ -2003,7 +2004,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 
 <!-- customize navigation -->
 <!-- the oath, read back -->
-<div class="modal" id="oathViewModal">
+<div class="modal" id="oathViewModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-title">⚔ THE OATH</div>
     <div id="oathViewBody"></div>
@@ -2015,7 +2016,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- learn & grow: a single level -->
-<div class="modal" id="lrnModal">
+<div class="modal" id="lrnModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-title" id="lrnMTitle">LEVEL</div>
     <div class="lrn-body" id="lrnMBody"></div>
@@ -2030,7 +2031,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
   </div>
 </div>
 
-<div class="modal" id="navModal">
+<div class="modal" id="navModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-title">✎ CUSTOMIZE NAVIGATION</div>
     <div class="empty-note" style="margin-bottom:12px">Rename a tab, reorder with ▲▼, or hide it. The 🔒 number is the unlock level set by the Administrator (— = always open) — it applies to everyone and can't be changed here. ADMIN always stays visible so you can get back here.</div>
@@ -2043,7 +2044,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- story path awards editor -->
-<div class="modal" id="roadModal">
+<div class="modal" id="roadModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:560px">
     <div class="modal-title">🗺 STORY PATH AWARDS</div>
     <div class="empty-note" style="margin-bottom:12px">Each row is granted automatically when that level is reached. Rolls go to STORAGE; SP = stat points; skills/equipment/food appear on your PROFILE; MY PRIZE is anything you write. Edit rows in place.</div>
@@ -2062,7 +2063,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- watch a clan member's stats -->
-<div class="modal" id="watchModal">
+<div class="modal" id="watchModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:460px">
     <div class="modal-title" id="watchTitle">HUNTER STATS</div>
     <div id="watchBody"></div>
@@ -2071,7 +2072,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- adjust today's completion modal -->
-<div class="modal" id="adjModal">
+<div class="modal" id="adjModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:380px">
     <div class="modal-title" id="adjTitle">ADJUST COMPLETION</div>
     <div class="empty-note" style="margin-bottom:14px">Only today's completion can be adjusted. XP is refunded accordingly.</div>
@@ -2082,7 +2083,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- calendar picker modal -->
-<div class="modal" id="calModal">
+<div class="modal" id="calModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:340px">
     <div class="cal-head">
       <button type="button" class="mini-btn" id="calPrev">◀</button>
@@ -2102,7 +2103,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- arm item on quest modal -->
-<div class="modal" id="armModal">
+<div class="modal" id="armModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:400px">
     <div class="modal-title" id="amTitle">🎒 USE ITEM ON THIS QUEST</div>
     <div class="empty-note" style="margin-bottom:12px">Pick a skill or equipment — it is consumed when you complete the quest and its bonus fires.</div>
@@ -2113,7 +2114,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- inventory item modal -->
-<div class="modal" id="itemModal">
+<div class="modal" id="itemModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:380px">
     <div class="modal-title" id="imTitle">USE ITEM</div>
     <div class="empty-note" id="imDesc" style="margin-bottom:14px"></div>
@@ -2126,7 +2127,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- collection modal -->
-<div class="modal" id="colModal">
+<div class="modal" id="colModal" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-title" id="cmTitle">NEW COLLECTION</div>
     <label class="form-lbl">Collection Name</label>
@@ -2148,7 +2149,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- honesty gate: clearing a penalty demands a sworn oath -->
-<div class="modal" id="honestyModal">
+<div class="modal" id="honestyModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="border-color:rgba(239,68,68,.6)">
     <div class="modal-title" style="color:#ef4444">⛓ THE HONESTY GATE</div>
     <div class="honesty-body" id="honestyBody"></div>
@@ -2163,7 +2164,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 
 <!-- finalize the day: evening reflection ritual -->
 <!-- a written report for a closed week / month / year -->
-<div class="modal" id="repModal">
+<div class="modal" id="repModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:560px">
     <div class="modal-title" id="repMTitle">REPORT</div>
     <div id="repMStats"></div>
@@ -2178,7 +2179,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- one quest, full screen: its whole record and its own interval timer -->
-<div id="questView">
+<div id="questView" role="dialog" aria-modal="true" aria-labelledby="qvName">
   <div class="qv-head">
     <span class="qv-ico" id="qvIco">⚔️</span>
     <div class="qv-h-t"><div class="qv-name" id="qvName"></div><div class="qv-sub" id="qvSub"></div></div>
@@ -2227,7 +2228,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
   </div>
 </div>
 
-<div class="modal" id="finalizeModal">
+<div class="modal" id="finalizeModal" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-title">🌙 FINALIZE THE DAY</div>
     <div class="empty-note" id="finalizeDate" style="margin-bottom:10px"></div>
@@ -2245,7 +2246,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 </div>
 
 <!-- transaction edit modal -->
-<div class="modal" id="txModal">
+<div class="modal" id="txModal" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-title">✎ EDIT TRANSACTION</div>
     <label class="form-lbl">Type</label>
@@ -2369,6 +2370,7 @@ function defaultState(){
     reports:{},          /* MANDATORY written reports: "w:<monday>" | "m:YYYY-MM" | "y:YYYY" -> {text, at, late} */
     reportDebt:{},       /* periods already punished for being missed, so nobody is charged twice */
     reportsSince:"",     /* reports are only owed for periods that closed AFTER this date */
+    archive:null,        /* day rows older than PRUNE_KEEP_DAYS, folded into running totals */
     lastMonthlyReport:"",
     timeHistory:{},      /* date -> seconds of tracked focus time */
     activeTimer:null,    /* {id, name, startedAt, accumulated, paused} while a session runs */
@@ -5148,6 +5150,133 @@ document.getElementById("honestySwear").addEventListener("click", function(){
   renderAll();
 });
 
+/* ================= ACCESSIBILITY =================
+   The app is built by hand in one file, so per-element ARIA would rot the
+   moment anything is edited. Instead this walks the DOM and repairs the two
+   things that actually lock a screen-reader user out: form controls with no
+   accessible name, and a UI that speaks only in silent toasts.
+   Adding a new panel needs no extra work — the observer picks it up. */
+function a11yName(el){
+  if(el.getAttribute("aria-label") || el.getAttribute("aria-labelledby")) return true;
+  if(el.id && document.querySelector('label[for="' + el.id + '"]')) return true;
+  return !!el.closest("label");
+}
+function a11yFix(root){
+  root = root || document;
+  var i, el;
+  /* the file uses .form-lbl divs as labels — bind each to the control it introduces */
+  var labels = root.querySelectorAll ? root.querySelectorAll(".form-lbl, label:not([for])") : [];
+  for(i=0;i<labels.length;i++){
+    var lb = labels[i];
+    if(lb.getAttribute("data-a11y")) continue;
+    var node = lb.nextElementSibling, hops = 0, ctl = null;
+    while(node && hops++ < 3){
+      if(node.matches && node.matches("input,textarea,select")) { ctl = node; break; }
+      if(node.querySelector) { ctl = node.querySelector("input,textarea,select"); if(ctl) break; }
+      node = node.nextElementSibling;
+    }
+    lb.setAttribute("data-a11y", "1");
+    if(!ctl) continue;
+    if(!ctl.id) ctl.id = "a11y_" + (++a11ySeq);
+    if(lb.tagName === "LABEL"){ if(!lb.getAttribute("for")) lb.setAttribute("for", ctl.id); }
+    else if(!a11yName(ctl)) ctl.setAttribute("aria-labelledby", (lb.id || (lb.id = "a11yl_" + (++a11ySeq))));
+  }
+  /* anything still nameless falls back to its own placeholder or title */
+  var ctls = root.querySelectorAll ? root.querySelectorAll("input,textarea,select") : [];
+  for(i=0;i<ctls.length;i++){
+    el = ctls[i];
+    if(a11yName(el)) continue;
+    var name = el.getAttribute("placeholder") || el.getAttribute("title") || el.getAttribute("name");
+    if(!name && el.id) name = el.id.replace(/^(iv|qv|qm|adm|ac|ent|fz|rep|lrn|oath|tx|cm|road|gm)/, "")
+                                   .replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").trim();
+    if(name) el.setAttribute("aria-label", name.charAt(0).toUpperCase() + name.slice(1));
+  }
+  /* icon-only buttons carry their meaning in a title attribute */
+  var btns = root.querySelectorAll ? root.querySelectorAll("button") : [];
+  for(i=0;i<btns.length;i++){
+    el = btns[i];
+    if(el.getAttribute("aria-label") || (el.textContent || "").trim()) continue;
+    if(el.getAttribute("title")) el.setAttribute("aria-label", el.getAttribute("title"));
+  }
+}
+var a11ySeq = 0;
+(function startA11y(){
+  var pending = null;
+  function run(){ pending = null; try{ a11yFix(document); }catch(e){} }
+  run();
+  if(window.MutationObserver){
+    new MutationObserver(function(){
+      if(pending) return;
+      pending = setTimeout(run, 250); /* the app re-renders whole panels at a time */
+    }).observe(document.body, {childList:true, subtree:true});
+  }
+})();
+
+/* ================= PRUNING THE SAVE =================
+   Two years of daily use grows the save past half a megabyte, and every
+   action rewrites the whole thing. Old per-day detail is folded into a
+   running summary so that ALL-TIME totals stay exactly right while the rows
+   themselves go away.
+
+   What is NEVER pruned: the journal, the reports, the Oath, honors, dreams —
+   anything the hunter wrote in their own words. Only mechanical rows the app
+   generated are summarised. */
+var PRUNE_KEEP_DAYS = 400;   /* ~13 months of full detail: covers the 6-month
+                                heatmap, 12-week quest grids and last year's report */
+var PRUNE_KEEP_COMPLETIONS = 500;
+function archiveFix(){
+  if(!state.archive) state.archive = {upTo:"", cleared:0, xp:0, activeDays:0, focusSec:0};
+}
+function pruneState(){
+  archiveFix();
+  var cutoff = addDays(todayStr(), -PRUNE_KEEP_DAYS), k, changed = false;
+  var a = state.archive;
+  for(k in state.history){
+    if(k >= cutoff) continue;
+    var h = state.history[k];
+    if(h){
+      a.cleared += (h.count || 0);
+      a.xp += (h.xp || 0);
+      if(h.count > 0) a.activeDays++;
+    }
+    delete state.history[k];
+    if(k > a.upTo) a.upTo = k;
+    changed = true;
+  }
+  for(k in state.timeHistory){
+    if(k >= cutoff) continue;
+    a.focusSec += (state.timeHistory[k] || 0);
+    delete state.timeHistory[k];
+    changed = true;
+  }
+  /* the streak chart only ever draws the visible range, so old rows are dead weight */
+  for(k in state.streakHistory){
+    if(k >= cutoff) continue;
+    delete state.streakHistory[k];
+    changed = true;
+  }
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(!q.completions || q.completions.length <= PRUNE_KEEP_COMPLETIONS) continue;
+    q.completions.sort(); /* dates are ISO, so this is chronological — never drop the newest */
+    var drop = q.completions.length - PRUNE_KEEP_COMPLETIONS;
+    q.clearedBefore = (q.clearedBefore || 0) + drop;  /* the count survives the rows */
+    q.completions = q.completions.slice(drop);
+    changed = true;
+  }
+  if(changed) save();
+  return changed;
+}
+/* all-time figures have to include what was folded away */
+function allTimeCleared(){ archiveFix(); return state.archive.cleared + rkCleared(); }
+function allTimeXp(){
+  archiveFix();
+  var n = state.archive.xp, k;
+  for(k in state.history) n += (state.history[k] && state.history[k].xp) || 0;
+  return n;
+}
+function questTimesCleared(q){ return (q.clearedBefore || 0) + ((q.completions && q.completions.length) || 0); }
+
 /* ---------------- storage failure + crash net ----------------
    Two things a daily-use app must never do: lose data quietly, or die on one
    uncaught error with no way back. */
@@ -5614,7 +5743,7 @@ function renderQuestView(){
   var nums = [
     {v:q.streak || 0,        l:"current streak"},
     {v:q.bestStreak || 0,    l:"best streak"},
-    {v:comps.length,         l:"times cleared"},
+    {v:questTimesCleared(q), l:"times cleared"},
     {v:last30 + " / 30",     l:"last 30 days"},
     {v:Math.min(q.progress || 0, target) + " / " + target, l:"toward reward"},
     {v:fmtDur(q.timeSpent || 0), l:"time logged"}
@@ -5832,6 +5961,21 @@ function saveReport(){
     sysToast(tr("Report updated."));
   }
   renderReports();
+}
+/* say plainly what was folded away, so a shorter ALL-TIME chart never looks
+   like lost history */
+function renderArchiveNote(){
+  var el = document.getElementById("archiveNote");
+  if(!el || !state) return;
+  archiveFix();
+  var a = state.archive;
+  if(!a.upTo || a.cleared === 0){ el.style.display = "none"; return; }
+  el.style.display = "";
+  el.innerHTML = "🗄 Day-by-day rows before <b>" + esc(niceDate(a.upTo))
+    + "</b> have been folded into a summary to keep the save small. Nothing you wrote was touched — "
+    + "journals, reports and honors are all still there. Archived: <b>" + a.cleared
+    + "</b> quests cleared, <b>" + a.xp + "</b> XP, <b>" + a.activeDays + "</b> active days, <b>"
+    + Math.round(a.focusSec / 3600) + "h</b> focused. These still count toward your rank.";
 }
 function renderReports(){
   var el = document.getElementById("repList");
@@ -7197,6 +7341,7 @@ function renderMonthlyReports(){
 }
 function renderStats(){
   renderReports();
+  renderArchiveNote();
   renderHeatmap();
   renderForecast();
   renderMonthlyReports();
@@ -11322,6 +11467,7 @@ checkGoalReopens();
 cleanupSeasonQuests();
 archiveDoneQuests();
 checkPunishments();
+pruneState();          /* fold away day rows the app will never show again */
 checkMonthlyReport();
 checkReportDeadlines();
 checkStoryUnlocks();

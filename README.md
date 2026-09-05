@@ -358,7 +358,26 @@ Three defects found in an audit, each proven with a test before it was fixed:
 - **A save that fails must never be silent.** `localStorage.setItem` was wrapped in `try{}catch(e){}` with an empty catch, so a full quota meant the hunter kept playing while nothing was written. `save()` now detects the failure and raises a full-screen warning telling them to export a backup. Never restore the empty catch.
 - **One uncaught error used to kill the app.** `window.onerror` and `unhandledrejection` now show a red recovery bar with RELOAD, instead of a frozen screen with no way back.
 
-Known and not yet addressed: after two years of daily use the save reaches roughly **600 KB** and every single action rewrites the whole blob (~25 ms on the main thread). It fits inside the ~5 MB browser limit, but old `history`, `streakHistory` and `completions` entries should eventually be pruned or summarised.
+### Pruning the save
+
+`pruneState()` runs on load. Day rows older than **400 days** (`PRUNE_KEEP_DAYS`) are folded out of `history`, `timeHistory` and `streakHistory` into `state.archive`, and each quest keeps its most recent **500** completions with the rest counted in `q.clearedBefore`.
+
+**All-time totals stay exactly right** — `allTimeCleared()`, `allTimeXp()` and `questTimesCleared()` add the archive back, so a rank evaluation still sees every quest you ever cleared. STATS shows a line saying what was folded away.
+
+**Nothing you wrote is ever pruned.** Journals, reports, honors, dreams and the Oath are untouched, by design. If you add a new store of the hunter's own words, do not add it to `pruneState()`.
+
+Honest measurement: this cuts the *mechanical* half of the save by about 38% and, more importantly, stops `completions` and `streakHistory` growing without limit. It does **not** shrink the save dramatically, because after two years the bulk is your own journal — roughly 200 KB a year against a ~5 MB browser limit, which is about 25 years of writing. That is not a problem and should not be "fixed" by deleting it.
+
+### Accessibility
+
+`a11yFix()` walks the DOM and repairs the two things that actually lock a screen-reader user out, then a `MutationObserver` re-runs it whenever a panel re-renders — **so a new panel needs no extra work**:
+
+- every `input` / `textarea` / `select` gets an accessible name, from its `.form-lbl` or `<label>`, else its placeholder, title or a humanised id
+- icon-only buttons take their `title` as an `aria-label`
+
+Plus: `#toasts` is a polite live region and the System announcement is an assertive `alertdialog`, so both are spoken rather than only shown; every modal is a `role="dialog"`; the walkable world is a labelled `role="application"`.
+
+Still open: focus is not trapped inside modals, and the world cannot be played without walking (the +1% dock reaches everything, so nothing is unreachable).
 
 ## 5. Features you may want to adjust later
 
