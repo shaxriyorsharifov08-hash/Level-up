@@ -48,6 +48,8 @@ And a section must also pass all three of these:
 | A plain to-do list, outside the game | 2026-09-16 — QUESTS → ✅ TO-DO; dated items, flat XP, no tier or trophy |
 | Somewhere for what you did NOT do | 2026-09-16 — HONOR → 💀 HALL OF SHAME, escaped only by doing it |
 | Money fields readable while typing | 2026-09-16 — 12000 shows as 12,000 |
+| The focus timer takes the whole screen | 2026-09-16 — ⏱ opens a Pomodoro-style window with a target ring |
+| A day opened as a file: time, percentage, and where the hours went | 2026-09-16 — CALENDAR → any date |
 
 ---
 

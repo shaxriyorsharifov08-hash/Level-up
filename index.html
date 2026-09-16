@@ -1032,6 +1032,37 @@ main section{animation:pagein .28s ease}
 .rep-facts b{display:block;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--blue)}
 .rep-facts span{font-size:.64rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 
+/* ---------- THE FOCUS WINDOW — one task, nothing else on screen ---------- */
+#focusOv{position:fixed;inset:0;z-index:270;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:0;padding:24px 20px;text-align:center;
+  background:radial-gradient(900px 700px at 50% 20%,rgba(124,97,255,.16),transparent 62%),#05060f;
+  overscroll-behavior:contain}
+#focusOv.show{display:flex}
+#focusOv.reached{background:radial-gradient(900px 700px at 50% 20%,rgba(251,191,36,.18),transparent 62%),#05060f}
+.fo-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:14px}
+.fo-min{margin-left:auto;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);color:var(--dim);font-size:1rem;cursor:pointer}
+.fo-min:hover{color:var(--text);border-color:var(--blue)}
+.fo-kind{font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.14em;color:var(--dim);
+  border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.fo-name{font-family:'Orbitron',monospace;font-weight:800;font-size:1.05rem;line-height:1.35;
+  max-width:420px;margin-bottom:22px;word-break:break-word}
+.fo-dial{position:relative;width:min(70vw,278px);aspect-ratio:1/1;display:flex;
+  align-items:center;justify-content:center;margin-bottom:8px}
+.fo-dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#foArc{transition:stroke-dashoffset .5s linear}
+.fo-time{font-family:'Orbitron',monospace;font-weight:900;font-size:2.5rem;letter-spacing:.02em;
+  font-variant-numeric:tabular-nums}
+.fo-goal{font-size:.7rem;color:var(--dim);margin-top:6px;letter-spacing:.06em}
+#focusOv.reached .fo-time{color:var(--legendary)}
+.fo-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:20px 0 4px}
+.fo-chip{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.09em;padding:8px 13px;
+  border-radius:999px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--dim)}
+.fo-chip.on{border-color:var(--blue);color:var(--blue);background:rgba(0,209,255,.10)}
+.fo-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px;width:100%;max-width:360px}
+.fo-acts .btn{flex:1;min-width:120px}
+.fo-hint{font-size:.68rem;color:var(--dim);margin-top:18px;line-height:1.6;max-width:320px}
+
 /* ---------- TO-DO LIST — deliberately plain ---------- */
 .td-add{display:flex;gap:8px;margin-bottom:12px}
 .td-add .inp{flex:1;min-width:0}
@@ -1055,6 +1086,21 @@ main section{animation:pagein .28s ease}
   border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--dim);font-size:.8rem}
 .td-mini:hover{border-color:var(--blue);color:var(--text)}
 .td-mini.on{border-color:var(--blue);color:var(--blue)}
+
+/* ---------- A DAY, OPENED AS A FILE ---------- */
+.qd-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}
+.qd-cell{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:11px;
+  padding:11px 8px;text-align:center}
+.qd-cell b{display:block;font-family:'Orbitron',monospace;font-size:1rem;color:var(--blue);line-height:1.2}
+.qd-cell span{display:block;font-size:.57rem;color:var(--dim);letter-spacing:.09em;margin-top:4px}
+.qd-bar{height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:14px}
+.qd-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+.qd-split{margin-bottom:6px}
+.qd-srow{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.qd-sname{flex:0 0 118px;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.07em;color:var(--dim)}
+.qd-sbar{flex:1;min-width:0;height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.qd-sbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--purple))}
+.qd-stime{flex:0 0 auto;font-family:'Orbitron',monospace;font-size:.62rem;color:var(--text)}
 
 /* ---------- THE HALL OF SHAME ---------- */
 #shameBtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -1445,13 +1491,14 @@ main section{animation:pagein .28s ease}
         <div id="questList"></div>
       </div>
       <div class="panel" id="tdPanel" style="display:none">
-        <div class="panel-title">✅ TO-DO LIST</div>
+        <div class="panel-title">✅ TO DO LIST</div>
         <div class="empty-note" style="margin-bottom:12px">Plain things that need doing. No tier, no crate, no trophy — write it, do it, tick it. Each one belongs to a day; miss the day and it goes to the HALL OF SHAME.</div>
         <div class="td-add">
           <input class="inp" id="tdInput" maxlength="120" placeholder="Write a thing and press Enter…" aria-label="New to-do">
           <input class="inp cal-input" id="tdDate" type="text" readonly style="width:132px;flex:0 0 auto" placeholder="Today 📅" aria-label="Day this to-do belongs to">
           <button class="btn primary" id="tdAdd">ADD</button>
         </div>
+        <div class="empty-note" id="tdTotal" style="margin-bottom:12px"></div>
         <div id="tdList"></div>
       </div>
     </section>
@@ -2008,6 +2055,32 @@ main section{animation:pagein .28s ease}
 </div>
 
 <button id="fab" title="Add" aria-label="Add new">+</button>
+<!-- the focus window: one task, a ring, and nothing to look at -->
+<div id="focusOv" role="dialog" aria-modal="true" aria-labelledby="foName">
+  <div class="fo-top">
+    <span class="fo-kind" id="foKind">FOCUS</span>
+    <button class="fo-min" id="foMin" aria-label="Keep it running and go back">–</button>
+  </div>
+  <div class="fo-name" id="foName"></div>
+  <div class="fo-dial">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="6"></circle>
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"
+              stroke-linecap="round" id="foArc" stroke-dasharray="283" stroke-dashoffset="283"></circle>
+    </svg>
+    <div>
+      <div class="fo-time" id="foTime">00:00</div>
+      <div class="fo-goal" id="foGoal"></div>
+    </div>
+  </div>
+  <div class="fo-chips" id="foChips"></div>
+  <div class="fo-acts">
+    <button class="btn" id="foPause">PAUSE</button>
+    <button class="btn primary" id="foFinish">✓ FINISH</button>
+  </div>
+  <div class="fo-hint">Put the phone down. The clock keeps running if you leave this window — nothing is lost, and nothing else here is asking for your attention.</div>
+</div>
+
 <div id="timerPill">
   <span class="tp-ico" id="timerIco">⏱</span>
   <div class="tp-info"><b id="timerElapsed">00:00</b><span id="timerName"></span></div>
@@ -2523,7 +2596,9 @@ function defaultState(){
     reportsSince:"",     /* reports are only owed for periods that closed AFTER this date */
     archive:null,        /* day rows older than PRUNE_KEEP_DAYS, folded into running totals */
     lastMonthlyReport:"",
-    timeHistory:{},      /* date -> seconds of tracked focus time */
+    timeHistory:{},      /* date -> seconds of tracked focus time (the total) */
+    timeBy:{},           /* date -> {quest,challenge,todo,interval} seconds, the same total split by source */
+    focusGoalMin:25,     /* the focus window's target, remembered between sessions (0 = no target) */
     activeTimer:null,    /* {id, name, startedAt, accumulated, paused} while a session runs */
     xpDebt:0,            /* punishment: half of XP gains seized until repaid */
     penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
@@ -3687,6 +3762,7 @@ function migrateState(){
   /* the walkable world was removed — drop its leftover position data */
   if(state.world !== undefined) delete state.world;
   if(!Array.isArray(state.todos)) state.todos = [];
+  if(!state.timeBy || typeof state.timeBy !== "object") state.timeBy = {};
   for(var ti=0; ti<state.todos.length; ti++){
     var tdo = state.todos[ti];
     if(!tdo.date) tdo.date = tdo.created || todayStr();
@@ -5398,6 +5474,11 @@ function pruneState(){
     delete state.timeHistory[k];
     changed = true;
   }
+  if(state.timeBy) for(k in state.timeBy){
+    if(k >= cutoff) continue;
+    delete state.timeBy[k];   /* the total is already folded into archive.focusSec */
+    changed = true;
+  }
   /* the streak chart only ever draws the visible range, so old rows are dead weight */
   for(k in state.streakHistory){
     if(k >= cutoff) continue;
@@ -5546,8 +5627,8 @@ function renderPunishBanners(){
 function fmtDur(s){
   s = Math.max(0, Math.round(s));
   var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-  if(h) return h + "h " + m + "m";
-  if(m) return m + "m " + sec + "s";
+  if(h) return m ? h + "h " + m + "m" : h + "h";
+  if(m) return sec ? m + "m " + sec + "s" : m + "m";
   return sec + "s";
 }
 function fmtHMS(s){
@@ -5573,10 +5654,13 @@ function startTimer(id){
     if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Finish it and start this one?')) return;
     stopTimer(true);
   }
-  state.activeTimer = {id:id, name: q ? q.name : td.text, startedAt: Date.now(), accumulated:0, paused:false};
+  state.activeTimer = {id:id, name: q ? q.name : td.text, startedAt: Date.now(), accumulated:0, paused:false,
+                       kind: timerKindFor(q, td), goalMin: state.focusGoalMin === undefined ? 25 : state.focusGoalMin,
+                       chimed:false};
   sfx("timer");
   save();
   renderTimerPill();
+  openFocus();
   if(currentPage === "quests") renderQuests();
   sysToast("⏱ Timer started: " + state.activeTimer.name);
 }
@@ -5606,18 +5690,49 @@ function restartTimer(){
   renderTimerPill();
   sysToast("↻ Timer restarted from zero.");
 }
+/* Every tracked second is written in two places: timeHistory keeps the day's
+   total (the STATS charts read it) and timeBy splits that same total by where
+   the work went, so the calendar can show a real breakdown. Both are written
+   here and nowhere else. */
+var TIME_KINDS = ["quest", "challenge", "todo", "interval"];
+var TIME_KIND_LABEL = {quest:"\ud83d\udcdc QUESTS", challenge:"\ud83d\udd25 CHALLENGES",
+                       todo:"\u2705 TO DO LIST", interval:"\ud83c\udfcb TRAINING"};
+function logTime(secs, kind){
+  if(!(secs > 0)) return;
+  var t = todayStr();
+  state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
+  if(!state.timeBy) state.timeBy = {};
+  if(!state.timeBy[t]) state.timeBy[t] = {};
+  state.timeBy[t][kind] = (state.timeBy[t][kind] || 0) + secs;
+}
+function timeByOn(ds){
+  var row = (state.timeBy && state.timeBy[ds]) || {}, out = {total: state.timeHistory[ds] || 0};
+  var named = 0;
+  for(var i=0;i<TIME_KINDS.length;i++){
+    out[TIME_KINDS[i]] = row[TIME_KINDS[i]] || 0;
+    named += out[TIME_KINDS[i]];
+  }
+  /* time logged before the split existed has no kind; never let it vanish */
+  out.other = Math.max(0, out.total - named);
+  return out;
+}
+function timerKindFor(q, td){
+  if(q) return q.freq === "challenge" ? "challenge" : "quest";
+  return td ? "todo" : "interval";
+}
 function stopTimer(silent){
   var tm = state.activeTimer;
   if(!tm) return;
   var secs = Math.round(timerElapsedSec());
   state.activeTimer = null;
+  closeFocus(true);
   var q = questById(tm.id);
   var td = q ? null : todoById(tm.id);
   if(secs >= 5){
     var t = todayStr();
     if(q){ q.timeSpent = (q.timeSpent || 0) + secs; q.lastTimedOn = t; }
     else if(td){ td.sec = (td.sec || 0) + secs; }
-    state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
+    logTime(secs, timerKindFor(q, td));
     if(!silent) toast("Session logged: " + fmtDur(secs) + " — " + tm.name + (q ? " (total " + fmtDur(q.timeSpent) + ")" : ""), "gold", "TIME RECORDED");
   } else if(!silent){
     sysToast("Timer stopped — under 5 seconds, nothing recorded.");
@@ -5650,6 +5765,86 @@ function activeTimeInRange(dates){
   for(var i=0;i<dates.length;i++) sum += state.timeHistory[dates[i]] || 0;
   return sum;
 }
+
+/* ---------------- THE FOCUS WINDOW ----------------
+   Pressing ⏱ does not just start a counter in the corner — it takes over the
+   screen. That is the whole point: a focus timer that shares the screen with
+   the thing you are avoiding is not a focus timer. The session itself still
+   lives in state.activeTimer, so closing this window changes nothing; the
+   clock runs on, the pill comes back, and the time is logged either way. */
+var FOCUS_GOALS = [25, 50, 90, 0];
+function focusOpen(){ return document.getElementById("focusOv").classList.contains("show"); }
+function openFocus(){
+  if(!state.activeTimer) return;
+  var ov = document.getElementById("focusOv");
+  document.getElementById("foName").textContent = state.activeTimer.name;
+  document.getElementById("foKind").textContent =
+    (TIME_KIND_LABEL[state.activeTimer.kind] || "FOCUS").replace(/^[^A-Z]*/, "");
+  ov.classList.add("show");
+  document.body.style.overflow = "hidden";
+  renderFocus();
+  sfx("open");
+}
+function closeFocus(silent){
+  var ov = document.getElementById("focusOv");
+  if(!ov.classList.contains("show")) return;
+  ov.classList.remove("show");
+  ov.classList.remove("reached");
+  document.body.style.overflow = "";
+  if(!silent) sfx("close");
+}
+function setFocusGoal(min){
+  state.focusGoalMin = min;
+  if(state.activeTimer){ state.activeTimer.goalMin = min; state.activeTimer.chimed = false; }
+  save();
+  renderFocus();
+}
+function renderFocus(){
+  if(!focusOpen()) return;
+  var tm = state.activeTimer;
+  if(!tm){ closeFocus(true); return; }
+  var secs = timerElapsedSec();
+  var goal = (tm.goalMin || 0) * 60;
+  var ov = document.getElementById("focusOv");
+  document.getElementById("foTime").textContent = fmtHMS(secs);
+  document.getElementById("foGoal").textContent = tm.paused ? "PAUSED"
+    : (goal ? (secs >= goal ? "TARGET REACHED — STILL COUNTING" : fmtDur(Math.max(0, goal - secs)) + " to go")
+            : "no target — counting up");
+  var pct = goal ? Math.min(1, secs / goal) : 0;
+  var arc = document.getElementById("foArc");
+  arc.setAttribute("stroke-dashoffset", String(Math.round(283 - 283 * pct)));
+  var reached = !!goal && secs >= goal;
+  ov.classList.toggle("reached", reached);
+  arc.style.color = reached ? "var(--legendary)" : "var(--blue)";
+  if(reached && !tm.chimed){
+    tm.chimed = true;
+    save();
+    sfx("levelup");
+    sysToast("⏱ " + tm.goalMin + " minutes of focus. Stop here or keep going.");
+  }
+  var pb = document.getElementById("foPause");
+  pb.textContent = tm.paused ? "RESUME" : "PAUSE";
+  var h = "";
+  for(var i=0;i<FOCUS_GOALS.length;i++){
+    var g = FOCUS_GOALS[i];
+    h += '<button class="fo-chip' + ((tm.goalMin || 0) === g ? " on" : "") + '" data-goal="' + g + '">'
+      + (g ? g + " MIN" : "NO TARGET") + "</button>";
+  }
+  document.getElementById("foChips").innerHTML = h;
+}
+document.getElementById("foMin").addEventListener("click", function(){ closeFocus(); });
+document.getElementById("foPause").addEventListener("click", function(){ pauseResumeTimer(); renderFocus(); });
+document.getElementById("foFinish").addEventListener("click", function(){ stopTimer(false); });
+document.getElementById("foChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-goal]"); if(!b) return;
+  setFocusGoal(+b.getAttribute("data-goal"));
+  sfx("tap");
+});
+/* the pill is the way back in */
+document.getElementById("timerPill").addEventListener("click", function(e){
+  if(e.target.closest(".tp-btn")) return;   /* its own buttons still do their job */
+  openFocus();
+});
 
 /* ---------------- notifications (daily quest reminder) ---------------- */
 var swReg = null;
@@ -5942,6 +6137,11 @@ function qcOpenDay(ds){
   qcRenderDay();
   sfx("open");
 }
+function dayTodoCounts(ds){
+  var l = todosOn(ds), done = 0;
+  for(var i=0;i<l.length;i++) if(l[i].done) done++;
+  return {done:done, total:l.length};
+}
 function qcRenderDay(){
   var ds = qcPick, t = todayStr();
   var list = dayQuests(ds), c = dayCounts(ds), i, h = "";
@@ -5951,9 +6151,41 @@ function qcRenderDay(){
                                  : dayDiff(ds, t) + " days ago");
   document.getElementById("qcDayCount").textContent = c.total
     ? ("\u00b7 " + c.done + " of " + c.total + " cleared") : "";
+
+  /* the day as a file: what it cost you, how much of it you finished, and
+     then where the hours actually went */
+  var tb = timeByOn(ds), tdc = dayTodoCounts(ds);
+  var totDone = c.done + tdc.done, totAll = c.total + tdc.total;
+  var pct = totAll ? Math.round(totDone / totAll * 100) : 0;
+  h += '<div class="qd-sum">'
+    +   '<div class="qd-cell"><b>' + esc(fmtDur(tb.total)) + '</b><span>TIME SPENT</span></div>'
+    +   '<div class="qd-cell"><b>' + pct + '%</b><span>COMPLETED</span></div>'
+    +   '<div class="qd-cell"><b>' + totDone + " / " + totAll + '</b><span>TASKS DONE</span></div>'
+    + '</div>';
+  h += '<div class="qd-bar"><i style="width:' + pct + '%"></i></div>';
+  if(tb.total){
+    h += '<div class="qd-split">';
+    for(i=0;i<TIME_KINDS.length;i++){
+      var kk = TIME_KINDS[i];
+      if(!tb[kk]) continue;
+      h += '<div class="qd-srow"><span class="qd-sname">' + TIME_KIND_LABEL[kk] + '</span>'
+        +    '<span class="qd-sbar"><i style="width:' + Math.round(tb[kk] / tb.total * 100) + '%"></i></span>'
+        +    '<span class="qd-stime">' + esc(fmtDur(tb[kk])) + '</span></div>';
+    }
+    if(tb.other){
+      h += '<div class="qd-srow"><span class="qd-sname">⏱ UNSPLIT</span>'
+        +    '<span class="qd-sbar"><i style="width:' + Math.round(tb.other / tb.total * 100) + '%"></i></span>'
+        +    '<span class="qd-stime">' + esc(fmtDur(tb.other)) + '</span></div>';
+    }
+    h += '</div>';
+  } else {
+    h += '<div class="empty-note" style="margin-bottom:14px">No time was tracked on this day.</div>';
+  }
+
   var LABEL = {done:"✔ COMPLETED", today:"○ NOT YET", missed:"✕ NOT DONE", future:"· SCHEDULED"};
+  h += '<div class="td-group">QUESTS &amp; CHALLENGES <i></i></div>';
   if(!list.length){
-    h = '<div class="empty-note">Nothing was scheduled for this day.</div>';
+    h += '<div class="empty-note">Nothing was scheduled for this day.</div>';
   }
   for(i=0;i<list.length;i++){
     var q = list[i].q, st = list[i].status;
@@ -5961,14 +6193,16 @@ function qcRenderDay(){
       +    '<span class="qc-ico">' + esc(q.icon) + "</span>"
       +    '<div class="qc-t"><div class="qc-name">' + esc(q.name) + "</div>"
       +      (q.desc ? '<div class="qc-desc">' + esc(q.desc) + "</div>" : "")
-      +      '<div class="qc-freq">' + esc(FREQ_LABEL[q.freq] || q.freq) + "</div></div>"
+      +      '<div class="qc-freq">' + esc(FREQ_LABEL[q.freq] || q.freq)
+      +        (q.timeSpent ? " \u00b7 \u23f1 " + esc(fmtDur(q.timeSpent)) + " all time" : "") + "</div></div>"
       +    '<span class="qc-status ' + st + '">' + LABEL[st] + "</span></div>";
   }
   /* the day's to-dos live behind their own button — a plain list, separate
      from the quests, exactly as they are separate everywhere else */
-  var tds = todosOn(ds);
+  var tds = todosOn(ds), tdSec = todoSecOn(ds);
   h += '<button class="btn" id="qcTdBtn" style="width:100%;margin-top:14px">\ud83d\udcdd TO DO LIST'
-    + (tds.length ? " \u00b7 " + tds.filter(function(x){ return x.done; }).length + " / " + tds.length : " \u00b7 empty")
+    + (tds.length ? " \u00b7 " + tdc.done + " / " + tds.length : " \u00b7 empty")
+    + (tdSec ? " \u00b7 \u23f1 " + fmtDur(tdSec) : "")
     + '</button>';
   h += '<div id="qcTdList" style="display:none;margin-top:10px"></div>';
   /* be honest when the records for that day were summarised away */
@@ -5993,7 +6227,7 @@ function qcRenderDay(){
       hh += '<div class="qc-row ' + st + '">'
          +   '<span class="qc-ico">' + (td.done ? "\u2705" : "\u2b1c") + "</span>"
          +   '<div class="qc-t"><div class="qc-name">' + esc(td.text) + "</div>"
-         +     (td.sec ? '<div class="qc-freq">' + esc(fmtDur(td.sec)) + " tracked</div>" : "")
+         +     '<div class="qc-freq">' + (td.sec ? "\u23f1 " + esc(fmtDur(td.sec)) : "no time tracked") + "</div>"
          +   "</div>"
          +   '<span class="qc-status ' + st + '">' + lbl + "</span></div>";
     }
@@ -7325,14 +7559,25 @@ function todoRow(td, showDate){
                    : dayDiff(td.date, t) + "D LATE");
   return '<div class="td-row' + (td.done ? " done" : "") + (late ? " late" : "") + '" data-tdid="' + td.id + '">'
     + '<button class="td-box" data-tdact="toggle" data-tdid="' + td.id + '" aria-label="' + (td.done ? "Mark as not done" : "Mark as done") + '">\u2713</button>'
-    + '<div class="td-txt">' + esc(td.text) + (td.sec ? ' <span class="td-when">\u00b7 ' + fmtDur(td.sec) + '</span>' : "") + '</div>'
+    + '<div class="td-txt">' + esc(td.text) + '</div>'
     + (showDate ? '<span class="td-when">' + esc(when) + '</span>' : "")
     + '<button class="td-mini' + (timing ? " on" : "") + '" data-tdact="timer" data-tdid="' + td.id + '" title="' + (timing ? "Stop the timer" : "Time this") + '">' + (timing ? "\u23f9" : "\u23f1") + '</button>'
     + '<button class="td-mini" data-tdact="del" data-tdid="' + td.id + '" title="Delete">\ud83d\uddd1</button>'
     + '</div>';
 }
+function todoSecOn(ds){
+  var n = 0;
+  for(var i=0;i<state.todos.length;i++) if(state.todos[i].date === ds) n += state.todos[i].sec || 0;
+  return n;
+}
 function renderTodos(){
   var t = todayStr(), h = "";
+  /* in the list the day's work reads as one number — the per-task split is
+     kept on every to-do and shown when the day is opened in the calendar */
+  var tot = timeByOn(t).todo;
+  var el = document.getElementById("tdTotal");
+  el.textContent = tot ? "\u23f1 " + fmtDur(tot) + " on this list today" : "\u23f1 nothing timed yet today";
+  el.className = "empty-note" + (tot ? " " : "");
   var today = todosOn(t), late = todosOverdue();
   var ahead = state.todos.filter(function(td){ return !td.done && td.date > t; })
     .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
@@ -7538,7 +7783,7 @@ function renderQTabs(){
   h += qTabSquare("calendar", "\ud83d\udcc5", "CALENDAR",
         when + "<br>" + dc.done + " of " + dc.total + " cleared today",
         dc.done, dc.total, " act");
-  h += qTabSquare("todo", "\u2705", "TO-DO",
+  h += qTabSquare("todo", "\u2705", "TO DO LIST",
         n.tDone + " / " + (n.tOpen + n.tDone) + " done today<br>"
         + (n.tLate ? "\u26a0 " + n.tLate + " overdue" : "nothing overdue"),
         n.tDone, n.tOpen + n.tDone);
@@ -9559,6 +9804,7 @@ setInterval(function(){
   var el = document.getElementById("pkgTimer");
   if(el && currentPage === "home") el.textContent = pkgCountdown();
   updateTimerPillTime();
+  renderFocus();
 }, 1000);
 
 /* ---------------- hero art (original, evolves with rank) ---------------- */
@@ -10409,10 +10655,10 @@ function ivFinish(){
   var secs = iv.worked;
   if(secs > 0){
     var t = todayStr();
-    state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
     /* a session started inside a quest counts as that quest's work, and
        satisfies a quest that demands a timed session before completion */
     var qq = iv.questId ? questById(iv.questId) : null;
+    logTime(secs, timerKindFor(qq, null));
     if(qq){
       qq.timeSpent = (qq.timeSpent || 0) + secs;
       qq.lastTimedOn = t;

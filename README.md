@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **88 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **100 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -183,7 +183,23 @@ Videos are **not hosted** — that would need a paid server. Instead each video 
 
 To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text, `dur` is how many days a task's quest should run.
 
-## 4d. THE INTERVAL TIMER
+## 4d. THE FOCUS WINDOW — ⏱ takes the whole screen
+
+Pressing ⏱ on any quest or to-do **takes over the screen**. A focus timer that shares a screen with the thing you are avoiding is not a focus timer.
+
+The window holds one task name, one ring, one clock, and nothing else:
+
+- **Target chips** — 25 / 50 / 90 minutes, or NO TARGET. The ring fills toward it and your choice is remembered in `state.focusGoalMin` for the next session.
+- **Reaching the target chimes and turns the ring gold, and then keeps counting.** It does not stop you — stopping is your decision, not the app's.
+- **PAUSE** / **FINISH**, and a **–** that closes the window.
+
+**Closing the window does not stop the clock.** The session lives in `state.activeTimer`, so the timer pill returns at the bottom of the screen and tapping it opens the window again. Nothing is lost either way, and a test asserts it.
+
+The window is redrawn by the same one-second loop that drives the pill, so it survives a reload mid-session.
+
+This is a different thing from the INTERVAL TIMER below: the focus window measures **one long unbroken session**; the interval timer runs **rounds of work and rest**.
+
+## 4e. THE INTERVAL TIMER
 
 TRAINING YARD → ⏱ INTERVAL TIMER (or the ⏱ TIMER tab). Rounds of work and rest, for the body — **distinct from the Focus Timer**, which measures one long unbroken session on a quest.
 
@@ -191,7 +207,7 @@ Presets: TABATA (20/10×8), HIIT (40/20×10), EMOM (60/0×10), STRENGTH (45/90×
 
 Finishing a session **logs the work time into the same `timeHistory` the STATS page charts**, trains END, and grants XP proportional to the time worked (capped at 120). Nothing here is decoration — the System counts every round.
 
-## 4e. THE OATH — the hunter's own words, used against them
+## 4f. THE OATH — the hunter's own words, used against them
 
 Before the System opens, every hunter answers four questions **in their own words** and signs them:
 
@@ -218,7 +234,7 @@ The oath can be re-sworn (PROFILE → THE OATH). **Re-swearing never erases the 
 
 To change the questions, edit `OATH_Q` (`k` is the storage key, `n` the question, `h` the hint, `p` the placeholder) and `OATH_PRE` for the opening text. Adding a question means adding a matching case to `oathLine()` if you want it quoted anywhere.
 
-## 4f. PUNISHMENTS — and the one that was removed
+## 4g. PUNISHMENTS — and the one that was removed
 
 Two punishments remain, and they share a rule: **they cost you, but they never take the work away.**
 
@@ -233,7 +249,7 @@ Removing it is not free: it was the only caller of `oathLine("quit")`, the momen
 
 A save written while quests were sealed is **released on open** — `migrateState()` strips every `lockedUntil` and the lockdown marker, so nothing stays locked forever. Two tests assert both halves: the punishment cannot fire, and an already-sealed quest becomes completable again.
 
-## 4g. REPORTS — written by you, and mandatory
+## 4h. REPORTS — written by you, and mandatory
 
 STATS → 📋 REPORTS. The System already grades your month automatically; these are the other half — **what you write, in your own words, when a period closes**.
 
@@ -249,7 +265,7 @@ Before you write, the System hands you the numbers it already has for that perio
 
 **No report is ever demanded retroactively.** `state.reportsSince` is stamped the first time the feature runs, so a hunter who was already playing is never billed for weeks that closed before the rule existed.
 
-## 4h. ONE QUEST, FULL SCREEN
+## 4i. ONE QUEST, FULL SCREEN
 
 In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full screen with everything the System knows about that one habit:
 
@@ -260,7 +276,7 @@ In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full 
 
 The interval engine is one engine with two faces (`iv.ui` is `"iv"` for the TRAINING YARD page or `"qv"` for the quest window), so only one session can run at a time — which is also the truth about doing interval work. A session started inside a quest keeps running and still logs correctly if you close the window.
 
-## 4i. RANK — eligibility is not promotion
+## 4j. RANK — eligibility is not promotion
 
 Rank used to be a pure function of your attribute total, which made it **buyable**: bank stat points, spend them all at once, and wake up an A-Rank without ever having done what an A-Rank does. Three things changed.
 
@@ -286,7 +302,7 @@ Every rank also demands a **clean record** — no XP debt outstanding, no penalt
 
 Across 99 levels that is **243 attribute points before, 105 after**. Existing saves are migrated once (`roadSpV3`), and **only the untouched default value of 2 is halved** — a road the Administrator edited keeps whatever they chose, and levels already claimed are unaffected.
 
-## 4j. Reliability rules (do not remove these)
+## 4k. Reliability rules (do not remove these)
 
 Three defects found in an audit, each proven with a test before it was fixed:
 
@@ -315,15 +331,15 @@ Plus: `#toasts` is a polite live region and the System announcement is an assert
 
 Still open: focus is not trapped inside modals.
 
-## 4k. THE QUEST HUB — four squares
+## 4l. THE QUEST HUB — four squares
 
 QUESTS opens on a **2×2 grid of squares**, the way LEARN opens on its four roads:
 
 | Square | What it holds |
 |---|---|
 | 📜 **QUESTS** | everything you committed to — daily, weekly, custom-day **and one-time goals** |
-| 📅 **CALENDAR** | opens the month view (section 4l) |
-| ✅ **TO-DO** | the plain list (section 4n) — not a quest, not in the game |
+| 📅 **CALENDAR** | opens the month view (section 4m) |
+| ✅ **TO DO LIST** | the plain list (section 4o) — not a quest, not in the game |
 | 🔥 **CHALLENGES** | streak quests — miss a day and the count returns to zero |
 
 **They are a selector, never a doorway.** The list is already rendered underneath, so opening QUESTS from the dock and clearing today's quests is still **one tap**, exactly as before. That rule is not decoration — putting a landing screen in front of the daily loop is the mistake section 4b describes, and a test asserts the quest list is on screen with no click at all.
@@ -337,7 +353,7 @@ Each square carries **live counts**, not a label: how many of today's quests are
 
 To add or rename a square, edit `QTAB_FREQS`, `QTAB_TITLE`, `QTAB_NOTE` and `QTAB_EMPTY` in `index.html`, then add its tile in `renderQTabs()`. A square must map to a real set of quests; a square that holds nothing is worse than no square.
 
-## 4l. THE CALENDAR
+## 4m. THE CALENDAR
 
 QUESTS → **📅 CALENDAR** at the top of the section.
 
@@ -349,7 +365,7 @@ Days older than the detailed records (see pruning) carry a note saying completio
 
 **Naming warning:** the app already had an `openCalendar(inputEl)` date picker for quest start/end fields, using `#calGrid`, `#calPrev`, `#calNext` and `.cal-*` classes. The quest calendar is namespaced **`qc`** (`qcOpen`, `#qcGrid`, `.qc-*`) to stay clear of it. Two tests guard the old picker. In one file this large, check a name before you reuse it.
 
-## 4m. CHANGING CURRENCY CONVERTS THE MONEY
+## 4n. CHANGING CURRENCY CONVERTS THE MONEY
 
 BUDGET → currency picker. Changing it no longer swaps only the symbol — it asks how many of the old currency make one of the new, shows what your balance becomes, and then converts **every transaction, savings goal and store item**.
 
@@ -396,7 +412,7 @@ A `type="number"` input **cannot hold a comma** — the browser rejects the valu
 - **`notify-sw.js` must never cache.** A caching service worker on the shared `github.io` origin once mixed this app with another project.
 - New state fields go into `defaultState()` — old saves pick them up automatically on load.
 
-## 4n. THE TO-DO LIST — and the HALL OF SHAME
+## 4o. THE TO-DO LIST — and the HALL OF SHAME
 
 QUESTS → **✅ TO-DO**. A plain list, on purpose.
 
@@ -405,6 +421,10 @@ Write a line, press Enter, it exists. Tap the circle to tick it. That is the who
 Each to-do carries exactly four things that matter: **its text, its day, whether it is done, and how long you timed it.** The ⏱ button runs the same focus timer the quests use, and the tracked time shows on the row.
 
 **It is outside the game economy, deliberately:**
+
+### Its time reads as one number
+
+The list shows **one accumulated total for the day** — *⏱ 40m on this list today* — not a stopwatch on every row. The per-task split is still recorded on each to-do (`td.sec`); you see it when you open that day in the calendar. Working time is one number in the moment and a breakdown in hindsight, which is the right way round.
 
 | | |
 |---|---|
@@ -422,7 +442,7 @@ That last row is a real trade-off and you should know it: doing six to-dos does 
 
 ### In the calendar
 
-Open any day (section 4l) and a **📝 TO DO LIST · 1 / 2** button sits under that day's quests. Tap it and the day's to-dos expand with their status — COMPLETED / NOT DONE / NOT YET / PLANNED. It stays behind the button so the day view is not two lists fighting each other.
+Open any day (section 4m) and a **📝 TO DO LIST · 1 / 2** button sits under that day's quests. Tap it and the day's to-dos expand with their status — COMPLETED / NOT DONE / NOT YET / PLANNED. It stays behind the button so the day view is not two lists fighting each other.
 
 ### 💀 HALL OF SHAME
 
@@ -434,3 +454,27 @@ The Hall of Honor keeps what you finished. This keeps what you didn't. There are
 - **LET GO** — deletes it, with a confirm. Nothing is recorded; you simply admitted it was never going to happen.
 
 There is no third button, and nothing expires out of the hall on its own. That is the point of it.
+
+## 4p. A DAY, OPENED AS A FILE
+
+Open any date in the calendar and the day reports itself, in this order:
+
+1. **TIME SPENT · COMPLETED · TASKS DONE** — three figures across the top. The percentage counts quests *and* to-dos together, because that is what the day actually was.
+2. **Where the hours went** — one bar per section: 📜 QUESTS, 🔥 CHALLENGES, ✅ TO DO LIST, 🏋 TRAINING (the interval timer). Only sections with time on them appear.
+3. **QUESTS & CHALLENGES** — the list, each with its own tracked time.
+4. **📝 TO DO LIST · 1 / 3 · ⏱ 40m** — a button that expands that day's to-dos, **each with the time you spent on it**.
+
+### How the split is recorded
+
+Every tracked second is written in **two** places, and only `logTime(secs, kind)` writes them:
+
+| | |
+|---|---|
+| `state.timeHistory[date]` | the day's **total** — what the STATS charts have always read |
+| `state.timeBy[date]` | the **same total**, split into `{quest, challenge, todo, interval}` |
+
+`timeByOn(ds)` reads them back and computes an **`other`** bucket from whatever the total has that the split does not. That is not a rounding fudge: a save written before the split existed has a total and no breakdown, and its hours must still show up rather than silently vanishing from the day. A test covers exactly that save.
+
+`timerKindFor(q, td)` decides the bucket: a challenge quest counts as a challenge, any other quest as a quest, a to-do as a to-do, and an interval session started from the TRAINING YARD page as training — but an interval session started **inside a quest window** counts as that quest's work, because it is.
+
+Pruning (section 4k) drops `timeBy` rows past the cutoff along with `timeHistory`; the total is already folded into `archive.focusSec`, so nothing is double counted and nothing is lost.
