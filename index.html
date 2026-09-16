@@ -1746,7 +1746,6 @@ main section{animation:pagein .28s ease}
         <ul>
           <li><b>Penalty Quest:</b> miss the Daily Quest package and the Penalty Zone opens — all XP is frozen until you serve the penalty task and confirm it.</li>
           <li><b>XP Debt:</b> each fully empty day adds 60 XP of debt; half of every gain is seized until repaid.</li>
-          <li><b>Quest Lockdown:</b> two consecutive empty days seal 2 random quests for 7 days.</li>
         </ul>
       </div>
       <div class="panel guide">
@@ -2462,7 +2461,7 @@ function defaultState(){
     activeTimer:null,    /* {id, name, startedAt, accumulated, paused} while a session runs */
     xpDebt:0,            /* punishment: half of XP gains seized until repaid */
     penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
-    lastPenaltyDay:"", lastDebtCheck:"", lastLockdownFor:"",
+    lastPenaltyDay:"", lastDebtCheck:"",
     firstStepsDismissed:false,
     dossier:{height:"",weight:"",age:"",status:""},
     realAchievements:[], /* {id, name, value} — IELTS, CEFR, certificates */
@@ -3552,7 +3551,6 @@ function migrateState(){
     if(qq.repeatDays === undefined) qq.repeatDays = 0;
     if(qq.timeSpent === undefined) qq.timeSpent = 0;
     if(qq.halfOn === undefined) qq.halfOn = "";
-    if(qq.lockedUntil === undefined) qq.lockedUntil = "";
     if(qq.blocking === undefined) qq.blocking = false;
     if(qq.needTimer === undefined) qq.needTimer = false;
     if(qq.lastTimedOn === undefined) qq.lastTimedOn = "";
@@ -3621,6 +3619,13 @@ function migrateState(){
   if(!state.claimedLevels) state.claimedLevels = [];
   /* the walkable world was removed — drop its leftover position data */
   if(state.world !== undefined) delete state.world;
+  /* QUEST LOCKDOWN was removed — release anything it had sealed, so a save
+     written mid-punishment does not keep quests uncompletable forever */
+  if(!state.lockdownGone){
+    state.lockdownGone = true;
+    delete state.lastLockdownFor;
+    for(var lk=0; lk<state.quests.length; lk++) delete state.quests[lk].lockedUntil;
+  }
   /* Rank was buyable because the road paid +2 attribute points on most levels.
      Only the untouched default value is halved — a road the Administrator
      edited keeps whatever they chose. Levels already claimed are unaffected. */
@@ -4079,7 +4084,7 @@ var I18N_RU = {
   "🏰 CREATE A CLAN":"🏰 СОЗДАТЬ КЛАН","🔑 JOIN A CLAN":"🔑 ВСТУПИТЬ В КЛАН","COLOSSEUM":"КОЛИЗЕЙ",
   /* quest card + package buttons (dynamic) */
   "⚔ COMPLETE":"⚔ ВЫПОЛНИТЬ","✓ COMPLETED":"✓ ВЫПОЛНЕНО","½ HALF DONE":"½ НАПОЛОВИНУ",
-  "⛔ SEALED":"⛔ ЗАПЕЧАТАНО","🚧 BLOCKED":"🚧 ЗАБЛОКИРОВАНО","NOT TODAY":"НЕ СЕГОДНЯ",
+  "🚧 BLOCKED":"🚧 ЗАБЛОКИРОВАНО","NOT TODAY":"НЕ СЕГОДНЯ",
   "🔒 LOCKED":"🔒 ЗАКРЫТО","⌛ EXPIRED":"⌛ ИСТЁК","⏱ TIME IT":"⏱ ПО ТАЙМЕРУ",
   "✓ DONE":"✓ ГОТОВО","COMPLETE":"ВЫПОЛНИТЬ","✓ CLAIMED":"✓ ПОЛУЧЕНО","✓ COMPLETE":"✓ СОБРАНО",
   /* common buttons */
@@ -4441,7 +4446,7 @@ var I18N_RU = {
   "Rolls:":"Роллы:","Local:":"Локально:","Cloud:":"Облако:","Backup:":"Резервная копия:",
   "Crates (collections):":"Ящики (коллекции):","Stats:":"Характеристики:","Ranks:":"Ранги:","Types:":"Типы:",
   "Leveling:":"Уровни:","Earning XP:":"Получение XP:","Focus timer:":"Таймер фокуса:","Completing:":"Выполнение:",
-  "XP Debt:":"Долг XP:","Penalty Quest:":"Штрафной квест:","Quest Lockdown:":"Блокировка квестов:",
+  "XP Debt:":"Долг XP:","Penalty Quest:":"Штрафной квест:",
   "⏱ Timer-required quests:":"⏱ Квесты с обязательным таймером:","🎒 Item boosts:":"🎒 Бонусы предметов:",
   "🚧 Priority lock (one-time goals):":"🚧 Приоритетная блокировка (разовые цели):"
 };
@@ -5127,7 +5132,7 @@ function checkStreakResets(){
   }
   if(changed) save();
 }
-/* ---------------- punishments: penalty quest, XP debt, quest lockdown ---------------- */
+/* ---------------- punishments: penalty quest, XP debt ---------------- */
 var PENALTY_TASKS = [
   {icon:"⛓", name:"Penalty Zone: 100 Squats", desc:"The System demands payment in sweat. 100 squats, no shortcuts."},
   {icon:"⛓", name:"Penalty Zone: 30 Push-up Tribute", desc:"30 push-ups performed with full focus."},
@@ -5165,28 +5170,11 @@ function checkPunishments(){
       + oathLine("running"),
       "💸", "UNDERSTOOD");
   }
-  /* 2) lockdown: two consecutive empty days seal 2 random quests for a week */
-  var y1 = addDays(t,-1), y2 = addDays(t,-2);
-  var e1 = !state.history[y1] || !state.history[y1].count;
-  var e2 = !state.history[y2] || !state.history[y2].count;
-  if(e1 && e2 && y2 >= state.created && state.lastLockdownFor !== y1){
-    state.lastLockdownFor = y1;
-    var pool = state.quests.filter(function(q){ return !q.done && !q.rankCheck && (!q.lockedUntil || q.lockedUntil <= t); });
-    var names = [];
-    for(var i=0; i<2 && pool.length; i++){
-      var idx = Math.floor(Math.random() * pool.length);
-      var lq = pool.splice(idx, 1)[0];
-      lq.lockedUntil = addDays(t, 7);
-      names.push(lq.icon + " " + lq.name);
-    }
-    if(names.length){
-      announce("⛔ QUEST LOCKDOWN ⛔",
-        "Two days of total absence detected.\n\nYou didn't fail loudly. You just... disappeared.\nThat is how most dreams actually die — quietly, two days at a time.\n\nThe System has SEALED:\n" + names.join("\n") + "\n\nSealed for 7 days. They cannot be completed until the seal expires.\n\nDo not vanish again, Hunter."
-        + oathLine("quit"),
-        "⛔", "ACCEPT PUNISHMENT");
-    }
-  }
-  /* 3) penalty quest: yesterday's daily package was not fully cleared */
+  /* QUEST LOCKDOWN was here: two empty days sealed two random quests for a
+     week. Removed 2026-09-16 — taking the hunter's quests away is the one
+     punishment that stops them coming back. Debt and the penalty quest still
+     bite, and both leave the work available. */
+  /* 2) penalty quest: yesterday's daily package was not fully cleared */
   var pd = pkgDayNow(), prev = addDays(pd, -1);
   if(state.lastPenaltyDay && state.lastPenaltyDay !== pd){
     if(prev >= state.created && state.dailyPackage.items.length && state.dailyPackage.lastFullDay !== prev && !legendaryBlocker()){
@@ -6499,9 +6487,6 @@ function completeQuest(id){
   if(!q) return;
   if(completedThisPeriod(q)){ toast("Already completed for this period.", "err"); return; }
   if(q.freq === "custom" && !isScheduledToday(q)){ toast("This quest is not scheduled today.", "err"); return; }
-  if(q.lockedUntil && todayStr() < q.lockedUntil){
-    toast("⛔ This quest is SEALED by the System until " + q.lockedUntil + ".", "err"); return;
-  }
   var blk = questBlocker(q);
   if(blk){
     toast("🚧 Blocked by priority goal [" + blk.name + "] (" + TIER_LABEL[blk.tier] + "). Complete it first, Hunter.", "err"); return;
@@ -7280,7 +7265,6 @@ function questCard(q){
   var sched = q.freq === "longterm" || q.freq === "challenge";
   var notStarted = sched && q.startDate && tNow < q.startDate;
   var expired = sched && q.endDate && !q.done && tNow > q.endDate;
-  var sealed = q.lockedUntil && tNow < q.lockedUntil;
   var blocker = completedThisPeriod(q) ? null : questBlocker(q);
   var timerReady = !q.needTimer || q.lastTimedOn === tNow || (state.activeTimer && state.activeTimer.id === q.id);
   var col = q.link ? colById(q.link) : null;
@@ -7307,7 +7291,6 @@ function questCard(q){
   } else {
     h += '<span class="tag tag-target" title="Progress toward the next roll">🎟 ' + Math.min(q.progress || 0, tgt) + ' / ' + tgt + '</span>';
   }
-  if(sealed) h += '<span class="tag tag-expired">⛔ SEALED · ' + dayDiff(tNow, q.lockedUntil) + 'd left</span>';
   if(blocker) h += '<span class="tag tag-expired">🚧 BLOCKED BY ' + esc(blocker.name) + '</span>';
   if(q.blocking && !q.done) h += '<span class="tag tag-' + q.tier + '">🚧 PRIORITY LOCK</span>';
   if(q.needTimer) h += '<span class="tag tag-freq">⏱ TIMER QUEST' + (timerReady ? " ✓" : "") + '</span>';
@@ -7330,11 +7313,11 @@ function questCard(q){
   h += '</div>';
   h += '<div class="q-actions">';
   var isHalf = doneNow && q.halfOn === tNow && q.lastCompleted === tNow;
-  var cDisabled = offToday || notStarted || expired || sealed || !!blocker || !timerReady;
+  var cDisabled = offToday || notStarted || expired || !!blocker || !timerReady;
   if(doneNow){
     h += '<button class="btn-complete done' + (isHalf ? " half" : "") + '" disabled>' + (isHalf ? "½ HALF DONE" : "✓ COMPLETED") + '</button>';
   } else {
-    var cTxt = sealed ? "⛔ SEALED" : (blocker ? "🚧 BLOCKED" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : (!timerReady ? "⏱ TIME IT" : "⚔ COMPLETE")))));
+    var cTxt = blocker ? "🚧 BLOCKED" : (offToday ? "NOT TODAY" : (notStarted ? "🔒 LOCKED" : (expired ? "⌛ EXPIRED" : (!timerReady ? "⏱ TIME IT" : "⚔ COMPLETE"))));
     h += '<button class="btn-complete" data-act="complete" data-id="' + q.id + '"' + (cDisabled ? " disabled" : "") + '>' + cTxt + '</button>';
   }
   h += '<div class="mini-row">';

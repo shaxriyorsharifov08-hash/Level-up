@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **71 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **73 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -183,7 +183,7 @@ Videos are **not hosted** — that would need a paid server. Instead each video 
 
 To change the curriculum, edit `LEARN_PATH` in `index.html`: `t` is `"video"` or `"task"`, `n` is the title, `d` is the body, `q` is the YouTube search text, `dur` is how many days a task's quest should run.
 
-## 4e. THE INTERVAL TIMER
+## 4d. THE INTERVAL TIMER
 
 TRAINING YARD → ⏱ INTERVAL TIMER (or the ⏱ TIMER tab). Rounds of work and rest, for the body — **distinct from the Focus Timer**, which measures one long unbroken session on a quest.
 
@@ -191,7 +191,7 @@ Presets: TABATA (20/10×8), HIIT (40/20×10), EMOM (60/0×10), STRENGTH (45/90×
 
 Finishing a session **logs the work time into the same `timeHistory` the STATS page charts**, trains END, and grants XP proportional to the time worked (capped at 120). Nothing here is decoration — the System counts every round.
 
-## 4d. THE OATH — the hunter's own words, used against them
+## 4e. THE OATH — the hunter's own words, used against them
 
 Before the System opens, every hunter answers four questions **in their own words** and signs them:
 
@@ -207,19 +207,33 @@ Each answer needs at least 20 characters and the oath **cannot be skipped**. Exi
 | Moment | What it quotes |
 |---|---|
 | XP debt from silent days | *the life they swore to escape* |
-| Quest lockdown (two empty days) | *the words they told the System to say when they want to quit* |
 | Penalty quest | *the promise they admitted to breaking before* |
 | Level up | *who they swore they would be* |
 | Rank up | *who they swore they would be* |
-| Mentor, after 3+ empty days in a week | *their own anti-quitting words, instead of generic advice* |
+| Mentor, after 3+ empty days in a week | *their own anti-quitting words, instead of generic advice — this is now the only place the "quit" answer is quoted, since QUEST LOCKDOWN was removed* |
 
 Nothing speaks over the Oath: any System announcement already on screen is parked and resumes the moment the oath is sealed.
 
-The oath can be re-sworn (PROFILE → THE OATH, or the ⚔ OATH STONE monument in the city plaza). **Re-swearing never erases the original** — the first `sworn` date is what the System keeps quoting, and every earlier version is kept in `state.oath.prev`.
+The oath can be re-sworn (PROFILE → THE OATH). **Re-swearing never erases the original** — the first `sworn` date is what the System keeps quoting, and every earlier version is kept in `state.oath.prev`.
 
 To change the questions, edit `OATH_Q` (`k` is the storage key, `n` the question, `h` the hint, `p` the placeholder) and `OATH_PRE` for the opening text. Adding a question means adding a matching case to `oathLine()` if you want it quoted anywhere.
 
-## 4f. REPORTS — written by you, and mandatory
+## 4f. PUNISHMENTS — and the one that was removed
+
+Two punishments remain, and they share a rule: **they cost you, but they never take the work away.**
+
+- **XP debt** — each fully empty day adds 60 XP of debt; half of every gain is seized until it is repaid.
+- **Penalty quest** — miss the Daily Package and the Penalty Zone opens; all XP is frozen until you serve the penalty task and confirm it.
+
+**QUEST LOCKDOWN was removed on 2026-09-16.** Two consecutive empty days used to make the System pick two of your quests at random and **seal them for seven days** — you could not complete them, and a `⛔ SEALED · 5d left` tag sat on the card.
+
+It is the one punishment that works against the app. Every other penalty makes returning *expensive*; this one made returning *impossible* for the specific things you came back to do. A hunter who disappears for two days and opens the app on the third has already done the hard part. Locking their quests tells them to come back later, and later is how it ends.
+
+Removing it is not free: it was the only caller of `oathLine("quit")`, the moment that quoted your own anti-quitting sentence back at you. That sentence now surfaces only through the **System Mentor**, after three or more empty days in a week. If you want it announced at the moment of failure again, it belongs on the XP-debt announcement, not on a seal.
+
+A save written while quests were sealed is **released on open** — `migrateState()` strips every `lockedUntil` and the lockdown marker, so nothing stays locked forever. Two tests assert both halves: the punishment cannot fire, and an already-sealed quest becomes completable again.
+
+## 4g. REPORTS — written by you, and mandatory
 
 STATS → 📋 REPORTS. The System already grades your month automatically; these are the other half — **what you write, in your own words, when a period closes**.
 
@@ -235,7 +249,7 @@ Before you write, the System hands you the numbers it already has for that perio
 
 **No report is ever demanded retroactively.** `state.reportsSince` is stamped the first time the feature runs, so a hunter who was already playing is never billed for weeks that closed before the rule existed.
 
-## 4g. ONE QUEST, FULL SCREEN
+## 4h. ONE QUEST, FULL SCREEN
 
 In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full screen with everything the System knows about that one habit:
 
@@ -246,7 +260,7 @@ In QUESTS, **tap a quest card** (anywhere except its buttons) and it opens full 
 
 The interval engine is one engine with two faces (`iv.ui` is `"iv"` for the TRAINING YARD page or `"qv"` for the quest window), so only one session can run at a time — which is also the truth about doing interval work. A session started inside a quest keeps running and still logs correctly if you close the window.
 
-## 4h. RANK — eligibility is not promotion
+## 4i. RANK — eligibility is not promotion
 
 Rank used to be a pure function of your attribute total, which made it **buyable**: bank stat points, spend them all at once, and wake up an A-Rank without ever having done what an A-Rank does. Three things changed.
 
@@ -272,7 +286,7 @@ Every rank also demands a **clean record** — no XP debt outstanding, no penalt
 
 Across 99 levels that is **243 attribute points before, 105 after**. Existing saves are migrated once (`roadSpV3`), and **only the untouched default value of 2 is halved** — a road the Administrator edited keeps whatever they chose, and levels already claimed are unaffected.
 
-## 4i. Reliability rules (do not remove these)
+## 4j. Reliability rules (do not remove these)
 
 Three defects found in an audit, each proven with a test before it was fixed:
 
@@ -301,14 +315,14 @@ Plus: `#toasts` is a polite live region and the System announcement is an assert
 
 Still open: focus is not trapped inside modals.
 
-## 4j. THE QUEST HUB — four squares
+## 4k. THE QUEST HUB — four squares
 
 QUESTS opens on a **2×2 grid of squares**, the way LEARN opens on its four roads:
 
 | Square | What it holds |
 |---|---|
 | 📜 **QUESTS** | the recurring log — daily, weekly and custom-day quests |
-| 📅 **CALENDAR** | opens the month view (section 4k) |
+| 📅 **CALENDAR** | opens the month view (section 4l) |
 | 🎯 **GOALS** | one-time goals, moved out of the quest log entirely |
 | 🔥 **CHALLENGES** | streak quests — miss a day and the count returns to zero |
 
@@ -323,7 +337,7 @@ Each square carries **live counts**, not a label: how many of today's quests are
 
 To add or rename a square, edit `QTAB_FREQS`, `QTAB_TITLE`, `QTAB_NOTE` and `QTAB_EMPTY` in `index.html`, then add its tile in `renderQTabs()`. A square must map to a real set of quests; a square that holds nothing is worse than no square.
 
-## 4k. THE CALENDAR
+## 4l. THE CALENDAR
 
 QUESTS → **📅 CALENDAR** at the top of the section.
 
@@ -335,7 +349,7 @@ Days older than the detailed records (see pruning) carry a note saying completio
 
 **Naming warning:** the app already had an `openCalendar(inputEl)` date picker for quest start/end fields, using `#calGrid`, `#calPrev`, `#calNext` and `.cal-*` classes. The quest calendar is namespaced **`qc`** (`qcOpen`, `#qcGrid`, `.qc-*`) to stay clear of it. Two tests guard the old picker. In one file this large, check a name before you reuse it.
 
-## 4l. CHANGING CURRENCY CONVERTS THE MONEY
+## 4m. CHANGING CURRENCY CONVERTS THE MONEY
 
 BUDGET → currency picker. Changing it no longer swaps only the symbol — it asks how many of the old currency make one of the new, shows what your balance becomes, and then converts **every transaction, savings goal and store item**.
 

@@ -36,7 +36,7 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 |---|---|
 | `smoke.spec.js` | The app opens at all: no JavaScript errors, every page exists, the Oath cannot be skipped, the dock leads with the daily loop. |
 | `data-safety.spec.js` | A hunter's record. HTML injection through icon fields, a failed save going unnoticed, one error killing the app, an old save losing fields, and the storage key never changing. |
-| `progression.spec.js` | The rules that make the game worth playing: rank cannot be bought with banked points, a rank is never taken back, stat points stay scarce, and an Academy task becomes a real quest. |
+| `progression.spec.js` | The rules that make the game worth playing: rank cannot be bought with banked points, a rank is never taken back, stat points stay scarce, an Academy task becomes a real quest, and the System can no longer seal a quest shut. |
 | `reports.spec.js` | Report deadlines (1 / 3 / 7 days), no report ever demanded retroactively, late filings earning nothing, and debt charged exactly once. |
 | `quest-view.spec.js` | One quest, full screen: the window opens and closes, it shows that quest's own record and streak, and its interval timer belongs to that quest alone. |
 | `pruning.spec.js` | The save cannot grow forever: mechanical rows fold into the archive, all-time totals survive the fold, and nothing the hunter wrote is ever deleted. |

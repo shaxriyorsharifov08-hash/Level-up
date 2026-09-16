@@ -181,3 +181,62 @@ test.describe("learn and grow", () => {
     expect(freq).toBe("longterm");
   });
 });
+
+test.describe("punishments", () => {
+  test("the System can no longer seal a quest for disappearing", async ({ page }) => {
+    await bootAsGuest(page);
+    /* two consecutive empty days used to seal two random quests for a week.
+       The punishment is gone; the quests must stay completable. */
+    const after = await page.evaluate(() => {
+      state.quests = [];
+      for (let i = 0; i < 6; i++) {
+        state.quests.push(makeQuest("\u2694", "Quest " + i, "d", "daily", [], "easy", "END", "", false, 1));
+      }
+      state.created = addDays(todayStr(), -30);
+      state.history = {};                 /* nothing done, ever */
+      state.lastDebtCheck = "";
+      save();
+      checkPunishments();
+      return {
+        sealed: state.quests.filter((q) => q.lockedUntil).length,
+        lockdownMarker: state.lastLockdownFor,
+        lockdownFn: typeof window.QUEST_LOCKDOWN
+      };
+    });
+    await drainAnnouncements(page);
+    expect(after.sealed).toBe(0);
+    expect(after.lockdownMarker).toBe(undefined);
+  });
+
+  test("a save written mid-lockdown is released, not left sealed forever", async ({ page }) => {
+    await bootAsGuest(page);
+    const freed = await page.evaluate(() => {
+      const old = JSON.parse(localStorage.getItem(SKEY));
+      old.lockdownGone = undefined;
+      delete old.lockdownGone;
+      old.lastLockdownFor = "2026-09-01";
+      old.quests = [{
+        id: "sealedone", icon: "\u2694", name: "Sealed in the old world", desc: "",
+        freq: "daily", days: [], tier: "easy", stat: "END", link: "", system: false,
+        target: 1, progress: 0, startDate: "", endDate: "", repeatDays: 0,
+        blocking: false, needTimer: false, lastTimedOn: "",
+        streak: 0, bestStreak: 0, lastCompleted: "", lastWeek: "",
+        completions: [], done: false, created: "2026-09-01",
+        lockedUntil: "2099-01-01"        /* sealed for the next 70 years */
+      }];
+      localStorage.setItem(SKEY, JSON.stringify(old));
+      load();
+      const q = questById("sealedone");
+      completeQuest("sealedone");
+      return {
+        stillSealed: q.lockedUntil !== undefined,
+        marker: state.lastLockdownFor,
+        completed: completedThisPeriod(questById("sealedone"))
+      };
+    });
+    await drainAnnouncements(page);
+    expect(freed.stillSealed).toBe(false);
+    expect(freed.marker).toBe(undefined);
+    expect(freed.completed).toBe(true);   /* and it can actually be done */
+  });
+});
