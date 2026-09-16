@@ -44,6 +44,8 @@ And a room/section must also pass all three of these:
 | Automated test suite + CI on every push | 2026-09-02 — 51 tests, `tests/`, GitHub Actions |
 | Prune the save so mechanical rows cannot grow without limit | 2026-09-02 — `pruneState()`, archive folding |
 | Accessible names everywhere + live regions | 2026-09-02 — `a11yFix()` with a MutationObserver |
+| Quest calendar: a month at a glance, then one day in full | 2026-09-16 — QUESTS → 📅 CALENDAR |
+| Changing currency converts the money, not just the symbol | 2026-09-16 — editable offline rate table |
 
 ---
 

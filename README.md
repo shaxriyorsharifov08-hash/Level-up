@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **36 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **66 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -378,6 +378,26 @@ Honest measurement: this cuts the *mechanical* half of the save by about 38% and
 Plus: `#toasts` is a polite live region and the System announcement is an assertive `alertdialog`, so both are spoken rather than only shown; every modal is a `role="dialog"`; the walkable world is a labelled `role="application"`.
 
 Still open: focus is not trapped inside modals, and the world cannot be played without walking (the +1% dock reaches everything, so nothing is unreachable).
+
+## 4j. THE CALENDAR
+
+QUESTS → **📅 CALENDAR** at the top of the section.
+
+A month grid: a **green** count on days you cleared something, a **red dot** on past days where nothing was done, a **blue** count on days that have something scheduled ahead. Tap any day and it opens as its own screen — a plain list of the quests and goals that belonged to that day with **name, description and status** (COMPLETED / NOT DONE / NOT YET / SCHEDULED). No editing, no detail; it is an overview. `‹` goes back to the month.
+
+A quest appears on a day if it was scheduled then (daily and weekly every day, custom on its chosen weekdays, goals and challenges inside their start/end window) **or** if it was actually cleared that day — so changing a schedule later never rewrites the past. Quests created after that day never appear on it.
+
+Days older than the detailed records (see pruning) carry a note saying completions may be incomplete.
+
+**Naming warning:** the app already had an `openCalendar(inputEl)` date picker for quest start/end fields, using `#calGrid`, `#calPrev`, `#calNext` and `.cal-*` classes. The quest calendar is namespaced **`qc`** (`qcOpen`, `#qcGrid`, `.qc-*`) to stay clear of it. Two tests guard the old picker. In one file this large, check a name before you reuse it.
+
+## 4k. CHANGING CURRENCY CONVERTS THE MONEY
+
+BUDGET → currency picker. Changing it no longer swaps only the symbol — it asks how many of the old currency make one of the new, shows what your balance becomes, and then converts **every transaction, savings goal and store item**.
+
+Rates live in `FX_PER_USD` in `index.html` and are **built in and approximate** — there is no server to ask, and the app must work offline. The suggested rate is always editable before converting, so today's real rate wins. `so'm` defaults to 12,600 to the dollar.
+
+Three choices every time: **CONVERT**, **SYMBOL ONLY** (leave the numbers alone), or **CANCEL**. Converting there and back returns the original amounts. An empty budget just changes the symbol with no prompt.
 
 ## 5. Features you may want to adjust later
 

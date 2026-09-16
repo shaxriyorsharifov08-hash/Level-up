@@ -1055,6 +1055,65 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
 .rep-facts b{display:block;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--blue)}
 .rep-facts span{font-size:.64rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 
+/* ---------- THE CALENDAR ---------- */
+#qcOpenBtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px;margin-bottom:14px;border-radius:14px;cursor:pointer;border:1px solid var(--line);
+  font-family:'Orbitron',monospace;font-weight:800;font-size:.76rem;letter-spacing:.08em;color:var(--text);
+  background:linear-gradient(135deg,rgba(124,97,255,.18),rgba(0,209,255,.10));box-shadow:var(--glow)}
+#qcOpenBtn:hover{border-color:var(--blue)}
+#qcOv{position:fixed;inset:0;z-index:262;display:none;flex-direction:column;
+  background:radial-gradient(900px 600px at 50% -10%,rgba(124,97,255,.13),transparent 60%),var(--bg);
+  overscroll-behavior:contain}
+#qcOv.show{display:flex}
+#qcMonthPane,#qcDayPane{display:flex;flex-direction:column;flex:1;min-height:0}
+.qc-bar{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;flex:0 0 auto;
+  border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(124,97,255,.12),rgba(0,209,255,.06))}
+.qc-nav{flex:0 0 auto;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(0,0,0,.35);color:var(--text);font-size:1.2rem;line-height:1;cursor:pointer}
+.qc-title{flex:1;min-width:0;text-align:center;font-family:'Orbitron',monospace;font-weight:800;
+  font-size:.92rem;letter-spacing:.1em}
+.qc-sub{font-family:system-ui,sans-serif;font-weight:400;font-size:.7rem;letter-spacing:0;
+  color:var(--dim);margin-top:3px}
+.qc-body{flex:1;overflow-y:auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom,0px));
+  max-width:1060px;width:100%;margin:0 auto;-webkit-overflow-scrolling:touch}
+.qc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.qc-dow{text-align:center;font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.06em;
+  color:var(--dim);padding-bottom:4px}
+.qc-cell{position:relative;aspect-ratio:1/1;border-radius:10px;cursor:pointer;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);color:var(--text)}
+.qc-cell.empty{background:none;border:0;cursor:default}
+.qc-cell.future{opacity:.55}
+.qc-cell.today{border-color:var(--blue);box-shadow:var(--glowblue)}
+.qc-cell:hover:not(.empty){border-color:var(--blue)}
+.qc-num{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700}
+.qc-pill{font-size:.54rem;font-weight:700;border-radius:20px;padding:1px 5px;line-height:1.5;min-width:14px}
+.qc-pill.done{background:rgba(34,197,94,.22);color:#22c55e}
+.qc-pill.miss{background:rgba(239,68,68,.20);color:#ef4444}
+.qc-pill.plan{background:rgba(0,209,255,.16);color:var(--blue)}
+.qc-key{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:16px;
+  font-size:.68rem;color:var(--dim)}
+.qc-key i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.qc-key i.done{background:#22c55e}
+.qc-key i.miss{background:#ef4444}
+.qc-key i.plan{background:var(--blue)}
+.qc-row{display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:12px;margin-bottom:9px;
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line)}
+.qc-row.done{border-color:rgba(34,197,94,.42)}
+.qc-row.missed{border-color:rgba(239,68,68,.38)}
+.qc-row.future{opacity:.72}
+.qc-ico{font-size:1.3rem;flex:0 0 auto;line-height:1.2}
+.qc-t{flex:1;min-width:0}
+.qc-name{font-weight:700;font-size:.9rem}
+.qc-desc{font-size:.75rem;color:var(--dim);margin-top:3px;line-height:1.45}
+.qc-freq{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.08em;color:var(--dim);margin-top:5px}
+.qc-status{flex:0 0 auto;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:.06em;
+  padding:4px 7px;border-radius:7px;white-space:nowrap}
+.qc-status.done{background:rgba(34,197,94,.18);color:#22c55e}
+.qc-status.missed{background:rgba(239,68,68,.16);color:#ef4444}
+.qc-status.today{background:rgba(251,191,36,.16);color:var(--legendary)}
+.qc-status.future{background:rgba(255,255,255,.07);color:var(--dim)}
+
 /* ---------- ONE QUEST, FULL SCREEN ---------- */
 #questView{position:fixed;inset:0;z-index:260;display:none;flex-direction:column;
   background:radial-gradient(900px 600px at 50% -10%,rgba(124,97,255,.13),transparent 60%),var(--bg);
@@ -1358,6 +1417,7 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
     <!-- ============ QUESTS ============ -->
     <section id="page-quests" style="display:none">
       <div id="punishQuests"></div>
+      <button id="qcOpenBtn">📅 CALENDAR — see any day</button>
       <div class="panel">
         <div class="panel-title">QUEST LOG</div>
         <div class="filters" id="freqFilters"></div>
@@ -2175,6 +2235,54 @@ body[data-theme="blossom"] .w-hud{background:rgba(255,255,255,.75);color:#3b2438
       <button class="btn" id="repMCancel">CLOSE</button>
       <button class="btn primary" id="repMSave">✔ FILE REPORT</button>
     </div>
+  </div>
+</div>
+
+<!-- changing currency: show the rate, let it be corrected, then convert -->
+<div class="modal" id="fxModal" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-title" id="fxTitle">CHANGE CURRENCY</div>
+    <div class="empty-note" id="fxCounts" style="margin-bottom:12px"></div>
+    <label class="form-lbl" id="fxQuestion">Rate</label>
+    <input class="inp" id="fxRate" type="number" step="any" min="0">
+    <div class="empty-note" style="margin-top:8px">These rates are built in and approximate — there is no server to ask. Check today's rate and correct it above.</div>
+    <div class="empty-note" id="fxPreview" style="margin-top:10px"></div>
+    <div class="modal-actions">
+      <button class="btn" id="fxCancel">CANCEL</button>
+      <button class="btn" id="fxSymbolOnly">SYMBOL ONLY</button>
+      <button class="btn primary" id="fxConvert">💱 CONVERT</button>
+    </div>
+  </div>
+</div>
+
+<!-- the calendar: a month at a glance, then one day in full -->
+<div id="qcOv" role="dialog" aria-modal="true" aria-label="Quest calendar">
+  <div id="qcMonthPane">
+    <div class="qc-bar">
+      <button class="qc-nav" id="qcPrev" aria-label="Previous month">‹</button>
+      <div class="qc-title" id="qcTitle"></div>
+      <button class="qc-nav" id="qcNext" aria-label="Next month">›</button>
+      <button class="qv-close" id="qcClose" aria-label="Close calendar">✕</button>
+    </div>
+    <div class="qc-body">
+      <div class="qc-grid" id="qcGrid"></div>
+      <div class="qc-key">
+        <span><i class="k done"></i> cleared</span>
+        <span><i class="k miss"></i> nothing done</span>
+        <span><i class="k plan"></i> scheduled</span>
+      </div>
+    </div>
+  </div>
+  <div id="qcDayPane" style="display:none">
+    <div class="qc-bar">
+      <button class="qc-nav" id="qcBack" aria-label="Back to the month">‹</button>
+      <div class="qc-title">
+        <div id="qcDayTitle"></div>
+        <div class="qc-sub"><span id="qcDaySub"></span> <span id="qcDayCount"></span></div>
+      </div>
+      <button class="qv-close" id="qcClose2" aria-label="Close calendar" style="visibility:hidden">✕</button>
+    </div>
+    <div class="qc-body"><div id="qcDayList"></div></div>
   </div>
 </div>
 
@@ -5688,6 +5796,154 @@ function checkMonthlyReport(){
   state.lastMonthlyReport = nowMk;
   save();
 }
+/* ================= THE CALENDAR =================
+   A plain overview of which quests and goals belong to a day, and whether
+   they were done. No details, no editing — tap a day, read the list. */
+function questScheduledOn(q, ds){
+  if(q.created && ds < q.created) return false;
+  if(q.freq === "custom"){
+    var d = new Date(ds + "T00:00:00");
+    return (q.days || []).indexOf(d.getDay()) !== -1;
+  }
+  if(q.freq === "longterm" || q.freq === "challenge"){
+    if(q.startDate && ds < q.startDate) return false;
+    if(q.endDate && ds > q.endDate) return false;
+    return true;
+  }
+  return true; /* daily and weekly sit on every day */
+}
+/* done | today | missed | future — what the day actually says about this quest */
+function questStatusOn(q, ds){
+  if((q.completions || []).indexOf(ds) !== -1) return "done";
+  var t = todayStr();
+  if(ds > t) return "future";
+  if(ds === t) return "today";
+  return "missed";
+}
+function dayQuests(ds){
+  var out = [];
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    var done = (q.completions || []).indexOf(ds) !== -1;
+    /* a quest that was cleared that day belongs to it even if the schedule
+       has since been changed */
+    if(!done && !questScheduledOn(q, ds)) continue;
+    out.push({q:q, status:questStatusOn(q, ds)});
+  }
+  out.sort(function(a, b){
+    var rank = {done:0, today:1, missed:2, future:3};
+    if(rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+    return (a.q.name || "").localeCompare(b.q.name || "");
+  });
+  return out;
+}
+function dayCounts(ds){
+  var list = dayQuests(ds), done = 0;
+  for(var i=0;i<list.length;i++) if(list[i].status === "done") done++;
+  return {done:done, total:list.length};
+}
+var qcY = 0, qcM = 0, qcPick = "";
+function qcOpen(){
+  var t = todayStr();
+  qcY = +t.slice(0, 4);
+  qcM = +t.slice(5, 7);
+  qcPick = "";
+  document.getElementById("qcMonthPane").style.display = "";
+  document.getElementById("qcDayPane").style.display = "none";
+  qcRenderMonth();
+  document.getElementById("qcOv").classList.add("show");
+  document.body.style.overflow = "hidden";
+  sfx("open");
+}
+function qcClose(){
+  document.getElementById("qcOv").classList.remove("show");
+  document.body.style.overflow = "";
+  sfx("close");
+}
+function qcShift(n){
+  qcM += n;
+  while(qcM > 12){ qcM -= 12; qcY++; }
+  while(qcM < 1){ qcM += 12; qcY--; }
+  qcRenderMonth();
+}
+function qcRenderMonth(){
+  var mk = qcY + "-" + pad2(qcM);
+  var total = daysInMonth(mk);
+  var first = new Date(mk + "-01T00:00:00");
+  var lead = (first.getDay() + 6) % 7;   /* weeks start on Monday */
+  var t = todayStr(), h = "", i;
+  document.getElementById("qcTitle").textContent = MONTH_NAMES[qcM - 1] + " " + qcY;
+  var dows = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  for(i=0;i<7;i++) h += '<div class="qc-dow">' + dows[i] + "</div>";
+  for(i=0;i<lead;i++) h += '<div class="qc-cell empty"></div>';
+  for(i=1;i<=total;i++){
+    var ds = mk + "-" + pad2(i);
+    var c = dayCounts(ds);
+    var cls = "qc-cell";
+    if(ds === t) cls += " today";
+    if(ds > t) cls += " future";
+    h += '<button class="' + cls + '" data-cal="' + ds + '">'
+      +    '<span class="qc-num">' + i + "</span>";
+    if(c.done > 0) h += '<span class="qc-pill done">' + c.done + "</span>";
+    else if(c.total > 0 && ds < t) h += '<span class="qc-pill miss">·</span>';
+    else if(c.total > 0) h += '<span class="qc-pill plan">' + c.total + "</span>";
+    h += "</button>";
+  }
+  document.getElementById("qcGrid").innerHTML = h;
+}
+function qcOpenDay(ds){
+  qcPick = ds;
+  document.getElementById("qcMonthPane").style.display = "none";
+  document.getElementById("qcDayPane").style.display = "";
+  qcRenderDay();
+  sfx("open");
+}
+function qcRenderDay(){
+  var ds = qcPick, t = todayStr();
+  var list = dayQuests(ds), c = dayCounts(ds), i, h = "";
+  document.getElementById("qcDayTitle").textContent = niceDate(ds);
+  document.getElementById("qcDaySub").textContent =
+    ds === t ? "Today" : (ds > t ? "Upcoming — " + dayDiff(t, ds) + " days away"
+                                 : dayDiff(ds, t) + " days ago");
+  document.getElementById("qcDayCount").textContent = c.total
+    ? ("\u00b7 " + c.done + " of " + c.total + " cleared") : "";
+  var LABEL = {done:"✔ COMPLETED", today:"○ NOT YET", missed:"✕ NOT DONE", future:"· SCHEDULED"};
+  if(!list.length){
+    h = '<div class="empty-note">Nothing was scheduled for this day.</div>';
+  }
+  for(i=0;i<list.length;i++){
+    var q = list[i].q, st = list[i].status;
+    h += '<div class="qc-row ' + st + '">'
+      +    '<span class="qc-ico">' + esc(q.icon) + "</span>"
+      +    '<div class="qc-t"><div class="qc-name">' + esc(q.name) + "</div>"
+      +      (q.desc ? '<div class="qc-desc">' + esc(q.desc) + "</div>" : "")
+      +      '<div class="qc-freq">' + esc(FREQ_LABEL[q.freq] || q.freq) + "</div></div>"
+      +    '<span class="qc-status ' + st + '">' + LABEL[st] + "</span></div>";
+  }
+  /* be honest when the records for that day were summarised away */
+  archiveFix();
+  if(state.archive.upTo && ds <= state.archive.upTo){
+    h += '<div class="empty-note" style="margin-top:12px">🗄 This day is older than the detailed records the app keeps, so completions may be incomplete.</div>';
+  }
+  document.getElementById("qcDayList").innerHTML = h;
+}
+document.getElementById("qcGrid").addEventListener("click", function(e){
+  var b = e.target.closest("[data-cal]");
+  if(b) qcOpenDay(b.getAttribute("data-cal"));
+});
+document.getElementById("qcBack").addEventListener("click", function(){
+  document.getElementById("qcDayPane").style.display = "none";
+  document.getElementById("qcMonthPane").style.display = "";
+  sfx("close");
+});
+document.getElementById("qcClose").addEventListener("click", qcClose);
+document.getElementById("qcPrev").addEventListener("click", function(){ qcShift(-1); });
+document.getElementById("qcNext").addEventListener("click", function(){ qcShift(1); });
+document.getElementById("qcOpenBtn").addEventListener("click", qcOpen);
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape" && document.getElementById("qcOv").classList.contains("show")) qcClose();
+});
+
 /* ================= ONE QUEST, FULL SCREEN =================
    Everything the System knows about a single quest: its whole record, how it
    is actually going, and its own interval timer. This is the answer to "I want
@@ -9428,9 +9684,93 @@ document.getElementById("storeList").addEventListener("click", function(e){
     save(); renderStore();
   }
 });
+/* ---------------- changing currency actually converts the money ----------------
+   Rates are approximate and offline by necessity — there is no server to ask.
+   The hunter is shown the rate, can correct it, and can always decline the
+   conversion and change only the symbol. */
+var FX_PER_USD = {
+  "$":1, "€":0.92, "£":0.79, "₽":90, "so'm":12600, "₸":470, "₴":41, "¥":150, "₹":84, "₺":34
+};
+var FX_NAME = {
+  "$":"Dollar", "€":"Euro", "£":"Pound", "₽":"Ruble", "so'm":"Uzbek so'm",
+  "₸":"Tenge", "₴":"Hryvnia", "¥":"Yen", "₹":"Rupee", "₺":"Lira"
+};
+var fxFrom = "", fxTo = "";
+/* how many OLD units make one NEW unit */
+function fxSuggest(from, to){
+  var a = FX_PER_USD[from], b = FX_PER_USD[to];
+  if(!a || !b) return 1;
+  return a / b;
+}
+function budgetTotals(){
+  var b = state.budget, n = 0, i;
+  for(i=0;i<b.transactions.length;i++) n += (b.transactions[i].type === "out" ? -1 : 1) * (+b.transactions[i].amount || 0);
+  return n;
+}
+function openFxModal(from, to){
+  fxFrom = from; fxTo = to;
+  var b = state.budget;
+  var per = fxSuggest(from, to);
+  document.getElementById("fxTitle").textContent = "💱 " + from + " → " + to;
+  document.getElementById("fxQuestion").textContent =
+    "How many " + (FX_NAME[from] || from) + " make one " + (FX_NAME[to] || to) + "?";
+  document.getElementById("fxRate").value = per;
+  document.getElementById("fxCounts").innerHTML =
+    "This will convert <b>" + b.transactions.length + "</b> transaction" + (b.transactions.length === 1 ? "" : "s")
+    + ", <b>" + b.goals.length + "</b> savings goal" + (b.goals.length === 1 ? "" : "s")
+    + " and <b>" + (b.wishlist || []).length + "</b> store item" + ((b.wishlist || []).length === 1 ? "" : "s") + ".";
+  fxPreview();
+  document.getElementById("fxModal").classList.add("show");
+}
+function fxPreview(){
+  var per = parseFloat(document.getElementById("fxRate").value);
+  var el = document.getElementById("fxPreview");
+  if(!(per > 0)){ el.textContent = "Enter a rate greater than zero."; return; }
+  var bal = budgetTotals();
+  el.innerHTML = "Your balance becomes <b>" + esc(fxFmt(bal, fxFrom)) + "</b> → <b>"
+    + esc(fxFmt(bal / per, fxTo)) + "</b>";
+}
+function fxFmt(n, cur){
+  var v = Math.round(n * 100) / 100;
+  return cur + " " + (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("en-US") : v);
+}
+function fxRound(n){ return Math.round(n * 100) / 100; }
+function applyFx(convert){
+  var b = state.budget, i;
+  if(convert){
+    var per = parseFloat(document.getElementById("fxRate").value);
+    if(!(per > 0)){ toast(tr("Enter a rate greater than zero."), "err"); return; }
+    for(i=0;i<b.transactions.length;i++) b.transactions[i].amount = fxRound((+b.transactions[i].amount || 0) / per);
+    for(i=0;i<b.goals.length;i++){
+      b.goals[i].target = fxRound((+b.goals[i].target || 0) / per);
+      b.goals[i].saved = fxRound((+b.goals[i].saved || 0) / per);
+    }
+    for(i=0;i<(b.wishlist || []).length;i++) b.wishlist[i].price = fxRound((+b.wishlist[i].price || 0) / per);
+    b.lastFx = {from:fxFrom, to:fxTo, per:per, at:todayStr()};
+  }
+  b.currency = fxTo;
+  save();
+  document.getElementById("fxModal").classList.remove("show");
+  renderBudget();
+  if(convert) toast(tr("Converted to ") + fxTo + ".", "gold", tr("CURRENCY CHANGED"));
+  else sysToast(tr("Symbol changed. The numbers were left as they were."));
+}
 document.getElementById("budgetCurrency").addEventListener("change", function(){
-  state.budget.currency = this.value;
-  save(); renderBudget();
+  var to = this.value, from = state.budget.currency || "$";
+  if(to === from) return;
+  var b = state.budget;
+  var anyMoney = b.transactions.length || b.goals.length || (b.wishlist || []).length;
+  if(!anyMoney){ b.currency = to; save(); renderBudget(); return; } /* nothing to convert */
+  this.value = from; /* the select only moves once the choice is made */
+  openFxModal(from, to);
+});
+document.getElementById("fxRate").addEventListener("input", fxPreview);
+document.getElementById("fxConvert").addEventListener("click", function(){ applyFx(true); });
+document.getElementById("fxSymbolOnly").addEventListener("click", function(){ applyFx(false); });
+document.getElementById("fxCancel").addEventListener("click", function(){
+  document.getElementById("fxModal").classList.remove("show");
+  var sel = document.getElementById("budgetCurrency");
+  if(sel) sel.value = state.budget.currency || "$";
 });
 document.getElementById("txType").addEventListener("change", function(){
   fillCatSelect(document.getElementById("txCat"), this.value);
