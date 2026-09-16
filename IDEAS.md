@@ -43,6 +43,7 @@ And a section must also pass all three of these:
 | Quest calendar: a month at a glance, then one day in full | 2026-09-16 — QUESTS → 📅 CALENDAR |
 | Changing currency converts the money, not just the symbol | 2026-09-16 — editable offline rate table |
 | Remove the walkable world entirely | 2026-09-16 — ~57,000 characters of engine deleted; the app opens on HOME |
+| Split the quest log into four squares, Academy-style | 2026-09-16 — QUESTS · CALENDAR · GOALS · CHALLENGES, as a selector above the list, not a landing screen |
 
 ---
 

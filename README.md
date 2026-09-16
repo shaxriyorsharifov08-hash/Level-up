@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **60 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **71 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -301,7 +301,29 @@ Plus: `#toasts` is a polite live region and the System announcement is an assert
 
 Still open: focus is not trapped inside modals.
 
-## 4j. THE CALENDAR
+## 4j. THE QUEST HUB — four squares
+
+QUESTS opens on a **2×2 grid of squares**, the way LEARN opens on its four roads:
+
+| Square | What it holds |
+|---|---|
+| 📜 **QUESTS** | the recurring log — daily, weekly and custom-day quests |
+| 📅 **CALENDAR** | opens the month view (section 4k) |
+| 🎯 **GOALS** | one-time goals, moved out of the quest log entirely |
+| 🔥 **CHALLENGES** | streak quests — miss a day and the count returns to zero |
+
+**They are a selector, never a doorway.** The list is already rendered underneath, so opening QUESTS from the dock and clearing today's quests is still **one tap**, exactly as before. That rule is not decoration — putting a landing screen in front of the daily loop is the mistake section 4b describes, and a test asserts the quest list is on screen with no click at all.
+
+Each square carries **live counts**, not a label: how many of today's quests are cleared, how many goals are open versus achieved, your longest running challenge streak, and what today's date holds.
+
+- The **frequency chips** (ALL / DAILY / WEEKLY / CUSTOM) show only on the QUESTS square — GOALS and CHALLENGES each hold one frequency already, so the chips would be noise.
+- Switching squares **clears the filters**, so a chip left on cannot make the next square look empty.
+- Creating a quest **follows it to its square**: write a one-time goal while the QUESTS square is open and the app moves to GOALS so you can see it land.
+- The slot note is per square: QUESTS and CHALLENGES show `QUEST SLOTS`, GOALS shows `GOALS STARTED THIS WEEK` — because one-time goals cost no slot, they are capped per week instead.
+
+To add or rename a square, edit `QTAB_FREQS`, `QTAB_TITLE`, `QTAB_NOTE` and `QTAB_EMPTY` in `index.html`, then add its tile in `renderQTabs()`. A square must map to a real set of quests; a square that holds nothing is worse than no square.
+
+## 4k. THE CALENDAR
 
 QUESTS → **📅 CALENDAR** at the top of the section.
 
@@ -313,7 +335,7 @@ Days older than the detailed records (see pruning) carry a note saying completio
 
 **Naming warning:** the app already had an `openCalendar(inputEl)` date picker for quest start/end fields, using `#calGrid`, `#calPrev`, `#calNext` and `.cal-*` classes. The quest calendar is namespaced **`qc`** (`qcOpen`, `#qcGrid`, `.qc-*`) to stay clear of it. Two tests guard the old picker. In one file this large, check a name before you reuse it.
 
-## 4k. CHANGING CURRENCY CONVERTS THE MONEY
+## 4l. CHANGING CURRENCY CONVERTS THE MONEY
 
 BUDGET → currency picker. Changing it no longer swaps only the symbol — it asks how many of the old currency make one of the new, shows what your balance becomes, and then converts **every transaction, savings goal and store item**.
 

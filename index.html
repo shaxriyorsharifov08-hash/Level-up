@@ -952,6 +952,35 @@ main section{animation:pagein .28s ease}
 .fs-row.done{opacity:.55}
 .fs-row .fs-mark{font-size:1rem;flex:0 0 auto}
 .fs-row.done .fs-mark{color:var(--easy)}
+/* ---------- LEARN & GROW ---------- */
+.lrn-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px}
+.lrn-cat{position:relative;text-align:left;padding:14px;border-radius:14px;cursor:pointer;color:var(--text);
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+.lrn-cat:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.lrn-cat.active{border-color:var(--blue);box-shadow:var(--glowblue)}
+.lrn-ico{font-size:1.6rem;line-height:1}
+.lrn-name{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.08em;margin:7px 0 3px}
+.lrn-meta{font-size:.7rem;color:var(--dim)}
+.lrn-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.09);margin-top:8px;overflow:hidden}
+.lrn-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+.lvl-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;margin-bottom:10px;
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);transition:.15s}
+.lvl-row.open{cursor:pointer}
+.lvl-row.open:hover{border-color:var(--blue)}
+.lvl-row.done{border-color:rgba(34,197,94,.45)}
+.lvl-row.locked{opacity:.45}
+.lvl-num{width:40px;height:40px;flex:0 0 40px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:.82rem;background:rgba(124,97,255,.18);color:var(--text)}
+.lvl-row.done .lvl-num{background:rgba(34,197,94,.2);color:#22c55e}
+.lvl-t{flex:1;min-width:0}
+.lvl-title{font-weight:700;font-size:.9rem}
+.lvl-sub{font-size:.71rem;color:var(--dim);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.lvl-tag{font-size:.58rem;letter-spacing:.11em;font-family:'Orbitron',monospace;padding:3px 7px;border-radius:6px;
+  background:rgba(0,209,255,.14);color:var(--blue)}
+.lvl-tag.task{background:rgba(251,191,36,.15);color:var(--legendary)}
+.lrn-body{white-space:pre-wrap;line-height:1.65;font-size:.88rem;color:var(--text)}
+
 /* ---------- INTERVAL TIMER ---------- */
 .iv-dial{position:relative;width:100%;max-width:280px;margin:0 auto 6px;aspect-ratio:1/1;
   display:flex;align-items:center;justify-content:center}
@@ -1003,12 +1032,23 @@ main section{animation:pagein .28s ease}
 .rep-facts b{display:block;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--blue)}
 .rep-facts span{font-size:.64rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 
+/* ---------- QUEST HUB — the four squares at the top of QUESTS ---------- */
+.qtab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.qtab{display:flex;flex-direction:column;justify-content:space-between;text-align:left;
+  aspect-ratio:1/1;max-height:172px;padding:14px;border-radius:14px;cursor:pointer;color:var(--text);
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+.qtab:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.qtab.active{border-color:var(--blue);box-shadow:var(--glowblue)}
+.qtab.act{background:linear-gradient(135deg,rgba(124,97,255,.18),rgba(0,209,255,.10))}
+.qtab-ico{font-size:1.6rem;line-height:1}
+.qtab-name{font-family:'Orbitron',monospace;font-weight:800;font-size:.8rem;letter-spacing:.08em;margin:7px 0 3px}
+.qtab-meta{font-size:.68rem;color:var(--dim);line-height:1.45}
+.qtab-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.09);margin-top:8px;overflow:hidden}
+.qtab-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+.qtab-top{min-width:0}
+
 /* ---------- THE CALENDAR ---------- */
-#qcOpenBtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-  padding:13px;margin-bottom:14px;border-radius:14px;cursor:pointer;border:1px solid var(--line);
-  font-family:'Orbitron',monospace;font-weight:800;font-size:.76rem;letter-spacing:.08em;color:var(--text);
-  background:linear-gradient(135deg,rgba(124,97,255,.18),rgba(0,209,255,.10));box-shadow:var(--glow)}
-#qcOpenBtn:hover{border-color:var(--blue)}
 #qcOv{position:fixed;inset:0;z-index:262;display:none;flex-direction:column;
   background:radial-gradient(900px 600px at 50% -10%,rgba(124,97,255,.13),transparent 60%),var(--bg);
   overscroll-behavior:contain}
@@ -1354,9 +1394,10 @@ main section{animation:pagein .28s ease}
     <!-- ============ QUESTS ============ -->
     <section id="page-quests" style="display:none">
       <div id="punishQuests"></div>
-      <button id="qcOpenBtn">📅 CALENDAR — see any day</button>
+      <div class="qtab-grid" id="qTabs"></div>
       <div class="panel">
-        <div class="panel-title">QUEST LOG</div>
+        <div class="panel-title" id="qLogTitle">QUEST LOG</div>
+        <div class="empty-note" id="qLogNote" style="margin-bottom:10px"></div>
         <div class="filters" id="freqFilters"></div>
         <div class="filters" id="tierFilters"></div>
         <div id="questList"></div>
@@ -3621,8 +3662,6 @@ function migrateState(){
     state.roadSeeded2 = true;
     state.levelRewards = defaultRoad();
     if(!state.claimedLevels) state.claimedLevels = [];
-  /* the walkable world was removed — drop its leftover position data */
-  if(state.world !== undefined) delete state.world;
   /* Rank was buyable because the road paid +2 attribute points on most levels.
      Only the untouched default value is halved — a road the Administrator
      edited keeps whatever they chose. Levels already claimed are unaffected. */
@@ -3646,8 +3685,6 @@ function migrateState(){
     state.limitsInit3 = true;
     if(!state.roadTemplateId) state.levelRewards = defaultRoad(); /* adopt the v3 road (admin template wins if present) */
     if(!state.claimedLevels) state.claimedLevels = [];
-  /* the walkable world was removed — drop its leftover position data */
-  if(state.world !== undefined) delete state.world;
   /* Rank was buyable because the road paid +2 attribute points on most levels.
      Only the untouched default value is halved — a road the Administrator
      edited keeps whatever they chose. Levels already claimed are unaffected. */
@@ -3686,8 +3723,6 @@ function migrateState(){
     if(!state.roadTemplateId){
       state.levelRewards = defaultRoad();
       if(!state.claimedLevels) state.claimedLevels = [];
-  /* the walkable world was removed — drop its leftover position data */
-  if(state.world !== undefined) delete state.world;
   /* Rank was buyable because the road paid +2 attribute points on most levels.
      Only the untouched default value is halved — a road the Administrator
      edited keeps whatever they chose. Levels already claimed are unaffected. */
@@ -4523,7 +4558,8 @@ var PAGES = ["learn","interval","home","profile","quests","rewards","inventory",
 var NAV_ICON = {learn:"🌱", interval:"⏱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
 var NAV_LABEL = {learn:"LEARN", interval:"TIMER", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
 /* daily loop first — the things touched every single day are never more than
-   one tap away; everything else is reached by walking the city */
+   one tap away. Nothing is ever placed between the hunter and the thing they
+   opened the app to do; the dock is the only navigation there is. */
 var NAV_ORDER = ["home","quests","learn","interval","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
@@ -5882,7 +5918,6 @@ document.getElementById("qcBack").addEventListener("click", function(){
 document.getElementById("qcClose").addEventListener("click", qcClose);
 document.getElementById("qcPrev").addEventListener("click", function(){ qcShift(-1); });
 document.getElementById("qcNext").addEventListener("click", function(){ qcShift(1); });
-document.getElementById("qcOpenBtn").addEventListener("click", qcOpen);
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && document.getElementById("qcOv").classList.contains("show")) qcClose();
 });
@@ -7120,13 +7155,101 @@ document.getElementById("hunterName").addEventListener("click", function(){
 });
 
 /* ---------------- render: quests ---------------- */
+/* QUESTS opens on a grid of four squares, the way LEARN opens on its four
+   roads. They are a selector, never a doorway: the list you came for is
+   already rendered underneath, so the daily case is still a single tap. */
+var qTab = "quests";
+var QTAB_FREQS = {quests:["daily","weekly","custom"], goals:["longterm"], challenges:["challenge"]};
+var QTAB_TITLE = {quests:"QUEST LOG", goals:"\ud83c\udfaf ONE-TIME GOALS", challenges:"\ud83d\udd25 CHALLENGES"};
+var QTAB_NOTE = {
+  quests:     "What you committed to repeating \u2014 daily, weekly and on chosen days.",
+  goals:      "Things done once and then finished forever. They cost no quest slot; they are capped per week instead.",
+  challenges: "A streak you must not break. Miss a day and the count returns to zero."
+};
+var QTAB_EMPTY = {
+  quests:     "No recurring quests. Press the glowing + button to forge your first, Hunter.",
+  goals:      "No one-time goals. Press + and choose ONE-TIME GOAL \u2014 something you finish once and never repeat.",
+  challenges: "No challenges. Press + and choose \ud83d\udd25 CHALLENGE \u2014 a streak the System will not forgive."
+};
+function qTabCounts(){
+  var n = {act:0, sched:0, doneToday:0, gOpen:0, gDone:0, cRun:0, cDone:0, cBest:0};
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(q.freq === "longterm"){ if(q.done) n.gDone++; else n.gOpen++; continue; }
+    if(q.freq === "challenge"){
+      if(q.done) n.cDone++; else n.cRun++;
+      if((q.streak || 0) > n.cBest) n.cBest = q.streak || 0;
+      continue;
+    }
+    n.act++;
+    if(isScheduledToday(q)){
+      n.sched++;
+      if(completedThisPeriod(q)) n.doneToday++;
+    }
+  }
+  return n;
+}
+function qTabSquare(key, ico, name, meta, done, total, cls){
+  var pct = total > 0 ? Math.round(done / total * 100) : 0;
+  var act = key === "calendar";  /* the calendar opens a dialog; it is not a toggle */
+  return '<button class="qtab' + (cls || "") + (qTab === key ? " active" : "") + '" data-tab="' + key + '"'
+    + (act ? ' id="qcOpenBtn" aria-haspopup="dialog"' : ' aria-pressed="' + (qTab === key ? "true" : "false") + '"')
+    + '>'
+    +   '<div class="qtab-top"><div class="qtab-ico">' + ico + '</div>'
+    +     '<div class="qtab-name">' + name + '</div></div>'
+    +   '<div><div class="qtab-meta">' + meta + '</div>'
+    +     (total >= 0 ? '<div class="qtab-bar"><i style="width:' + pct + '%"></i></div>' : "")
+    +   '</div>'
+    + '</button>';
+}
+function renderQTabs(){
+  var n = qTabCounts(), t = todayStr();
+  var dc = dayCounts(t);
+  var d = new Date(t + "T00:00:00");
+  var when = DAY_NAMES[d.getDay()].toUpperCase() + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()].slice(0, 3);
+  var h = "";
+  h += qTabSquare("quests", "\ud83d\udcdc", "QUESTS",
+        n.doneToday + " / " + n.sched + " done today<br>" + n.act + " recurring in the log",
+        n.doneToday, n.sched);
+  h += qTabSquare("calendar", "\ud83d\udcc5", "CALENDAR",
+        when + "<br>" + dc.done + " of " + dc.total + " cleared today",
+        dc.done, dc.total, " act");
+  h += qTabSquare("goals", "\ud83c\udfaf", "GOALS",
+        n.gOpen + " open<br>" + n.gDone + " achieved",
+        n.gDone, n.gOpen + n.gDone);
+  h += qTabSquare("challenges", "\ud83d\udd25", "CHALLENGES",
+        n.cRun + " running \u00b7 " + n.cDone + " conquered<br>"
+        + (n.cBest ? "best streak " + n.cBest + " days" : "no streak yet"),
+        n.cDone, n.cRun + n.cDone);
+  document.getElementById("qTabs").innerHTML = h;
+}
+document.getElementById("qTabs").addEventListener("click", function(e){
+  var b = e.target.closest(".qtab"); if(!b) return;
+  var k = b.getAttribute("data-tab");
+  if(k === "calendar"){ qcOpen(); return; }
+  if(k === qTab) return;
+  qTab = k;
+  freqFilter = "all"; tierFilter = "all";
+  sfx("tap");
+  renderQuests();
+});
 var freqFilter = "all", tierFilter = "all";
 function renderFilterChips(){
-  var fh = '<button class="f-chip' + (freqFilter==="all"?" on":"") + '" data-f="all">ALL</button>';
-  for(var i=0;i<FREQS.length;i++){
-    fh += '<button class="f-chip' + (freqFilter===FREQS[i]?" on":"") + '" data-f="' + FREQS[i] + '">' + FREQ_LABEL[FREQS[i]] + '</button>';
+  /* the frequency chips only mean something on the QUESTS tab \u2014 GOALS and
+     CHALLENGES each hold exactly one frequency already */
+  var sub = QTAB_FREQS[qTab] || [];
+  var fel = document.getElementById("freqFilters");
+  if(sub.length < 2){
+    fel.innerHTML = "";
+    fel.style.display = "none";
+  } else {
+    fel.style.display = "";
+    var fh = '<button class="f-chip' + (freqFilter==="all"?" on":"") + '" data-f="all">ALL</button>';
+    for(var i=0;i<sub.length;i++){
+      fh += '<button class="f-chip' + (freqFilter===sub[i]?" on":"") + '" data-f="' + sub[i] + '">' + FREQ_LABEL[sub[i]] + '</button>';
+    }
+    fel.innerHTML = fh;
   }
-  document.getElementById("freqFilters").innerHTML = fh;
   var th = '<button class="f-chip' + (tierFilter==="all"?" on":"") + '" data-t="all">ALL TIERS</button>';
   for(var j=0;j<TIERS.length;j++){
     th += '<button class="f-chip' + (tierFilter===TIERS[j]?" on":"") + '" data-t="' + TIERS[j] + '">' + TIER_LABEL[TIERS[j]] + '</button>';
@@ -7237,10 +7360,33 @@ function slotsNoteHtml(){
   h += '</div>';
   return h;
 }
+function goalCapNoteHtml(){
+  var weekAgo = addDays(todayStr(), -7), recent = 0;
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(q.freq === "longterm" && !q.system && (q.created || "") > weekAgo) recent++;
+  }
+  var cap = state.goalCapWeekly || 10;
+  return '<div class="empty-note" style="margin-bottom:10px">\ud83c\udfaf ' + esc(tr("GOALS STARTED THIS WEEK: "))
+    + recent + " / " + cap
+    + (recent >= cap ? ' \u2014 <b style="color:var(--legendary)">' + esc(tr("limit reached")) + '</b>. ' + esc(tr("The story path raises it."))
+                     : ". " + esc(tr("One-time goals cost no quest slot.")))
+    + '</div>';
+}
 function renderQuests(){
   renderPunishBanners();
+  renderQTabs();
   renderFilterChips();
-  var list = state.quests.slice();
+  document.getElementById("qLogTitle").textContent = tr(QTAB_TITLE[qTab]);
+  document.getElementById("qLogNote").textContent = tr(QTAB_NOTE[qTab]);
+  var sub = QTAB_FREQS[qTab] || [];
+  var list = state.quests.filter(function(q){
+    /* QUESTS is the catch-all: anything that is not a goal and not a
+       challenge belongs there, so a quest carrying an unexpected frequency
+       can never fall off every square and become invisible */
+    if(qTab === "quests") return q.freq !== "longterm" && q.freq !== "challenge";
+    return sub.indexOf(q.freq) !== -1;
+  });
   if(freqFilter !== "all") list = list.filter(function(q){ return q.freq === freqFilter; });
   if(tierFilter !== "all") list = list.filter(function(q){ return q.tier === tierFilter; });
   /* active first, done longterm last */
@@ -7249,12 +7395,14 @@ function renderQuests(){
     if(da!==db) return da-db;
     return 0;
   });
+  /* the slot note is about recurring quests, so it belongs on their tabs only */
+  var head = qTab === "goals" ? goalCapNoteHtml() : slotsNoteHtml();
   var el = document.getElementById("questList");
   if(list.length === 0){
-    el.innerHTML = slotsNoteHtml() + '<div class="empty-note">No quests here. Press the glowing + button to forge your first quest, Hunter.</div>';
+    el.innerHTML = head + '<div class="empty-note">' + esc(tr(QTAB_EMPTY[qTab])) + '</div>';
     return;
   }
-  var h = slotsNoteHtml();
+  var h = head;
   for(var i=0;i<list.length;i++) h += questCard(list[i]);
   el.innerHTML = h;
 }
@@ -8876,6 +9024,10 @@ document.getElementById("qmSave").addEventListener("click", function(){
     toast("New quest registered: " + name, "sys", "QUEST CREATED");
   }
   document.getElementById("questModal").classList.remove("show");
+  /* a new goal must not vanish because the QUESTS tab was open when it
+     was written \u2014 follow it to the square it belongs on */
+  qTab = qmSel.freq === "longterm" ? "goals" : (qmSel.freq === "challenge" ? "challenges" : "quests");
+  freqFilter = "all";
   save(); renderAll();
 });
 
