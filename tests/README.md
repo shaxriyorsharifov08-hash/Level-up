@@ -38,7 +38,11 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `data-safety.spec.js` | A hunter's record. HTML injection through icon fields, a failed save going unnoticed, one error killing the app, an old save losing fields, and the storage key never changing. |
 | `progression.spec.js` | The rules that make the game worth playing: rank cannot be bought with banked points, a rank is never taken back, stat points stay scarce, and an Academy task becomes a real quest. |
 | `reports.spec.js` | Report deadlines (1 / 3 / 7 days), no report ever demanded retroactively, late filings earning nothing, and debt charged exactly once. |
-| `world.spec.js` | The world as a front door: every building leads somewhere real, no spawn point is inside a wall, every interior has an exit, sealed rooms refuse entry, position survives a reload, and 3D falls back to flat when Three.js cannot load. |
+| `quest-view.spec.js` | One quest, full screen: the window opens and closes, it shows that quest's own record and streak, and its interval timer belongs to that quest alone. |
+| `pruning.spec.js` | The save cannot grow forever: mechanical rows fold into the archive, all-time totals survive the fold, and nothing the hunter wrote is ever deleted. |
+| `accessibility.spec.js` | Every control has a name, panels rendered later are repaired by the observer, dialogs say they are dialogs, and announcements are spoken. |
+| `calendar-currency.spec.js` | The quest calendar shows the right day and does not collide with the old date picker, and changing currency converts every amount both ways. |
+| *(removed)* | `world.spec.js` is gone — the walkable world was removed on 2026-09-16. `smoke.spec.js` now guards that it stays gone. |
 
 ---
 

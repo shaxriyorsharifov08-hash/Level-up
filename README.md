@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **66 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **60 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -51,7 +51,7 @@ The file is large, so don't paste all of it. Instead:
 
 A ❌ is not a disaster: your commit is in git, so revert it from **History** or fix and commit again.
 
-They cover: the app booting at all, HTML injection through icon fields, a failed save being noticed, an old save keeping its fields, rank not being buyable, report deadlines, every world door leading somewhere real, and 3D falling back to flat. Full list and how to add your own: **`tests/README.md`**.
+They cover: the app booting at all, HTML injection through icon fields, a failed save being noticed, an old save keeping its fields, rank not being buyable, report deadlines, the calendar not colliding with the date picker, and a currency change converting every amount. Full list and how to add your own: **`tests/README.md`**.
 
 On a computer: `npm install && npx playwright install chromium && npm test`. The tests open `index.html` from disk in a throwaway browser profile with the network blocked, so **they can never touch your real save** and never depend on a CDN being up.
 
@@ -147,106 +147,28 @@ Logging in as admin (any email/password account) is treated as an administrator 
 
 ---
 
-## 4b. THE WORLD — the walkable hub city
+## 4b. THERE IS NO WORLD MAP — and that was a decision
 
-The app no longer opens on a menu. It opens on a **top-down world you walk**, like a game lobby.
+For a while the app opened on a **walkable top-down city** with a joystick, buildings you entered, an isometric Academy interior and a WebGL 3D version of it. **All of it was removed on 2026-09-16.**
 
-- Movement: **hold and drag anywhere** on the world (a floating joystick appears under your thumb, Brawl-Stars style), or **WASD / arrow keys** on a computer. **E** or **Enter** opens the door you are standing at.
-- Each **building is a section** of the System. Walk to a building's **south-facing door** (the glowing one at the bottom) and an `ENTER` button appears.
-- A section that is still sealed shows a **🔒 and the level needed** on the building itself — the door refuses you until you have earned it. This uses the exact same lock system as before (ADMIN CONSOLE → SECTION LOCKS), so nothing about progression changed.
-- A section the Administrator **removed** has no building at all.
-- The **minimap** (top right) shows the whole district and where you are standing.
-- Your position is saved — you come back where you left.
+It is documented here so nobody — no future you, no AI you ask for help — rebuilds it by accident.
 
-### The city is organised by INTENT, not by feature
+**Why it went:**
 
-Every building answers **one sentence a real person says out loud** — the sentence is written under its sign. The old sections became the **rooms inside** them.
+- It put a **walk** between the hunter and every single action. The whole point of this app is that you open it and do the thing. A lobby is a toll booth.
+- It was **~57,000 characters of engine** (renderer, collision, joystick, isometric projection, Three.js scene) serving zero habits. Every one of those lines was a line that could break the app that actually matters.
+- The 3D interior made the room depend on a **CDN fetch**. Offline, it fell back — which means the best case was a feature nobody could rely on seeing.
+- It competed with the **+1% dock**, which already reaches every section in one tap and always did it faster.
 
-| Building | The sentence it answers | Rooms inside |
-|---|---|---|
-| 🌱 ACADEMY | *"I want to become someone"* | Discipline · Education · Physical · Emotional |
-| 🏋 TRAINING YARD | *"I want to train my body"* | Interval Timer · Daily Package · Body & Stats · Challenges |
-| 🏦 TREASURY | *"I want control of my money"* | Budget · Reward Vault · Armory |
-| 🏠 SANCTUARY | *"Who am I becoming?"* | The Oath · Profile · Story Path · Manual · Settings |
-| 📜 QUEST BOARD | *"What did I commit to?"* | — opens QUESTS directly |
-| ⚔ CLAN HALL | *"I don't want to do this alone"* | — opens CLAN directly |
-| 🏆 HALL OF HONOR | *"I want proof of what I've done"* | — opens HONOR directly |
-| ⚔ OATH STONE | the monument where you swore | reads your oath back |
+**The rule that replaced it:** *simple, but compelling.* Compelling comes from the **content and the voice** — the Oath, the Reports, the Rank trials, the Chronicle — not from graphics this project has no artist for.
 
-**Buildings are never sealed. Rooms are.** You walk into the Treasury and see which vaults you have not earned yet, with the level written on them. This uses the same lock system as before (ADMIN CONSOLE → SECTION LOCKS) — nothing about progression changed.
+**What survived, and where it went:** the city's one genuinely good idea was **ordering sections by intent rather than by feature**. That lives on in the dock order — HOME · QUESTS · LEARN · TIMER · PROFILE · STATS — which is exactly the order of a real day. Nothing else was worth keeping.
 
-**The architecture rule:** the city is where you go to **start** something; the dock is where you go to **do** it. Anything touched every day stays one tap away — that is why the +1% dock now opens with WORLD · HOME · QUESTS · LEARN · TIMER. Existing hunters get this order once, automatically (`state.navIntentV2`); renamed and hidden tabs are preserved, and you can reorder again any time in SETTINGS → RENAME & REORDER TABS.
-
-### How maps work (this is the important part for editing)
-
-Every walkable place — the city and every interior — is an entry in **`WMAPS`** in `index.html`:
-
-| Field | Meaning |
-|---|---|
-| `kind` | `"city"` (streets + buildings) or `"room"` (tiled floor + stations) |
-| `w`, `h` | size of the map in world units |
-| `fit` | `true` = zoom so the whole room is on screen at once (interiors); leave out for outdoor maps, which scroll with the camera |
-| `iso` | `true` = draw this map in **isometric 2.5D** (solid boxes with height and shaded faces) instead of flat top-down. Per-map, so maps can be converted one at a time |
-| `r3d` | `true` = draw this map in **real 3D** (WebGL). Keep `iso:true` alongside it — that is the fallback whenever 3D cannot run |
-| `spawn` | `{x,y}` where you appear when you arrive |
-| `nodes` | the things with doors — each has `x,y,w,h`, `ico`, `name`, colors `a` (dark) / `b` (light), and a `go` |
-| `walls` | solid blocks you cannot enter (`desk:true` draws it as furniture) |
-
-A node's **`go`** decides what its door does:
-- `go:{page:"quests"}` — open that section
-- `go:{page:"learn", cat:"discipline"}` — open a section already switched to that road
-- `go:{map:"academy"}` — walk into another map
-- `go:{map:"city", at:{x,y}}` — walk out, landing at an exact spot
-- `face:"n"` puts the door on the **north** side instead of the south (used for exits set into the bottom wall)
-- `prompt:"..."` overrides the button text (so an exit says *LEAVE*, not *ENTER*)
-
-City nodes also carry `page`, which is what the lock system checks.
-
-**Adding a whole new interior is now one `WMAPS` entry plus a `go:{map:"..."}` on the building that leads to it.** Nothing else needs to change.
-
-### THE ACADEMY (the first interior)
-
-Walking into the ACADEMY building no longer opens a menu — it puts you **inside a room**. Four stations, one per road (🔥 DISCIPLINE, 📚 EDUCATION, 💪 PHYSICAL, 🧠 EMOTIONAL), each showing **how many levels of that road you have cleared** right on the station. Walk into one and LEARN & GROW opens on that road. The 🚪 door in the south wall returns you to the city, standing outside the Academy where you came in.
-
-Which map you are standing in is saved (`state.world.map`), so closing the app inside the Academy reopens inside the Academy.
-
-Everything in the world is **drawn with code** — there are no image files. That is deliberate: the app stays one file and opens instantly on a phone.
-
-### Isometric maps (`iso:true`)
-
-THE ACADEMY is drawn in **isometric 2.5D**: rooms and doors are solid boxes with a lit top, two shaded side faces, and a glowing doorway on the south face. This is real depth, not a filter.
-
-**It is only a rendering change.** The world stays a plain flat grid — collision, door zones, travel and saved positions are all still ordinary `x`/`y` and know nothing about the projection. That is why a map can be switched over with a single `iso:true` and nothing else breaks.
-
-Three things the projection has to get right, all handled in `index.html`:
-
-- **Steering.** Input is rotated back into world space (`ISO_KX`/`ISO_KY`), so dragging right walks the hunter right on screen instead of diagonally.
-- **Depth.** Objects are sorted back-to-front so the hunter passes behind far rooms and in front of near ones. The two back walls are drawn before that pass — a single sort key cannot place a wall spanning the whole room — and the low south/east trim after it.
-- **Signs.** Labels are collected and drawn in a second pass, otherwise a box drawn later paints over the sign of the one before it.
-
-### Real 3D maps (`r3d:true`)
-
-THE ACADEMY is rendered as an actual WebGL interior: stone floor with an inlaid border, tall walls with a cornice, columns down both sides, bookshelves along the north wall, a lit study table, and four archway stations you walk into. A third-person camera follows the hunter.
-
-**Three.js is only fetched when a 3D map is entered** (`THREE_SRC`, ~600 KB), so the app's front door never waits on the network. It is layered so that 3D can never cost you the room:
-
-- CDN unreachable (offline) → falls back to the isometric renderer
-- device has no WebGL → falls back
-- anything throws while building or drawing the scene → `g3Fail()` frees the scene, disables 3D for the session, and falls back
-
-That is why an `r3d` map keeps `iso:true` as well. Leaving the map disposes the scene and frees GPU memory; returning rebuilds it.
-
-The camera is axis-aligned (world x → screen right, world y → into the screen), so input is **not** rotated on a 3D map — only on a map actually drawn isometrically. The world stays a flat grid throughout; collision, doors, travel and saved positions never change.
-
-To convert another map: add `r3d:true` next to its `iso:true`. The room, its stations, locks and progress read straight from the same `WMAPS` entry — no separate 3D model list to maintain.
-
-`ISO_KY` versus `ISO_KX` is the camera pitch. Classic 2:1 isometric is `KY = KX/2`, which on a tall phone squashes the room into a ribbon; `0.38` keeps the solid-box look while filling the screen. The rest of the world is still top-down — set `iso:true` on another map when you want it converted.
-
-The old **+1% dock still works** and reaches every section directly. The world is a new way in, not a cage.
+An old save that was standing in the world still opens normally: `migrateState()` deletes the leftover `state.world` and the app lands on HOME. There is a test that asserts this, and another that asserts no part of the world engine has crept back in.
 
 ## 4c. LEARN & GROW — the four roads
 
-A teaching section, not a tracking section (ACADEMY building, or the 🌱 tab).
+A teaching section, not a tracking section (the 🌱 LEARN tab).
 
 Four categories — **DISCIPLINE (CON)**, **EDUCATION (INT)**, **PHYSICAL (STR)**, **EMOTIONAL (END)** — each a ladder of **10 levels** that alternates:
 
@@ -375,9 +297,9 @@ Honest measurement: this cuts the *mechanical* half of the save by about 38% and
 - every `input` / `textarea` / `select` gets an accessible name, from its `.form-lbl` or `<label>`, else its placeholder, title or a humanised id
 - icon-only buttons take their `title` as an `aria-label`
 
-Plus: `#toasts` is a polite live region and the System announcement is an assertive `alertdialog`, so both are spoken rather than only shown; every modal is a `role="dialog"`; the walkable world is a labelled `role="application"`.
+Plus: `#toasts` is a polite live region and the System announcement is an assertive `alertdialog`, so both are spoken rather than only shown; every modal is a `role="dialog"`.
 
-Still open: focus is not trapped inside modals, and the world cannot be played without walking (the +1% dock reaches everything, so nothing is unreachable).
+Still open: focus is not trapped inside modals.
 
 ## 4j. THE CALENDAR
 

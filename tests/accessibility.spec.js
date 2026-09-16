@@ -79,16 +79,6 @@ test.describe("accessibility", () => {
     expect(missing).toEqual([]);
   });
 
-  test("the walkable world is not a nameless canvas", async ({ page }) => {
-    await bootAsGuest(page);
-    const world = await page.evaluate(() => ({
-      canvasLabel: document.getElementById("worldCv").getAttribute("aria-label"),
-      stageRole: document.getElementById("worldStage").getAttribute("role")
-    }));
-    expect(world.canvasLabel).toBeTruthy();
-    expect(world.stageRole).toBe("application");
-  });
-
   test("icon-only buttons expose what they do", async ({ page }) => {
     await bootAsGuest(page);
     await page.evaluate(() => switchPage("quests"));

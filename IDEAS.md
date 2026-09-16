@@ -13,13 +13,13 @@ Before anything is built, it must pass **one** of these:
 1. **Does it make the user act today?**
 2. **Does it make the app know the user better?**
 
-And a room/section must also pass all three of these:
+And a section must also pass all three of these:
 
-1. Can its purpose be said as a sentence a real person says out loud? If not, it is not a room.
-2. Would the same person open two rooms in one sitting? Then they are one room.
-3. Is it used daily? Then it does not get a room — it goes in the daily loop.
+1. Can its purpose be said as a sentence a real person says out loud? If not, it is not a section.
+2. Would the same person open two sections in one sitting? Then they are one section.
+3. Is it used daily? Then it belongs at the front of the dock, not behind another tap.
 
-**The architecture rule:** the city is where you go to **start** something. The dock is where you go to **do** it. Anything touched daily is never more than one tap away.
+**The architecture rule (revised 2026-09-16):** every action is **one tap from the dock**. Nothing may be placed between the hunter and the thing they came to do — that is the mistake the walkable world made, and it is why the world is gone. Depth goes into the **writing**, never into the navigation.
 
 ---
 
@@ -27,15 +27,11 @@ And a room/section must also pass all three of these:
 
 | Idea | Shipped |
 |---|---|
-| Make the app a game world, not a menu | 2026-09-02 — walkable city, joystick, doors |
 | A place that teaches discipline gradually, not just tracks it | 2026-09-02 — LEARN & GROW, 4 roads × 10 levels |
-| Rooms inside buildings (the Academy) | 2026-09-02 — interiors as a first-class map system |
 | The user's own words used against them when they want to quit | 2026-09-02 — THE OATH |
 | Lessons must produce action, not just motivation | 2026-09-02 — Academy tasks become real System quests |
-| Order sections by intent, not by feature | 2026-09-02 — 7 intent buildings, sections became rooms |
+| Order sections by intent, not by feature | 2026-09-02 — the dock order became the order of a real day (the buildings it shipped with are gone; the ordering survived) |
 | Interval timer with rounds (distinct from the focus timer) | 2026-09-02 — TRAINING YARD |
-| Isometric 2.5D world | 2026-09-02 — THE ACADEMY, as a per-map `iso:true` flag |
-| Real 3D (WebGL) | 2026-09-02 — THE ACADEMY, per-map `r3d:true`, lazy-loaded with iso as the fallback |
 | Finalize asks about interesting things and mistakes, not lessons | 2026-09-02 |
 | Mandatory written weekly / monthly / annual reports with deadlines | 2026-09-02 — STATS → REPORTS |
 | Per-quest full-screen record with its own interval timer | 2026-09-02 — tap any quest card |
@@ -46,6 +42,7 @@ And a room/section must also pass all three of these:
 | Accessible names everywhere + live regions | 2026-09-02 — `a11yFix()` with a MutationObserver |
 | Quest calendar: a month at a glance, then one day in full | 2026-09-16 — QUESTS → 📅 CALENDAR |
 | Changing currency converts the money, not just the symbol | 2026-09-16 — editable offline rate table |
+| Remove the walkable world entirely | 2026-09-16 — ~57,000 characters of engine deleted; the app opens on HOME |
 
 ---
 
@@ -58,13 +55,9 @@ And a room/section must also pass all three of these:
 
 ## Raw — captured, not yet triaged
 
-- NPCs in the world — a quest-giver at the board, a mentor in the Academy. Makes a world feel alive more than better graphics do.
-- Buildings visibly under construction until unlocked, instead of a padlock.
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
 - **Focus is not trapped inside modals** — a keyboard or screen-reader user can tab out of an open dialog into the page behind it.
 - The STATS page itself is still "awful" — the per-quest window solved *finding a single task's record*, but the whole-hunter view has not been redesigned yet.
-- More interiors: Clan Hall and Hall of Honor as walkable rooms rather than direct page links.
-- Convert the remaining maps to isometric (`iso:true` on each) once the Academy has been judged in real use.
 
 ---
 
@@ -72,7 +65,8 @@ And a room/section must also pass all three of these:
 
 | Idea | Why not |
 |---|---|
-| Make the WHOLE world real 3D | Would make the app's front door depend on a CDN fetch, so a bad connection means a blank screen where the city should be. **Revised 2026-09-02:** scoped to a single interior with the flat renderer as an automatic fallback, this objection does not hold — THE ACADEMY is now real 3D. Photorealism is still out: there is no 3D artist and no model files, so the architecture is generated in code. |
+| **The walkable world, the isometric Academy and the 3D Academy — all of it** | **Built 2026-09-02, deleted 2026-09-16.** It put a walk between the hunter and every action; the dock already did the same job in one tap. ~57,000 characters of renderer, collision, joystick, isometric projection and Three.js scene served zero habits, and every line of it could break the part of the app that matters. The 3D room depended on a CDN fetch, so its best case was a feature you could not rely on seeing. *Simple, but compelling* — and compelling comes from the writing, not from graphics this project has no artist for. **Do not rebuild this.** |
+| NPCs, buildings under construction, more walkable interiors, converting other maps to isometric | All of these were extensions of the world. The world is gone, so they are too. |
 | "Combine all features of every app — habit breaker, running, sport, study, finance, everything" | Unbounded scope is how solo projects die. The app already has budgeting, quests, focus timing, clans, ranks and journaling. Features are not the differentiator; the content and the voice are. |
 | A separate SELF-IMPROVEMENT building with a "be disciplined" room | Duplicates the Academy's Discipline road. One home per intent. |
 | Separate rooms for workout plans / challenges / physical stats | Already exist as the Daily Package, quest tiers and STATS. The problem was findability, not absence — building duplicates would have made it worse. |

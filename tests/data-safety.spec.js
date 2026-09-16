@@ -105,7 +105,6 @@ test.describe("data safety", () => {
         name: state.hunterName,
         level: state.level,
         oldJournalKept: state.journal["2026-01-01"].learn === "old field",
-        gotWorld: !!state.world && state.world.map === "city",
         gotLearn: !!state.learn,
         gotReports: typeof state.reports === "object",
         gotOathSlot: state.oath === null || typeof state.oath === "object"
@@ -114,7 +113,6 @@ test.describe("data safety", () => {
     expect(result.name).toBe("Veteran");
     expect(result.level).toBe(12);
     expect(result.oldJournalKept).toBe(true);
-    expect(result.gotWorld).toBe(true);
     expect(result.gotLearn).toBe(true);
     expect(result.gotReports).toBe(true);
   });
