@@ -36,7 +36,7 @@ test.describe("the quest hub", () => {
         name: b.querySelector(".qtab-name").textContent,
         active: b.classList.contains("active")
       })));
-    expect(tabs.map((t) => t.key)).toEqual(["quests", "calendar", "goals", "challenges"]);
+    expect(tabs.map((t) => t.key)).toEqual(["quests", "calendar", "todo", "challenges"]);
     expect(tabs.find((t) => t.key === "quests").active).toBe(true);
     expect(tabs.filter((t) => t.active).length).toBe(1);
   });
@@ -53,22 +53,26 @@ test.describe("the quest hub", () => {
     expect(await page.locator("#questList").isVisible()).toBe(true);
   });
 
-  test("one-time goals are out of the quest log and live on their own square", async ({ page }) => {
+  test("one-time goals sit in the quest log; only challenges are split out", async ({ page }) => {
     await bootAsGuest(page);
     await seed(page);
     const onQuests = await page.evaluate(() =>
       Array.from(document.querySelectorAll("#questList .quest-card .q-name")).map((e) => e.textContent.trim()));
-    expect(onQuests).not.toContain("Buy a guitar");
-    expect(onQuests).not.toContain("Pass the exam");
+    expect(onQuests).toContain("Buy a guitar");
+    expect(onQuests).toContain("Pass the exam");
     expect(onQuests).not.toContain("30 days sober");
+  });
 
-    await page.click('#qTabs .qtab[data-tab="goals"]');
+  test("the TO-DO square shows a plain list, never a quest card", async ({ page }) => {
+    await bootAsGuest(page);
+    await seed(page);
+    await page.click('#qTabs .qtab[data-tab="todo"]');
     await page.waitForTimeout(250);
-    const onGoals = await page.evaluate(() =>
-      Array.from(document.querySelectorAll("#questList .quest-card .q-name")).map((e) => e.textContent.trim()));
-    expect(onGoals).toContain("Buy a guitar");
-    expect(onGoals).toContain("Pass the exam");
-    expect(onGoals).not.toContain("Run");
+    expect(await page.locator("#tdPanel").isVisible()).toBe(true);
+    expect(await page.locator("#qLogPanel").isVisible()).toBe(false);
+    /* no tier chips, no slot note, no quest card anywhere in sight */
+    expect(await page.locator("#tdPanel .f-chip").count()).toBe(0);
+    expect(await page.locator("#tdPanel .quest-card").count()).toBe(0);
   });
 
   test("challenges have their own square too", async ({ page }) => {
@@ -86,7 +90,7 @@ test.describe("the quest hub", () => {
     await seed(page);
     const seen = await page.evaluate(() => {
       const found = {};
-      ["quests", "goals", "challenges"].forEach((t) => {
+      ["quests", "challenges"].forEach((t) => {
         qTab = t;
         renderQuests();
         document.querySelectorAll("#questList .quest-card[data-qid]").forEach((c) => {
@@ -120,19 +124,21 @@ test.describe("the quest hub", () => {
   test("the squares carry live counts, not decoration", async ({ page }) => {
     await bootAsGuest(page);
     await seed(page);
-    const before = await page.textContent('#qTabs .qtab[data-tab="goals"] .qtab-meta');
-    expect(before).toContain("1 open");
-    expect(before).toContain("1 achieved");
+    const before = await page.textContent('#qTabs .qtab[data-tab="todo"] .qtab-meta');
+    expect(before).toContain("0 / 0 done today");
+    expect(before).toContain("nothing overdue");
 
     await page.evaluate(() => {
-      state.quests.filter((q) => q.freq === "longterm").forEach((q) => { q.done = true; });
+      state.todos = [makeTodo("a", todayStr()), makeTodo("b", todayStr()),
+                     makeTodo("old", addDays(todayStr(), -4))];
+      state.todos[0].done = true;
       save();
       renderQuests();
     });
     await page.waitForTimeout(200);
-    const after = await page.textContent('#qTabs .qtab[data-tab="goals"] .qtab-meta');
-    expect(after).toContain("0 open");
-    expect(after).toContain("2 achieved");
+    const after = await page.textContent('#qTabs .qtab[data-tab="todo"] .qtab-meta');
+    expect(after).toContain("1 / 2 done today");
+    expect(after).toContain("1 overdue");
   });
 
   test("the calendar square opens the calendar and does not become a tab", async ({ page }) => {
@@ -150,13 +156,14 @@ test.describe("the quest hub", () => {
     await bootAsGuest(page);
     await seed(page);
     const landed = await page.evaluate(() => {
+      qTab = "todo"; renderQuests();
       openQuestModal();
       qmSel.freq = "longterm";
       document.getElementById("qmName").value = "Learn to swim";
       document.getElementById("qmSave").click();
       return { tab: qTab, shown: Array.from(document.querySelectorAll("#questList .quest-card .q-name")).map((e) => e.textContent.trim()) };
     });
-    expect(landed.tab).toBe("goals");
+    expect(landed.tab).toBe("quests");
     expect(landed.shown).toContain("Learn to swim");
   });
 
@@ -165,10 +172,10 @@ test.describe("the quest hub", () => {
     await seed(page);
     const onQuests = await page.evaluate(() =>
       Array.from(document.querySelectorAll("#freqFilters .f-chip")).map((b) => b.getAttribute("data-f")));
-    expect(onQuests).toEqual(["all", "daily", "weekly", "custom"]);
-    expect(onQuests).not.toContain("longterm");
+    expect(onQuests).toEqual(["all", "daily", "weekly", "custom", "longterm"]);
+    expect(onQuests).not.toContain("challenge");
 
-    await page.click('#qTabs .qtab[data-tab="goals"]');
+    await page.click('#qTabs .qtab[data-tab="challenges"]');
     await page.waitForTimeout(250);
     expect(await page.locator("#freqFilters").isVisible()).toBe(false);
   });
@@ -178,7 +185,7 @@ test.describe("the quest hub", () => {
     await seed(page);
     await page.click('#freqFilters .f-chip[data-f="weekly"]');
     await page.waitForTimeout(200);
-    await page.click('#qTabs .qtab[data-tab="goals"]');
+    await page.click('#qTabs .qtab[data-tab="challenges"]');
     await page.waitForTimeout(250);
     const names = await page.evaluate(() =>
       Array.from(document.querySelectorAll("#questList .quest-card .q-name")).map((e) => e.textContent.trim()));

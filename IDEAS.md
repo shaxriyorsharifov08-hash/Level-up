@@ -45,6 +45,9 @@ And a section must also pass all three of these:
 | Remove the walkable world entirely | 2026-09-16 — ~57,000 characters of engine deleted; the app opens on HOME |
 | Split the quest log into four squares, Academy-style | 2026-09-16 — QUESTS · CALENDAR · GOALS · CHALLENGES, as a selector above the list, not a landing screen |
 | Remove QUEST LOCKDOWN | 2026-09-16 — the one punishment that made returning impossible instead of expensive |
+| A plain to-do list, outside the game | 2026-09-16 — QUESTS → ✅ TO-DO; dated items, flat XP, no tier or trophy |
+| Somewhere for what you did NOT do | 2026-09-16 — HONOR → 💀 HALL OF SHAME, escaped only by doing it |
+| Money fields readable while typing | 2026-09-16 — 12000 shows as 12,000 |
 
 ---
 

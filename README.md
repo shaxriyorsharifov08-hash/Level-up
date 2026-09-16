@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **73 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **88 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -321,19 +321,19 @@ QUESTS opens on a **2×2 grid of squares**, the way LEARN opens on its four road
 
 | Square | What it holds |
 |---|---|
-| 📜 **QUESTS** | the recurring log — daily, weekly and custom-day quests |
+| 📜 **QUESTS** | everything you committed to — daily, weekly, custom-day **and one-time goals** |
 | 📅 **CALENDAR** | opens the month view (section 4l) |
-| 🎯 **GOALS** | one-time goals, moved out of the quest log entirely |
+| ✅ **TO-DO** | the plain list (section 4n) — not a quest, not in the game |
 | 🔥 **CHALLENGES** | streak quests — miss a day and the count returns to zero |
 
 **They are a selector, never a doorway.** The list is already rendered underneath, so opening QUESTS from the dock and clearing today's quests is still **one tap**, exactly as before. That rule is not decoration — putting a landing screen in front of the daily loop is the mistake section 4b describes, and a test asserts the quest list is on screen with no click at all.
 
 Each square carries **live counts**, not a label: how many of today's quests are cleared, how many goals are open versus achieved, your longest running challenge streak, and what today's date holds.
 
-- The **frequency chips** (ALL / DAILY / WEEKLY / CUSTOM) show only on the QUESTS square — GOALS and CHALLENGES each hold one frequency already, so the chips would be noise.
+- The **frequency chips** (ALL / DAILY / WEEKLY / CUSTOM / ONE-TIME GOAL) show only on the QUESTS square — CHALLENGES holds one frequency already and TO-DO is not a quest list at all.
 - Switching squares **clears the filters**, so a chip left on cannot make the next square look empty.
 - Creating a quest **follows it to its square**: write a one-time goal while the QUESTS square is open and the app moves to GOALS so you can see it land.
-- The slot note is per square: QUESTS and CHALLENGES show `QUEST SLOTS`, GOALS shows `GOALS STARTED THIS WEEK` — because one-time goals cost no slot, they are capped per week instead.
+- The QUESTS square shows both `QUEST SLOTS` and `GOALS STARTED THIS WEEK`, because one-time goals cost no slot — they are capped per week instead.
 
 To add or rename a square, edit `QTAB_FREQS`, `QTAB_TITLE`, `QTAB_NOTE` and `QTAB_EMPTY` in `index.html`, then add its tile in `renderQTabs()`. A square must map to a real set of quests; a square that holds nothing is worse than no square.
 
@@ -356,6 +356,18 @@ BUDGET → currency picker. Changing it no longer swaps only the symbol — it a
 Rates live in `FX_PER_USD` in `index.html` and are **built in and approximate** — there is no server to ask, and the app must work offline. The suggested rate is always editable before converting, so today's real rate wins. `so'm` defaults to 12,600 to the dollar.
 
 Three choices every time: **CONVERT**, **SYMBOL ONLY** (leave the numbers alone), or **CANCEL**. Converting there and back returns the original amounts. An empty budget just changes the symbol with no prompt.
+
+### Amounts group themselves while you type
+
+Typing `12000` into a bare box and reading it back is genuinely hard, so every amount field now groups its thousands **live**: it shows `12,000` as you type, and `2,500,000` for a savings target.
+
+A `type="number"` input **cannot hold a comma** — the browser rejects the value — so these five fields (`#txAmount`, `#txmAmount`, `#goalTarget`, `#wishPrice`, `#fxRate`) are `type="text"` with `inputmode="decimal"`, which still opens the numeric keypad on a phone. Three rules follow from that, and breaking any of them breaks the budget:
+
+1. **Never `parseFloat(el.value)` on one of these.** Always `moneyNum(el)`, which strips the commas first. A raw `parseFloat("12,000")` returns `12`, silently, and logs the wrong expense.
+2. **Never assign a number straight to `.value`.** Use `moneySet(el, n)` so the field opens already grouped.
+3. `min` and `step` no longer validate anything, so each field keeps its own `> 0` guard in JS. They already had them.
+
+`moneyGroup()` allows exactly one decimal point and **never truncates the decimals you typed** — the FX rate needs more than two places, and silently cutting them would be data loss. The caret is restored by counting digits before it rather than raw characters, so typing into the middle of a number does not throw you to the end.
 
 ## 5. Features you may want to adjust later
 
@@ -383,3 +395,42 @@ Three choices every time: **CONVERT**, **SYMBOL ONLY** (leave the numbers alone)
 - **Never rename** the storage key `leveluphunter_v1` or the IndexedDB name `leveluphunter_db` — users would "lose" their progress.
 - **`notify-sw.js` must never cache.** A caching service worker on the shared `github.io` origin once mixed this app with another project.
 - New state fields go into `defaultState()` — old saves pick them up automatically on load.
+
+## 4n. THE TO-DO LIST — and the HALL OF SHAME
+
+QUESTS → **✅ TO-DO**. A plain list, on purpose.
+
+Write a line, press Enter, it exists. Tap the circle to tick it. That is the whole interaction — **no tier, no stat, no reward crate, no roll, no trophy, no target count, no priority lock.** If something deserves those, it is a quest, not a to-do, and the QUESTS square is where it belongs.
+
+Each to-do carries exactly four things that matter: **its text, its day, whether it is done, and how long you timed it.** The ⏱ button runs the same focus timer the quests use, and the tracked time shows on the row.
+
+**It is outside the game economy, deliberately:**
+
+| | |
+|---|---|
+| XP | a flat **10 XP**, paid **once per to-do, ever** (`td.paid`) |
+| Ticking and unticking | pays nothing the second time — it cannot be farmed |
+| Hall of Honor | never. A hall full of *buy milk* is not a hall |
+| Rank trials | never. `rkCleared()` does not see to-dos |
+| Streak / XP debt | **also never** — a day of only to-dos still counts as an empty day |
+
+That last row is a real trade-off and you should know it: doing six to-dos does **not** protect your streak. To-dos are errands; quests are commitments, and only commitments hold the chain. If you decide it should protect the streak, `toggleTodo()` is where the second argument to `recordHistory()` would change — but then to-dos start feeding rank again through the back door.
+
+### The list groups itself
+
+**⚠ OVERDUE** first (anything whose day has passed, oldest first), then **TODAY**, then **DONE TODAY**, then **LATER**. Nothing is ever hidden behind a filter.
+
+### In the calendar
+
+Open any day (section 4l) and a **📝 TO DO LIST · 1 / 2** button sits under that day's quests. Tap it and the day's to-dos expand with their status — COMPLETED / NOT DONE / NOT YET / PLANNED. It stays behind the button so the day view is not two lists fighting each other.
+
+### 💀 HALL OF SHAME
+
+HONOR → **💀 HALL OF SHAME** (the button carries the count). It lists every to-do whose day came and went without you, **oldest first**, with how many days late it is.
+
+The Hall of Honor keeps what you finished. This keeps what you didn't. There are two ways out of it and only two:
+
+- **DO IT TODAY** — moves the to-do to today. It leaves the hall the moment you actually do it.
+- **LET GO** — deletes it, with a confirm. Nothing is recorded; you simply admitted it was never going to happen.
+
+There is no third button, and nothing expires out of the hall on its own. That is the point of it.

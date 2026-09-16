@@ -1032,6 +1032,48 @@ main section{animation:pagein .28s ease}
 .rep-facts b{display:block;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--blue)}
 .rep-facts span{font-size:.64rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 
+/* ---------- TO-DO LIST — deliberately plain ---------- */
+.td-add{display:flex;gap:8px;margin-bottom:12px}
+.td-add .inp{flex:1;min-width:0}
+.td-group{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.12em;color:var(--dim);
+  margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.td-group:first-child{margin-top:4px}
+.td-group i{flex:1;height:1px;background:var(--line);font-style:normal}
+.td-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;margin-bottom:7px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);transition:.15s}
+.td-row.late{border-color:rgba(239,68,68,.45)}
+.td-row.done{opacity:.5}
+.td-box{flex:0 0 auto;width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;
+  border:2px solid var(--dim);background:transparent;color:transparent;font-size:.72rem;line-height:1;
+  display:flex;align-items:center;justify-content:center}
+.td-row.done .td-box{border-color:#22c55e;background:#22c55e;color:#04140a}
+.td-txt{flex:1;min-width:0;font-size:.92rem;word-break:break-word}
+.td-row.done .td-txt{text-decoration:line-through}
+.td-when{font-size:.64rem;color:var(--dim);font-family:'Orbitron',monospace;letter-spacing:.06em;white-space:nowrap}
+.td-row.late .td-when{color:#ef4444}
+.td-mini{flex:0 0 auto;width:30px;height:30px;border-radius:8px;cursor:pointer;padding:0;
+  border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--dim);font-size:.8rem}
+.td-mini:hover{border-color:var(--blue);color:var(--text)}
+.td-mini.on{border-color:var(--blue);color:var(--blue)}
+
+/* ---------- THE HALL OF SHAME ---------- */
+#shameBtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px;margin-bottom:14px;border-radius:14px;cursor:pointer;border:1px solid rgba(239,68,68,.45);
+  font-family:'Orbitron',monospace;font-weight:800;font-size:.76rem;letter-spacing:.08em;color:var(--text);
+  background:linear-gradient(135deg,rgba(239,68,68,.16),rgba(0,0,0,0))}
+#shameBtn:hover{border-color:#ef4444}
+#shameOv{position:fixed;inset:0;z-index:263;display:none;flex-direction:column;
+  background:radial-gradient(900px 600px at 50% -10%,rgba(239,68,68,.12),transparent 60%),var(--bg);
+  overscroll-behavior:contain}
+#shameOv.show{display:flex}
+.sh-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px;border-radius:11px;margin-bottom:8px;
+  background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.35)}
+.sh-t{flex:1 1 100%;min-width:0}
+.sh-name{font-size:.92rem;word-break:break-word}
+.sh-when{font-size:.66rem;color:#ef4444;font-family:'Orbitron',monospace;letter-spacing:.06em;margin-top:3px}
+.sh-acts{display:flex;gap:8px;flex:1 1 auto}
+.sh-acts .btn{flex:1;padding:9px 10px;font-size:.68rem}
+
 /* ---------- QUEST HUB — the four squares at the top of QUESTS ---------- */
 .qtab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
 .qtab{display:flex;flex-direction:column;justify-content:space-between;text-align:left;
@@ -1395,12 +1437,22 @@ main section{animation:pagein .28s ease}
     <section id="page-quests" style="display:none">
       <div id="punishQuests"></div>
       <div class="qtab-grid" id="qTabs"></div>
-      <div class="panel">
+      <div class="panel" id="qLogPanel">
         <div class="panel-title" id="qLogTitle">QUEST LOG</div>
         <div class="empty-note" id="qLogNote" style="margin-bottom:10px"></div>
         <div class="filters" id="freqFilters"></div>
         <div class="filters" id="tierFilters"></div>
         <div id="questList"></div>
+      </div>
+      <div class="panel" id="tdPanel" style="display:none">
+        <div class="panel-title">✅ TO-DO LIST</div>
+        <div class="empty-note" style="margin-bottom:12px">Plain things that need doing. No tier, no crate, no trophy — write it, do it, tick it. Each one belongs to a day; miss the day and it goes to the HALL OF SHAME.</div>
+        <div class="td-add">
+          <input class="inp" id="tdInput" maxlength="120" placeholder="Write a thing and press Enter…" aria-label="New to-do">
+          <input class="inp cal-input" id="tdDate" type="text" readonly style="width:132px;flex:0 0 auto" placeholder="Today 📅" aria-label="Day this to-do belongs to">
+          <button class="btn primary" id="tdAdd">ADD</button>
+        </div>
+        <div id="tdList"></div>
       </div>
     </section>
 
@@ -1551,6 +1603,7 @@ main section{animation:pagein .28s ease}
 
     <!-- ============ HONOR ============ -->
     <section id="page-honor" style="display:none">
+      <button id="shameBtn">💀 HALL OF SHAME</button>
       <div class="panel">
         <div class="panel-title">🏆 HALL OF HONOR</div>
         <div class="empty-note" style="margin-bottom:12px">Every one-time goal you achieve and every challenge you conquer is enshrined here — permanent proof of who you are becoming.</div>
@@ -1638,7 +1691,7 @@ main section{animation:pagein .28s ease}
             <option value="in">➕ INCOME</option>
             <option value="out">➖ EXPENSE</option>
           </select>
-          <input class="inp" id="txAmount" type="number" min="0" step="0.01" style="flex:1;min-width:100px" placeholder="Amount">
+          <input class="inp" id="txAmount" type="text" inputmode="decimal" data-money style="flex:1;min-width:100px" placeholder="Amount">
           <input class="inp" id="txDate" type="date" style="width:148px;flex:0 0 auto">
         </div>
         <div class="adm-row" style="margin-top:8px">
@@ -1663,7 +1716,7 @@ main section{animation:pagein .28s ease}
         <div id="savingsList"></div>
         <div class="adm-row" style="margin-top:10px">
           <input class="inp" id="goalName" style="flex:1;min-width:130px" maxlength="50" placeholder="Goal, e.g. New laptop">
-          <input class="inp" id="goalTarget" type="number" min="1" step="0.01" style="width:120px;flex:0 0 auto" placeholder="Target">
+          <input class="inp" id="goalTarget" type="text" inputmode="decimal" data-money style="width:120px;flex:0 0 auto" placeholder="Target">
           <button class="btn primary" id="goalAddBtn">ADD GOAL</button>
         </div>
       </div>
@@ -1674,7 +1727,7 @@ main section{animation:pagein .28s ease}
         <div class="adm-row" style="margin-top:10px">
           <select class="sel" id="wishEmoji" style="width:74px;flex:0 0 auto"></select>
           <input class="inp" id="wishName" style="flex:1;min-width:120px" maxlength="50" placeholder="e.g. New headphones">
-          <input class="inp" id="wishPrice" type="number" min="0" step="0.01" style="width:110px;flex:0 0 auto" placeholder="Price">
+          <input class="inp" id="wishPrice" type="text" inputmode="decimal" data-money style="width:110px;flex:0 0 auto" placeholder="Price">
         </div>
         <div class="adm-row" style="margin-top:8px">
           <select class="sel" id="wishGoal" style="flex:1;min-width:130px"></select>
@@ -2221,7 +2274,7 @@ main section{animation:pagein .28s ease}
     <div class="modal-title" id="fxTitle">CHANGE CURRENCY</div>
     <div class="empty-note" id="fxCounts" style="margin-bottom:12px"></div>
     <label class="form-lbl" id="fxQuestion">Rate</label>
-    <input class="inp" id="fxRate" type="number" step="any" min="0">
+    <input class="inp" id="fxRate" type="text" inputmode="decimal" data-money>
     <div class="empty-note" style="margin-top:8px">These rates are built in and approximate — there is no server to ask. Check today's rate and correct it above.</div>
     <div class="empty-note" id="fxPreview" style="margin-top:10px"></div>
     <div class="modal-actions">
@@ -2260,6 +2313,19 @@ main section{animation:pagein .28s ease}
       <button class="qv-close" id="qcClose2" aria-label="Close calendar" style="visibility:hidden">✕</button>
     </div>
     <div class="qc-body"><div id="qcDayList"></div></div>
+  </div>
+</div>
+
+<!-- the hall of shame: to-dos whose day came and went -->
+<div id="shameOv" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+  <div class="qv-head">
+    <span class="qv-ico">💀</span>
+    <div class="qv-h-t"><div class="qv-name" id="shTitle">HALL OF SHAME</div><div class="qv-sub" id="shSub"></div></div>
+    <button class="qv-close" id="shClose" aria-label="Close">✕</button>
+  </div>
+  <div class="qv-body">
+    <div class="empty-note" style="margin-bottom:14px">Every to-do whose day came and went without you. The Hall of Honor keeps what you finished; this keeps what you didn't. Move one to today and it leaves — that is the only way out.</div>
+    <div id="shList"></div>
   </div>
 </div>
 
@@ -2340,7 +2406,7 @@ main section{animation:pagein .28s ease}
       <option value="out">➖ EXPENSE</option>
     </select>
     <label class="form-lbl">Amount</label>
-    <input class="inp" id="txmAmount" type="number" min="0" step="0.01">
+    <input class="inp" id="txmAmount" type="text" inputmode="decimal" data-money>
     <label class="form-lbl">Category</label>
     <select class="sel" id="txmCat"></select>
     <label class="form-lbl">Note</label>
@@ -2488,6 +2554,7 @@ function defaultState(){
     navConfig:null,      /* customizable navigation: [{page,label,hidden}] */
     navIntentV2:false,   /* must default false: load() fills missing keys from here,
                             so a true default would skip the migration on old saves */
+    todos:[],            /* TO-DO LIST: plain dated items, outside the quest economy */
     oath:null,           /* THE OATH: the hunter's own words, quoted back at them forever */
     learn:{done:{}, links:{}, cat:"discipline"}, /* LEARN & GROW: "cat:index" -> ISO date, and user video links */
     budget:{currency:"$", transactions:[], goals:[]},
@@ -3619,6 +3686,13 @@ function migrateState(){
   if(!state.claimedLevels) state.claimedLevels = [];
   /* the walkable world was removed — drop its leftover position data */
   if(state.world !== undefined) delete state.world;
+  if(!Array.isArray(state.todos)) state.todos = [];
+  for(var ti=0; ti<state.todos.length; ti++){
+    var tdo = state.todos[ti];
+    if(!tdo.date) tdo.date = tdo.created || todayStr();
+    if(tdo.paid === undefined) tdo.paid = !!tdo.done;   /* already-ticked items are not re-paid */
+    if(tdo.sec === undefined) tdo.sec = 0;
+  }
   /* QUEST LOCKDOWN was removed — release anything it had sealed, so a save
      written mid-punishment does not keep quests uncompletable forever */
   if(!state.lockdownGone){
@@ -5492,18 +5566,19 @@ function startTimer(id){
   var tl = featureSealedLv("timer");
   if(tl){ toast(tr("The Focus Timer unlocks at Level ") + tl + tr(" on the story path."), "err"); return; }
   var q = questById(id);
-  if(!q) return;
+  var td = q ? null : todoById(id);   /* a to-do can be timed too */
+  if(!q && !td) return;
   if(state.activeTimer){
-    if(state.activeTimer.id === id){ renderTimerPill(); return; } /* already timing this quest */
+    if(state.activeTimer.id === id){ renderTimerPill(); return; } /* already timing this one */
     if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Finish it and start this one?')) return;
     stopTimer(true);
   }
-  state.activeTimer = {id:id, name:q.name, startedAt: Date.now(), accumulated:0, paused:false};
+  state.activeTimer = {id:id, name: q ? q.name : td.text, startedAt: Date.now(), accumulated:0, paused:false};
   sfx("timer");
   save();
   renderTimerPill();
   if(currentPage === "quests") renderQuests();
-  sysToast("⏱ Timer started: " + q.name);
+  sysToast("⏱ Timer started: " + state.activeTimer.name);
 }
 function pauseResumeTimer(){
   var tm = state.activeTimer;
@@ -5537,9 +5612,11 @@ function stopTimer(silent){
   var secs = Math.round(timerElapsedSec());
   state.activeTimer = null;
   var q = questById(tm.id);
+  var td = q ? null : todoById(tm.id);
   if(secs >= 5){
     var t = todayStr();
     if(q){ q.timeSpent = (q.timeSpent || 0) + secs; q.lastTimedOn = t; }
+    else if(td){ td.sec = (td.sec || 0) + secs; }
     state.timeHistory[t] = (state.timeHistory[t] || 0) + secs;
     if(!silent) toast("Session logged: " + fmtDur(secs) + " — " + tm.name + (q ? " (total " + fmtDur(q.timeSpent) + ")" : ""), "gold", "TIME RECORDED");
   } else if(!silent){
@@ -5887,12 +5964,41 @@ function qcRenderDay(){
       +      '<div class="qc-freq">' + esc(FREQ_LABEL[q.freq] || q.freq) + "</div></div>"
       +    '<span class="qc-status ' + st + '">' + LABEL[st] + "</span></div>";
   }
+  /* the day's to-dos live behind their own button — a plain list, separate
+     from the quests, exactly as they are separate everywhere else */
+  var tds = todosOn(ds);
+  h += '<button class="btn" id="qcTdBtn" style="width:100%;margin-top:14px">\ud83d\udcdd TO DO LIST'
+    + (tds.length ? " \u00b7 " + tds.filter(function(x){ return x.done; }).length + " / " + tds.length : " \u00b7 empty")
+    + '</button>';
+  h += '<div id="qcTdList" style="display:none;margin-top:10px"></div>';
   /* be honest when the records for that day were summarised away */
   archiveFix();
   if(state.archive.upTo && ds <= state.archive.upTo){
     h += '<div class="empty-note" style="margin-top:12px">🗄 This day is older than the detailed records the app keeps, so completions may be incomplete.</div>';
   }
   document.getElementById("qcDayList").innerHTML = h;
+  var tb = document.getElementById("qcTdBtn");
+  if(tb) tb.addEventListener("click", function(){
+    var box = document.getElementById("qcTdList");
+    var open = box.style.display !== "none";
+    box.style.display = open ? "none" : "";
+    if(open) return;
+    var list = todosOn(ds), hh = "", i;
+    if(!list.length) hh = '<div class="empty-note">No to-dos were written for this day.</div>';
+    for(i=0;i<list.length;i++){
+      var td = list[i];
+      var st = td.done ? "done" : (ds < todayStr() ? "missed" : (ds === todayStr() ? "today" : "future"));
+      var lbl = td.done ? "\u2714 COMPLETED"
+        : (st === "missed" ? "\u2715 NOT DONE" : (st === "today" ? "\u25cb NOT YET" : "\u00b7 PLANNED"));
+      hh += '<div class="qc-row ' + st + '">'
+         +   '<span class="qc-ico">' + (td.done ? "\u2705" : "\u2b1c") + "</span>"
+         +   '<div class="qc-t"><div class="qc-name">' + esc(td.text) + "</div>"
+         +     (td.sec ? '<div class="qc-freq">' + esc(fmtDur(td.sec)) + " tracked</div>" : "")
+         +   "</div>"
+         +   '<span class="qc-status ' + st + '">' + lbl + "</span></div>";
+    }
+    box.innerHTML = hh;
+  });
 }
 document.getElementById("qcGrid").addEventListener("click", function(e){
   var b = e.target.closest("[data-cal]");
@@ -7139,38 +7245,271 @@ document.getElementById("hunterName").addEventListener("click", function(){
   inp.addEventListener("keydown", function(ev){ if(ev.key === "Enter") inp.blur(); });
 });
 
+/* ---------------- TO-DO LIST ----------------
+   Deliberately outside the game. A to-do has a line of text and a day, and
+   nothing else: no tier, no stat, no crate, no roll, no trophy, no rank.
+   Finishing one pays a flat TODO_XP so the app still rewards doing things,
+   but it can never be farmed into a rank the way a tiered quest could. */
+var TODO_XP = 10;
+function todoById(id){
+  for(var i=0;i<state.todos.length;i++) if(state.todos[i].id === id) return state.todos[i];
+  return null;
+}
+function makeTodo(text, ds){
+  return {id:uid(), text:text, date: ds || todayStr(), done:false, doneOn:"", paid:false, sec:0, created:todayStr()};
+}
+function todosOn(ds){
+  return state.todos.filter(function(td){ return td.date === ds; });
+}
+function todosOverdue(){
+  /* its day has passed and it was never ticked */
+  var t = todayStr();
+  return state.todos.filter(function(td){ return !td.done && td.date < t; })
+    .sort(function(a,b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+}
+function addTodo(){
+  var inp = document.getElementById("tdInput");
+  var text = inp.value.trim();
+  if(!text){ toast(tr("Write something first."), "err"); return; }
+  var ds = document.getElementById("tdDate").value || todayStr();
+  state.todos.push(makeTodo(text, ds));
+  inp.value = "";
+  save();
+  sfx("tap");
+  renderTodos();
+  renderQTabs();
+  inp.focus();
+}
+function toggleTodo(id){
+  var td = todoById(id); if(!td) return;
+  if(td.done){
+    td.done = false; td.doneOn = "";
+  } else {
+    td.done = true; td.doneOn = todayStr();
+    sfx("complete");
+    /* paid once per to-do, ever — ticking and unticking cannot farm XP, and
+       gainXP() never runs backwards, which would corrupt debt and levels */
+    if(!td.paid){
+      td.paid = true;
+      gainXP(TODO_XP);
+      toast("+" + TODO_XP + " XP · " + td.text, "gold");
+    }
+  }
+  save();
+  renderTodos();
+  renderQTabs();
+}
+function deleteTodo(id){
+  var td = todoById(id); if(!td) return;
+  if(!confirm('Delete "' + td.text + '"? This cannot be undone.')) return;
+  state.todos = state.todos.filter(function(x){ return x.id !== id; });
+  save();
+  renderTodos();
+  renderQTabs();
+}
+function todoToToday(id){
+  var td = todoById(id); if(!td) return;
+  td.date = todayStr();
+  save();
+  sysToast("Moved to today: " + td.text);
+  renderTodos();
+  renderShame();
+  renderQTabs();
+}
+function todoRow(td, showDate){
+  var t = todayStr();
+  var late = !td.done && td.date < t;
+  var timing = state.activeTimer && state.activeTimer.id === td.id;
+  var when = td.date === t ? "TODAY"
+    : (td.date > t ? niceDate(td.date).toUpperCase()
+                   : dayDiff(td.date, t) + "D LATE");
+  return '<div class="td-row' + (td.done ? " done" : "") + (late ? " late" : "") + '" data-tdid="' + td.id + '">'
+    + '<button class="td-box" data-tdact="toggle" data-tdid="' + td.id + '" aria-label="' + (td.done ? "Mark as not done" : "Mark as done") + '">\u2713</button>'
+    + '<div class="td-txt">' + esc(td.text) + (td.sec ? ' <span class="td-when">\u00b7 ' + fmtDur(td.sec) + '</span>' : "") + '</div>'
+    + (showDate ? '<span class="td-when">' + esc(when) + '</span>' : "")
+    + '<button class="td-mini' + (timing ? " on" : "") + '" data-tdact="timer" data-tdid="' + td.id + '" title="' + (timing ? "Stop the timer" : "Time this") + '">' + (timing ? "\u23f9" : "\u23f1") + '</button>'
+    + '<button class="td-mini" data-tdact="del" data-tdid="' + td.id + '" title="Delete">\ud83d\uddd1</button>'
+    + '</div>';
+}
+function renderTodos(){
+  var t = todayStr(), h = "";
+  var today = todosOn(t), late = todosOverdue();
+  var ahead = state.todos.filter(function(td){ return !td.done && td.date > t; })
+    .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  var openToday = today.filter(function(td){ return !td.done; });
+  var doneToday = today.filter(function(td){ return td.done; });
+  var i;
+  if(late.length){
+    h += '<div class="td-group" style="color:#ef4444">\u26a0 OVERDUE <i></i></div>';
+    for(i=0;i<late.length;i++) h += todoRow(late[i], true);
+  }
+  h += '<div class="td-group">TODAY <i></i></div>';
+  if(!openToday.length && !doneToday.length){
+    h += '<div class="empty-note">Nothing for today. Write a line above.</div>';
+  }
+  for(i=0;i<openToday.length;i++) h += todoRow(openToday[i], false);
+  if(doneToday.length){
+    h += '<div class="td-group">DONE TODAY \u00b7 ' + doneToday.length + ' <i></i></div>';
+    for(i=0;i<doneToday.length;i++) h += todoRow(doneToday[i], false);
+  }
+  if(ahead.length){
+    h += '<div class="td-group">LATER <i></i></div>';
+    for(i=0;i<ahead.length;i++) h += todoRow(ahead[i], true);
+  }
+  document.getElementById("tdList").innerHTML = h;
+}
+document.getElementById("tdAdd").addEventListener("click", addTodo);
+document.getElementById("tdInput").addEventListener("keydown", function(e){
+  if(e.key === "Enter"){ e.preventDefault(); addTodo(); }
+});
+document.getElementById("tdDate").addEventListener("click", function(){ openCalendar(this); });
+document.getElementById("tdList").addEventListener("click", function(e){
+  var b = e.target.closest("[data-tdact]"); if(!b) return;
+  var act = b.getAttribute("data-tdact"), id = b.getAttribute("data-tdid");
+  if(act === "toggle") toggleTodo(id);
+  else if(act === "del") deleteTodo(id);
+  else if(act === "timer"){
+    if(state.activeTimer && state.activeTimer.id === id) stopTimer(false);
+    else startTimer(id);
+  }
+});
+
+/* ---------------- THE HALL OF SHAME ---------------- */
+function renderShameBtn(){
+  var n = todosOverdue().length;
+  var b = document.getElementById("shameBtn");
+  b.textContent = n ? "\ud83d\udc80 HALL OF SHAME \u00b7 " + n : "\ud83d\udc80 HALL OF SHAME";
+}
+function renderShame(){
+  var late = todosOverdue(), t = todayStr(), h = "", i;
+  document.getElementById("shSub").textContent = late.length
+    ? late.length + " left undone" : "empty \u2014 nothing is owed";
+  if(!late.length){
+    h = '<div class="empty-note">Nothing here. Every to-do you wrote, you did on the day you said. Keep it that way.</div>';
+  }
+  for(i=0;i<late.length;i++){
+    var td = late[i];
+    h += '<div class="sh-row">'
+      + '<div class="sh-t"><div class="sh-name">' + esc(td.text) + '</div>'
+      + '<div class="sh-when">' + esc(niceDate(td.date)) + " \u00b7 " + dayDiff(td.date, t) + " days late</div></div>"
+      + '<div class="sh-acts">'
+      + '<button class="btn" data-shact="today" data-shid="' + td.id + '">DO IT TODAY</button>'
+      + '<button class="btn danger" data-shact="drop" data-shid="' + td.id + '">LET GO</button>'
+      + '</div></div>';
+  }
+  document.getElementById("shList").innerHTML = h;
+  renderShameBtn();
+}
+function openShame(){
+  renderShame();
+  document.getElementById("shameOv").classList.add("show");
+  document.body.style.overflow = "hidden";
+  sfx("open");
+}
+function closeShame(){
+  document.getElementById("shameOv").classList.remove("show");
+  document.body.style.overflow = "";
+  sfx("close");
+}
+document.getElementById("shameBtn").addEventListener("click", openShame);
+document.getElementById("shClose").addEventListener("click", closeShame);
+document.getElementById("shList").addEventListener("click", function(e){
+  var b = e.target.closest("[data-shact]"); if(!b) return;
+  var act = b.getAttribute("data-shact"), id = b.getAttribute("data-shid");
+  if(act === "today") todoToToday(id);
+  else if(act === "drop"){
+    var td = todoById(id); if(!td) return;
+    if(!confirm('Let go of "' + td.text + '"? It disappears without being done.')) return;
+    state.todos = state.todos.filter(function(x){ return x.id !== id; });
+    save();
+    renderShame();
+    renderQTabs();
+  }
+});
+
+/* ---------------- money inputs: grouped while you type ----------------
+   Typing 12000 into a bare number box is genuinely hard to read back, so
+   every amount field groups its thousands live: 12000 shows as 12,000.
+   A number input cannot hold a comma, so these are text inputs with
+   inputmode="decimal" (still a numeric keypad on a phone) and every read
+   goes through moneyNum(), never parseFloat() on the raw value. */
+function moneyGroup(raw){
+  var v = String(raw == null ? "" : raw).replace(/,/g, "");
+  v = v.replace(/[^0-9.]/g, "");
+  var dot = v.indexOf(".");
+  if(dot !== -1) v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, "");  /* one decimal point only */
+  var parts = v.split(".");
+  var whole = parts[0].replace(/^0+(?=\d)/, "");                                 /* 007 -> 7 */
+  var grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return parts.length > 1 ? grouped + "." + parts[1] : grouped;   /* never truncate what they typed */
+}
+function moneyNum(el){
+  if(typeof el === "string") el = document.getElementById(el);
+  if(!el) return NaN;
+  var v = String(el.value).replace(/,/g, "").trim();
+  return v === "" ? NaN : parseFloat(v);
+}
+function moneySet(el, n){
+  if(typeof el === "string") el = document.getElementById(el);
+  if(!el) return;
+  el.value = (n === "" || n === null || n === undefined || isNaN(n)) ? "" : moneyGroup(n);
+}
+document.addEventListener("input", function(e){
+  var el = e.target;
+  if(!el || !el.hasAttribute || !el.hasAttribute("data-money")) return;
+  /* regrouping rewrites the whole value, so the caret has to be put back by
+     how many digits sit before it rather than by raw character offset */
+  var before = el.value, caret = el.selectionStart;
+  var digitsBefore = (before.slice(0, caret).match(/[0-9.]/g) || []).length;
+  var after = moneyGroup(before);
+  if(after === before) return;
+  el.value = after;
+  var seen = 0, pos = after.length;
+  for(var i=0;i<after.length;i++){
+    if(/[0-9.]/.test(after[i])) seen++;
+    if(seen === digitsBefore){ pos = i + 1; break; }
+  }
+  if(digitsBefore === 0) pos = 0;
+  try { el.setSelectionRange(pos, pos); } catch(err){ /* not all inputs allow it */ }
+});
+
 /* ---------------- render: quests ---------------- */
 /* QUESTS opens on a grid of four squares, the way LEARN opens on its four
    roads. They are a selector, never a doorway: the list you came for is
    already rendered underneath, so the daily case is still a single tap. */
 var qTab = "quests";
-var QTAB_FREQS = {quests:["daily","weekly","custom"], goals:["longterm"], challenges:["challenge"]};
-var QTAB_TITLE = {quests:"QUEST LOG", goals:"\ud83c\udfaf ONE-TIME GOALS", challenges:"\ud83d\udd25 CHALLENGES"};
+var QTAB_FREQS = {quests:["daily","weekly","custom","longterm"], todo:[], challenges:["challenge"]};
+var QTAB_TITLE = {quests:"QUEST LOG", challenges:"\ud83d\udd25 CHALLENGES"};
 var QTAB_NOTE = {
-  quests:     "What you committed to repeating \u2014 daily, weekly and on chosen days.",
-  goals:      "Things done once and then finished forever. They cost no quest slot; they are capped per week instead.",
+  quests:     "Everything you committed to: daily, weekly, chosen days, and one-time goals.",
   challenges: "A streak you must not break. Miss a day and the count returns to zero."
 };
 var QTAB_EMPTY = {
-  quests:     "No recurring quests. Press the glowing + button to forge your first, Hunter.",
-  goals:      "No one-time goals. Press + and choose ONE-TIME GOAL \u2014 something you finish once and never repeat.",
+  quests:     "No quests yet. Press the glowing + button to forge your first, Hunter.",
   challenges: "No challenges. Press + and choose \ud83d\udd25 CHALLENGE \u2014 a streak the System will not forgive."
 };
 function qTabCounts(){
-  var n = {act:0, sched:0, doneToday:0, gOpen:0, gDone:0, cRun:0, cDone:0, cBest:0};
-  for(var i=0;i<state.quests.length;i++){
+  var n = {act:0, sched:0, doneToday:0, gOpen:0, cRun:0, cDone:0, cBest:0,
+           tOpen:0, tDone:0, tLate:0};
+  var t = todayStr(), i;
+  for(i=0;i<state.quests.length;i++){
     var q = state.quests[i];
-    if(q.freq === "longterm"){ if(q.done) n.gDone++; else n.gOpen++; continue; }
     if(q.freq === "challenge"){
       if(q.done) n.cDone++; else n.cRun++;
       if((q.streak || 0) > n.cBest) n.cBest = q.streak || 0;
       continue;
     }
     n.act++;
+    if(q.freq === "longterm"){ if(!q.done) n.gOpen++; continue; }
     if(isScheduledToday(q)){
       n.sched++;
       if(completedThisPeriod(q)) n.doneToday++;
     }
+  }
+  for(i=0;i<state.todos.length;i++){
+    var td = state.todos[i];
+    if(td.date === t){ if(td.done) n.tDone++; else n.tOpen++; }
+    else if(!td.done && td.date < t) n.tLate++;
   }
   return n;
 }
@@ -7194,14 +7533,15 @@ function renderQTabs(){
   var when = DAY_NAMES[d.getDay()].toUpperCase() + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()].slice(0, 3);
   var h = "";
   h += qTabSquare("quests", "\ud83d\udcdc", "QUESTS",
-        n.doneToday + " / " + n.sched + " done today<br>" + n.act + " recurring in the log",
+        n.doneToday + " / " + n.sched + " done today<br>" + n.act + " in the log \u00b7 " + n.gOpen + " goals open",
         n.doneToday, n.sched);
   h += qTabSquare("calendar", "\ud83d\udcc5", "CALENDAR",
         when + "<br>" + dc.done + " of " + dc.total + " cleared today",
         dc.done, dc.total, " act");
-  h += qTabSquare("goals", "\ud83c\udfaf", "GOALS",
-        n.gOpen + " open<br>" + n.gDone + " achieved",
-        n.gDone, n.gOpen + n.gDone);
+  h += qTabSquare("todo", "\u2705", "TO-DO",
+        n.tDone + " / " + (n.tOpen + n.tDone) + " done today<br>"
+        + (n.tLate ? "\u26a0 " + n.tLate + " overdue" : "nothing overdue"),
+        n.tDone, n.tOpen + n.tDone);
   h += qTabSquare("challenges", "\ud83d\udd25", "CHALLENGES",
         n.cRun + " running \u00b7 " + n.cDone + " conquered<br>"
         + (n.cBest ? "best streak " + n.cBest + " days" : "no streak yet"),
@@ -7359,6 +7699,11 @@ function goalCapNoteHtml(){
 function renderQuests(){
   renderPunishBanners();
   renderQTabs();
+  /* the to-do list is not a quest list, so it gets its own panel entirely */
+  var isTodo = qTab === "todo";
+  document.getElementById("qLogPanel").style.display = isTodo ? "none" : "";
+  document.getElementById("tdPanel").style.display = isTodo ? "" : "none";
+  if(isTodo){ renderTodos(); return; }
   renderFilterChips();
   document.getElementById("qLogTitle").textContent = tr(QTAB_TITLE[qTab]);
   document.getElementById("qLogNote").textContent = tr(QTAB_NOTE[qTab]);
@@ -7367,7 +7712,7 @@ function renderQuests(){
     /* QUESTS is the catch-all: anything that is not a goal and not a
        challenge belongs there, so a quest carrying an unexpected frequency
        can never fall off every square and become invisible */
-    if(qTab === "quests") return q.freq !== "longterm" && q.freq !== "challenge";
+    if(qTab === "quests") return q.freq !== "challenge";
     return sub.indexOf(q.freq) !== -1;
   });
   if(freqFilter !== "all") list = list.filter(function(q){ return q.freq === freqFilter; });
@@ -7379,7 +7724,7 @@ function renderQuests(){
     return 0;
   });
   /* the slot note is about recurring quests, so it belongs on their tabs only */
-  var head = qTab === "goals" ? goalCapNoteHtml() : slotsNoteHtml();
+  var head = slotsNoteHtml() + (qTab === "quests" ? goalCapNoteHtml() : "");
   var el = document.getElementById("questList");
   if(list.length === 0){
     el.innerHTML = head + '<div class="empty-note">' + esc(tr(QTAB_EMPTY[qTab])) + '</div>';
@@ -8024,6 +8369,7 @@ function honorDetail(hn){
   return bits;
 }
 function renderHonor(){
+  renderShameBtn();
   var byType = {challenge:0, goal:0, trial:0};
   for(var i=0;i<state.honors.length;i++) byType[state.honors[i].type] = (byType[state.honors[i].type] || 0) + 1;
   var cards = [
@@ -9009,7 +9355,7 @@ document.getElementById("qmSave").addEventListener("click", function(){
   document.getElementById("questModal").classList.remove("show");
   /* a new goal must not vanish because the QUESTS tab was open when it
      was written \u2014 follow it to the square it belongs on */
-  qTab = qmSel.freq === "longterm" ? "goals" : (qmSel.freq === "challenge" ? "challenges" : "quests");
+  qTab = qmSel.freq === "challenge" ? "challenges" : "quests";
   freqFilter = "all";
   save(); renderAll();
 });
@@ -9724,7 +10070,7 @@ function renderStore(){
 }
 document.getElementById("wishAddBtn").addEventListener("click", function(){
   var name = document.getElementById("wishName").value.trim();
-  var price = parseFloat(document.getElementById("wishPrice").value);
+  var price = moneyNum("wishPrice");
   if(!name){ toast(tr("Name the thing you want."), "err"); return; }
   if(!(price > 0)){ toast(tr("Enter a price above zero."), "err"); return; }
   state.budget.wishlist.push({id: uid(), emoji: document.getElementById("wishEmoji").value || "🛍️",
@@ -9792,7 +10138,7 @@ function openFxModal(from, to){
   document.getElementById("fxTitle").textContent = "💱 " + from + " → " + to;
   document.getElementById("fxQuestion").textContent =
     "How many " + (FX_NAME[from] || from) + " make one " + (FX_NAME[to] || to) + "?";
-  document.getElementById("fxRate").value = per;
+  moneySet("fxRate", per);
   document.getElementById("fxCounts").innerHTML =
     "This will convert <b>" + b.transactions.length + "</b> transaction" + (b.transactions.length === 1 ? "" : "s")
     + ", <b>" + b.goals.length + "</b> savings goal" + (b.goals.length === 1 ? "" : "s")
@@ -9801,7 +10147,7 @@ function openFxModal(from, to){
   document.getElementById("fxModal").classList.add("show");
 }
 function fxPreview(){
-  var per = parseFloat(document.getElementById("fxRate").value);
+  var per = moneyNum("fxRate");
   var el = document.getElementById("fxPreview");
   if(!(per > 0)){ el.textContent = "Enter a rate greater than zero."; return; }
   var bal = budgetTotals();
@@ -9816,7 +10162,7 @@ function fxRound(n){ return Math.round(n * 100) / 100; }
 function applyFx(convert){
   var b = state.budget, i;
   if(convert){
-    var per = parseFloat(document.getElementById("fxRate").value);
+    var per = moneyNum("fxRate");
     if(!(per > 0)){ toast(tr("Enter a rate greater than zero."), "err"); return; }
     for(i=0;i<b.transactions.length;i++) b.transactions[i].amount = fxRound((+b.transactions[i].amount || 0) / per);
     for(i=0;i<b.goals.length;i++){
@@ -9854,7 +10200,7 @@ document.getElementById("txType").addEventListener("change", function(){
   fillCatSelect(document.getElementById("txCat"), this.value);
 });
 document.getElementById("txAddBtn").addEventListener("click", function(){
-  var amt = parseFloat(document.getElementById("txAmount").value);
+  var amt = moneyNum("txAmount");
   if(!(amt > 0)){ toast("Enter an amount greater than zero.", "err"); return; }
   var d = document.getElementById("txDate").value || todayStr();
   state.budget.transactions.push({
@@ -9880,7 +10226,7 @@ function openTxModal(id){
   if(!x) return;
   txEditId = id;
   document.getElementById("txmType").value = x.type;
-  document.getElementById("txmAmount").value = x.amount;
+  moneySet("txmAmount", x.amount);
   fillCatSelect(document.getElementById("txmCat"), x.type, x.cat || "other");
   document.getElementById("txmNote").value = x.note || "";
   document.getElementById("txmDate").value = x.date || todayStr();
@@ -9903,7 +10249,7 @@ document.getElementById("txmSave").addEventListener("click", function(){
   var x = null;
   for(var i=0;i<state.budget.transactions.length;i++) if(state.budget.transactions[i].id === txEditId) x = state.budget.transactions[i];
   if(!x){ document.getElementById("txModal").classList.remove("show"); return; }
-  var amt = parseFloat(document.getElementById("txmAmount").value);
+  var amt = moneyNum("txmAmount");
   if(!(amt > 0)){ toast("Enter an amount greater than zero.", "err"); return; }
   x.type = document.getElementById("txmType").value;
   x.amount = Math.round(amt * 100) / 100;
@@ -9926,7 +10272,7 @@ document.getElementById("txmDelete").addEventListener("click", function(){
 });
 document.getElementById("goalAddBtn").addEventListener("click", function(){
   var name = document.getElementById("goalName").value.trim();
-  var target = parseFloat(document.getElementById("goalTarget").value);
+  var target = moneyNum("goalTarget");
   if(!name){ toast("Name your savings goal.", "err"); return; }
   if(!(target > 0)){ toast("Enter a target amount.", "err"); return; }
   state.budget.goals.push({id: uid(), name:name, target:target, saved:0, done:false, created:todayStr()});

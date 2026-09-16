@@ -134,7 +134,8 @@ test.describe("currency conversion", () => {
     const result = await page.evaluate((seed) => {
       eval("(" + seed + ")")();
       openFxModal("so'm", "$");
-      const suggested = +document.getElementById("fxRate").value;
+      /* money fields hold grouped text now ("12,600"), so never read them raw */
+      const suggested = moneyNum("fxRate");
       applyFx(true);
       const b = state.budget;
       return {
