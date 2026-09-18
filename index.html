@@ -563,6 +563,15 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .cat-row .cr-fill{height:100%;border-radius:4px;transition:width .4s ease}
 .tx-cat{font-size:1rem;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
   background:rgba(11,15,34,.8);border:1px solid var(--line);flex:0 0 auto}
+.tx-day{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;
+  background:linear-gradient(150deg,var(--panel2),var(--panel))}
+.tx-day-head{display:flex;align-items:center;gap:8px;padding:9px 11px;background:rgba(255,255,255,.04);
+  border-bottom:1px solid var(--line)}
+.tx-day-d{font-family:'Orbitron',monospace;font-size:.66rem;letter-spacing:.09em;color:var(--text)}
+.tx-day-n{font-size:.62rem;color:var(--dim)}
+.tx-day-sum{margin-left:auto;font-family:'Orbitron',monospace;font-size:.7rem;white-space:nowrap}
+.tx-day-body{padding:2px 11px 6px}
+.tx-day-body .tx-row:last-child{border-bottom:0}
 .tx-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
 .tx-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex:0 0 auto}
 .tx-in{color:var(--easy)}.tx-out{color:#ef4444}
@@ -982,26 +991,6 @@ main section{animation:pagein .28s ease}
 .lrn-body{white-space:pre-wrap;line-height:1.65;font-size:.88rem;color:var(--text)}
 
 /* ---------- INTERVAL TIMER ---------- */
-.iv-dial{position:relative;width:100%;max-width:280px;margin:0 auto 6px;aspect-ratio:1/1;
-  display:flex;align-items:center;justify-content:center}
-.iv-dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.iv-mid{position:relative;text-align:center}
-.iv-phase{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:.24em;color:var(--dim)}
-.iv-time{font-family:'Orbitron',monospace;font-weight:900;font-size:2.9rem;line-height:1.1;color:var(--text)}
-.iv-round{font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--blue);margin-top:2px}
-.iv-dial.work .iv-time{color:#ff6b6b}
-.iv-dial.rest .iv-time{color:#22c55e}
-.iv-dial.done .iv-time{color:var(--legendary)}
-.iv-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.iv-pre{padding:8px 12px;border-radius:10px;cursor:pointer;font-family:'Orbitron',monospace;
-  font-size:.68rem;letter-spacing:.06em;color:var(--text);
-  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--line)}
-.iv-pre.active{border-color:var(--blue);box-shadow:var(--glowblue);color:var(--blue)}
-.iv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.iv-grid label{display:block;font-size:.66rem;font-weight:700;letter-spacing:.1em;color:var(--dim);
-  text-transform:uppercase;margin-bottom:5px}
-.iv-actions{display:flex;gap:10px}
-.iv-actions .btn{flex:1}
 
 .rk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .rk-arrow{color:var(--dim);font-size:1.1rem}
@@ -1398,42 +1387,6 @@ main section{animation:pagein .28s ease}
       <div class="panel">
         <div class="panel-title" id="lrnLadderTitle">PATH</div>
         <div id="lrnLadder"></div>
-      </div>
-    </section>
-
-    <!-- ============ INTERVAL TIMER ============ -->
-    <section id="page-interval" style="display:none">
-      <div class="panel">
-        <div class="panel-title">⏱ INTERVAL TIMER</div>
-        <div class="empty-note" style="margin-bottom:14px">Rounds of work and rest. For training the body — the ⏱ on a quest card is for one long focused session; this is for intervals.</div>
-        <div class="iv-dial" id="ivDial">
-          <svg viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"></circle>
-            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"
-                    stroke-linecap="round" id="ivArc" stroke-dasharray="283" stroke-dashoffset="0"></circle>
-          </svg>
-          <div class="iv-mid">
-            <div class="iv-phase" id="ivPhase">READY</div>
-            <div class="iv-time" id="ivTime">00:00</div>
-            <div class="iv-round" id="ivRound"></div>
-          </div>
-        </div>
-        <div class="iv-actions" style="margin:16px 0 6px">
-          <button class="btn primary" id="ivStart">▶ START</button>
-          <button class="btn" id="ivReset">■ RESET</button>
-        </div>
-        <div class="empty-note" id="ivTotal" style="text-align:center"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">SESSION</div>
-        <div class="iv-presets" id="ivPresets"></div>
-        <div class="iv-grid">
-          <div><label>Work (sec)</label><input class="inp" id="ivWork" type="number" min="5" max="3600" value="30"></div>
-          <div><label>Rest (sec)</label><input class="inp" id="ivRest" type="number" min="0" max="3600" value="15"></div>
-          <div><label>Rounds</label><input class="inp" id="ivRounds" type="number" min="1" max="99" value="8"></div>
-        </div>
-        <div class="empty-note" id="ivPlan"></div>
       </div>
     </section>
 
@@ -2579,32 +2532,10 @@ main section{animation:pagein .28s ease}
       <div class="hm-legend" style="margin-top:10px">12 WEEKS &nbsp;<span class="hm-cell"></span><span class="hm-cell hm-l4"></span>&nbsp; DONE</div>
     </div>
     <div class="panel">
-      <div class="panel-title">⏱ INTERVAL TIMER FOR THIS QUEST</div>
-      <div class="empty-note" style="margin-bottom:12px">Rounds saved with this quest. Finishing a session logs the time against it — and satisfies a ⏱ TIMER QUEST.</div>
-      <div class="iv-dial" id="qvDial">
-        <svg viewBox="0 0 100 100" aria-hidden="true">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"></circle>
-          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"
-                  stroke-linecap="round" id="qvArc" stroke-dasharray="283" stroke-dashoffset="0"></circle>
-        </svg>
-        <div class="iv-mid">
-          <div class="iv-phase" id="qvPhase">READY</div>
-          <div class="iv-time" id="qvTime">00:00</div>
-          <div class="iv-round" id="qvRound"></div>
-        </div>
-      </div>
-      <div class="iv-actions" style="margin:16px 0 6px">
-        <button class="btn primary" id="qvStart">▶ START</button>
-        <button class="btn" id="qvReset">■ RESET</button>
-      </div>
-      <div class="empty-note" id="qvTotal" style="text-align:center"></div>
-      <div class="iv-presets" id="qvPresets" style="margin-top:14px"></div>
-      <div class="iv-grid">
-        <div><label>Work (sec)</label><input class="inp" id="qvWork" type="number" min="5" max="3600" value="30"></div>
-        <div><label>Rest (sec)</label><input class="inp" id="qvRest" type="number" min="0" max="3600" value="15"></div>
-        <div><label>Rounds</label><input class="inp" id="qvRounds" type="number" min="1" max="99" value="8"></div>
-      </div>
-      <div class="empty-note" id="qvPlan"></div>
+      <div class="panel-title">⏱ TIME THIS QUEST</div>
+      <div class="empty-note" style="margin-bottom:12px">Opens the full-screen focus timer — stopwatch or GRIND cycles, whichever you set there. Finishing a session logs the time against this quest and satisfies a ⏱ TIMER QUEST.</div>
+      <button class="btn primary" id="qvStart" style="width:100%">⏱ START THE FOCUS TIMER</button>
+      <div class="empty-note" id="qvTotal" style="text-align:center;margin-top:12px"></div>
     </div>
     <div class="panel">
       <div class="panel-title">🗂 EVERY RECORD</div>
@@ -3946,6 +3877,8 @@ function migrateState(){
   if(state.focusGoalMin !== undefined && state.focus.goalMin === undefined) state.focus.goalMin = state.focusGoalMin;
   if(!Array.isArray(state.focus.wallpapers)) state.focus.wallpapers = [];
   if(!Array.isArray(state.focus.sounds)) state.focus.sounds = [];
+  /* the separate interval timer was removed — drop the rounds it kept per quest */
+  for(var qi=0; qi<state.quests.length; qi++) if(state.quests[qi].iv !== undefined) delete state.quests[qi].iv;
   if(!state.focus.wallpapers.length) state.focus.wpOn = false;
   for(var ti=0; ti<state.todos.length; ti++){
     var tdo = state.todos[ti];
@@ -4893,13 +4826,13 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["learn","interval","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
-var NAV_ICON = {learn:"🌱", interval:"⏱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
-var NAV_LABEL = {learn:"LEARN", interval:"TIMER", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
+var PAGES = ["learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var NAV_ICON = {learn:"🌱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {learn:"LEARN", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
 /* daily loop first — the things touched every single day are never more than
    one tap away. Nothing is ever placed between the hunter and the thing they
    opened the app to do; the dock is the only navigation there is. */
-var NAV_ORDER = ["home","quests","learn","interval","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
+var NAV_ORDER = ["home","quests","learn","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
   if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
@@ -5881,6 +5814,9 @@ function restartTimer(){
    total (the STATS charts read it) and timeBy splits that same total by where
    the work went, so the calendar can show a real breakdown. Both are written
    here and nowhere else. */
+/* "interval" is no longer produced — the TRAINING YARD page was removed on
+   2026-09-18 — but it stays in the list so days recorded before then still
+   show where their hours went instead of dropping into the unsplit bucket. */
 var TIME_KINDS = ["quest", "challenge", "todo", "interval"];
 var TIME_KIND_LABEL = {quest:"\ud83d\udcdc QUESTS", challenge:"\ud83d\udd25 CHALLENGES",
                        todo:"\u2705 TO DO LIST", interval:"\ud83c\udfcb TRAINING"};
@@ -5905,7 +5841,7 @@ function timeByOn(ds){
 }
 function timerKindFor(q, td){
   if(q) return q.freq === "challenge" ? "challenge" : "quest";
-  return td ? "todo" : "interval";
+  return "todo";   /* only quests, challenges and to-dos are timed now */
 }
 function stopTimer(silent){
   var tm = state.activeTimer;
@@ -7123,12 +7059,33 @@ function qcRenderDay(){
     + (tdSec ? " \u00b7 \u23f1 " + fmtDur(tdSec) : "")
     + '</button>';
   h += '<div id="qcTdList" style="display:none;margin-top:10px"></div>';
+  /* and the money that moved that day, kept behind its own button for the
+     same reason: the day view must stay an overview, not three lists at once */
+  var txd = txOn(ds), txt = txDayTotals(txd);
+  h += '<button class="btn" id="qcTxBtn" style="width:100%;margin-top:10px">\ud83d\udcb0 MONEY'
+    + (txd.length
+        ? " \u00b7 " + txd.length + (txd.length === 1 ? " entry \u00b7 " : " entries \u00b7 ")
+          + (txt.net >= 0 ? "+" : "\u2212") + money(Math.abs(txt.net)).replace("\u2212", "")
+        : " \u00b7 nothing spent")
+    + '</button>';
+  h += '<div id="qcTxList" style="display:none;margin-top:10px"></div>';
   /* be honest when the records for that day were summarised away */
   archiveFix();
   if(state.archive.upTo && ds <= state.archive.upTo){
     h += '<div class="empty-note" style="margin-top:12px">🗄 This day is older than the detailed records the app keeps, so completions may be incomplete.</div>';
   }
   document.getElementById("qcDayList").innerHTML = h;
+  var xb = document.getElementById("qcTxBtn");
+  if(xb) xb.addEventListener("click", function(){
+    var box = document.getElementById("qcTxList");
+    var open = box.style.display !== "none";
+    box.style.display = open ? "none" : "";
+    if(open) return;
+    var list = txOn(ds);
+    box.innerHTML = list.length
+      ? txDayPackHtml(ds, list, false)
+      : '<div class="empty-note">No money moved on this day.</div>';
+  });
   var tb = document.getElementById("qcTdBtn");
   if(tb) tb.addEventListener("click", function(){
     var box = document.getElementById("qcTdList");
@@ -7179,12 +7136,6 @@ function openQuestView(id){
   var q = questById(id);
   if(!q) return;
   qvId = id;
-  /* the timer inside this window drives the same engine, pointed at this quest */
-  if(!iv.on){ iv.ui = "qv"; iv.questId = id; ivReset(); }
-  if(!q.iv) q.iv = {w:30, r:15, c:8};
-  document.getElementById("qvWork").value = q.iv.w;
-  document.getElementById("qvRest").value = q.iv.r;
-  document.getElementById("qvRounds").value = q.iv.c;
   renderQuestView();
   document.getElementById("questView").classList.add("show");
   document.body.style.overflow = "hidden";
@@ -7193,15 +7144,7 @@ function openQuestView(id){
 function closeQuestView(){
   document.getElementById("questView").classList.remove("show");
   document.body.style.overflow = "";
-  var q = qvQuest();
-  if(q){ /* remember this quest's rounds even if no session was run */
-    q.iv = {w:Math.max(5, +document.getElementById("qvWork").value || 30),
-            r:Math.max(0, +document.getElementById("qvRest").value || 0),
-            c:Math.max(1, +document.getElementById("qvRounds").value || 1)};
-    save();
-  }
   qvId = "";
-  if(!iv.on){ iv.ui = "iv"; iv.questId = ""; }
   sfx("close");
   if(currentPage === "quests") renderQuests();
 }
@@ -7259,30 +7202,12 @@ function renderQuestView(){
   }
   if(comps.length > 60) lh += '<div class="empty-note">…and ' + (comps.length - 60) + ' older records.</div>';
   document.getElementById("qvLog").innerHTML = lh;
-  if(iv.ui === "qv"){ renderIvPresets(); renderIv(); }
 }
 document.getElementById("qvClose").addEventListener("click", closeQuestView);
 document.getElementById("qvStart").addEventListener("click", function(){
-  if(!iv.on){ iv.ui = "qv"; iv.questId = qvId; }
-  ivStart();
-});
-document.getElementById("qvReset").addEventListener("click", ivReset);
-document.getElementById("qvPresets").addEventListener("click", function(e){
-  var b = e.target.closest(".iv-pre");
-  if(!b) return;
-  var p = IV_PRESETS[+b.getAttribute("data-p")];
-  if(!p || !p.c) return;
-  iv.ui = "qv"; iv.questId = qvId;
-  ivReset();
-  document.getElementById("qvWork").value = p.w;
-  document.getElementById("qvRest").value = p.r;
-  document.getElementById("qvRounds").value = p.c;
-  renderIvPresets(); renderIv();
-});
-["qvWork","qvRest","qvRounds"].forEach(function(id){
-  document.getElementById(id).addEventListener("input", function(){
-    if(!iv.on && iv.ui === "qv"){ renderIvPresets(); renderIv(); }
-  });
+  /* one timer for everything now: the same focus window a quest card, a
+     challenge or a to-do opens */
+  if(qvId) startTimer(qvId);
 });
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && document.getElementById("questView").classList.contains("show")) closeQuestView();
@@ -11157,25 +11082,62 @@ function renderBudget(){
     }
     sl.innerHTML = sh;
   }
-  /* transactions of the selected month (most recent first) */
+  /* transactions of the selected month, packed one day at a time */
   var tl = document.getElementById("txList");
-  var txs = state.budget.transactions.filter(function(x){ return (x.date || "").slice(0,7) === budgetMonth; }).reverse();
-  if(txs.length === 0){
-    tl.innerHTML = '<div class="empty-note">' + esc(tr("No transactions this month.")) + '</div>';
-  } else {
-    var th = "";
-    for(var t=0;t<txs.length && t<80;t++){
-      var x = txs[t];
-      var xc = txCat(x.type, x.cat || "other");
-      th += '<div class="tx-row"><span class="tx-cat" style="border-color:' + (CAT_COLOR[x.cat || "other"] || "#8b92c9") + '55">' + xc.ico + '</span>'
-        + '<div class="tx-main"><div class="tx-note">' + esc(x.note || tr(xc.name)) + '</div>'
-        + '<div class="tx-date">' + esc(tr(xc.name)) + (x.date ? " · " + niceDate(x.date) : "") + '</div></div>'
-        + '<span class="tx-amt ' + (x.type==="in"?"tx-in":"tx-out") + '">' + (x.type==="in"?"+":"−") + money(x.amount).replace("−","") + '</span>'
-        + '<button class="mini-btn" data-txedit="' + x.id + '" title="Edit">✎</button></div>';
-    }
-    tl.innerHTML = th;
-  }
+  var txs = state.budget.transactions.filter(function(x){ return (x.date || "").slice(0,7) === budgetMonth; });
+  tl.innerHTML = txs.length
+    ? txDaysHtml(txs, true)
+    : '<div class="empty-note">' + esc(tr("No transactions this month.")) + '</div>';
   renderStore();
+}
+/* A flat list of transactions is unreadable — one run of rows with no seam
+   between Monday and Thursday. These group into a pack per day, the same way a
+   day opens in the calendar, and the same function draws both places. */
+function txOn(ds){
+  return state.budget.transactions.filter(function(x){ return (x.date || "") === ds; });
+}
+function txDayTotals(list){
+  var inc = 0, out = 0;
+  for(var i=0;i<list.length;i++){
+    if(list[i].type === "in") inc += (+list[i].amount || 0);
+    else out += (+list[i].amount || 0);
+  }
+  return {inc:inc, out:out, net:inc - out};
+}
+function txRowHtml(x, editable){
+  var xc = txCat(x.type, x.cat || "other");
+  return '<div class="tx-row"><span class="tx-cat" style="border-color:'
+    + (CAT_COLOR[x.cat || "other"] || "#8b92c9") + '55">' + xc.ico + '</span>'
+    + '<div class="tx-main"><div class="tx-note">' + esc(x.note || tr(xc.name)) + '</div>'
+    + '<div class="tx-date">' + esc(tr(xc.name)) + '</div></div>'
+    + '<span class="tx-amt ' + (x.type === "in" ? "tx-in" : "tx-out") + '">'
+    + (x.type === "in" ? "+" : "−") + money(x.amount).replace("−", "") + '</span>'
+    + (editable ? '<button class="mini-btn" data-txedit="' + x.id + '" title="Edit">✎</button>' : "")
+    + '</div>';
+}
+function txDayPackHtml(ds, list, editable){
+  var tot = txDayTotals(list), h = "", i;
+  var net = tot.net >= 0 ? "tx-in" : "tx-out";
+  h += '<div class="tx-day"><div class="tx-day-head">'
+    + '<span class="tx-day-d">' + esc(niceDate(ds).toUpperCase()) + "</span>"
+    + '<span class="tx-day-n">' + list.length + (list.length === 1 ? " entry" : " entries") + "</span>"
+    + '<span class="tx-day-sum ' + net + '">' + (tot.net >= 0 ? "+" : "−")
+    + money(Math.abs(tot.net)).replace("−", "") + "</span></div>"
+    + '<div class="tx-day-body">';
+  for(i=0;i<list.length;i++) h += txRowHtml(list[i], editable);
+  return h + "</div></div>";
+}
+function txDaysHtml(list, editable){
+  var by = {}, days = [], i;
+  for(i=0;i<list.length;i++){
+    var d = list[i].date || "";
+    if(!by[d]){ by[d] = []; days.push(d); }
+    by[d].push(list[i]);
+  }
+  days.sort().reverse();                 /* newest day first */
+  var h = "";
+  for(i=0;i<days.length;i++) h += txDayPackHtml(days[i], by[days[i]], editable);
+  return h;
 }
 function goalById(id){ for(var i=0;i<state.budget.goals.length;i++) if(state.budget.goals[i].id===id) return state.budget.goals[i]; return null; }
 function renderStore(){
@@ -11477,164 +11439,6 @@ document.getElementById("savingsList").addEventListener("click", function(e){
 });
 
 /* ---------------- render dispatcher ---------------- */
-/* ================= INTERVAL TIMER =================
-   Rounds of work and rest, for training the body. Distinct from the Focus
-   Timer, which measures one long unbroken session. Time spent here is logged
-   into the same timeHistory the STATS page charts. */
-var IV_PRESETS = [
-  {n:"TABATA",  w:20, r:10, c:8},
-  {n:"HIIT",    w:40, r:20, c:10},
-  {n:"EMOM",    w:60, r:0,  c:10},
-  {n:"STRENGTH",w:45, r:90, c:5},
-  {n:"CUSTOM",  w:0,  r:0,  c:0}
-];
-/* one engine, two faces: the TRAINING YARD page ("iv") and the per-quest
-   window ("qv"). Only one session can run at a time, which is also the truth
-   about doing interval work. */
-var iv = {on:false, phase:"ready", round:1, endsAt:0, left:0, tick:null, worked:0, cfg:null, ui:"iv", questId:""};
-function ivEl(n){ return document.getElementById((iv.ui || "iv") + n); }
-function ivCfg(){
-  return {
-    w: Math.max(5, Math.min(3600, +ivEl("Work").value || 30)),
-    r: Math.max(0, Math.min(3600, +ivEl("Rest").value || 0)),
-    c: Math.max(1, Math.min(99,  +ivEl("Rounds").value || 1))
-  };
-}
-function ivFmt(s){
-  s = Math.max(0, Math.ceil(s));
-  var m = Math.floor(s / 60);
-  var ss = s % 60;
-  return (m < 10 ? "0" : "") + m + ":" + (ss < 10 ? "0" : "") + ss;
-}
-function renderIvPresets(){
-  if(!ivEl("Presets")) return;
-  var c = ivCfg(), h = "";
-  for(var i=0;i<IV_PRESETS.length;i++){
-    var p = IV_PRESETS[i];
-    var on = p.c ? (p.w === c.w && p.r === c.r && p.c === c.c) : false;
-    h += '<button class="iv-pre' + (on ? " active" : "") + '" data-p="' + i + '">' + p.n
-      + (p.c ? '<div style="font-size:.58rem;color:var(--dim);letter-spacing:.04em;margin-top:3px">'
-               + p.w + "s / " + p.r + "s × " + p.c + "</div>" : "") + "</button>";
-  }
-  ivEl("Presets").innerHTML = h;
-  var total = c.c * c.w + Math.max(0, c.c - 1) * c.r;
-  ivEl("Plan").textContent =
-    c.c + " rounds · " + c.w + "s work · " + c.r + "s rest · total " + ivFmt(total);
-}
-function renderIv(){
-  var d = ivEl("Dial");
-  if(!d || !ivEl("Time")) return;
-  var cfg = iv.cfg || ivCfg();
-  var full = iv.phase === "rest" ? cfg.r : cfg.w;
-  var left = iv.on ? Math.max(0, (iv.endsAt - Date.now()) / 1000) : (iv.phase === "done" ? 0 : cfg.w);
-  d.className = "iv-dial " + (iv.phase === "work" ? "work" : iv.phase === "rest" ? "rest" : iv.phase === "done" ? "done" : "");
-  d.style.color = iv.phase === "rest" ? "#22c55e" : iv.phase === "done" ? "#fbbf24" : "#ff6b6b";
-  ivEl("Time").textContent = ivFmt(left);
-  ivEl("Phase").textContent =
-    iv.phase === "work" ? "WORK" : iv.phase === "rest" ? "REST" : iv.phase === "done" ? "COMPLETE" : "READY";
-  ivEl("Round").textContent =
-    iv.phase === "ready" ? (cfg.c + " ROUNDS") : ("ROUND " + Math.min(iv.round, cfg.c) + " / " + cfg.c);
-  var frac = full > 0 ? (left / full) : 0;
-  ivEl("Arc").setAttribute("stroke-dashoffset", String(283 * (1 - Math.max(0, Math.min(1, frac)))));
-  ivEl("Start").textContent = iv.on ? "❚❚ PAUSE" : (iv.phase === "ready" || iv.phase === "done" ? "▶ START" : "▶ RESUME");
-  ivEl("Total").textContent = iv.worked > 0 ? ("Worked this session: " + ivFmt(iv.worked)) : "";
-}
-function ivStop(){
-  if(iv.tick){ clearInterval(iv.tick); iv.tick = null; }
-  iv.on = false;
-}
-function ivReset(){
-  ivStop();
-  iv.phase = "ready"; iv.round = 1; iv.left = 0; iv.worked = 0; iv.cfg = null;
-  renderIvPresets();
-  renderIv();
-}
-function ivAdvance(){
-  var cfg = iv.cfg;
-  if(iv.phase === "work"){
-    iv.worked += cfg.w;
-    if(iv.round >= cfg.c){ ivFinish(); return; }
-    if(cfg.r > 0){ iv.phase = "rest"; iv.endsAt = Date.now() + cfg.r * 1000; sfx("close"); }
-    else { iv.round++; iv.endsAt = Date.now() + cfg.w * 1000; sfx("pkg"); }
-  } else {
-    iv.round++;
-    iv.phase = "work";
-    iv.endsAt = Date.now() + cfg.w * 1000;
-    sfx("pkg");
-  }
-  renderIv();
-}
-function ivFinish(){
-  var cfg = iv.cfg;
-  ivStop();
-  iv.phase = "done";
-  renderIv();
-  sfx("levelup");
-  /* the work counts: logged into the same history STATS charts */
-  var secs = iv.worked;
-  if(secs > 0){
-    var t = todayStr();
-    /* a session started inside a quest counts as that quest's work, and
-       satisfies a quest that demands a timed session before completion */
-    var qq = iv.questId ? questById(iv.questId) : null;
-    logTime(secs, timerKindFor(qq, null));
-    if(qq){
-      qq.timeSpent = (qq.timeSpent || 0) + secs;
-      qq.lastTimedOn = t;
-      if(qq.iv) qq.iv = {w:cfg.w, r:cfg.r, c:cfg.c};
-    }
-    var gained = trainStat("END", Math.max(1, Math.round(secs / 120)));
-    gainXP(Math.min(120, Math.round(secs / 20))); /* saves */
-    announce("⏱ SESSION COMPLETE",
-      cfg.c + " rounds finished.\n\nWork time: " + ivFmt(secs)
-      + "\n+" + Math.min(120, Math.round(secs / 20)) + " XP  ·  +" + Math.max(1, Math.round(secs / 120)) + " END training"
-      + (gained ? "\n\n⚡ END attribute increased." : "")
-      + (qq ? "\n\nLogged against: " + qq.name : "")
-      + "\n\nLogged to your focus history. Nothing here was decoration — the System counted every round.",
-      "⏱", "DONE");
-  }
-}
-function ivStart(){
-  if(iv.on){ /* pause */
-    iv.left = Math.max(0, (iv.endsAt - Date.now()) / 1000);
-    ivStop();
-    renderIv();
-    return;
-  }
-  if(iv.phase === "ready" || iv.phase === "done"){
-    iv.cfg = ivCfg();
-    iv.phase = "work"; iv.round = 1; iv.worked = 0;
-    iv.endsAt = Date.now() + iv.cfg.w * 1000;
-    sfx("pkg");
-  } else {
-    iv.endsAt = Date.now() + iv.left * 1000; /* resume */
-  }
-  iv.on = true;
-  iv.tick = setInterval(function(){
-    if(!iv.on) return;
-    if(Date.now() >= iv.endsAt) ivAdvance();
-    else renderIv();
-  }, 200);
-  renderIv();
-}
-document.getElementById("ivStart").addEventListener("click", ivStart);
-document.getElementById("ivReset").addEventListener("click", ivReset);
-document.getElementById("ivPresets").addEventListener("click", function(e){
-  var b = e.target.closest(".iv-pre");
-  if(!b) return;
-  var p = IV_PRESETS[+b.getAttribute("data-p")];
-  if(!p || !p.c) return; /* CUSTOM: leave the fields alone */
-  ivReset();
-  document.getElementById("ivWork").value = p.w;
-  document.getElementById("ivRest").value = p.r;
-  document.getElementById("ivRounds").value = p.c;
-  renderIvPresets();
-  renderIv();
-});
-document.getElementById("ivWork").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
-document.getElementById("ivRest").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
-document.getElementById("ivRounds").addEventListener("input", function(){ if(!iv.on){ renderIvPresets(); renderIv(); } });
-
 /* ================= THE OATH =================
    Sworn once, in the hunter's own words, before the System opens. The System
    never invents motivation for them again — at every moment that matters it
@@ -12074,7 +11878,6 @@ document.getElementById("lrnMDone").addEventListener("click", completeLearnLevel
 function renderAll(){
   renderHeader();
   if(currentPage === "learn"){ renderLearn(); return; }
-  if(currentPage === "interval"){ renderIvPresets(); renderIv(); return; }
   if(currentPage === "home") renderHome();
   else if(currentPage === "profile") renderProfile();
   else if(currentPage === "quests") renderQuests();

@@ -55,6 +55,8 @@ And a section must also pass all three of these:
 | Editable laps, and the session ends itself | 2026-09-18 — 2/4/6/endless, checked even with the window closed |
 | An alarm that survives backgrounding | 2026-09-18 — scheduled on the audio clock + a silent keep-alive; honest about the phone-off limit |
 | Upload a ringtone or song and pick 30 seconds of it | 2026-09-18 — trimmed, mono, stored in the vault |
+| Remove the separate interval timer | 2026-09-18 — GRIND does it better; one timer for everything now |
+| Transactions packed per day, in BUDGET and the calendar | 2026-09-18 — the calendar is now an overview of a whole date |
 
 ---
 

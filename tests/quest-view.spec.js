@@ -29,17 +29,17 @@ test.describe("one quest, full screen", () => {
     expect(result.logRows).toBeGreaterThan(0);
   });
 
-  test("its interval rounds are remembered per quest", async ({ page }) => {
+  test("its timer is the same focus window everything else uses", async ({ page }) => {
     await bootAsGuest(page);
-    const saved = await page.evaluate(() => {
+    const r = await page.evaluate(() => {
       const q = state.quests[0];
       openQuestView(q.id);
-      document.getElementById("qvWork").value = 45;
-      document.getElementById("qvRest").value = 20;
-      document.getElementById("qvRounds").value = 6;
-      closeQuestView();
-      return questById(q.id).iv;
+      document.getElementById("qvStart").click();
+      return { open: focusOpen(), timing: state.activeTimer && state.activeTimer.id === q.id,
+               name: document.getElementById("foName").textContent };
     });
-    expect(saved).toEqual({ w: 45, r: 20, c: 6 });
+    expect(r.open).toBe(true);
+    expect(r.timing).toBe(true);
+    expect(r.name).toBeTruthy();
   });
 });

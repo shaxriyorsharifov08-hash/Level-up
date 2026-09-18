@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **132 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **143 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -283,13 +283,15 @@ That check lives in `grindTick()`, which the one-second loop runs **whether or n
 
 **CHANGE EVERY** rotates the picture on a timer — NEVER, 5, 25 or 50 minutes — and grind also swaps the picture on every phase change. The index is `floor(workedSec / everyMin) % count`, so it wraps and needs no state of its own.
 
-## 4e. THE INTERVAL TIMER
+## 4e. THERE IS NO SEPARATE TIMER SECTION
 
-TRAINING YARD → ⏱ INTERVAL TIMER (or the ⏱ TIMER tab). Rounds of work and rest, for the body — **distinct from the Focus Timer**, which measures one long unbroken session on a quest.
+There used to be a **TRAINING YARD** tab: its own page, its own engine, rounds of work and rest for training the body. It was **removed on 2026-09-18**, along with the copy of it that lived inside every quest's window.
 
-Presets: TABATA (20/10×8), HIIT (40/20×10), EMOM (60/0×10), STRENGTH (45/90×5), or CUSTOM. Work is clamped to a 5-second minimum, rounds to 99.
+GRIND (section 4d) does the same job better and in one place. Two timers that both counted rounds meant two engines to keep correct, two places to look, and a real question every time you pressed ⏱ about which one you were starting.
 
-Finishing a session **logs the work time into the same `timeHistory` the STATS page charts**, trains END, and grants XP proportional to the time worked (capped at 120). Nothing here is decoration — the System counts every round.
+**Now there is exactly one timer, and everything opens it:** a quest card, a challenge, a one-time goal, a to-do row, and the ⏱ START THE FOCUS TIMER button inside a quest's full-screen window. All of them call `startTimer(id)` and all of them get the same focus window with the same themes, the same alarm and the same grind cycles.
+
+An old save is cleaned up on open: `migrateState()` drops the `q.iv` rounds each quest used to carry, and `reconcileNav()` removes the dead tab from a customised dock. The `interval` time bucket **stays** in `TIME_KINDS` so days recorded before the removal still show where their hours went instead of sliding into the unsplit bucket.
 
 ## 4f. THE OATH — the hunter's own words, used against them
 
@@ -457,6 +459,14 @@ Rates live in `FX_PER_USD` in `index.html` and are **built in and approximate** 
 
 Three choices every time: **CONVERT**, **SYMBOL ONLY** (leave the numbers alone), or **CANCEL**. Converting there and back returns the original amounts. An empty budget just changes the symbol with no prompt.
 
+### Transactions are packed one day at a time
+
+A flat list of transactions is unreadable — one run of rows with no seam between Monday and Thursday. They now group into **a pack per day**, newest day first, each with its date, how many entries it holds, and that day's **net** in green or red.
+
+The date left the individual rows: it is the pack's header now, and repeating it on every line was the noise.
+
+`txDayPackHtml(ds, list, editable)` draws a pack, and the **same function draws it in the calendar** (section 4p) with `editable` false — editing belongs in BUDGET, the calendar is an overview. A test asserts the calendar copy carries no edit buttons while the budget one does.
+
 ### Amounts group themselves while you type
 
 Typing `12000` into a bare box and reading it back is genuinely hard, so every amount field now groups its thousands **live**: it shows `12,000` as you type, and `2,500,000` for a savings target.
@@ -547,6 +557,9 @@ Open any date in the calendar and the day reports itself, in this order:
 2. **Where the hours went** — one bar per section: 📜 QUESTS, 🔥 CHALLENGES, ✅ TO DO LIST, 🏋 TRAINING (the interval timer). Only sections with time on them appear.
 3. **QUESTS & CHALLENGES** — the list, each with its own tracked time.
 4. **📝 TO DO LIST · 1 / 3 · ⏱ 40m** — a button that expands that day's to-dos, **each with the time you spent on it**.
+5. **💰 MONEY · 3 entries · +$443** — a button that expands that day's transactions, drawn by the same code the BUDGET section uses.
+
+Both stay **behind their buttons** on purpose. The day view has to remain an overview; three lists competing for the same screen is what made the old STATS page unreadable.
 
 ### How the split is recorded
 
