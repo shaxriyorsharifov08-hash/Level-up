@@ -42,6 +42,7 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `pruning.spec.js` | The save cannot grow forever: mechanical rows fold into the archive, all-time totals survive the fold, and nothing the hunter wrote is ever deleted. |
 | `accessibility.spec.js` | Every control has a name, panels rendered later are repaired by the observer, dialogs say they are dialogs, and announcements are spoken. |
 | `calendar-currency.spec.js` | The quest calendar shows the right day and does not collide with the old date picker, and changing currency converts every amount both ways. |
+| `focus-skin.spec.js` | Focus themes paint, uploaded wallpapers live in the vault and never in the save, they rotate on schedule, and GRIND never logs rest as work. |
 | `focus-time.spec.js` | The focus window covers the screen and keeps running when closed, and every tracked second is attributed to its section without losing time logged before the split existed. |
 | `todo-money.spec.js` | The to-do list stays out of the game (flat XP paid once, no trophy, no rank), overdue items reach the Hall of Shame, and money fields group thousands while you type without corrupting the saved amount. |
 | `quest-hub.spec.js` | The four squares on QUESTS: the list is still one tap away, every quest belongs to exactly one square, nothing is stranded off all of them, the counts are live, and a new goal is followed to its square. |

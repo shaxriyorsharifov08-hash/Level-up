@@ -1032,10 +1032,41 @@ main section{animation:pagein .28s ease}
 .rep-facts b{display:block;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--blue)}
 .rep-facts span{font-size:.64rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 
+/* ---------- FOCUS THEMES — every one drawn in CSS, no image files ----------
+   Sized in percentages, not pixels, so the same rule paints a full screen and a
+   90px settings swatch. That is why the selector is [data-fx] and not
+   #focusOv[data-fx]: the swatch wears the real theme rather than a copy of it. */
+[data-fx="void"]{background:radial-gradient(130% 100% at 50% 20%,rgba(124,97,255,.26),transparent 62%),#05060f}
+[data-fx="leaf"]{background:
+  radial-gradient(110% 80% at 50% 26%,rgba(255,140,32,.36),transparent 64%),
+  radial-gradient(130% 100% at 78% 96%,rgba(24,86,168,.50),transparent 62%),
+  conic-gradient(from 210deg at 50% 26%,rgba(255,168,64,.16),transparent 32%,rgba(255,110,0,.14),transparent 72%),#0a0806}
+[data-fx="cursed"]{background:
+  radial-gradient(115% 85% at 50% 22%,rgba(168,44,220,.38),transparent 62%),
+  conic-gradient(from 40deg at 50% 22%,rgba(236,72,153,.20),transparent 22%,rgba(88,28,135,.32),transparent 58%,rgba(236,72,153,.16),transparent 88%),#06030b}
+[data-fx="ember"]{background:
+  radial-gradient(125% 92% at 50% 96%,rgba(239,68,68,.42),transparent 60%),
+  radial-gradient(95% 70% at 50% 16%,rgba(251,146,60,.26),transparent 64%),#0c0503}
+[data-fx="tide"]{background:
+  radial-gradient(125% 95% at 50% 18%,rgba(34,211,238,.30),transparent 62%),
+  radial-gradient(130% 100% at 20% 100%,rgba(30,64,175,.52),transparent 62%),#020711}
+[data-fx="steel"]{background:
+  radial-gradient(110% 80% at 50% 22%,rgba(148,163,184,.24),transparent 64%),
+  linear-gradient(180deg,#0d1117 0%,#11161f 52%,#070a0e 100%)}
+[data-fx="sakura"]{background:
+  radial-gradient(115% 85% at 50% 20%,rgba(244,114,182,.34),transparent 62%),
+  radial-gradient(130% 100% at 76% 98%,rgba(76,29,149,.42),transparent 62%),#0b0610}
+#focusOv .fo-wall{position:absolute;inset:0;background-size:cover;background-position:center;
+  opacity:0;transition:opacity .6s ease;pointer-events:none}
+#focusOv .fo-wall.on{opacity:1}
+#focusOv .fo-scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(2,3,10,.62),rgba(2,3,10,.38) 40%,rgba(2,3,10,.74))}
+#focusOv.wp .fo-scrim{display:block}
+#focusOv:not(.wp) .fo-scrim{display:none}
+
 /* ---------- THE FOCUS WINDOW — one task, nothing else on screen ---------- */
 #focusOv{position:fixed;inset:0;z-index:270;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:0;padding:24px 20px;text-align:center;
-  background:radial-gradient(900px 700px at 50% 20%,rgba(124,97,255,.16),transparent 62%),#05060f;
   overscroll-behavior:contain}
 #focusOv.show{display:flex}
 #focusOv.reached{background:radial-gradient(900px 700px at 50% 20%,rgba(251,191,36,.18),transparent 62%),#05060f}
@@ -1062,6 +1093,43 @@ main section{animation:pagein .28s ease}
 .fo-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px;width:100%;max-width:360px}
 .fo-acts .btn{flex:1;min-width:120px}
 .fo-hint{font-size:.68rem;color:var(--dim);margin-top:18px;line-height:1.6;max-width:320px}
+.fo-main{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
+.fo-phase{font-family:'Orbitron',monospace;font-size:.66rem;letter-spacing:.16em;margin-bottom:8px}
+.fo-phase.work{color:var(--blue)}
+.fo-phase.rest{color:#22c55e}
+#focusOv.rest .fo-time{color:#22c55e}
+#focusOv.rest #foArc{color:#22c55e}
+
+/* the settings sheet, inside the window so focus is never actually left */
+#foCfg{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;
+  background:rgba(4,5,14,.93);backdrop-filter:blur(8px);text-align:left;
+  padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#foCfg.show{display:flex}
+.fo-cfg-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex:0 0 auto}
+.fo-cfg-head .qv-close{margin-left:auto}
+.fo-cfg-body{flex:1;overflow-y:auto;min-height:0}
+.fo-sec{font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.13em;color:var(--dim);
+  margin:18px 0 9px;display:flex;align-items:center;gap:8px}
+.fo-sec i{flex:1;height:1px;background:var(--line);font-style:normal}
+.fo-sec:first-child{margin-top:6px}
+.fo-themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:9px}
+.fo-th{position:relative;height:62px;border-radius:11px;cursor:pointer;border:1px solid var(--line);
+  overflow:hidden;padding:0;display:flex;align-items:flex-end}
+.fo-th.on{border-color:var(--blue);box-shadow:var(--glowblue)}
+.fo-th span{position:relative;z-index:1;width:100%;padding:5px 7px;font-family:'Orbitron',monospace;
+  font-size:.55rem;letter-spacing:.08em;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.72))}
+.fo-th i{position:absolute;inset:0;font-style:normal}
+.fo-wps{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;margin-top:10px}
+.fo-wp{position:relative;height:62px;border-radius:11px;overflow:hidden;border:1px solid var(--line);
+  background:rgba(255,255,255,.04) center/cover no-repeat}
+.fo-wp b{position:absolute;left:0;right:0;bottom:0;padding:4px 6px;font-weight:400;font-size:.54rem;
+  color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.76));
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fo-wp button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:7px;cursor:pointer;
+  border:0;background:rgba(0,0,0,.6);color:#fff;font-size:.66rem;line-height:1}
+.fo-nums{display:flex;gap:9px;align-items:flex-end;margin-top:10px}
+.fo-nums > div{flex:1;min-width:0}
+.fo-nums label{display:block;font-size:.6rem;color:var(--dim);letter-spacing:.07em;margin-bottom:5px}
 
 /* ---------- TO-DO LIST — deliberately plain ---------- */
 .td-add{display:flex;gap:8px;margin-bottom:12px}
@@ -2056,29 +2124,67 @@ main section{animation:pagein .28s ease}
 
 <button id="fab" title="Add" aria-label="Add new">+</button>
 <!-- the focus window: one task, a ring, and nothing to look at -->
-<div id="focusOv" role="dialog" aria-modal="true" aria-labelledby="foName">
+<div id="focusOv" role="dialog" aria-modal="true" aria-labelledby="foName" data-fx="void">
+  <div class="fo-wall" id="foWall"></div>
+  <div class="fo-scrim"></div>
   <div class="fo-top">
     <span class="fo-kind" id="foKind">FOCUS</span>
-    <button class="fo-min" id="foMin" aria-label="Keep it running and go back">–</button>
+    <button class="fo-min" id="foCfgBtn" aria-label="Timer settings" style="margin-left:auto">⚙</button>
+    <button class="fo-min" id="foMin" aria-label="Keep it running and go back" style="margin-left:0">–</button>
   </div>
-  <div class="fo-name" id="foName"></div>
-  <div class="fo-dial">
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="6"></circle>
-      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"
-              stroke-linecap="round" id="foArc" stroke-dasharray="283" stroke-dashoffset="283"></circle>
-    </svg>
-    <div>
-      <div class="fo-time" id="foTime">00:00</div>
-      <div class="fo-goal" id="foGoal"></div>
+  <div class="fo-main">
+    <div class="fo-phase" id="foPhase" style="display:none"></div>
+    <div class="fo-name" id="foName"></div>
+    <div class="fo-dial">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"></circle>
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"
+                stroke-linecap="round" id="foArc" stroke-dasharray="283" stroke-dashoffset="283"></circle>
+      </svg>
+      <div>
+        <div class="fo-time" id="foTime">00:00</div>
+        <div class="fo-goal" id="foGoal"></div>
+      </div>
+    </div>
+    <div class="fo-chips" id="foChips"></div>
+    <div class="fo-acts">
+      <button class="btn" id="foPause">PAUSE</button>
+      <button class="btn primary" id="foFinish">✓ FINISH</button>
+    </div>
+    <div class="fo-hint" id="foHint">Put the phone down. The clock keeps running if you leave this window — nothing is lost, and nothing else here is asking for your attention.</div>
+  </div>
+
+  <div id="foCfg">
+    <div class="fo-cfg-head">
+      <div class="qv-name">⚙ TIMER SETTINGS</div>
+      <button class="qv-close" id="foCfgClose" aria-label="Back to the timer">✕</button>
+    </div>
+    <div class="fo-cfg-body">
+      <div class="fo-sec">MODE <i></i></div>
+      <div class="fo-chips" id="foModeChips" style="justify-content:flex-start;margin:0"></div>
+
+      <div id="foGrindWrap" style="display:none">
+        <div class="fo-sec">GRIND — WORK / REST <i></i></div>
+        <div class="fo-chips" id="foGrindChips" style="justify-content:flex-start;margin:0"></div>
+        <div class="fo-nums">
+          <div><label for="foWork">Work (min)</label><input class="inp" id="foWork" type="number" min="1" max="180" value="25"></div>
+          <div><label for="foRest">Rest (min)</label><input class="inp" id="foRest" type="number" min="0" max="60" value="5"></div>
+        </div>
+      </div>
+
+      <div class="fo-sec">THEME <i></i></div>
+      <div class="fo-themes" id="foThemes"></div>
+
+      <div class="fo-sec">YOUR WALLPAPERS <i></i></div>
+      <div class="empty-note" style="margin-bottom:10px">Upload your own — anime, a photo, anything. They are stored on this device only, never in your save and never uploaded anywhere.</div>
+      <label class="chk-row"><input type="checkbox" id="foWpOn"><span>Use my wallpapers instead of the theme</span></label>
+      <div class="fo-chips" id="foRotChips" style="justify-content:flex-start;margin:10px 0 0"></div>
+      <div class="fo-wps" id="foWpList"></div>
+      <input type="file" id="foWpFile" accept="image/*" multiple style="display:none" aria-label="Choose wallpaper images">
+      <button class="btn" id="foWpAdd" style="width:100%;margin-top:12px">🖼 UPLOAD A WALLPAPER</button>
+      <div class="empty-note" id="foWpNote" style="margin-top:10px"></div>
     </div>
   </div>
-  <div class="fo-chips" id="foChips"></div>
-  <div class="fo-acts">
-    <button class="btn" id="foPause">PAUSE</button>
-    <button class="btn primary" id="foFinish">✓ FINISH</button>
-  </div>
-  <div class="fo-hint">Put the phone down. The clock keeps running if you leave this window — nothing is lost, and nothing else here is asking for your attention.</div>
 </div>
 
 <div id="timerPill">
@@ -2598,7 +2704,16 @@ function defaultState(){
     lastMonthlyReport:"",
     timeHistory:{},      /* date -> seconds of tracked focus time (the total) */
     timeBy:{},           /* date -> {quest,challenge,todo,interval} seconds, the same total split by source */
-    focusGoalMin:25,     /* the focus window's target, remembered between sessions (0 = no target) */
+    focusGoalMin:25,     /* legacy home of the focus target; migrated into state.focus */
+    focus:{              /* how the focus window looks and behaves */
+      theme:"void",      /* a built-in look, drawn in CSS — the app ships no image files */
+      goalMin:25,        /* STOPWATCH target in minutes (0 = none) */
+      mode:"stopwatch",  /* "stopwatch" counts up; "grind" runs work/rest cycles */
+      work:25, rest:5,   /* GRIND cycle, in minutes */
+      wpOn:false,        /* show your own wallpapers instead of the theme */
+      rotateMin:25,      /* change picture every N minutes (0 = never) */
+      wallpapers:[]      /* [{id,name}] only — the bytes live in IndexedDB, never in the save */
+    },
     activeTimer:null,    /* {id, name, startedAt, accumulated, paused} while a session runs */
     xpDebt:0,            /* punishment: half of XP gains seized until repaid */
     penaltyTask:null,    /* punishment: {icon,name,desc,day} — all XP frozen until served */
@@ -3763,6 +3878,14 @@ function migrateState(){
   if(state.world !== undefined) delete state.world;
   if(!Array.isArray(state.todos)) state.todos = [];
   if(!state.timeBy || typeof state.timeBy !== "object") state.timeBy = {};
+  /* the focus window grew themes, wallpapers and grind cycles; older saves
+     carry only the old focusGoalMin, which becomes the stopwatch target */
+  if(!state.focus || typeof state.focus !== "object") state.focus = defaultState().focus;
+  var fdef = defaultState().focus;
+  for(var fk in fdef) if(state.focus[fk] === undefined) state.focus[fk] = fdef[fk];
+  if(state.focusGoalMin !== undefined && state.focus.goalMin === undefined) state.focus.goalMin = state.focusGoalMin;
+  if(!Array.isArray(state.focus.wallpapers)) state.focus.wallpapers = [];
+  if(!state.focus.wallpapers.length) state.focus.wpOn = false;
   for(var ti=0; ti<state.todos.length; ti++){
     var tdo = state.todos[ti];
     if(!tdo.date) tdo.date = tdo.created || todayStr();
@@ -5654,9 +5777,11 @@ function startTimer(id){
     if(!confirm('A timer is already running for "' + state.activeTimer.name + '". Finish it and start this one?')) return;
     stopTimer(true);
   }
+  var f = fo();
   state.activeTimer = {id:id, name: q ? q.name : td.text, startedAt: Date.now(), accumulated:0, paused:false,
-                       kind: timerKindFor(q, td), goalMin: state.focusGoalMin === undefined ? 25 : state.focusGoalMin,
-                       chimed:false};
+                       kind: timerKindFor(q, td), goalMin: f.goalMin === undefined ? 25 : f.goalMin,
+                       mode: f.mode || "stopwatch", work: f.work || 25, rest: f.rest === undefined ? 5 : f.rest,
+                       lastPhase:"", chimed:false};
   sfx("timer");
   save();
   renderTimerPill();
@@ -5723,7 +5848,8 @@ function timerKindFor(q, td){
 function stopTimer(silent){
   var tm = state.activeTimer;
   if(!tm) return;
-  var secs = Math.round(timerElapsedSec());
+  /* in GRIND only the work phases count — resting is not focus time */
+  var secs = Math.round(focusWorkedSec(tm));
   state.activeTimer = null;
   closeFocus(true);
   var q = questById(tm.id);
@@ -5773,7 +5899,50 @@ function activeTimeInRange(dates){
    lives in state.activeTimer, so closing this window changes nothing; the
    clock runs on, the pill comes back, and the time is logged either way. */
 var FOCUS_GOALS = [25, 50, 90, 0];
+var GRIND_PRESETS = [{w:25,r:5}, {w:50,r:10}, {w:90,r:20}];
+/* Every theme is drawn in CSS. The app ships no image files on purpose — that
+   is what keeps it one file that opens instantly — and it must not ship
+   somebody else's artwork either. These are palettes; for actual anime art,
+   the hunter uploads their own wallpaper, which never leaves their device. */
+var FOCUS_THEMES = [
+  {k:"void",   n:"VOID"},
+  {k:"leaf",   n:"HIDDEN LEAF"},
+  {k:"cursed", n:"CURSED"},
+  {k:"ember",  n:"EMBER"},
+  {k:"tide",   n:"TIDE"},
+  {k:"steel",  n:"STEEL"},
+  {k:"sakura", n:"SAKURA"}
+];
+var FOCUS_ROTATE = [0, 5, 25, 50];
+var WP_MAX = 24;            /* a sane ceiling; the vault is not a photo library */
+var WP_MAX_PX = 1440;       /* every upload is downscaled to this before storing */
+function fo(){ return state.focus || (state.focus = defaultState().focus); }
 function focusOpen(){ return document.getElementById("focusOv").classList.contains("show"); }
+
+/* ---- GRIND: work and rest, derived from one clock ----
+   Nothing here stores its own timestamps. The phase, the cycle count and the
+   worked seconds are all computed from timerElapsedSec(), which already knows
+   about pausing. That means a phone that slept through three cycles comes back
+   with the right phase instead of a timer frozen where it was left. */
+function grindOn(tm){ return !!tm && tm.mode === "grind"; }
+function grindState(tm){
+  var w = Math.max(1, tm.work || 25) * 60, r = Math.max(0, tm.rest === undefined ? 5 : tm.rest) * 60;
+  var cycle = w + r, el = timerElapsedSec();
+  if(cycle <= 0) return {phase:"work", left:0, len:w, cycles:0, worked:el};
+  var done = Math.floor(el / cycle), pos = el - done * cycle;
+  var working = pos < w;
+  return {
+    phase: working ? "work" : "rest",
+    left: working ? (w - pos) : (cycle - pos),
+    len: working ? w : r,
+    cycles: done,
+    /* rest is not work, and is never logged as focus time */
+    worked: done * w + (working ? pos : w)
+  };
+}
+function focusWorkedSec(tm){
+  return grindOn(tm) ? grindState(tm).worked : timerElapsedSec();
+}
 function openFocus(){
   if(!state.activeTimer) return;
   var ov = document.getElementById("focusOv");
@@ -5782,6 +5951,7 @@ function openFocus(){
     (TIME_KIND_LABEL[state.activeTimer.kind] || "FOCUS").replace(/^[^A-Z]*/, "");
   ov.classList.add("show");
   document.body.style.overflow = "hidden";
+  applyFocusSkin(true);
   renderFocus();
   sfx("open");
 }
@@ -5790,55 +5960,320 @@ function closeFocus(silent){
   if(!ov.classList.contains("show")) return;
   ov.classList.remove("show");
   ov.classList.remove("reached");
+  ov.classList.remove("rest");
+  document.getElementById("foCfg").classList.remove("show");
   document.body.style.overflow = "";
   if(!silent) sfx("close");
 }
 function setFocusGoal(min){
+  fo().goalMin = min;
   state.focusGoalMin = min;
   if(state.activeTimer){ state.activeTimer.goalMin = min; state.activeTimer.chimed = false; }
   save();
   renderFocus();
 }
+
+/* ---- wallpapers: ids in the save, bytes in the vault ----
+   A base64 image in state would be written to localStorage AND pushed to the
+   cloud save on every change. One photo would break both. The picture lives in
+   IndexedDB under "wp:<id>"; the save carries nothing but a name. */
+function wpKey(id){ return "wp:" + id; }
+var wpCache = {};
+function wpLoad(id, cb){
+  if(wpCache[id]){ cb(wpCache[id]); return; }
+  idbGet("kv", wpKey(id), function(v){
+    if(v) wpCache[id] = v;
+    cb(v || "");
+  });
+}
+function wpShrink(file, cb){
+  var url = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function(){
+    try{
+      var sc = Math.min(1, WP_MAX_PX / Math.max(img.width, img.height));
+      var c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * sc));
+      c.height = Math.max(1, Math.round(img.height * sc));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      cb(c.toDataURL("image/jpeg", 0.82));
+    }catch(e){ cb(""); }
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); cb(""); };
+  img.src = url;
+}
+function wpAddFiles(files){
+  if(!idb){ toast(tr("This browser has no vault, so wallpapers cannot be stored."), "err"); return; }
+  var list = fo().wallpapers, added = 0, pending = files.length;
+  if(!pending) return;
+  for(var i=0;i<files.length;i++){
+    (function(f){
+      if(list.length + added >= WP_MAX){ pending--; if(!pending) finish(); return; }
+      wpShrink(f, function(data){
+        if(data){
+          var id = uid();
+          idbPut("kv", wpKey(id), data);
+          wpCache[id] = data;
+          list.push({id:id, name:(f.name || "wallpaper").slice(0, 40)});
+          added++;
+        }
+        pending--;
+        if(!pending) finish();
+      });
+    })(files[i]);
+  }
+  function finish(){
+    save();
+    if(added){
+      fo().wpOn = true;
+      save();
+      sysToast(added + (added === 1 ? " wallpaper added." : " wallpapers added."));
+    } else {
+      toast(tr("Nothing could be read from those files."), "err");
+    }
+    renderFocusCfg();
+    applyFocusSkin(true);
+  }
+}
+function wpRemove(id){
+  fo().wallpapers = fo().wallpapers.filter(function(w){ return w.id !== id; });
+  idbDel("kv", wpKey(id));
+  delete wpCache[id];
+  if(!fo().wallpapers.length) fo().wpOn = false;
+  save();
+  renderFocusCfg();
+  applyFocusSkin(true);
+}
+function wpIndexNow(){
+  var list = fo().wallpapers;
+  if(!list.length) return -1;
+  var every = fo().rotateMin || 0;
+  if(!every || !state.activeTimer) return 0;
+  return Math.floor(focusWorkedSec(state.activeTimer) / (every * 60)) % list.length;
+}
+var wpShown = -1, wpShownId = "";
+function applyFocusSkin(force){
+  var ov = document.getElementById("focusOv");
+  ov.setAttribute("data-fx", fo().theme || "void");
+  var list = fo().wallpapers, use = fo().wpOn && list.length;
+  ov.classList.toggle("wp", !!use);
+  var el = document.getElementById("foWall");
+  if(!use){ el.classList.remove("on"); wpShown = -1; wpShownId = ""; return; }
+  var i = wpIndexNow();
+  if(i < 0){ el.classList.remove("on"); return; }
+  var w = list[i];
+  if(!force && w.id === wpShownId) return;
+  wpShown = i; wpShownId = w.id;
+  wpLoad(w.id, function(data){
+    if(!data){ el.classList.remove("on"); return; }
+    /* the id may have moved on while the vault was reading */
+    if(wpShownId !== w.id) return;
+    el.style.backgroundImage = "url(" + JSON.stringify(data) + ")";
+    el.classList.add("on");
+  });
+}
 function renderFocus(){
   if(!focusOpen()) return;
   var tm = state.activeTimer;
   if(!tm){ closeFocus(true); return; }
-  var secs = timerElapsedSec();
-  var goal = (tm.goalMin || 0) * 60;
-  var ov = document.getElementById("focusOv");
-  document.getElementById("foTime").textContent = fmtHMS(secs);
-  document.getElementById("foGoal").textContent = tm.paused ? "PAUSED"
-    : (goal ? (secs >= goal ? "TARGET REACHED — STILL COUNTING" : fmtDur(Math.max(0, goal - secs)) + " to go")
-            : "no target — counting up");
-  var pct = goal ? Math.min(1, secs / goal) : 0;
-  var arc = document.getElementById("foArc");
-  arc.setAttribute("stroke-dashoffset", String(Math.round(283 - 283 * pct)));
-  var reached = !!goal && secs >= goal;
-  ov.classList.toggle("reached", reached);
-  arc.style.color = reached ? "var(--legendary)" : "var(--blue)";
-  if(reached && !tm.chimed){
-    tm.chimed = true;
-    save();
-    sfx("levelup");
-    sysToast("⏱ " + tm.goalMin + " minutes of focus. Stop here or keep going.");
+  var ov = document.getElementById("focusOv"), arc = document.getElementById("foArc");
+  document.getElementById("foPause").textContent = tm.paused ? "RESUME" : "PAUSE";
+  var i, h = "";
+
+  if(grindOn(tm)){
+    var g = grindState(tm), resting = g.phase === "rest";
+    /* the phase turned over, possibly while the phone was asleep: say it once */
+    if(tm.lastPhase !== g.phase){
+      if(tm.lastPhase){
+        sfx(resting ? "reward" : "levelup");
+        sysToast(resting ? "☕ Rest — " + (tm.rest || 0) + " min. Look away from the screen."
+                         : "⚔ Back to work. Cycle " + (g.cycles + 1) + ".");
+        applyFocusSkin(true);        /* a new phase earns a new picture */
+      }
+      tm.lastPhase = g.phase;
+      save();
+    }
+    ov.classList.toggle("rest", resting);
+    ov.classList.remove("reached");
+    var ph = document.getElementById("foPhase");
+    ph.style.display = "";
+    ph.className = "fo-phase " + g.phase;
+    ph.textContent = (resting ? "REST" : "WORK") + " · CYCLE " + (g.cycles + 1);
+    document.getElementById("foTime").textContent = fmtHMS(g.left);
+    document.getElementById("foGoal").textContent = tm.paused ? "PAUSED"
+      : (resting ? "then back to work" : fmtDur(g.worked) + " worked");
+    arc.setAttribute("stroke-dashoffset",
+      String(Math.round(283 - 283 * (g.len ? Math.min(1, (g.len - g.left) / g.len) : 0))));
+    arc.style.color = resting ? "#22c55e" : "var(--blue)";
+    document.getElementById("foChips").innerHTML = "";
+  } else {
+    var secs = timerElapsedSec();
+    var goal = (tm.goalMin || 0) * 60;
+    ov.classList.remove("rest");
+    document.getElementById("foPhase").style.display = "none";
+    document.getElementById("foTime").textContent = fmtHMS(secs);
+    document.getElementById("foGoal").textContent = tm.paused ? "PAUSED"
+      : (goal ? (secs >= goal ? "TARGET REACHED — STILL COUNTING" : fmtDur(Math.max(0, goal - secs)) + " to go")
+              : "no target — counting up");
+    arc.setAttribute("stroke-dashoffset",
+      String(Math.round(283 - 283 * (goal ? Math.min(1, secs / goal) : 0))));
+    var reached = !!goal && secs >= goal;
+    ov.classList.toggle("reached", reached);
+    arc.style.color = reached ? "var(--legendary)" : "var(--blue)";
+    if(reached && !tm.chimed){
+      tm.chimed = true;
+      save();
+      sfx("levelup");
+      sysToast("⏱ " + tm.goalMin + " minutes of focus. Stop here or keep going.");
+    }
+    for(i=0;i<FOCUS_GOALS.length;i++){
+      var gm = FOCUS_GOALS[i];
+      h += '<button class="fo-chip' + ((tm.goalMin || 0) === gm ? " on" : "") + '" data-goal="' + gm + '">'
+        + (gm ? gm + " MIN" : "NO TARGET") + "</button>";
+    }
+    document.getElementById("foChips").innerHTML = h;
   }
-  var pb = document.getElementById("foPause");
-  pb.textContent = tm.paused ? "RESUME" : "PAUSE";
-  var h = "";
-  for(var i=0;i<FOCUS_GOALS.length;i++){
-    var g = FOCUS_GOALS[i];
-    h += '<button class="fo-chip' + ((tm.goalMin || 0) === g ? " on" : "") + '" data-goal="' + g + '">'
-      + (g ? g + " MIN" : "NO TARGET") + "</button>";
+  applyFocusSkin(false);     /* rotates the wallpaper when its turn comes up */
+}
+
+/* ---- the settings sheet, inside the window so focus is never actually left ---- */
+function renderFocusCfg(){
+  var f = fo(), tm = state.activeTimer, i, h = "";
+  var mode = tm ? tm.mode : f.mode;
+  h = '<button class="fo-chip' + (mode !== "grind" ? " on" : "") + '" data-mode="stopwatch">STOPWATCH</button>'
+    + '<button class="fo-chip' + (mode === "grind" ? " on" : "") + '" data-mode="grind">GRIND</button>';
+  document.getElementById("foModeChips").innerHTML = h;
+  document.getElementById("foGrindWrap").style.display = mode === "grind" ? "" : "none";
+
+  var w = (tm && tm.mode === "grind") ? tm.work : f.work;
+  var r = (tm && tm.mode === "grind") ? tm.rest : f.rest;
+  h = "";
+  for(i=0;i<GRIND_PRESETS.length;i++){
+    var gp = GRIND_PRESETS[i];
+    h += '<button class="fo-chip' + (w === gp.w && r === gp.r ? " on" : "") + '" data-grind="' + gp.w + "/" + gp.r + '">'
+      + gp.w + " / " + gp.r + "</button>";
   }
-  document.getElementById("foChips").innerHTML = h;
+  document.getElementById("foGrindChips").innerHTML = h;
+  document.getElementById("foWork").value = w;
+  document.getElementById("foRest").value = r;
+
+  h = "";
+  for(i=0;i<FOCUS_THEMES.length;i++){
+    var t = FOCUS_THEMES[i];
+    /* the swatch borrows the real theme's own CSS through the same attribute */
+    h += '<button class="fo-th' + (f.theme === t.k ? " on" : "") + '" data-theme="' + t.k + '">'
+      + '<i data-fx="' + t.k + '"></i><span>' + t.n + "</span></button>";
+  }
+  document.getElementById("foThemes").innerHTML = h;
+
+  document.getElementById("foWpOn").checked = !!f.wpOn;
+  h = '<span class="fo-chip" style="border:0;background:none;padding-left:0">CHANGE EVERY</span>';
+  for(i=0;i<FOCUS_ROTATE.length;i++){
+    var m = FOCUS_ROTATE[i];
+    h += '<button class="fo-chip' + ((f.rotateMin || 0) === m ? " on" : "") + '" data-rot="' + m + '">'
+      + (m ? m + " MIN" : "NEVER") + "</button>";
+  }
+  document.getElementById("foRotChips").innerHTML = h;
+
+  var list = f.wallpapers || [];
+  h = "";
+  for(i=0;i<list.length;i++){
+    h += '<div class="fo-wp" data-wpid="' + list[i].id + '"><b>' + esc(list[i].name) + "</b>"
+      + '<button data-wpdel="' + list[i].id + '" aria-label="Remove this wallpaper">✕</button></div>';
+  }
+  document.getElementById("foWpList").innerHTML = h;
+  for(i=0;i<list.length;i++){
+    (function(wp){
+      wpLoad(wp.id, function(data){
+        var el = document.querySelector('.fo-wp[data-wpid="' + wp.id + '"]');
+        if(el && data) el.style.backgroundImage = "url(" + JSON.stringify(data) + ")";
+      });
+    })(list[i]);
+  }
+  document.getElementById("foWpNote").textContent = list.length
+    ? list.length + " of " + WP_MAX + " stored on this device."
+    : "No wallpapers yet. The built-in themes are drawn in code — upload your own art for anything else.";
+}
+function openFocusCfg(){
+  renderFocusCfg();
+  document.getElementById("foCfg").classList.add("show");
+  sfx("open");
+}
+function setGrind(w, r){
+  w = Math.max(1, Math.min(180, w || 25));
+  r = Math.max(0, Math.min(60, isNaN(r) ? 5 : r));
+  fo().work = w; fo().rest = r;
+  if(state.activeTimer && state.activeTimer.mode === "grind"){
+    state.activeTimer.work = w; state.activeTimer.rest = r; state.activeTimer.lastPhase = "";
+  }
+  save(); renderFocusCfg(); renderFocus();
 }
 document.getElementById("foMin").addEventListener("click", function(){ closeFocus(); });
+document.getElementById("foCfgBtn").addEventListener("click", openFocusCfg);
+document.getElementById("foCfgClose").addEventListener("click", function(){
+  document.getElementById("foCfg").classList.remove("show");
+  sfx("close");
+});
 document.getElementById("foPause").addEventListener("click", function(){ pauseResumeTimer(); renderFocus(); });
 document.getElementById("foFinish").addEventListener("click", function(){ stopTimer(false); });
 document.getElementById("foChips").addEventListener("click", function(e){
   var b = e.target.closest("[data-goal]"); if(!b) return;
   setFocusGoal(+b.getAttribute("data-goal"));
   sfx("tap");
+});
+document.getElementById("foModeChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-mode]"); if(!b) return;
+  var m = b.getAttribute("data-mode");
+  fo().mode = m;
+  if(state.activeTimer){
+    state.activeTimer.mode = m;
+    state.activeTimer.work = fo().work;
+    state.activeTimer.rest = fo().rest;
+    state.activeTimer.lastPhase = "";
+  }
+  save(); sfx("tap"); renderFocusCfg(); renderFocus();
+});
+document.getElementById("foGrindChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-grind]"); if(!b) return;
+  var pr = b.getAttribute("data-grind").split("/");
+  setGrind(+pr[0], +pr[1]);
+  sfx("tap");
+});
+document.getElementById("foWork").addEventListener("change", function(){ setGrind(+this.value, fo().rest); });
+document.getElementById("foRest").addEventListener("change", function(){ setGrind(fo().work, +this.value); });
+document.getElementById("foThemes").addEventListener("click", function(e){
+  var b = e.target.closest("[data-theme]"); if(!b) return;
+  fo().theme = b.getAttribute("data-theme");
+  save(); sfx("tap"); renderFocusCfg(); applyFocusSkin(true);
+});
+document.getElementById("foWpOn").addEventListener("change", function(){
+  if(this.checked && !(fo().wallpapers || []).length){
+    this.checked = false;
+    toast(tr("Upload a wallpaper first."), "err");
+    return;
+  }
+  fo().wpOn = this.checked;
+  save(); applyFocusSkin(true);
+});
+document.getElementById("foRotChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-rot]"); if(!b) return;
+  fo().rotateMin = +b.getAttribute("data-rot");
+  save(); sfx("tap"); renderFocusCfg(); applyFocusSkin(true);
+});
+document.getElementById("foWpAdd").addEventListener("click", function(){
+  document.getElementById("foWpFile").click();
+});
+document.getElementById("foWpFile").addEventListener("change", function(){
+  if(this.files && this.files.length) wpAddFiles(this.files);
+  this.value = "";
+});
+document.getElementById("foWpList").addEventListener("click", function(e){
+  var b = e.target.closest("[data-wpdel]"); if(!b) return;
+  var id = b.getAttribute("data-wpdel");
+  var wp = (fo().wallpapers || []).filter(function(x){ return x.id === id; })[0];
+  if(wp && !confirm('Remove "' + wp.name + '"?')) return;
+  wpRemove(id);
 });
 /* the pill is the way back in */
 document.getElementById("timerPill").addEventListener("click", function(e){

@@ -50,6 +50,8 @@ And a section must also pass all three of these:
 | Money fields readable while typing | 2026-09-16 — 12000 shows as 12,000 |
 | The focus timer takes the whole screen | 2026-09-16 — ⏱ opens a Pomodoro-style window with a target ring |
 | A day opened as a file: time, percentage, and where the hours went | 2026-09-16 — CALENDAR → any date |
+| Focus themes + your own wallpapers on a rotation | 2026-09-18 — 7 CSS themes; uploads stored in the vault, never in the save |
+| GRIND: editable work/rest cycles in the focus window | 2026-09-18 — 25/5, 50/10, 90/20 or custom; rest is never logged as work |
 
 ---
 

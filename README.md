@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **100 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **117 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -189,7 +189,7 @@ Pressing ⏱ on any quest or to-do **takes over the screen**. A focus timer that
 
 The window holds one task name, one ring, one clock, and nothing else:
 
-- **Target chips** — 25 / 50 / 90 minutes, or NO TARGET. The ring fills toward it and your choice is remembered in `state.focusGoalMin` for the next session.
+- **Target chips** — 25 / 50 / 90 minutes, or NO TARGET. The ring fills toward it and your choice is remembered in `state.focus.goalMin` for the next session.
 - **Reaching the target chimes and turns the ring gold, and then keeps counting.** It does not stop you — stopping is your decision, not the app's.
 - **PAUSE** / **FINISH**, and a **–** that closes the window.
 
@@ -197,7 +197,47 @@ The window holds one task name, one ring, one clock, and nothing else:
 
 The window is redrawn by the same one-second loop that drives the pill, so it survives a reload mid-session.
 
-This is a different thing from the INTERVAL TIMER below: the focus window measures **one long unbroken session**; the interval timer runs **rounds of work and rest**.
+This is a different thing from the INTERVAL TIMER below: that one runs **rounds of physical training**; this one is for sitting down and working.
+
+### ⚙ GRIND — work and rest cycles
+
+The ⚙ in the corner opens the timer's settings **inside the window**, so changing something never means leaving focus.
+
+**MODE** picks between **STOPWATCH** (counts up, described above) and **GRIND** (a pomodoro cycle). Grind presets are **25 / 5**, **50 / 10** and **90 / 20**, and both numbers are editable — anything from 1 to 180 minutes of work and 0 to 60 of rest. Out-of-range values are clamped rather than left to break the cycle maths.
+
+In grind the window shows **WORK · CYCLE 3**, the ring counts down inside the current phase, and the phase turns over on its own with a chime and a colour change (blue for work, green for rest).
+
+**Rest is never logged as focus time.** `focusWorkedSec()` returns only the work phases, and that is the number `stopTimer()` records — finish a 28-minute grind session and the app logs 25 minutes, because that is what you worked.
+
+**Nothing in grind stores its own timestamps.** The phase, the cycle count and the worked seconds are all *derived* from `timerElapsedSec()`, which already understands pausing:
+
+```
+cycle = work + rest
+pos   = elapsed % cycle          → where you are inside the current cycle
+phase = pos < work ? work : rest
+worked = floor(elapsed/cycle) * work + (working ? pos : work)
+```
+
+That is not a style preference. A backgrounded phone stops ticking, so a timer that *counts* phases would wake up frozen three cycles behind. Deriving them from the clock means it wakes up correct. A test sleeps a session through three whole cycles and asserts it comes back in the right phase with the right worked total.
+
+### Themes, and your own wallpapers
+
+**Seven built-in themes** — VOID, HIDDEN LEAF, CURSED, EMBER, TIDE, STEEL, SAKURA — each drawn entirely in CSS gradients. The app ships **no image files**, on purpose: that is what keeps it one file that opens instantly, and it also means it ships nobody else's artwork. If you want actual anime art on your timer, **upload it** — that is what the upload button is for, and it is your file.
+
+Theme rules are written as `[data-fx="leaf"]` rather than `#focusOv[data-fx="leaf"]`, and sized in **percentages rather than pixels**, so the identical rule paints both a full screen and a 90px settings swatch. The swatch therefore wears the real theme instead of an approximation of it.
+
+**🖼 UPLOAD A WALLPAPER** takes any image, or several at once. Each one is downscaled to `WP_MAX_PX` (1440px on its long edge) and re-encoded as JPEG before being stored, up to `WP_MAX` of them.
+
+**Where they are stored is the important part.** A base64 image in `state` would be written to localStorage *and* pushed to the cloud save on every single change — one photo would break both. So:
+
+| | |
+|---|---|
+| `state.focus.wallpapers` | `[{id, name}]` and **nothing else** |
+| IndexedDB, key `wp:<id>` | the actual bytes, on that device only |
+
+A test asserts that after an upload, the string `data:image` appears **nowhere** in the save or in localStorage. Wallpapers are never uploaded anywhere, never synced, and never leave the device.
+
+**CHANGE EVERY** rotates the picture on a timer — NEVER, 5, 25 or 50 minutes — and grind also swaps the picture on every phase change. The index is `floor(workedSec / everyMin) % count`, so it wraps and needs no state of its own.
 
 ## 4e. THE INTERVAL TIMER
 
