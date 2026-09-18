@@ -1101,6 +1101,18 @@ main section{animation:pagein .28s ease}
 #focusOv.rest #foArc{color:#22c55e}
 
 /* the settings sheet, inside the window so focus is never actually left */
+#foTrim{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;
+  background:rgba(4,5,14,.96);backdrop-filter:blur(8px);text-align:left;
+  padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#foTrim.show{display:flex}
+.fo-snd{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:10px;margin-bottom:7px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.fo-snd.on{border-color:var(--blue)}
+.fo-snd b{flex:1;min-width:0;font-weight:400;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fo-snd span{font-size:.62rem;color:var(--dim);font-family:'Orbitron',monospace;flex:0 0 auto}
+.fo-snd button{flex:0 0 auto;width:30px;height:30px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--dim);font-size:.76rem}
+.fo-snd button:hover{border-color:var(--blue);color:var(--text)}
 #foCfg{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;
   background:rgba(4,5,14,.93);backdrop-filter:blur(8px);text-align:left;
   padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -2154,6 +2166,28 @@ main section{animation:pagein .28s ease}
     <div class="fo-hint" id="foHint">Put the phone down. The clock keeps running if you leave this window — nothing is lost, and nothing else here is asking for your attention.</div>
   </div>
 
+  <div id="foTrim">
+    <div class="fo-cfg-head">
+      <div class="qv-name">✂ CHOOSE 30 SECONDS</div>
+      <button class="qv-close" id="foTrimCancel" aria-label="Cancel">✕</button>
+    </div>
+    <div class="fo-cfg-body">
+      <div class="empty-note" id="foTrimName" style="margin-bottom:12px"></div>
+      <div class="fo-nums" style="margin-top:0">
+        <div>
+          <label for="foTrimStart">Start at <b id="foTrimAt">0:00</b></label>
+          <input class="inp" id="foTrimStart" type="range" min="0" max="100" value="0">
+        </div>
+      </div>
+      <div class="fo-nums">
+        <div><label for="foTrimLen">Length (seconds, max 30)</label><input class="inp" id="foTrimLen" type="number" min="1" max="30" value="15"></div>
+      </div>
+      <button class="btn" id="foTrimPlay" style="width:100%;margin-top:12px">▶ PREVIEW THIS PART</button>
+      <button class="btn primary" id="foTrimSave" style="width:100%;margin-top:10px">✓ SAVE THIS SOUND</button>
+      <div class="empty-note" id="foTrimNote" style="margin-top:12px"></div>
+    </div>
+  </div>
+
   <div id="foCfg">
     <div class="fo-cfg-head">
       <div class="qv-name">⚙ TIMER SETTINGS</div>
@@ -2170,7 +2204,28 @@ main section{animation:pagein .28s ease}
           <div><label for="foWork">Work (min)</label><input class="inp" id="foWork" type="number" min="1" max="180" value="25"></div>
           <div><label for="foRest">Rest (min)</label><input class="inp" id="foRest" type="number" min="0" max="60" value="5"></div>
         </div>
+        <div class="fo-sec">LAPS — CYCLES BEFORE THE SESSION ENDS <i></i></div>
+        <div class="fo-chips" id="foLapChips" style="justify-content:flex-start;margin:0"></div>
+        <div class="fo-nums">
+          <div><label for="foLaps">Laps (0 = keep going forever)</label><input class="inp" id="foLaps" type="number" min="0" max="24" value="4"></div>
+        </div>
       </div>
+
+      <div class="fo-sec">ALARM <i></i></div>
+      <div class="empty-note" id="foAlarmWarn" style="margin-bottom:10px"></div>
+      <div class="fo-chips" id="foToneChips" style="justify-content:flex-start;margin:0"></div>
+      <div class="fo-nums">
+        <div><label for="foVol">Volume</label><input class="inp" id="foVol" type="range" min="0" max="100" value="80"></div>
+        <div><label for="foRepeat">Repeats</label><input class="inp" id="foRepeat" type="number" min="1" max="6" value="2"></div>
+      </div>
+      <button class="btn" id="foTest" style="width:100%;margin-top:10px">▶ TEST THE ALARM</button>
+
+      <div class="fo-sec">YOUR SOUNDS <i></i></div>
+      <div class="empty-note" style="margin-bottom:10px">Upload a ringtone or a song and pick the 30 seconds you want. Stored on this device only.</div>
+      <div id="foSndList"></div>
+      <input type="file" id="foSndFile" accept="audio/*" style="display:none" aria-label="Choose an audio file">
+      <button class="btn" id="foSndAdd" style="width:100%;margin-top:10px">🎵 UPLOAD A SOUND</button>
+      <div class="empty-note" id="foSndNote" style="margin-top:10px"></div>
 
       <div class="fo-sec">THEME <i></i></div>
       <div class="fo-themes" id="foThemes"></div>
@@ -2710,6 +2765,11 @@ function defaultState(){
       goalMin:25,        /* STOPWATCH target in minutes (0 = none) */
       mode:"stopwatch",  /* "stopwatch" counts up; "grind" runs work/rest cycles */
       work:25, rest:5,   /* GRIND cycle, in minutes */
+      laps:4,            /* how many work cycles before the session ends (0 = endless) */
+      alarm:"chime",     /* built-in tone key, or "snd:<id>" for an uploaded one */
+      alarmVol:0.8,
+      alarmRepeat:2,     /* how many times the alarm fires each phase change */
+      sounds:[],         /* [{id,name,sec}] only — the audio lives in IndexedDB */
       wpOn:false,        /* show your own wallpapers instead of the theme */
       rotateMin:25,      /* change picture every N minutes (0 = never) */
       wallpapers:[]      /* [{id,name}] only — the bytes live in IndexedDB, never in the save */
@@ -3885,6 +3945,7 @@ function migrateState(){
   for(var fk in fdef) if(state.focus[fk] === undefined) state.focus[fk] = fdef[fk];
   if(state.focusGoalMin !== undefined && state.focus.goalMin === undefined) state.focus.goalMin = state.focusGoalMin;
   if(!Array.isArray(state.focus.wallpapers)) state.focus.wallpapers = [];
+  if(!Array.isArray(state.focus.sounds)) state.focus.sounds = [];
   if(!state.focus.wallpapers.length) state.focus.wpOn = false;
   for(var ti=0; ti<state.todos.length; ti++){
     var tdo = state.todos[ti];
@@ -5781,6 +5842,7 @@ function startTimer(id){
   state.activeTimer = {id:id, name: q ? q.name : td.text, startedAt: Date.now(), accumulated:0, paused:false,
                        kind: timerKindFor(q, td), goalMin: f.goalMin === undefined ? 25 : f.goalMin,
                        mode: f.mode || "stopwatch", work: f.work || 25, rest: f.rest === undefined ? 5 : f.rest,
+                       laps: f.laps === undefined ? 0 : f.laps,
                        lastPhase:"", chimed:false};
   sfx("timer");
   save();
@@ -5848,6 +5910,9 @@ function timerKindFor(q, td){
 function stopTimer(silent){
   var tm = state.activeTimer;
   if(!tm) return;
+  alarmDisarm();
+  keepAliveOff();
+  mediaSessionOff();
   /* in GRIND only the work phases count — resting is not focus time */
   var secs = Math.round(focusWorkedSec(tm));
   state.activeTimer = null;
@@ -6099,7 +6164,8 @@ function renderFocus(){
     var ph = document.getElementById("foPhase");
     ph.style.display = "";
     ph.className = "fo-phase " + g.phase;
-    ph.textContent = (resting ? "REST" : "WORK") + " · CYCLE " + (g.cycles + 1);
+    ph.textContent = (resting ? "REST" : "WORK") + " · CYCLE " + (g.cycles + 1)
+      + (tm.laps ? " / " + tm.laps : "");
     document.getElementById("foTime").textContent = fmtHMS(g.left);
     document.getElementById("foGoal").textContent = tm.paused ? "PAUSED"
       : (resting ? "then back to work" : fmtDur(g.worked) + " worked");
@@ -6137,6 +6203,291 @@ function renderFocus(){
   applyFocusSkin(false);     /* rotates the wallpaper when its turn comes up */
 }
 
+/* ---------------- THE ALARM ----------------
+   What a web app can and cannot do, stated once so nobody re-litigates it:
+
+   - Screen on, app open ...................... perfect, any sound, any length.
+   - Screen on, another tab/app in front ...... works: the alarm is scheduled on
+     the AudioContext clock, which keeps running when JS timers are throttled.
+   - Screen locked, app still resident ........ usually works on Android, thanks
+     to the silent keep-alive loop below holding the audio context awake; on iOS
+     it is unreliable and may be killed at any moment.
+   - App force-closed, browser killed, phone
+     powered off .............................. IMPOSSIBLE. A web page is not an
+     OS alarm clock. There is no API for it: Notification Triggers was removed,
+     and web push needs a server this app deliberately does not have. A native
+     app would be required. The UI says so rather than pretending.
+
+   So the alarm is built to survive everything it can survive: the sound is
+   handed to the audio hardware in advance, not fired by a timer callback. */
+var ALARM_TONES = [
+  {k:"chime",  n:"CHIME"},
+  {k:"bell",   n:"BELL"},
+  {k:"ascend", n:"ASCEND"},
+  {k:"pulse",  n:"PULSE"},
+  {k:"gong",   n:"GONG"},
+  {k:"alert",  n:"ALERT"}
+];
+var LAP_PRESETS = [2, 4, 6, 0];
+var SND_MAX = 8;            /* uploaded sounds kept on the device */
+var SND_MAX_SEC = 30;       /* the slice they choose, never longer */
+var SND_RATE = 22050;       /* mono at this rate keeps 30s near a megabyte */
+var SND_MAX_FILE = 30 * 1024 * 1024;
+
+/* every built-in tone is synthesised, so the app still ships no media files
+   and still ships nobody else's ringtone */
+function toneAt(key, at, vol){
+  var v = Math.max(0.02, Math.min(1, vol === undefined ? 0.8 : vol));
+  function t(f, off, dur, type, g, slide){ sfxTone(f, at + off, dur, type, g * v, slide); }
+  if(key === "bell"){
+    t(1318, 0, 1.5, "sine", 0.34); t(1976, 0.01, 1.2, "sine", 0.12);
+    t(659, 0.02, 1.8, "sine", 0.16);
+  } else if(key === "ascend"){
+    t(523, 0, 0.18, "triangle", 0.26); t(659, 0.16, 0.18, "triangle", 0.26);
+    t(784, 0.32, 0.18, "triangle", 0.26); t(1047, 0.48, 0.7, "triangle", 0.30);
+  } else if(key === "pulse"){
+    for(var i=0;i<4;i++) t(880, i * 0.26, 0.13, "square", 0.20);
+  } else if(key === "gong"){
+    t(110, 0, 2.4, "sine", 0.34); t(164, 0.02, 2.0, "triangle", 0.16);
+    t(220, 0.04, 1.6, "sine", 0.12);
+  } else if(key === "alert"){
+    for(var j=0;j<3;j++){ t(1200, j * 0.38, 0.16, "square", 0.24); t(900, j * 0.38 + 0.17, 0.16, "square", 0.24); }
+  } else { /* chime */
+    t(880, 0, 0.5, "sine", 0.28); t(1174, 0.14, 0.5, "sine", 0.24); t(1568, 0.28, 0.9, "sine", 0.26);
+  }
+}
+function toneLen(key){
+  return key === "gong" ? 2.6 : (key === "bell" ? 1.9 : (key === "ascend" ? 1.3 : 1.2));
+}
+
+/* ---- uploaded sounds: names in the save, audio in the vault ---- */
+function sndKey(id){ return "snd:" + id; }
+var sndBufCache = {};
+function sndLoadBuf(id, cb){
+  if(sndBufCache[id]){ cb(sndBufCache[id]); return; }
+  var ctx = audio(); if(!ctx){ cb(null); return; }
+  idbGet("kv", sndKey(id), function(data){
+    if(!data){ cb(null); return; }
+    try{
+      var bin = atob(String(data).split(",")[1] || "");
+      var buf = new ArrayBuffer(bin.length), view = new Uint8Array(buf);
+      for(var i=0;i<bin.length;i++) view[i] = bin.charCodeAt(i);
+      ctx.decodeAudioData(buf, function(ab){ sndBufCache[id] = ab; cb(ab); }, function(){ cb(null); });
+    }catch(e){ cb(null); }
+  });
+}
+/* scheduled alarm voices, so a re-arm or a stop can silence what is pending */
+var alarmNodes = [];
+function alarmCancel(){
+  for(var i=0;i<alarmNodes.length;i++){ try{ alarmNodes[i].stop(0); }catch(e){} }
+  alarmNodes = [];
+}
+function bufferAt(ab, at, vol){
+  var ctx = audio(); if(!ctx || !ab) return;
+  try{
+    var src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = ab;
+    g.gain.value = Math.max(0.02, Math.min(1, vol === undefined ? 0.8 : vol));
+    src.connect(g); g.connect(ctx.destination);
+    src.start(at);
+    alarmNodes.push(src);
+  }catch(e){}
+}
+/* offset is seconds from now; 0 rings immediately */
+function alarmPlay(offset, times){
+  if(!state || state.sound === false) return;
+  var ctx = audio(); if(!ctx) return;
+  var f = fo();
+  var key = f.alarm || "chime";
+  var vol = f.alarmVol === undefined ? 0.8 : f.alarmVol;
+  var reps = Math.max(1, Math.min(6, times || f.alarmRepeat || 1));
+  var at = ctx.currentTime + Math.max(0, offset || 0);
+  if(key.indexOf("snd:") === 0){
+    sndLoadBuf(key.slice(4), function(ab){
+      if(!ab){ for(var i=0;i<reps;i++) toneAt("chime", at + i * 1.5, vol); return; }
+      /* a long clip repeats back to back rather than on top of itself */
+      for(var j=0;j<reps;j++) bufferAt(ab, at + j * (ab.duration + 0.25), vol);
+    });
+    return;
+  }
+  var gap = toneLen(key) + 0.35;
+  for(var i=0;i<reps;i++) toneAt(key, at + i * gap, vol);
+}
+
+/* ---- the keep-alive: a silent loop that stops the phone suspending audio ----
+   Without it the AudioContext is suspended the moment the tab goes to the
+   background on mobile, and a scheduled alarm never sounds. With it the
+   context stays live, so the alarm handed to the hardware still fires. */
+var keepAliveSrc = null;
+function keepAliveOn(){
+  var ctx = audio(); if(!ctx || keepAliveSrc) return;
+  try{
+    var buf = ctx.createBuffer(1, Math.round(ctx.sampleRate), ctx.sampleRate); /* one second of silence */
+    var src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = buf; src.loop = true;
+    g.gain.value = 0.0001;   /* inaudible, but not zero: some engines cull true silence */
+    src.connect(g); g.connect(ctx.destination);
+    src.start(0);
+    keepAliveSrc = src;
+  }catch(e){}
+}
+function keepAliveOff(){
+  if(!keepAliveSrc) return;
+  try{ keepAliveSrc.stop(0); }catch(e){}
+  keepAliveSrc = null;
+}
+/* the lock screen shows what is running, which also helps Android keep us alive */
+function mediaSessionOn(name){
+  if(!("mediaSession" in navigator)) return;
+  try{
+    navigator.mediaSession.metadata = new window.MediaMetadata({
+      title: name || "Focus", artist: "LEVEL UP", album: "Hunter System"
+    });
+    navigator.mediaSession.playbackState = "playing";
+  }catch(e){}
+}
+function mediaSessionOff(){
+  if(!("mediaSession" in navigator)) return;
+  try{ navigator.mediaSession.playbackState = "none"; }catch(e){}
+}
+
+/* ---- arming: hand the next phase change to the audio hardware in advance ---- */
+var armedFor = "";
+function alarmArm(force){
+  var tm = state.activeTimer;
+  if(!tm || !grindOn(tm) || tm.paused){ if(force){ alarmCancel(); armedFor = ""; } return; }
+  var g = grindState(tm);
+  var tag = tm.id + ":" + g.cycles + ":" + g.phase + ":" + (fo().alarm || "") + ":" + (fo().alarmRepeat || 1);
+  if(!force && tag === armedFor) return;
+  alarmCancel();
+  armedFor = tag;
+  alarmPlay(g.left, fo().alarmRepeat);
+}
+function alarmDisarm(){
+  alarmCancel();
+  armedFor = "";
+}
+
+/* ---- laps: the session ends itself once the cycles are done ----
+   This runs from the one-second tick rather than from renderFocus, because the
+   window is often closed while the session runs and a finished grind must still
+   finish. */
+function grindDone(tm){
+  if(!grindOn(tm)) return false;
+  var laps = tm.laps === undefined ? 0 : tm.laps;
+  if(!laps) return false;
+  return grindState(tm).cycles >= laps;
+}
+function grindTick(){
+  var tm = state.activeTimer;
+  if(!tm) { keepAliveOff(); mediaSessionOff(); alarmDisarm(); return; }
+  if(grindOn(tm) && !tm.paused){ keepAliveOn(); mediaSessionOn(tm.name); }
+  alarmArm(false);
+  if(grindDone(tm)){
+    var laps = tm.laps;
+    alarmDisarm();
+    alarmPlay(0, Math.max(2, fo().alarmRepeat || 2));
+    showNotify("✓ GRIND COMPLETE", laps + (laps === 1 ? " lap" : " laps") + " of " + tm.work + " minutes. " + tm.name);
+    stopTimer(false);
+    announce("✓ GRIND COMPLETE",
+      laps + (laps === 1 ? " lap" : " laps") + " of " + tm.work + " minutes, finished.\n\n" + tm.name
+      + "\n\nThat is " + fmtDur(laps * tm.work * 60) + " of real work. Stand up and walk away from it.",
+      "⏱", "GOOD");
+  }
+}
+
+/* ---- uploading a sound, and choosing the part of it you want ---- */
+var trimBuf = null, trimName = "", trimPreview = null;
+function wavFromBuffer(ab){
+  /* mono 16-bit PCM: the smallest thing every browser can decode back */
+  var n = ab.length, data = ab.getChannelData(0);
+  var bytes = 44 + n * 2, buf = new ArrayBuffer(bytes), v = new DataView(buf), i;
+  function str(off, t){ for(var k=0;k<t.length;k++) v.setUint8(off + k, t.charCodeAt(k)); }
+  str(0, "RIFF"); v.setUint32(4, bytes - 8, true); str(8, "WAVE");
+  str(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, ab.sampleRate, true); v.setUint32(28, ab.sampleRate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, n * 2, true);
+  for(i=0;i<n;i++){
+    var x = Math.max(-1, Math.min(1, data[i]));
+    v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true);
+  }
+  var bin = "", u8 = new Uint8Array(buf);
+  for(i=0;i<u8.length;i+=0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return "data:audio/wav;base64," + btoa(bin);
+}
+function trimOpen(file){
+  var ctx = audio();
+  if(!ctx){ toast(tr("This browser cannot read audio."), "err"); return; }
+  if(file.size > SND_MAX_FILE){ toast(tr("That file is too big. Use one under 30 MB."), "err"); return; }
+  document.getElementById("foTrimNote").textContent = tr("Reading the file…");
+  document.getElementById("foTrim").classList.add("show");
+  file.arrayBuffer().then(function(ar){
+    ctx.decodeAudioData(ar, function(ab){
+      trimBuf = ab;
+      trimName = (file.name || "sound").replace(/\.[a-z0-9]+$/i, "").slice(0, 40);
+      document.getElementById("foTrimName").textContent = trimName + " · " + fmtDur(ab.duration);
+      var sl = document.getElementById("foTrimStart");
+      sl.max = String(Math.max(0, Math.floor(ab.duration - 1)));
+      sl.value = "0";
+      document.getElementById("foTrimLen").value = String(Math.min(SND_MAX_SEC, Math.max(1, Math.floor(ab.duration))));
+      document.getElementById("foTrimNote").textContent =
+        tr("Slide to the part you want. It is saved as mono, which is all an alarm needs.");
+      trimUpdate();
+    }, function(){
+      document.getElementById("foTrimNote").textContent = tr("That file could not be decoded. Try an mp3, m4a, wav or ogg.");
+      trimBuf = null;
+    });
+  })["catch"](function(){
+    document.getElementById("foTrimNote").textContent = tr("That file could not be read.");
+    trimBuf = null;
+  });
+}
+function trimSpan(){
+  var start = +document.getElementById("foTrimStart").value || 0;
+  var len = Math.max(1, Math.min(SND_MAX_SEC, +document.getElementById("foTrimLen").value || 15));
+  if(trimBuf) len = Math.min(len, Math.max(0.5, trimBuf.duration - start));
+  return {start:start, len:len};
+}
+function trimUpdate(){
+  var sp = trimSpan();
+  document.getElementById("foTrimAt").textContent = fmtHMS(sp.start) + " → " + fmtHMS(sp.start + sp.len);
+}
+function trimRender(cb){
+  if(!trimBuf){ cb(null); return; }
+  var sp = trimSpan();
+  var frames = Math.max(1, Math.round(sp.len * SND_RATE));
+  var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if(!OC){ cb(null); return; }
+  try{
+    var oc = new OC(1, frames, SND_RATE);
+    var src = oc.createBufferSource();
+    src.buffer = trimBuf;
+    /* a short fade at each end so an alarm never starts or stops with a click */
+    var g = oc.createGain(), fade = Math.min(0.25, sp.len / 6);
+    g.gain.setValueAtTime(0.0001, 0);
+    g.gain.linearRampToValueAtTime(1, fade);
+    g.gain.setValueAtTime(1, Math.max(fade, sp.len - fade));
+    g.gain.linearRampToValueAtTime(0.0001, sp.len);
+    src.connect(g); g.connect(oc.destination);
+    src.start(0, sp.start, sp.len);
+    oc.startRendering().then(cb)["catch"](function(){ cb(null); });
+  }catch(e){ cb(null); }
+}
+function trimClose(){
+  document.getElementById("foTrim").classList.remove("show");
+  if(trimPreview){ try{ trimPreview.stop(0); }catch(e){} trimPreview = null; }
+  trimBuf = null;
+}
+function sndRemove(id){
+  fo().sounds = (fo().sounds || []).filter(function(x){ return x.id !== id; });
+  idbDel("kv", sndKey(id));
+  delete sndBufCache[id];
+  if(fo().alarm === "snd:" + id) fo().alarm = "chime";
+  save();
+  renderFocusCfg();
+}
+
 /* ---- the settings sheet, inside the window so focus is never actually left ---- */
 function renderFocusCfg(){
   var f = fo(), tm = state.activeTimer, i, h = "";
@@ -6157,6 +6508,43 @@ function renderFocusCfg(){
   document.getElementById("foGrindChips").innerHTML = h;
   document.getElementById("foWork").value = w;
   document.getElementById("foRest").value = r;
+
+  var laps = (tm && tm.mode === "grind") ? (tm.laps || 0) : (f.laps || 0);
+  h = "";
+  for(i=0;i<LAP_PRESETS.length;i++){
+    var lp = LAP_PRESETS[i];
+    h += '<button class="fo-chip' + (laps === lp ? " on" : "") + '" data-lap="' + lp + '">'
+      + (lp ? lp + " LAPS" : "ENDLESS") + "</button>";
+  }
+  document.getElementById("foLapChips").innerHTML = h;
+  document.getElementById("foLaps").value = laps;
+
+  /* the alarm */
+  h = "";
+  for(i=0;i<ALARM_TONES.length;i++){
+    var at = ALARM_TONES[i];
+    h += '<button class="fo-chip' + (f.alarm === at.k ? " on" : "") + '" data-tone="' + at.k + '">' + at.n + "</button>";
+  }
+  document.getElementById("foToneChips").innerHTML = h;
+  document.getElementById("foVol").value = Math.round((f.alarmVol === undefined ? 0.8 : f.alarmVol) * 100);
+  document.getElementById("foRepeat").value = f.alarmRepeat || 1;
+  document.getElementById("foAlarmWarn").textContent = alarmReachText();
+
+  var snds = f.sounds || [];
+  h = "";
+  for(i=0;i<snds.length;i++){
+    var sd = snds[i], picked = f.alarm === "snd:" + sd.id;
+    h += '<div class="fo-snd' + (picked ? " on" : "") + '" data-sid="' + sd.id + '">'
+      + '<button data-sndplay="' + sd.id + '" aria-label="Play this sound">\u25b6</button>'
+      + "<b>" + esc(sd.name) + "</b><span>" + Math.round(sd.sec || 0) + "s</span>"
+      + '<button data-sndpick="' + sd.id + '" aria-label="Use this as the alarm">'
+      + (picked ? "\u2713" : "\u25cb") + "</button>"
+      + '<button data-snddel="' + sd.id + '" aria-label="Delete this sound">\u2715</button></div>';
+  }
+  document.getElementById("foSndList").innerHTML = h;
+  document.getElementById("foSndNote").textContent = snds.length
+    ? snds.length + " of " + SND_MAX + " stored on this device."
+    : "No sounds yet. The built-in ones are synthesised, so the app carries no audio files.";
 
   h = "";
   for(i=0;i<FOCUS_THEMES.length;i++){
@@ -6239,6 +6627,101 @@ document.getElementById("foGrindChips").addEventListener("click", function(e){
   var pr = b.getAttribute("data-grind").split("/");
   setGrind(+pr[0], +pr[1]);
   sfx("tap");
+});
+function setLaps(n){
+  n = Math.max(0, Math.min(24, isNaN(n) ? 0 : Math.round(n)));
+  fo().laps = n;
+  if(state.activeTimer) state.activeTimer.laps = n;
+  save(); renderFocusCfg(); renderFocus();
+}
+/* said plainly in the settings, because the alternative is a broken promise */
+function alarmReachText(){
+  var ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return "Rings while the app is open or in the background. "
+    + (ios ? "On iPhone it may be silenced once the screen locks. " : "It usually survives the screen locking. ")
+    + "It cannot ring if you force-close the app or power the phone off \u2014 no website can, on any phone.";
+}
+document.getElementById("foLapChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-lap]"); if(!b) return;
+  setLaps(+b.getAttribute("data-lap")); sfx("tap");
+});
+document.getElementById("foLaps").addEventListener("change", function(){ setLaps(+this.value); });
+document.getElementById("foToneChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-tone]"); if(!b) return;
+  fo().alarm = b.getAttribute("data-tone");
+  save(); renderFocusCfg(); alarmArm(true);
+  alarmPlay(0, 1);
+});
+document.getElementById("foVol").addEventListener("input", function(){
+  fo().alarmVol = Math.max(0, Math.min(1, (+this.value || 0) / 100));
+  save();
+});
+document.getElementById("foVol").addEventListener("change", function(){ alarmPlay(0, 1); alarmArm(true); });
+document.getElementById("foRepeat").addEventListener("change", function(){
+  fo().alarmRepeat = Math.max(1, Math.min(6, +this.value || 1));
+  save(); renderFocusCfg(); alarmArm(true);
+});
+document.getElementById("foTest").addEventListener("click", function(){ alarmPlay(0, fo().alarmRepeat); });
+document.getElementById("foSndAdd").addEventListener("click", function(){
+  if((fo().sounds || []).length >= SND_MAX){ toast(tr("That is as many sounds as the device keeps."), "err"); return; }
+  document.getElementById("foSndFile").click();
+});
+document.getElementById("foSndFile").addEventListener("change", function(){
+  if(this.files && this.files[0]) trimOpen(this.files[0]);
+  this.value = "";
+});
+document.getElementById("foSndList").addEventListener("click", function(e){
+  var b = e.target.closest("[data-sndplay],[data-sndpick],[data-snddel]"); if(!b) return;
+  var id = b.getAttribute("data-sndplay") || b.getAttribute("data-sndpick") || b.getAttribute("data-snddel");
+  if(b.hasAttribute("data-sndplay")){
+    sndLoadBuf(id, function(ab){
+      if(ab) bufferAt(ab, audio() ? audio().currentTime : 0, fo().alarmVol);
+      else toast(tr("That sound could not be read back."), "err");
+    });
+  } else if(b.hasAttribute("data-sndpick")){
+    fo().alarm = "snd:" + id;
+    save(); renderFocusCfg(); alarmArm(true); sfx("tap");
+  } else {
+    var sd = (fo().sounds || []).filter(function(x){ return x.id === id; })[0];
+    if(sd && !confirm('Delete "' + sd.name + '"?')) return;
+    sndRemove(id);
+  }
+});
+document.getElementById("foTrimStart").addEventListener("input", trimUpdate);
+document.getElementById("foTrimLen").addEventListener("change", trimUpdate);
+document.getElementById("foTrimCancel").addEventListener("click", trimClose);
+document.getElementById("foTrimPlay").addEventListener("click", function(){
+  if(!trimBuf) return;
+  if(trimPreview){ try{ trimPreview.stop(0); }catch(e){} trimPreview = null; }
+  trimRender(function(ab){
+    if(!ab){ toast(tr("That part could not be rendered."), "err"); return; }
+    var ctx = audio(); if(!ctx) return;
+    try{
+      var src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = ab; g.gain.value = fo().alarmVol === undefined ? 0.8 : fo().alarmVol;
+      src.connect(g); g.connect(ctx.destination);
+      src.start(0); trimPreview = src;
+    }catch(e){}
+  });
+});
+document.getElementById("foTrimSave").addEventListener("click", function(){
+  if(!trimBuf){ toast(tr("Nothing to save yet."), "err"); return; }
+  if(!idb){ toast(tr("This browser has no vault, so sounds cannot be stored."), "err"); return; }
+  document.getElementById("foTrimNote").textContent = tr("Saving\u2026");
+  var nm = trimName, sp = trimSpan();
+  trimRender(function(ab){
+    if(!ab){ document.getElementById("foTrimNote").textContent = tr("That part could not be rendered."); return; }
+    var id = uid();
+    idbPut("kv", sndKey(id), wavFromBuffer(ab));
+    sndBufCache[id] = ab;
+    fo().sounds.push({id:id, name:nm, sec:Math.round(sp.len)});
+    fo().alarm = "snd:" + id;
+    save();
+    trimClose();
+    renderFocusCfg();
+    sysToast("\ud83c\udfb5 " + nm + " is now your alarm.");
+  });
 });
 document.getElementById("foWork").addEventListener("change", function(){ setGrind(+this.value, fo().rest); });
 document.getElementById("foRest").addEventListener("change", function(){ setGrind(fo().work, +this.value); });
@@ -10239,6 +10722,7 @@ setInterval(function(){
   var el = document.getElementById("pkgTimer");
   if(el && currentPage === "home") el.textContent = pkgCountdown();
   updateTimerPillTime();
+  grindTick();
   renderFocus();
 }, 1000);
 

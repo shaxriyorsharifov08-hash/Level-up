@@ -52,6 +52,9 @@ And a section must also pass all three of these:
 | A day opened as a file: time, percentage, and where the hours went | 2026-09-16 — CALENDAR → any date |
 | Focus themes + your own wallpapers on a rotation | 2026-09-18 — 7 CSS themes; uploads stored in the vault, never in the save |
 | GRIND: editable work/rest cycles in the focus window | 2026-09-18 — 25/5, 50/10, 90/20 or custom; rest is never logged as work |
+| Editable laps, and the session ends itself | 2026-09-18 — 2/4/6/endless, checked even with the window closed |
+| An alarm that survives backgrounding | 2026-09-18 — scheduled on the audio clock + a silent keep-alive; honest about the phone-off limit |
+| Upload a ringtone or song and pick 30 seconds of it | 2026-09-18 — trimmed, mono, stored in the vault |
 
 ---
 

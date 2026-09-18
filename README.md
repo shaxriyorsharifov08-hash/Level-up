@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **117 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **132 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -236,6 +236,50 @@ Theme rules are written as `[data-fx="leaf"]` rather than `#focusOv[data-fx="lea
 | IndexedDB, key `wp:<id>` | the actual bytes, on that device only |
 
 A test asserts that after an upload, the string `data:image` appears **nowhere** in the save or in localStorage. Wallpapers are never uploaded anywhere, never synced, and never leave the device.
+
+### 🔔 THE ALARM — and exactly how far it reaches
+
+**Read this before trusting it with anything that matters.** A web page is not an OS alarm clock, and this section says what it really does rather than what would sound better:
+
+| Situation | Does it ring? |
+|---|---|
+| Screen on, app open | **Yes.** Any sound, any length. |
+| Screen on, another app or tab in front | **Yes.** The sound is handed to the audio hardware in advance, so a throttled tab cannot swallow it. |
+| Screen locked, app still resident | **Usually, on Android**, thanks to the silent keep-alive loop. **On iPhone this is unreliable** and may be silenced at any moment. |
+| App force-closed, browser killed, phone powered off | **No. Never.** |
+
+That last row is not a bug to fix later. There is no web API for it: Notification Triggers was removed from browsers, and web push needs a server this app deliberately does not have. Only a native app can wake a powered-off phone. The settings panel prints this same warning, and a test asserts the wording never quietly starts claiming otherwise.
+
+**How it survives what it can survive.** The alarm is never fired by `setTimeout`. When a grind phase begins, the sound is *scheduled on the AudioContext clock* for the exact moment the phase ends (`alarmArm()`), because that clock keeps running when JavaScript timers are throttled to a crawl. Alongside it:
+
+- a **silent looping buffer** (`keepAliveOn()`) stops mobile browsers suspending the audio context the moment the tab goes to the background — without it, a scheduled alarm simply never sounds;
+- **MediaSession** metadata puts the session on the lock screen, which also makes Android less likely to evict the page;
+- a **notification** fires as a visual backup where permission was granted.
+
+Re-arming cancels whatever was already scheduled (`alarmCancel()`), so changing the tone or the cycle mid-session does not stack alarms on top of each other. A test asserts the second arm does not double the pending voices.
+
+**Six built-in tones** — CHIME, BELL, ASCEND, PULSE, GONG, ALERT — every one *synthesised* from oscillators, so the app still carries no audio files and still carries nobody else's ringtone. Volume and a repeat count (1–6) apply to all of them.
+
+### 🎵 Your own sounds, trimmed to the part you want
+
+**UPLOAD A SOUND** takes a ringtone or a whole song, then opens a picker: slide to the start, set a length up to **30 seconds**, PREVIEW it, save it. What gets stored is only that slice.
+
+The pipeline is `decodeAudioData` → `OfflineAudioContext` render of the chosen span → **mono at 22 050 Hz** with a short fade at each end so an alarm never starts or ends on a click → WAV → the vault. Mono is not a compromise here; an alarm has no use for stereo, and it roughly halves what the device has to keep.
+
+Storage follows the same rule as wallpapers, for the same reason — audio in `state` would be written to localStorage *and* pushed to the cloud save on every change:
+
+| | |
+|---|---|
+| `state.focus.sounds` | `[{id, name, sec}]` and **nothing else** |
+| IndexedDB, key `snd:<id>` | the trimmed audio, on that device only |
+
+A test asserts `data:audio` appears nowhere in the save or localStorage after an upload. Deleting the sound that was serving as the alarm falls back to CHIME rather than leaving the timer mute.
+
+### LAPS — how many cycles before it stops
+
+**2 / 4 / 6 / ENDLESS**, or any number up to 24 typed in. The window counts *WORK · CYCLE 3 / 4*, and when the last lap finishes the session **ends itself**: alarm, notification, and a System announcement with the real worked total.
+
+That check lives in `grindTick()`, which the one-second loop runs **whether or not the focus window is open** — a finished grind has to finish even if you closed the window an hour ago. `ENDLESS` (0) never self-terminates.
 
 **CHANGE EVERY** rotates the picture on a timer — NEVER, 5, 25 or 50 minutes — and grind also swaps the picture on every phase change. The index is `floor(workedSec / everyMin) % count`, so it wraps and needs no state of its own.
 
