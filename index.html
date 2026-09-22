@@ -4235,15 +4235,31 @@ function audio(){
   if(!audioCtx){
     try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ return null; }
   }
-  if(audioCtx && audioCtx.state === "suspended"){ try{ audioCtx.resume(); }catch(e){} }
+  if(audioCtx && audioCtx.state === "suspended"){
+    try{
+      var r = audioCtx.resume();
+      /* the clock stood still while suspended, so anything already scheduled
+         is now wrong: re-arm against the clock that is actually running */
+      if(r && r.then) r.then(function(){ if(typeof alarmArm === "function") alarmArm(true); });
+    }catch(e){}
+  }
   return audioCtx;
 }
+/* sfxTone takes an offset from now; sfxToneAt takes an absolute point on the
+   audio clock. Mixing the two was a real bug: the alarm computed an absolute
+   time and then handed it to sfxTone, which added currentTime to it a second
+   time. After an hour with the app open the alarm was scheduled an hour late,
+   which is indistinguishable from an alarm that does not work. */
 function sfxTone(freq, t0, dur, type, vol, slideTo){
-  var ctx = audio(); if(!ctx) return;
+  var ctx = audio(); if(!ctx) return null;
+  return sfxToneAt(freq, ctx.currentTime + (t0 || 0), dur, type, vol, slideTo);
+}
+function sfxToneAt(freq, when, dur, type, vol, slideTo){
+  var ctx = audio(); if(!ctx) return null;
   try{
     var o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type || "sine";
-    var st = ctx.currentTime + (t0 || 0);
+    var st = Math.max(ctx.currentTime, when || 0);
     o.frequency.setValueAtTime(freq, st);
     if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, st + dur);
     g.gain.setValueAtTime(0.0001, st);
@@ -4251,7 +4267,8 @@ function sfxTone(freq, t0, dur, type, vol, slideTo){
     g.gain.exponentialRampToValueAtTime(0.0001, st + dur);
     o.connect(g); g.connect(ctx.destination);
     o.start(st); o.stop(st + dur + 0.06);
-  }catch(e){}
+    return o;
+  }catch(e){ return null; }
 }
 function sfx(name){
   if(!state || state.sound === false) return;
@@ -6126,7 +6143,7 @@ function renderFocus(){
     if(reached && !tm.chimed){
       tm.chimed = true;
       save();
-      sfx("levelup");
+      /* the alarm was armed for this exact moment and is already sounding */
       sysToast("⏱ " + tm.goalMin + " minutes of focus. Stop here or keep going.");
     }
     for(i=0;i<FOCUS_GOALS.length;i++){
@@ -6172,9 +6189,12 @@ var SND_MAX_FILE = 30 * 1024 * 1024;
 
 /* every built-in tone is synthesised, so the app still ships no media files
    and still ships nobody else's ringtone */
-function toneAt(key, at, vol){
+function toneAt(key, at, vol, sink){
   var v = Math.max(0.02, Math.min(1, vol === undefined ? 0.8 : vol));
-  function t(f, off, dur, type, g, slide){ sfxTone(f, at + off, dur, type, g * v, slide); }
+  function t(f, off, dur, type, g, slide){
+    var o = sfxToneAt(f, at + off, dur, type, g * v, slide);
+    if(o && sink) sink.push(o);
+  }
   if(key === "bell"){
     t(1318, 0, 1.5, "sine", 0.34); t(1976, 0.01, 1.2, "sine", 0.12);
     t(659, 0.02, 1.8, "sine", 0.16);
@@ -6240,14 +6260,14 @@ function alarmPlay(offset, times){
   var at = ctx.currentTime + Math.max(0, offset || 0);
   if(key.indexOf("snd:") === 0){
     sndLoadBuf(key.slice(4), function(ab){
-      if(!ab){ for(var i=0;i<reps;i++) toneAt("chime", at + i * 1.5, vol); return; }
+      if(!ab){ for(var i=0;i<reps;i++) toneAt("chime", at + i * 1.5, vol, alarmNodes); return; }
       /* a long clip repeats back to back rather than on top of itself */
       for(var j=0;j<reps;j++) bufferAt(ab, at + j * (ab.duration + 0.25), vol);
     });
     return;
   }
   var gap = toneLen(key) + 0.35;
-  for(var i=0;i<reps;i++) toneAt(key, at + i * gap, vol);
+  for(var i=0;i<reps;i++) toneAt(key, at + i * gap, vol, alarmNodes);
 }
 
 /* ---- the keep-alive: a silent loop that stops the phone suspending audio ----
@@ -6290,14 +6310,25 @@ function mediaSessionOff(){
 /* ---- arming: hand the next phase change to the audio hardware in advance ---- */
 var armedFor = "";
 function alarmArm(force){
-  var tm = state.activeTimer;
-  if(!tm || !grindOn(tm) || tm.paused){ if(force){ alarmCancel(); armedFor = ""; } return; }
-  var g = grindState(tm);
-  var tag = tm.id + ":" + g.cycles + ":" + g.phase + ":" + (fo().alarm || "") + ":" + (fo().alarmRepeat || 1);
+  var tm = state.activeTimer, left = -1, tag = "";
+  if(tm && !tm.paused){
+    if(grindOn(tm)){
+      var g = grindState(tm);
+      left = g.left;
+      tag = tm.id + ":" + g.cycles + ":" + g.phase;
+    } else if(tm.goalMin){
+      /* a stopwatch target deserves the same alarm a grind phase gets: it used
+         to get a chirp, and only if the focus window happened to be open */
+      var togo = tm.goalMin * 60 - timerElapsedSec();
+      if(togo > 0){ left = togo; tag = tm.id + ":goal:" + tm.goalMin; }
+    }
+  }
+  if(left < 0){ if(force){ alarmCancel(); armedFor = ""; } return; }
+  tag += ":" + (fo().alarm || "") + ":" + (fo().alarmRepeat || 1) + ":" + (fo().alarmVol || 0);
   if(!force && tag === armedFor) return;
   alarmCancel();
   armedFor = tag;
-  alarmPlay(g.left, fo().alarmRepeat);
+  alarmPlay(left, fo().alarmRepeat);
 }
 function alarmDisarm(){
   alarmCancel();
@@ -6571,7 +6602,12 @@ function setLaps(n){
   save(); renderFocusCfg(); renderFocus();
 }
 /* said plainly in the settings, because the alternative is a broken promise */
+function alarmMuted(){ return !state || state.sound === false; }
 function alarmReachText(){
+  if(alarmMuted()){
+    return "⚠ SOUND IS OFF, so the alarm cannot ring at all. "
+      + "Turn it back on in SETTINGS → APPEARANCE → Sound Effects.";
+  }
   var ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   return "Rings while the app is open or in the background. "
@@ -6598,7 +6634,13 @@ document.getElementById("foRepeat").addEventListener("change", function(){
   fo().alarmRepeat = Math.max(1, Math.min(6, +this.value || 1));
   save(); renderFocusCfg(); alarmArm(true);
 });
-document.getElementById("foTest").addEventListener("click", function(){ alarmPlay(0, fo().alarmRepeat); });
+document.getElementById("foTest").addEventListener("click", function(){
+  if(alarmMuted()){
+    toast(tr("Sound is OFF in SETTINGS → APPEARANCE. The alarm cannot ring until you turn it back on."), "err");
+    return;
+  }
+  alarmPlay(0, fo().alarmRepeat);
+});
 document.getElementById("foSndAdd").addEventListener("click", function(){
   if((fo().sounds || []).length >= SND_MAX){ toast(tr("That is as many sounds as the device keeps."), "err"); return; }
   document.getElementById("foSndFile").click();

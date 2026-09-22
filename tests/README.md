@@ -43,7 +43,7 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `accessibility.spec.js` | Every control has a name, panels rendered later are repaired by the observer, dialogs say they are dialogs, and announcements are spoken. |
 | `calendar-currency.spec.js` | The quest calendar shows the right day and does not collide with the old date picker, and changing currency converts every amount both ways. |
 | `budget-days.spec.js` | The separate interval timer is gone for good, one focus window serves quests, challenges, goals and to-dos alike, and money reads a day at a time in both BUDGET and the calendar. |
-| `alarm.spec.js` | Laps end the session by themselves, the alarm is scheduled on the audio clock and disarms cleanly, uploaded sounds are trimmed to the chosen span and never enter the save, and the reach warning keeps telling the truth. |
+| `alarm.spec.js` | Laps end the session by themselves; the alarm is scheduled **at the right moment** (measured, not assumed), is cancellable, arms for a stopwatch target as well as a grind phase, and says so when sound is off; uploaded sounds are trimmed to the chosen span and never enter the save. |
 | `focus-skin.spec.js` | Focus themes paint, uploaded wallpapers live in the vault and never in the save, they rotate on schedule, and GRIND never logs rest as work. |
 | `focus-time.spec.js` | The focus window covers the screen and keeps running when closed, and every tracked second is attributed to its section without losing time logged before the split existed. |
 | `todo-money.spec.js` | The to-do list stays out of the game (flat XP paid once, no trophy, no rank), overdue items reach the Hall of Shame, and money fields group thousands while you type without corrupting the saved amount. |

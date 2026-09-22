@@ -3,7 +3,12 @@
    on a normal machine and in CI, Playwright uses the one it installed. */
 const { defineConfig } = require("@playwright/test");
 
-const launchOptions = {};
+const launchOptions = {
+  /* the alarm is scheduled on the AudioContext clock, and that clock only
+     advances in a context that is actually running. Without this the tests
+     would measure a frozen clock and miss timing bugs entirely. */
+  args: ["--autoplay-policy=no-user-gesture-required"]
+};
 if (process.env.CHROMIUM_PATH) launchOptions.executablePath = process.env.CHROMIUM_PATH;
 
 module.exports = defineConfig({

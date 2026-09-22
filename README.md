@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **143 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **149 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -249,6 +249,14 @@ A test asserts that after an upload, the string `data:image` appears **nowhere**
 | App force-closed, browser killed, phone powered off | **No. Never.** |
 
 That last row is not a bug to fix later. There is no web API for it: Notification Triggers was removed from browsers, and web push needs a server this app deliberately does not have. Only a native app can wake a powered-off phone. The settings panel prints this same warning, and a test asserts the wording never quietly starts claiming otherwise.
+
+**Two time conventions, and the bug that came of mixing them.** `sfxTone(freq, offset, …)` schedules relative to now; `sfxToneAt(freq, when, …)` schedules at an absolute point on the audio clock. The alarm works in absolute times, and for four days it handed one of those absolute times to `sfxTone`, which added `currentTime` to it a second time. **The alarm was therefore scheduled `currentTime` seconds late** — unnoticeable on a page just opened, an hour late after an hour with the app open. Six tests now measure *when* the sound is scheduled, not merely that something was. If you add a new sound anywhere, pick the right one of those two functions and check the test still passes.
+
+**Everything the alarm schedules is cancellable.** Oscillators used to be fire-and-forget: nothing held a reference, so `alarmCancel()` could not stop a built-in tone and re-arming stacked alarms on top of each other. `toneAt()` now collects what it creates into `alarmNodes`, the same list the uploaded clips go into.
+
+**A STOPWATCH target rings too.** It used to arm only in GRIND; reaching a stopwatch target played a chirp, and only if the focus window happened to be open.
+
+**If SOUND is off, the alarm cannot ring** — `audio()` returns nothing when `state.sound === false`, which means no volume, no repeats, no alarm. Rather than failing silently, the settings panel replaces its reach warning with a line saying sound is off and where to turn it back on, and TEST THE ALARM says the same instead of doing nothing.
 
 **How it survives what it can survive.** The alarm is never fired by `setTimeout`. When a grind phase begins, the sound is *scheduled on the AudioContext clock* for the exact moment the phase ends (`alarmArm()`), because that clock keeps running when JavaScript timers are throttled to a crawl. Alongside it:
 

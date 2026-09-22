@@ -100,6 +100,146 @@ test.describe("laps", () => {
   });
 });
 
+/* Catch what a scheduled sound sounds like from the outside: patch the context
+   so every oscillator and buffer reports the moment it was told to start. */
+async function spyScheduler(page) {
+  await page.evaluate(() => {
+    const ctx = audio();
+    window.__sched = [];
+    const ro = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = function () {
+      const o = ro();
+      const rs = o.start.bind(o);
+      o.start = function (t) { window.__sched.push(t); return rs(t); };
+      return o;
+    };
+    const rb = ctx.createBufferSource.bind(ctx);
+    ctx.createBufferSource = function () {
+      const b = rb();
+      const rs = b.start.bind(b);
+      b.start = function (t) { window.__sched.push(t); return rs(t); };
+      return b;
+    };
+  });
+}
+
+test.describe("the alarm actually sounds, and on time", () => {
+  /* THE BUG THIS GUARDS (found 2026-09-22, shipped silently for four days):
+     alarmPlay computed an absolute time on the audio clock and handed it to
+     sfxTone, which adds currentTime to whatever it is given. The alarm was
+     therefore scheduled currentTime seconds late. On a freshly opened page
+     that is a fraction of a second and nobody notices; after an hour with the
+     app open the alarm fires an hour late, which is simply an alarm that does
+     not work. The old tests only asserted that SOMETHING was scheduled, never
+     when -- so they all passed while the feature was broken. */
+  test("TEST THE ALARM rings now, not at some point later", async ({ page }) => {
+    await bootAsGuest(page);
+    /* let the audio clock run: with a clock at zero the bug is invisible */
+    await page.evaluate(() => audio());
+    await page.waitForTimeout(1500);
+    await spyScheduler(page);
+    const late = await page.evaluate(() => {
+      const ctx = audio();
+      window.__sched = [];
+      const now = ctx.currentTime;
+      alarmPlay(0, 1);
+      return Math.min.apply(null, window.__sched) - now;
+    });
+    expect(late).toBeLessThan(0.25);
+    expect(late).toBeGreaterThanOrEqual(0);
+  });
+
+  test("an alarm asked for in 60 seconds is scheduled in 60 seconds", async ({ page }) => {
+    await bootAsGuest(page);
+    await page.evaluate(() => audio());
+    await page.waitForTimeout(1500);
+    await spyScheduler(page);
+    const off = await page.evaluate(() => {
+      const ctx = audio();
+      window.__sched = [];
+      const now = ctx.currentTime;
+      alarmPlay(60, 1);
+      return Math.min.apply(null, window.__sched) - now - 60;
+    });
+    expect(Math.abs(off)).toBeLessThan(0.25);
+  });
+
+  test("a grind phase arms for the end of that phase, to the second", async ({ page }) => {
+    await bootAsGuest(page);
+    await page.evaluate(() => audio());
+    await page.waitForTimeout(1500);
+    await startGrind(page, { work: 25, rest: 5, laps: 0 });
+    await spyScheduler(page);
+    const at = await page.evaluate(() => {
+      const ctx = audio();
+      window.__sched = [];
+      state.activeTimer.accumulated = 0;
+      state.activeTimer.startedAt = Date.now();
+      const now = ctx.currentTime;
+      alarmArm(true);
+      return Math.min.apply(null, window.__sched) - now;
+    });
+    expect(at).toBeGreaterThan(1490);
+    expect(at).toBeLessThan(1501);
+  });
+
+  test("a STOPWATCH target arms an alarm too, not just a grind phase", async ({ page }) => {
+    await bootAsGuest(page);
+    await page.evaluate(() => audio());
+    await page.waitForTimeout(1200);
+    await page.evaluate(() => {
+      state.quests = [makeQuest("\u23f1", "Focus", "d", "daily", [], "easy", "END", "", false, 1)];
+      state.focus.mode = "stopwatch";
+      state.focus.goalMin = 25;
+      save();
+      startTimer(state.quests[0].id);
+    });
+    await spyScheduler(page);
+    const at = await page.evaluate(() => {
+      const ctx = audio();
+      window.__sched = [];
+      const now = ctx.currentTime;
+      alarmArm(true);
+      return window.__sched.length ? Math.min.apply(null, window.__sched) - now : -1;
+    });
+    expect(at).toBeGreaterThan(1490);
+    expect(at).toBeLessThan(1501);
+  });
+
+  test("a built-in tone can be cancelled, not only an uploaded clip", async ({ page }) => {
+    await bootAsGuest(page);
+    await startGrind(page, { work: 25, rest: 5, laps: 0 });
+    const r = await page.evaluate(() => {
+      alarmDisarm();
+      fo().alarm = "chime";
+      fo().alarmRepeat = 2;
+      alarmArm(true);
+      const tracked = alarmNodes.length;
+      alarmCancel();
+      return { tracked: tracked, after: alarmNodes.length };
+    });
+    /* oscillators used to be fire-and-forget: nothing held them, so nothing
+       could stop them, and re-arming stacked alarms on top of each other */
+    expect(r.tracked).toBeGreaterThan(0);
+    expect(r.after).toBe(0);
+  });
+
+  test("with sound off it says so instead of failing quietly", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate(() => {
+      state.sound = false;
+      const txt = alarmReachText();
+      const muted = alarmMuted();
+      state.sound = true;
+      return { txt: txt, muted: muted, onText: alarmReachText() };
+    });
+    expect(r.muted).toBe(true);
+    expect(r.txt).toContain("SOUND IS OFF");
+    expect(r.txt).toContain("Sound Effects");
+    expect(r.onText).not.toContain("SOUND IS OFF");
+  });
+});
+
 test.describe("the alarm", () => {
   test("every built-in tone exists and is choosable", async ({ page }) => {
     await bootAsGuest(page);
