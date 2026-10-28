@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Plus, Settings, Users } from "lucide-react";
+import { CalendarDays, LayoutDashboard, Plus, Settings, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import type { CurrentUser } from "@/lib/auth";
 import type { ShellData } from "@/features/shell/queries";
@@ -25,6 +25,9 @@ function SidebarContent({ user, workspaces }: Omit<Props, "children">) {
 
         <div className="space-y-0.5">
           <p className="mb-1 px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">Discover</p>
+          <NavLink href="/events">
+            <CalendarDays /> Events
+          </NavLink>
           <NavLink href="/clubs">
             <Users /> Clubs
           </NavLink>

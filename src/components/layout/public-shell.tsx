@@ -6,7 +6,10 @@ import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileDrawer } from "./mobile-drawer";
 
-const links = [{ href: "/clubs", label: "Clubs" }];
+const links = [
+  { href: "/events", label: "Events" },
+  { href: "/clubs", label: "Clubs" },
+];
 
 /** Layout for visitors who are not signed in. */
 export function PublicShell({ children, bare = false }: { children: React.ReactNode; bare?: boolean }) {

@@ -13,6 +13,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
 
   const tabs: TabItem[] = [
     { href: base, label: "Overview", exact: true },
+    { href: `${base}/events`, label: "Events" },
     { href: `${base}/members`, label: "Members", count: pending },
   ];
   if (org.kind === "organization") tabs.push({ href: `${base}/clubs`, label: "Clubs" });

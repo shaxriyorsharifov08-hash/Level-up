@@ -22,6 +22,8 @@ import {
   getPublicOrganization,
   listOrganizations,
 } from "@/features/organizations/queries";
+import { EventCard } from "@/features/events/components/event-card";
+import { getUserRegistrationMap, listEvents } from "@/features/events/queries";
 import { pluralize } from "@/lib/utils";
 
 export async function generateMetadata({ params }: PageProps<"/clubs/[slug]">): Promise<Metadata> {
@@ -32,11 +34,13 @@ export async function generateMetadata({ params }: PageProps<"/clubs/[slug]">): 
 export default async function OrganizationPage({ params }: PageProps<"/clubs/[slug]">) {
   const { slug } = await params;
   const { user, org, access, isFollowing } = await getPublicOrganization(slug);
-  const [members, counts, children] = await Promise.all([
+  const [members, counts, children, events] = await Promise.all([
     getOrgMembers(org.id),
     getOrgCounts([org.id]),
     org.kind === "organization" ? listOrganizations({ parentId: org.id }) : Promise.resolve([]),
+    listEvents({ organizationId: org.id, limit: 4 }),
   ]);
+  const myRegistrations = await getUserRegistrationMap(user?.id, events.map((e) => e.id));
   const { members: memberCount, followers } = counts.get(org.id)!;
   const team = members.filter((m) => m.role !== "member" || m.responsibility);
 
@@ -164,6 +168,28 @@ export default async function OrganizationPage({ params }: PageProps<"/clubs/[sl
               </p>
             </CardContent>
           </Card>
+
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Upcoming events</h2>
+              {access.canManage && (
+                <Link href={`/workspace/${org.slug}/events/new`} className="text-sm font-medium text-primary-text hover:underline">
+                  New event
+                </Link>
+              )}
+            </div>
+            {events.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                No upcoming events. Follow {org.name} to hear about the next one.
+              </p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {events.map((event) => (
+                  <EventCard key={event.id} event={event} myStatus={myRegistrations.get(event.id)} />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
         <aside className="space-y-6">
