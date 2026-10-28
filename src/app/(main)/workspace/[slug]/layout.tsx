@@ -16,6 +16,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
     { href: `${base}/events`, label: "Events" },
     { href: `${base}/projects`, label: "Projects" },
     { href: `${base}/tasks`, label: "Tasks" },
+    { href: `${base}/calendar`, label: "Calendar" },
     { href: `${base}/members`, label: "Members", count: pending },
   ];
   if (org.kind === "organization") tabs.push({ href: `${base}/clubs`, label: "Clubs" });

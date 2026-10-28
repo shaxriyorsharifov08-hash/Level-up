@@ -185,6 +185,13 @@ export function monthGrid(year: number, month: number) {
   return weeks;
 }
 
+/** The "YYYY-MM-DD" key of the following calendar day. */
+export function nextDayKey(key: string) {
+  const [y, m, d] = key.split("-").map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d + 1));
+  return `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-${pad(next.getUTCDate())}`;
+}
+
 /** Parse "YYYY-MM" (or fall back to the current month in the university time zone). */
 export function parseMonthParam(value: string | undefined, now = new Date()) {
   const match = value ? /^(\d{4})-(\d{2})$/.exec(value) : null;

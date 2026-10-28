@@ -119,7 +119,7 @@ export function TaskBoard({
                       {task.dueLabel && (
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 text-xs",
+                            "inline-flex items-center gap-1 text-xs whitespace-nowrap",
                             task.overdue ? "font-medium text-destructive" : "text-muted-foreground",
                           )}
                         >
