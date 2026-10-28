@@ -6,10 +6,10 @@ import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileDrawer } from "./mobile-drawer";
 
-const links: { href: string; label: string }[] = [];
+const links = [{ href: "/clubs", label: "Clubs" }];
 
 /** Layout for visitors who are not signed in. */
-export function PublicShell({ children }: { children: React.ReactNode }) {
+export function PublicShell({ children, bare = false }: { children: React.ReactNode; bare?: boolean }) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
@@ -46,7 +46,9 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        {bare ? children : <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-10">{children}</div>}
+      </main>
       <footer className="border-t border-border bg-card">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
