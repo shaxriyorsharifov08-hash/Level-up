@@ -18,7 +18,7 @@ export default async function WorkspaceChatPage({ params }: PageProps<"/workspac
   const channels = await listConversations(user.id, { organizationId: org.id });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-2 lg:col-span-2">
         {channels.length === 0 ? (
           <EmptyState

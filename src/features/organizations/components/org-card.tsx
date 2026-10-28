@@ -19,7 +19,7 @@ export function OrgCard({ org }: { org: OrganizationListItem }) {
           seed={org.id}
           size="lg"
           square
-          className="-mt-7 ring-4 ring-card"
+          className="relative -mt-7 ring-4 ring-card"
         />
         <div className="mt-2 flex items-center gap-1.5">
           <h3 className="truncate font-semibold group-hover:text-primary-text">{org.name}</h3>

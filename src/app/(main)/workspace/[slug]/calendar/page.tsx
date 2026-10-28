@@ -25,7 +25,7 @@ export default async function WorkspaceCalendarPage({ params, searchParams }: Pa
   ]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
       <MonthCalendar year={year} month={month} items={items} basePath={`/workspace/${org.slug}/calendar`} />
       <aside className="space-y-6">
         {access.canView && (

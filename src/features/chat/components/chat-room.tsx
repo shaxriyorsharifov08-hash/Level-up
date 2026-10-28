@@ -57,9 +57,10 @@ export function ChatRoom({
     lastIdRef.current = lastConfirmedId;
   }, [lastConfirmedId]);
 
-  const poll = useCallback(async () => {
+  const poll = useCallback(async (markRead = false) => {
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages?after=${lastIdRef.current}`, { cache: "no-store" });
+      const url = `/api/conversations/${conversationId}/messages?after=${lastIdRef.current}${markRead ? "&read=1" : ""}`;
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) return;
       const data: { messages: ChatMessage[] } = await res.json();
       if (data.messages.length) setMessages((current) => mergeMessages(current, data.messages));
@@ -72,7 +73,7 @@ export function ChatRoom({
     let timer: ReturnType<typeof setInterval> | undefined;
     const start = () => {
       if (timer) return;
-      timer = setInterval(poll, POLL_INTERVAL_MS);
+      timer = setInterval(() => void poll(), POLL_INTERVAL_MS);
     };
     const stop = () => {
       clearInterval(timer);
@@ -87,7 +88,7 @@ export function ChatRoom({
       }
     };
     // Mark as read on open, then keep polling while the tab is visible.
-    void fetch(`/api/conversations/${conversationId}/messages?after=${lastIdRef.current}&read=1`, { cache: "no-store" });
+    void poll(true);
     if (document.visibilityState === "visible") start();
     document.addEventListener("visibilitychange", onVisibility);
     return () => {

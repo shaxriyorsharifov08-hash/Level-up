@@ -62,7 +62,7 @@ export default async function OrganizationPage({ params }: PageProps<"/clubs/[sl
               seed={org.id}
               size="xl"
               square
-              className="-mt-16 ring-4 ring-card sm:-mt-20"
+              className="relative -mt-16 ring-4 ring-card sm:-mt-20"
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -162,7 +162,7 @@ export default async function OrganizationPage({ params }: PageProps<"/clubs/[sl
         />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>

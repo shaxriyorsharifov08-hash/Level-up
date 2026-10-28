@@ -141,7 +141,7 @@ export function TaskBoard({
                       {task.assignee ? (
                         <Avatar name={task.assignee.name} src={task.assignee.avatarUrl} seed={task.assignee.id} size="xs" />
                       ) : (
-                        <span className="size-6 rounded-full border border-dashed border-border" title="Unassigned" />
+                        <span className="size-6 shrink-0 rounded-full border border-dashed border-border" title="Unassigned" />
                       )}
                     </div>
                   </article>
