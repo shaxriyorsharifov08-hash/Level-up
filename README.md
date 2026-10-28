@@ -43,7 +43,7 @@ The file is large, so don't paste all of it. Instead:
 
 ### 2b. The tests will tell you if you broke it
 
-`index.html` is one very large file, so every hand edit is a risk. **149 automated tests now run on GitHub after every single commit — you do not have to run anything.**
+`index.html` is one very large file, so every hand edit is a risk. **163 automated tests now run on GitHub after every single commit — you do not have to run anything.**
 
 1. Commit your change.
 2. Repo → **Actions** tab → newest run.
@@ -423,7 +423,7 @@ Honest measurement: this cuts the *mechanical* half of the save by about 38% and
 
 Plus: `#toasts` is a polite live region and the System announcement is an assertive `alertdialog`, so both are spoken rather than only shown; every modal is a `role="dialog"`.
 
-Still open: focus is not trapped inside modals.
+**Focus is trapped inside open dialogs.** Every dialog opens by gaining the class `show`, so a single observer watches for that — no opener has to call anything. While a dialog is open, Tab and Shift+Tab cycle inside it and focus cannot land on the page behind. Opening focuses the dialog itself rather than its first input, so a phone does not raise its keyboard just because a window appeared. Closing hands focus back to the button that opened it. Panels inside the focus window (⚙ settings, ✂ trim) are nested dialogs and trap on their own. **A new dialog only needs `role="dialog" aria-modal="true"` and to be shown with the `show` class.**
 
 ## 4l. THE QUEST HUB — four squares
 
@@ -583,3 +583,11 @@ Every tracked second is written in **two** places, and only `logTime(secs, kind)
 `timerKindFor(q, td)` decides the bucket: a challenge quest counts as a challenge, any other quest as a quest, a to-do as a to-do, and an interval session started from the TRAINING YARD page as training — but an interval session started **inside a quest window** counts as that quest's work, because it is.
 
 Pruning (section 4k) drops `timeBy` rows past the cutoff along with `timeHistory`; the total is already folded into `archive.focusSec`, so nothing is double counted and nothing is lost.
+
+## 4q. THE CHRONICLE — your own story, told back
+
+STORY → 📜 **THE CHRONICLE**. Every calendar month since the save was created is a chapter, newest first. The System writes each one from the record: days you showed up, quests cleared, XP, focus time, your longest unbroken run, honors enshrined, rank trials passed, dreams that came true, and how many pages you wrote. It then **quotes you** — the longest line you wrote in Finalize the Day that month, and your written monthly report. The prologue is your Oath.
+
+A chapter's title is **earned, never decorative**. It is chosen by comparing the month with the one before it, so *"The winter you nearly stopped"* appears only when you really went from showing up most days to fewer than a third of them, and *"The spring you came back"* only when the reverse is true. *"Strongest"* is not said until there are at least three months to compare.
+
+**It stores nothing.** The Chronicle is computed from the save every time it opens, so it can never disagree with the record and adds nothing to the save's size. The one new field it relies on is `doneOn` on a dream, written when a dream is ticked — dreams achieved before this existed are simply not dated. Months whose day rows were folded into the archive (older than 400 days) say so honestly and still quote what you wrote. The titles and sentences are in English only; the Russian dictionary does not cover them yet.

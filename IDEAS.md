@@ -57,20 +57,20 @@ And a section must also pass all three of these:
 | Upload a ringtone or song and pick 30 seconds of it | 2026-09-18 — trimmed, mono, stored in the vault |
 | Remove the separate interval timer | 2026-09-18 — GRIND does it better; one timer for everything now |
 | Transactions packed per day, in BUDGET and the calendar | 2026-09-18 — the calendar is now an overview of a whole date |
+| The Chronicle — the app narrates the hunter's own history back | 2026-10-28 — STORY → 📜 THE CHRONICLE; a chapter per month, titles earned by comparison, quotes the hunter's own pages |
+| Focus is trapped inside modals | 2026-10-28 — one observer for every dialog; focus returns to the opener on close |
 
 ---
 
 ## Next (agreed, not yet built)
 
 - **Doctrine** — the owner writes their own laws and stories, tagged to moments (broken streak, first rank-up, a month of silence). The System quotes the owner instead of anonymous quotes. *This needs the owner to write the content; it cannot be faked.*
-- **The Chronicle** — the app narrates the user's own history back to them: *"Chapter 3 — the winter you nearly stopped."* Uses data already stored (journal, honors, history, monthly reports).
 
 ---
 
 ## Raw — captured, not yet triaged
 
 - Workout plans as a first-class thing (note: the Daily Package already is one — it may only need renaming and a better home).
-- **Focus is not trapped inside modals** — a keyboard or screen-reader user can tab out of an open dialog into the page behind it.
 - The STATS page itself is still "awful" — the per-quest window solved *finding a single task's record*, but the whole-hunter view has not been redesigned yet.
 
 ---

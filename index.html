@@ -505,6 +505,24 @@ nav.open .nav-btn:nth-child(11){animation-delay:.32s}
 .beat-dream{animation-delay:.95s;background:linear-gradient(160deg,rgba(251,191,36,.12),rgba(5,6,16,.6));border-color:rgba(251,191,36,.35)}
 .beat-btn.active{border-width:2px;box-shadow:var(--glow);animation:none}
 .beat-dream.active{box-shadow:0 0 12px rgba(251,191,36,.55),0 0 32px rgba(251,191,36,.25)}
+.story-choice.three{grid-template-columns:1fr 1fr 1fr}
+@media (max-width:720px){
+  .story-choice.three{grid-template-columns:1fr;gap:8px}
+  .story-choice.three .beat-btn{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;
+    column-gap:12px;row-gap:2px;align-items:center;justify-items:start;padding:12px 16px;text-align:left}
+  .story-choice.three .beat-ico{grid-row:1 / span 2;font-size:1.6rem}
+}
+.beat-chron{animation-delay:.45s;background:linear-gradient(160deg,rgba(45,212,191,.12),rgba(5,6,16,.6));border-color:rgba(45,212,191,.35)}
+.beat-chron.active{box-shadow:0 0 12px rgba(45,212,191,.5),0 0 32px rgba(45,212,191,.2)}
+.chron-ch{position:relative}
+.chron-num{font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:3px;color:var(--muted)}
+.chron-title{font-family:Orbitron,sans-serif;font-size:17px;font-weight:700;margin:4px 0 2px;line-height:1.3}
+.chron-when{font-size:13px;color:var(--muted);margin-bottom:10px}
+.chron-ch p{margin:0 0 8px;line-height:1.55}
+.chron-quote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--line);font-style:italic;line-height:1.5}
+.chron-quote small{display:block;font-style:normal;color:var(--muted);margin-top:4px}
+.chron-open{font-size:12px;color:var(--muted);letter-spacing:1px}
+.chron-oath{font-style:italic;line-height:1.55}
 @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 .beat-ico{font-size:2rem;line-height:1}
 .beat-lbl{font-family:'Orbitron',monospace;font-weight:800;font-size:.82rem;letter-spacing:.08em;color:#fff}
@@ -826,6 +844,7 @@ body.dock-open #fab{bottom:calc(96px + env(safe-area-inset-bottom,0px)) !importa
 .modal{position:fixed;inset:0;z-index:250;display:none;align-items:flex-start;justify-content:center;
   background:rgba(2,3,10,.8);backdrop-filter:blur(5px);padding:20px;overflow-y:auto}
 .modal.show{display:flex}
+[aria-modal="true"]:focus{outline:none}
 .modal-box{width:100%;max-width:520px;margin:auto;border-radius:16px;border:1px solid var(--line);
   background:linear-gradient(160deg,rgba(14,18,42,.99),rgba(6,8,20,.99));padding:22px;
   box-shadow:var(--glow);animation:annin .3s cubic-bezier(.2,.9,.3,1.2)}
@@ -1632,7 +1651,7 @@ main section{animation:pagein .28s ease}
 
     <!-- ============ STORY ============ -->
     <section id="page-story" style="display:none">
-      <div class="story-choice">
+      <div class="story-choice three">
         <button class="beat-btn beat-path" id="chooseStoryPath">
           <span class="beat-ico">🗺️</span><span class="beat-lbl">STORY PATH</span>
           <span class="beat-sub">your rise, level by level</span>
@@ -1641,6 +1660,19 @@ main section{animation:pagein .28s ease}
           <span class="beat-ico">✨</span><span class="beat-lbl">CHASING AFTER DREAMS</span>
           <span class="beat-sub">your goals &amp; dreams</span>
         </button>
+        <button class="beat-btn beat-chron" id="chooseChronicle">
+          <span class="beat-ico">📜</span><span class="beat-lbl">THE CHRONICLE</span>
+          <span class="beat-sub">your own story, told back</span>
+        </button>
+      </div>
+
+      <div id="chronicleView" style="display:none">
+        <div class="panel">
+          <div class="panel-title">📜 THE CHRONICLE</div>
+          <div class="empty-note" style="margin-bottom:12px">Every month you live becomes a chapter. The System writes it from what you actually did, and quotes the pages you wrote yourself. Nothing here can be edited — it is a record, not a diary.</div>
+          <div id="chronPrologue"></div>
+        </div>
+        <div id="chronChapters"></div>
       </div>
 
       <div id="storyPathView" style="display:none">
@@ -2119,7 +2151,7 @@ main section{animation:pagein .28s ease}
     <div class="fo-hint" id="foHint">Put the phone down. The clock keeps running if you leave this window — nothing is lost, and nothing else here is asking for your attention.</div>
   </div>
 
-  <div id="foTrim">
+  <div id="foTrim" role="dialog" aria-modal="true" aria-label="Choose 30 seconds">
     <div class="fo-cfg-head">
       <div class="qv-name">✂ CHOOSE 30 SECONDS</div>
       <button class="qv-close" id="foTrimCancel" aria-label="Cancel">✕</button>
@@ -2141,7 +2173,7 @@ main section{animation:pagein .28s ease}
     </div>
   </div>
 
-  <div id="foCfg">
+  <div id="foCfg" role="dialog" aria-modal="true" aria-label="Timer settings">
     <div class="fo-cfg-head">
       <div class="qv-name">⚙ TIMER SETTINGS</div>
       <button class="qv-close" id="foCfgClose" aria-label="Back to the timer">✕</button>
@@ -5569,6 +5601,108 @@ var a11ySeq = 0;
       pending = setTimeout(run, 250); /* the app re-renders whole panels at a time */
     }).observe(document.body, {childList:true, subtree:true});
   }
+})();
+
+/* ================= FOCUS STAYS INSIDE AN OPEN DIALOG =================
+   Every dialog opens by gaining the class "show", from dozens of places, so
+   the trap watches for that instead of asking each opener to call it.
+   While a dialog is open, Tab cycles inside it and focus cannot land on the
+   page behind; when it closes, focus returns to whatever opened it.
+   Opening focuses the dialog itself, never its first input, so a phone does
+   not throw up its keyboard just because a window appeared. */
+var TRAP_SEL = '[aria-modal="true"]';
+var TRAP_FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),' +
+                     'select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),[contenteditable="true"]';
+function trapShown(el){
+  if(!el.getClientRects().length) return false;
+  return getComputedStyle(el).visibility !== "hidden";
+}
+function trapZ(el){
+  var z = 0, n = el, v;
+  while(n && n.nodeType === 1){
+    v = parseInt(getComputedStyle(n).zIndex, 10);
+    if(!isNaN(v) && v > z) z = v;
+    n = n.parentElement;
+  }
+  return z;
+}
+/* the dialog the hunter is looking at: innermost, then highest, then latest */
+function trapTop(){
+  var all = document.querySelectorAll(TRAP_SEL), open = [], i, j, best = null, bestZ = -1, z;
+  for(i=0;i<all.length;i++) if(trapShown(all[i])) open.push(all[i]);
+  for(i=0;i<open.length;i++){
+    var inner = false;
+    for(j=0;j<open.length;j++) if(i !== j && open[i].contains(open[j])) { inner = true; break; }
+    if(inner) continue;
+    z = trapZ(open[i]);
+    if(z >= bestZ) { best = open[i]; bestZ = z; }
+  }
+  return best;
+}
+function trapItems(dlg){
+  var list = dlg.querySelectorAll(TRAP_FOCUSABLE), out = [], i, inner;
+  for(i=0;i<list.length;i++){
+    if(!trapShown(list[i])) continue;
+    /* a nested dialog that is closed hides its controls; one that is open owns them */
+    inner = list[i].parentElement && list[i].parentElement.closest(TRAP_SEL);
+    if(inner && inner !== dlg) continue;
+    out.push(list[i]);
+  }
+  return out;
+}
+function trapEnter(dlg){
+  if(!dlg || dlg.contains(document.activeElement)) return;
+  if(!dlg.hasAttribute("tabindex")) dlg.setAttribute("tabindex", "-1");
+  try{ dlg.focus({preventScroll:true}); }catch(e){ dlg.focus(); }
+}
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Tab") return;
+  var dlg = trapTop();
+  if(!dlg) return;
+  var items = trapItems(dlg);
+  if(!items.length) { e.preventDefault(); trapEnter(dlg); return; }
+  var first = items[0], last = items[items.length-1], at = document.activeElement;
+  if(!dlg.contains(at) || at === dlg){
+    e.preventDefault(); (e.shiftKey ? last : first).focus();
+  } else if(e.shiftKey && at === first){
+    e.preventDefault(); last.focus();
+  } else if(!e.shiftKey && at === last){
+    e.preventDefault(); first.focus();
+  }
+}, true);
+document.addEventListener("focusin", function(e){
+  var dlg = trapTop();
+  if(dlg && !dlg.contains(e.target)) trapEnter(dlg);
+}, true);
+(function startTrap(){
+  if(!window.MutationObserver) return;
+  var returnTo = [], wasTop = null;
+  function opener(dlg){
+    for(var i=returnTo.length-1;i>=0;i--) if(returnTo[i].dlg === dlg) return returnTo.splice(i, 1)[0].el;
+    return null;
+  }
+  new MutationObserver(function(recs){
+    /* timers repaint classes every second; only a dialog's own class matters */
+    var hit = false, i;
+    for(i=0;i<recs.length && !hit;i++) hit = recs[i].target.matches && recs[i].target.matches(TRAP_SEL);
+    if(!hit) return;
+    var top = trapTop(), prev = wasTop;
+    if(top === prev) return;
+    wasTop = top;
+    if(top && (!prev || trapShown(prev))){
+      /* opened over the page or over another dialog: remember where the hunter was */
+      returnTo.push({dlg: top, el: document.activeElement});
+      trapEnter(top);
+      return;
+    }
+    /* prev closed: hand focus back to what opened it, if that is still reachable */
+    var el = prev ? opener(prev) : null;
+    if(el && el !== document.body && document.contains(el) && trapShown(el) && (!top || top.contains(el))){
+      try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); }
+    } else if(top) {
+      trapEnter(top);
+    }
+  }).observe(document.body, {attributes:true, attributeFilter:["class"], subtree:true});
 })();
 
 /* ================= PRUNING THE SAVE =================
@@ -9422,12 +9556,16 @@ function setStoryView(v, scrollToLevel){
   }
   var dreamBtn = document.getElementById("chooseDreams");
   if(dreamBtn) dreamBtn.style.display = featureRemoved("dreams") ? "none" : "";
+  if(v !== "path" && v !== "dreams" && v !== "chronicle") v = "path";
   state.storyView = v;
   document.getElementById("storyPathView").style.display = v === "path" ? "" : "none";
   document.getElementById("dreamsView").style.display = v === "dreams" ? "" : "none";
+  document.getElementById("chronicleView").style.display = v === "chronicle" ? "" : "none";
   document.getElementById("chooseStoryPath").classList.toggle("active", v === "path");
   document.getElementById("chooseDreams").classList.toggle("active", v === "dreams");
+  document.getElementById("chooseChronicle").classList.toggle("active", v === "chronicle");
   if(v === "dreams") renderDreams();
+  else if(v === "chronicle") renderChronicle();
   else if(scrollToLevel){
     setTimeout(function(){
       var cur = document.getElementById("roadCur");
@@ -9479,6 +9617,156 @@ function renderStory(){
   var r = rankForLevel(state.level);
   document.getElementById("sysVoice").textContent = SYS_VOICE[r.key];
   renderRoad();
+}
+
+/* ================= THE CHRONICLE =================
+   The app narrates the hunter's own history back to them, one chapter per
+   calendar month, from data the save already holds: day rows, focus time,
+   honors, dreams, the journal, written reports and the Oath. It stores
+   nothing of its own, so it can never drift from the record. A chapter's
+   title is earned by what the month actually was, compared with the month
+   before it — "the winter you nearly stopped" is only ever said when it is
+   true. */
+var CHRON_SEASON = ["winter","winter","spring","spring","spring","summer","summer","summer","autumn","autumn","autumn","winter"];
+function chronMonths(){
+  var first = (state.created || todayStr()).slice(0, 7), last = todayStr().slice(0, 7), out = [];
+  var y = +first.slice(0, 4), m = +first.slice(5, 7);
+  while(out.length < 600){
+    var key = y + "-" + (m < 10 ? "0" : "") + m;
+    out.push(key);
+    if(key >= last) break;
+    if(++m > 12){ m = 1; y++; }
+  }
+  return out;
+}
+function chronDaysIn(key){
+  var y = +key.slice(0, 4), m = +key.slice(5, 7);
+  return new Date(y, m, 0).getDate();
+}
+/* the measured facts of one month, before any words are put to them */
+function chronFacts(key){
+  var t = todayStr(), created = state.created || t, n = chronDaysIn(key), d, ds, i;
+  var f = {key:key, lived:0, active:0, xp:0, cleared:0, focus:0, run:0, honors:[], trials:[], dreams:[],
+           pages:0, quote:null, report:"", folded:false, open:key === t.slice(0, 7)};
+  var arch = state.archive && state.archive.upTo;
+  var run = 0;
+  for(d=1; d<=n; d++){
+    ds = key + "-" + (d < 10 ? "0" : "") + d;
+    if(ds < created || ds > t) continue;
+    f.lived++;
+    if(arch && ds <= arch) f.folded = true;
+    var h = state.history[ds];
+    var on = !!(h && (h.count > 0 || h.xp > 0));
+    if(h){ f.xp += h.xp || 0; f.cleared += h.count || 0; }
+    f.focus += (state.timeHistory && state.timeHistory[ds]) || 0;
+    if(on){ f.active++; run++; if(run > f.run) f.run = run; } else if(ds !== t) run = 0;
+    var j = state.journal && state.journal[ds];
+    if(j){
+      f.pages++;
+      var words = [j.interesting, j.learn, j.mistake, j.changed], w;
+      for(i=0;i<words.length;i++){
+        w = (words[i] || "").trim();
+        if(w.length >= 12 && (!f.quote || w.length > f.quote.text.length)) f.quote = {text:w, date:ds};
+      }
+    }
+  }
+  for(i=0;i<(state.honors || []).length;i++){
+    var hn = state.honors[i];
+    if((hn.completedOn || "").slice(0, 7) !== key) continue;
+    (hn.type === "trial" ? f.trials : f.honors).push(hn);
+  }
+  for(i=0;i<(state.dreams || []).length;i++){
+    var dr = state.dreams[i];
+    if(dr.done && (dr.doneOn || "").slice(0, 7) === key) f.dreams.push(dr);
+  }
+  var rep = state.reports && state.reports["m:" + key];
+  if(rep && rep.text) f.report = rep.text.trim();
+  f.rate = f.lived ? f.active / f.lived : 0;
+  return f;
+}
+function chronTitle(f, prev, best, idx){
+  var season = CHRON_SEASON[+f.key.slice(5, 7) - 1];
+  if(idx === 0) return "The Awakening";
+  if(f.folded && !f.active) return "The " + season + " the record kept";
+  if(f.trials.length) return "The " + season + " you were tested — and passed";
+  if(f.lived >= 7 && f.active === 0) return "The " + season + " of silence";
+  if(prev && prev.rate >= 0.5 && f.rate < 0.3 && f.lived >= 7) return "The " + season + " you nearly stopped";
+  if(prev && prev.rate < 0.3 && f.rate >= 0.5) return "The " + season + " you came back";
+  if(best && f.key === best && f.xp > 0) return "The " + season + " you were strongest";
+  if(f.run >= 21) return "The unbroken " + season;
+  if(f.honors.length || f.dreams.length) return "The " + season + " of conquest";
+  if(f.rate >= 0.8) return "The " + season + " of discipline";
+  if(f.rate >= 0.5) return "The " + season + " of the grind";
+  if(f.open && f.lived < 7) return "A new page";
+  return "The " + season + " of struggle";
+}
+function chronClip(s, n){
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s;
+}
+function chronNum(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function chronStory(f, prev){
+  var p = [], s;
+  if(f.folded && !f.active){
+    p.push("The day-by-day record of this month was folded into the archive long ago. The totals still count toward everything you are; only what you wrote is told here.");
+  } else if(f.active === 0){
+    p.push(f.open ? "Nothing has been cleared yet this month. The page is blank, and it is still yours to write."
+                  : "Not one quest was cleared in " + f.lived + " days. The System recorded the silence too.");
+  } else {
+    s = "You showed up on " + f.active + " of " + f.lived + " days and cleared " + chronNum(f.cleared)
+      + " quest" + (f.cleared === 1 ? "" : "s") + " for " + chronNum(f.xp) + " XP.";
+    if(prev && prev.lived && !(prev.folded && !prev.active)){
+      var diff = f.active - prev.active;
+      if(diff > 0) s += " That is " + diff + " more day" + (diff === 1 ? "" : "s") + " than the month before.";
+      else if(diff < 0) s += " That is " + (-diff) + " fewer than the month before.";
+    }
+    p.push(s);
+    var bits = [];
+    if(f.focus >= 60) bits.push("you held focus for " + fmtDur(f.focus));
+    if(f.run >= 3) bits.push("your longest unbroken run was " + f.run + " days");
+    if(bits.length) p.push(bits.join(", and ").replace(/^./, function(c){ return c.toUpperCase(); }) + ".");
+  }
+  if(f.trials.length) p.push("You stood before the Association and passed: " + f.trials.map(function(h){ return h.name; }).join(", ") + ".");
+  if(f.honors.length){
+    var names = f.honors.slice(0, 4).map(function(h){ return h.name; });
+    p.push("Enshrined in the Hall of Honor: " + names.join(", ") + (f.honors.length > 4 ? " and " + (f.honors.length - 4) + " more" : "") + ".");
+  }
+  if(f.dreams.length) p.push("A dream came true: " + f.dreams.map(function(d){ return d.title; }).join(", ") + ".");
+  if(f.pages) p.push("You wrote " + f.pages + " page" + (f.pages === 1 ? "" : "s") + " of your own.");
+  if(f.open) p.push("This chapter is still being written. " + (chronDaysIn(f.key) - +todayStr().slice(8, 10)) + " days remain.");
+  return p;
+}
+function renderChronicle(){
+  var months = chronMonths(), facts = [], i, best = "", bestXp = 0;
+  for(i=0;i<months.length;i++){
+    facts.push(chronFacts(months[i]));
+    if(!facts[i].open && facts[i].xp > bestXp){ bestXp = facts[i].xp; best = months[i]; }
+  }
+  if(facts.length < 3) best = "";   /* "strongest" means nothing until there is something to beat */
+  var o = state.oath, pro = "";
+  if(o && o.sworn){
+    pro = '<div class="chron-num">PROLOGUE</div>'
+      + '<div class="chron-quote chron-oath">“' + esc(chronClip(o.become || o.words, 280)) + '”'
+      + '<small>— the Oath, sworn ' + esc(niceDate(o.sworn)) + (o.signed ? ', signed ' + esc(o.signed) : '') + '</small></div>';
+  } else {
+    pro = '<div class="empty-note">No Oath has been sworn, so the story has no prologue yet.</div>';
+  }
+  document.getElementById("chronPrologue").innerHTML = pro;
+  var html = "";
+  for(i=facts.length-1;i>=0;i--){
+    var f = facts[i], prev = i ? facts[i-1] : null;
+    var mm = MONTH_NAMES[+f.key.slice(5, 7) - 1];
+    html += '<div class="panel chron-ch" data-chapter="' + f.key + '">'
+      + '<div class="chron-num">CHAPTER ' + (i + 1) + (f.open ? ' <span class="chron-open">· NOW</span>' : '') + '</div>'
+      + '<div class="chron-title">' + esc(chronTitle(f, prev, best, i)) + '</div>'
+      + '<div class="chron-when">' + esc(mm.charAt(0) + mm.slice(1).toLowerCase() + " " + f.key.slice(0, 4)) + '</div>';
+    var paras = chronStory(f, prev);
+    for(var k=0;k<paras.length;k++) html += '<p>' + esc(paras[k]) + '</p>';
+    if(f.quote) html += '<div class="chron-quote">“' + esc(chronClip(f.quote.text, 260)) + '”<small>— you, ' + esc(niceDate(f.quote.date)) + '</small></div>';
+    if(f.report) html += '<div class="chron-quote">“' + esc(chronClip(f.report, 260)) + '”<small>— your report for the month</small></div>';
+    html += '</div>';
+  }
+  document.getElementById("chronChapters").innerHTML = html;
 }
 
 /* ---------------- render: hall of honor ---------------- */
@@ -10303,6 +10591,7 @@ function applyTheme(id){
 /* ---------------- chasing after dreams ---------------- */
 document.getElementById("chooseStoryPath").addEventListener("click", function(){ setStoryView("path", true); });
 document.getElementById("chooseDreams").addEventListener("click", function(){ setStoryView("dreams"); });
+document.getElementById("chooseChronicle").addEventListener("click", function(){ setStoryView("chronicle"); });
 document.getElementById("dreamAddBtn").addEventListener("click", function(){
   var title = document.getElementById("dreamTitle").value.trim();
   if(!title){ toast("Name the dream you are chasing.", "err"); return; }
@@ -10337,6 +10626,7 @@ document.getElementById("dreamGroups").addEventListener("click", function(e){
   for(var j=0;j<state.dreams.length;j++){
     if(state.dreams[j].id === id){
       state.dreams[j].done = !state.dreams[j].done;
+      state.dreams[j].doneOn = state.dreams[j].done ? todayStr() : "";
       if(state.dreams[j].done){
         announce("🌟 DREAM ACHIEVED", "You reached a dream you were chasing:\n\n[" + state.dreams[j].title + "]\n\nThe distance between who you were and who you are grows. Keep chasing, Hunter.", "🌟", "ONWARD");
       }

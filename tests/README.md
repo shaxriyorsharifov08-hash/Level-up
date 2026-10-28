@@ -47,6 +47,8 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `focus-skin.spec.js` | Focus themes paint, uploaded wallpapers live in the vault and never in the save, they rotate on schedule, and GRIND never logs rest as work. |
 | `focus-time.spec.js` | The focus window covers the screen and keeps running when closed, and every tracked second is attributed to its section without losing time logged before the split existed. |
 | `todo-money.spec.js` | The to-do list stays out of the game (flat XP paid once, no trophy, no rank), overdue items reach the Hall of Shame, and money fields group thousands while you type without corrupting the saved amount. |
+| `focus-trap.spec.js` | Tab and Shift+Tab never leave an open dialog, focus pushed behind it is pulled back, opening does not raise a phone keyboard, closing returns focus to the opener, and the focus window's own panels trap on their own. |
+| `chronicle.spec.js` | A chapter per month, newest first; a collapse or a return is named only when the record shows it; the hunter's words are quoted and never executed; the Oath is the prologue; reading the Chronicle never writes to the save. |
 | `quest-hub.spec.js` | The four squares on QUESTS: the list is still one tap away, every quest belongs to exactly one square, nothing is stranded off all of them, the counts are live, and a new goal is followed to its square. |
 | *(removed)* | `world.spec.js` is gone — the walkable world was removed on 2026-09-16. `smoke.spec.js` now guards that it stays gone. |
 
