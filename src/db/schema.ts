@@ -3,6 +3,10 @@
  *
  * Column names are written in camelCase here and mapped to snake_case in the
  * database automatically (`casing: "snake_case"` in drizzle.config.ts and src/db/index.ts).
+ *
+ * Every table has Row Level Security enabled with no policies. The app connects as the table
+ * owner, which bypasses RLS, while Supabase's public REST API (anon/authenticated roles) can't
+ * read or write anything. See docs/SUPABASE.md.
  */
 import { relations } from "drizzle-orm";
 import {
@@ -68,7 +72,7 @@ export const users = pgTable("users", {
   telegram: text(),
   instagram: text(),
   createdAt: createdAt(),
-});
+}).enableRLS();
 
 export const sessions = pgTable(
   "sessions",
@@ -82,7 +86,7 @@ export const sessions = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                         Organizations, clubs, members                      */
@@ -115,7 +119,7 @@ export const organizations = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("organizations_parent_idx").on(t.parentId)],
-);
+).enableRLS();
 
 export const memberships = pgTable(
   "memberships",
@@ -137,7 +141,7 @@ export const memberships = pgTable(
     uniqueIndex("memberships_org_user_uq").on(t.organizationId, t.userId),
     index("memberships_user_idx").on(t.userId),
   ],
-);
+).enableRLS();
 
 export const follows = pgTable(
   "follows",
@@ -154,7 +158,7 @@ export const follows = pgTable(
     primaryKey({ columns: [t.userId, t.organizationId] }),
     index("follows_org_idx").on(t.organizationId),
   ],
-);
+).enableRLS();
 
 /** Announcements / activity posts published by an organization. */
 export const posts = pgTable(
@@ -169,7 +173,7 @@ export const posts = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("posts_org_created_idx").on(t.organizationId, t.createdAt)],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                                   Events                                   */
@@ -201,7 +205,7 @@ export const events = pgTable(
     index("events_starts_at_idx").on(t.startsAt),
     index("events_org_idx").on(t.organizationId),
   ],
-);
+).enableRLS();
 
 export const eventRegistrations = pgTable(
   "event_registrations",
@@ -223,7 +227,7 @@ export const eventRegistrations = pgTable(
     uniqueIndex("event_registrations_event_user_uq").on(t.eventId, t.userId),
     index("event_registrations_user_idx").on(t.userId),
   ],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                              Projects & tasks                              */
@@ -251,7 +255,7 @@ export const projects = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [index("projects_org_idx").on(t.organizationId)],
-);
+).enableRLS();
 
 export const tasks = pgTable(
   "tasks",
@@ -278,7 +282,7 @@ export const tasks = pgTable(
     index("tasks_project_idx").on(t.projectId),
     index("tasks_assignee_idx").on(t.assigneeId),
   ],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                                  Meetings                                  */
@@ -301,7 +305,7 @@ export const meetings = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("meetings_org_starts_idx").on(t.organizationId, t.startsAt)],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                                  Messaging                                 */
@@ -325,7 +329,7 @@ export const conversations = pgTable(
     lastMessageAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("conversations_org_idx").on(t.organizationId)],
-);
+).enableRLS();
 
 export const conversationMembers = pgTable(
   "conversation_members",
@@ -343,7 +347,7 @@ export const conversationMembers = pgTable(
     primaryKey({ columns: [t.conversationId, t.userId] }),
     index("conversation_members_user_idx").on(t.userId),
   ],
-);
+).enableRLS();
 
 export const messages = pgTable(
   "messages",
@@ -358,7 +362,7 @@ export const messages = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("messages_conversation_idx").on(t.conversationId, t.id)],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                                Notifications                               */
@@ -378,7 +382,7 @@ export const notifications = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("notifications_user_created_idx").on(t.userId, t.createdAt)],
-);
+).enableRLS();
 
 /* -------------------------------------------------------------------------- */
 /*                                  Relations                                 */

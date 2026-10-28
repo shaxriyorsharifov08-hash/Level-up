@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+import { directDatabaseUrl } from "./src/db/url";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
@@ -9,6 +10,7 @@ export default defineConfig({
   dialect: "postgresql",
   casing: "snake_case",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://levelup:levelup@localhost:5432/levelup",
+    // Migrations need a session connection (Supabase: session pooler or direct connection).
+    url: directDatabaseUrl(),
   },
 });

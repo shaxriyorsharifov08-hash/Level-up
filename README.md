@@ -24,7 +24,7 @@ It's a working MVP, not a visual prototype. Every screen reads from and writes t
 | --- | --- | --- |
 | Framework | **Next.js 16** (App Router, React 19, Server Components, Server Actions) | One codebase for UI and backend; deploys free on Vercel |
 | Language | **TypeScript** | Type safety from the database to the UI |
-| Database | **PostgreSQL** + **Drizzle ORM** | Relational data with real transactions; free hosting on Neon or Supabase |
+| Database | **PostgreSQL on Supabase** + **Drizzle ORM** | Relational data with real transactions; free hosted database with a friendly dashboard |
 | Styling | **Tailwind CSS v4** + small hand-written UI kit | Modern look, automatic dark mode, no heavy component library |
 | Validation | **Zod** | Every form and action input is validated on the server |
 | Auth | Built-in (scrypt hashing + database sessions) | No paid auth provider and no vendor lock-in |
@@ -34,18 +34,20 @@ It's a working MVP, not a visual prototype. Every screen reads from and writes t
 
 ## Quick start
 
-**Requirements:** Node.js 20.9+ and a PostgreSQL database.
+**Requirements:** Node.js 20.9+ and a PostgreSQL database: a free **Supabase** project (recommended) or a local one.
 
 ```bash
 # 1. Install dependencies
 npm install
 
 # 2. Configure
-cp .env.example .env            # edit university name, time zone, social links…
+cp .env.example .env            # database URLs, university name, time zone, social links…
 
-# 3. Start PostgreSQL. Pick one:
-docker compose up -d            # local Postgres via Docker
-# …or create a free database on https://neon.tech and paste its URL into DATABASE_URL
+# 3. Database. Pick one:
+#    a) Supabase: paste the two connection strings into .env (DATABASE_URL, DIRECT_URL)
+#       → step-by-step guide: docs/SUPABASE.md
+#    b) Local Postgres via Docker:
+docker compose up -d
 
 # 4. Create the tables and load demo data
 npm run db:migrate
@@ -78,7 +80,7 @@ On a fresh database without demo data, **the first account you register becomes 
 | `npm run db:generate` | Create a new SQL migration after editing `src/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Load demo data (only into an empty database) |
-| `npm run db:reset` | **Delete everything**, re-migrate and re-seed (refuses in production) |
+| `npm run db:reset` | **Delete all app data**, re-migrate and re-seed (refuses in production and, unless confirmed, on remote databases like Supabase) |
 | `npm run db:studio` | Browse the database in Drizzle Studio |
 
 ---
@@ -89,7 +91,8 @@ All settings live in environment variables (see [`.env.example`](.env.example)):
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_URL` | Connection string used by the app (Supabase: **transaction pooler**, port 6543) |
+| `DIRECT_URL` | Connection string for migrations and the seed script (Supabase: **session pooler**, port 5432). Defaults to `DATABASE_URL` |
 | `NEXT_PUBLIC_APP_NAME` | Platform name shown in the UI (default "Level Up") |
 | `NEXT_PUBLIC_UNIVERSITY_NAME` / `_SHORT_NAME` | Your university's name |
 | `NEXT_PUBLIC_UNIVERSITY_TIMEZONE` | IANA time zone for showing and entering times, e.g. `Asia/Tashkent` |
@@ -101,14 +104,16 @@ All settings live in environment variables (see [`.env.example`](.env.example)):
 
 ---
 
-## Deploying for free (Vercel + Neon)
+## Deploying for free (Supabase + Vercel)
 
-1. **Database:** create a free project on [Neon](https://neon.tech) (or [Supabase](https://supabase.com)) and copy the connection string. Use the pooled connection string if one is offered.
-2. **Create the tables** from your machine: `DATABASE_URL="<neon url>" npm run db:migrate` (optionally also `db:seed` for a demo).
-3. **App:** import the GitHub repository on [Vercel](https://vercel.com), add the environment variables from `.env.example` with your values, and deploy.
-4. After schema changes, run `npm run db:migrate` against the production database before or right after deploying.
+Step-by-step walkthrough: **[docs/SUPABASE.md](docs/SUPABASE.md)**.
 
-The app is a standard Node.js server (`npm run build && npm start`), so it also runs on Render, Railway, Fly.io or any VPS.
+1. **Database:** create a free project on [Supabase](https://supabase.com). Under **Connect → Connection string**, copy the *transaction pooler* (port 6543) and *session pooler* (port 5432) strings.
+2. **Create the tables:** put them in `.env` as `DATABASE_URL` and `DIRECT_URL`, then run `npm run db:migrate` (and `npm run db:seed` for demo data). Without Node.js locally, add a `DIRECT_URL` repository secret and run the **"Supabase – migrate database"** GitHub Action instead.
+3. **App:** import the repository on [Vercel](https://vercel.com), add `DATABASE_URL` (transaction pooler), `DATABASE_POOL_MAX=1` and your `NEXT_PUBLIC_*` settings, and deploy.
+4. After schema changes, run `npm run db:migrate` against Supabase before deploying the new code.
+
+Every table has Row Level Security enabled, so Supabase's public REST API can't read or change data; the app itself connects as the table owner. Any other PostgreSQL host (Neon, Railway, a VPS) works too: just set `DATABASE_URL`. The app is a standard Node.js server (`npm run build && npm start`), so it also runs on Render, Railway, Fly.io or any VPS.
 
 ---
 
@@ -139,6 +144,7 @@ drizzle/                      # SQL migrations (committed)
 scripts/                      # seed & reset
 tests/                        # Vitest unit + integration tests
 docs/ARCHITECTURE.md          # How it fits together and why
+docs/SUPABASE.md              # Running on Supabase + Vercel, step by step
 ```
 
 Read **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the data model, permission rules, the real-time chat approach and the scaling roadmap.

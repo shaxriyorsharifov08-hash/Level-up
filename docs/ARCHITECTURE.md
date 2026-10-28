@@ -129,6 +129,7 @@ The university's time zone (`NEXT_PUBLIC_UNIVERSITY_TIMEZONE`) is used for displ
 - CSV exports neutralise spreadsheet formulas (`=`, `+`, `-`, `@`).
 - Server Actions have built-in CSRF protection (origin checks). Cookies are httpOnly, `Secure` in production.
 - Drafts, private projects, attendee exports, meetings and conversations return 404 to people without access.
+- Every table has Row Level Security enabled with no policies (`drizzle/0001_enable_rls.sql`). The app connects as the table owner and is unaffected, but Supabase's auto-generated REST API (`anon` / `authenticated` roles) can't read or write anything. See [SUPABASE.md](SUPABASE.md).
 
 **Before a real launch, add:** rate limiting on login and registration (for example Upstash's free tier), e-mail verification or SSO with the university, and password reset.
 
@@ -136,7 +137,7 @@ The university's time zone (`NEXT_PUBLIC_UNIVERSITY_TIMEZONE`) is used for displ
 
 The MVP comfortably serves a single university. When it grows:
 
-1. **Database:** add indexes as queries appear in slow logs. Neon and Supabase scale vertically with a click.
+1. **Database:** add indexes as queries appear in slow logs. Supabase scales vertically with a click. The app already talks to it through the transaction pooler (port 6543), so many serverless instances can share a few database connections.
 2. **Caching:** enable Next.js Cache Components for public pages (events, clubs, landing).
 3. **Chat:** switch polling to a push service (section 7).
 4. **Files:** move from image URLs to an upload service.

@@ -7,6 +7,9 @@ import { config } from "dotenv";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
+// Scripts use the session connection (Supabase session pooler) when one is configured.
+if (process.env.DIRECT_URL) process.env.DATABASE_URL = process.env.DIRECT_URL;
+
 async function main() {
   // Imported after dotenv so DATABASE_URL is set before the connection is created.
   const { db } = await import("../src/db");

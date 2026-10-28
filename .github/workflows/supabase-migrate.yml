@@ -1,0 +1,38 @@
+# Applies database migrations to your Supabase project from GitHub, no local setup needed.
+# Setup: add a repository secret named DIRECT_URL with the Supabase *session pooler*
+# connection string, then run this workflow from the Actions tab. See docs/SUPABASE.md.
+name: Supabase – migrate database
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Also load demo data (only runs on an empty database)"
+        type: boolean
+        default: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      DATABASE_URL: ${{ secrets.DIRECT_URL }}
+      NEXT_PUBLIC_UNIVERSITY_TIMEZONE: ${{ vars.NEXT_PUBLIC_UNIVERSITY_TIMEZONE || 'UTC' }}
+    steps:
+      - name: Check the DIRECT_URL secret
+        run: |
+          if [ -z "$DIRECT_URL" ]; then
+            echo "::error::Add a repository secret named DIRECT_URL (Supabase session pooler connection string)."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations
+        run: npm run db:migrate
+      - name: Load demo data
+        if: ${{ inputs.seed }}
+        run: npm run db:seed
