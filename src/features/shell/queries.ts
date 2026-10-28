@@ -1,4 +1,5 @@
 import "server-only";
+import { countUnreadConversations } from "@/features/chat/queries";
 import { getUserWorkspaces } from "@/features/organizations/queries";
 
 export type ShellData = {
@@ -9,6 +10,9 @@ export type ShellData = {
 
 /** Data the signed-in navigation needs on every page (workspaces, unread counters). */
 export async function getShellData(userId: string): Promise<ShellData> {
-  const workspaces = await getUserWorkspaces(userId);
-  return { workspaces, unreadMessages: 0, unreadNotifications: 0 };
+  const [workspaces, unreadMessages] = await Promise.all([
+    getUserWorkspaces(userId),
+    countUnreadConversations(userId),
+  ]);
+  return { workspaces, unreadMessages, unreadNotifications: 0 };
 }
