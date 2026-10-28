@@ -8,6 +8,7 @@ import { MobileDrawer } from "./mobile-drawer";
 
 const links = [
   { href: "/events", label: "Events" },
+  { href: "/projects", label: "Projects" },
   { href: "/clubs", label: "Clubs" },
 ];
 
