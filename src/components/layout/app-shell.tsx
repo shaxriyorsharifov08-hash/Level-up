@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Bell,
   CalendarDays,
   CalendarRange,
   FolderKanban,
@@ -21,7 +22,7 @@ import { UserMenu } from "./user-menu";
 
 type Props = ShellData & { user: CurrentUser; children: React.ReactNode };
 
-function SidebarContent({ user, workspaces, unreadMessages }: Omit<Props, "children">) {
+function SidebarContent({ user, workspaces, unreadMessages, unreadNotifications }: Omit<Props, "children">) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-4">
@@ -31,6 +32,9 @@ function SidebarContent({ user, workspaces, unreadMessages }: Omit<Props, "child
         <div className="space-y-0.5">
           <NavLink href="/dashboard">
             <LayoutDashboard /> Dashboard
+          </NavLink>
+          <NavLink href="/notifications" badge={unreadNotifications}>
+            <Bell /> Notifications
           </NavLink>
         </div>
 
@@ -112,6 +116,14 @@ export function AppShell({ children, ...props }: Props) {
             <SidebarContent {...props} />
           </MobileDrawer>
           <Logo href="/dashboard" />
+          <Link
+            href="/notifications"
+            className="relative ml-auto rounded-lg p-2 text-muted-foreground hover:bg-accent"
+            aria-label={props.unreadNotifications ? `Notifications (${props.unreadNotifications} new)` : "Notifications"}
+          >
+            <Bell className="size-5" />
+            {props.unreadNotifications > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+          </Link>
         </header>
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>

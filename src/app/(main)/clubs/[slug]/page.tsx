@@ -26,6 +26,8 @@ import { EventCard } from "@/features/events/components/event-card";
 import { getUserRegistrationMap, listEvents } from "@/features/events/queries";
 import { ProjectCard } from "@/features/projects/components/project-card";
 import { listOrgProjects } from "@/features/projects/queries";
+import { FeedList } from "@/features/feed/components/feed";
+import { getOrgPosts } from "@/features/feed/queries";
 import { pluralize } from "@/lib/utils";
 
 export async function generateMetadata({ params }: PageProps<"/clubs/[slug]">): Promise<Metadata> {
@@ -36,12 +38,13 @@ export async function generateMetadata({ params }: PageProps<"/clubs/[slug]">): 
 export default async function OrganizationPage({ params }: PageProps<"/clubs/[slug]">) {
   const { slug } = await params;
   const { user, org, access, isFollowing } = await getPublicOrganization(slug);
-  const [members, counts, children, events, projects] = await Promise.all([
+  const [members, counts, children, events, projects, posts] = await Promise.all([
     getOrgMembers(org.id),
     getOrgCounts([org.id]),
     org.kind === "organization" ? listOrganizations({ parentId: org.id }) : Promise.resolve([]),
     listEvents({ organizationId: org.id, limit: 4 }),
     listOrgProjects(org.id, { includePrivate: false }),
+    getOrgPosts(org.id, 5),
   ]);
   const myRegistrations = await getUserRegistrationMap(user?.id, events.map((e) => e.id));
   const { members: memberCount, followers } = counts.get(org.id)!;
@@ -192,6 +195,11 @@ export default async function OrganizationPage({ params }: PageProps<"/clubs/[sl
                 ))}
               </div>
             )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Updates</h2>
+            <FeedList items={posts} emptyText={`${org.name} hasn't posted any updates yet.`} />
           </section>
 
           {projects.length > 0 && (
