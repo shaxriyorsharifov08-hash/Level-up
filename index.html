@@ -2879,7 +2879,7 @@ function cloudAdopt(remoteJson){
   adoptState(remoteState);
   try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
   idbPut("kv", "state", JSON.stringify(state));
-  if(cloudUser && state.guildId) attachGuild(); /* guild may have changed on another device */
+  if(cloudUser && state.guildId){ publishGuildProfile(); attachGuild(); } /* guild may have changed on another device */
   applyTheme(state.theme || "shadow");
   renderAll();
 }
@@ -3101,6 +3101,12 @@ function renderGuildChat(){
   el.innerHTML = h;
   el.scrollTop = el.scrollHeight;
 }
+/* Clan and cloud data is written by OTHER people's devices, so it is untrusted:
+   numbers are forced to numbers and the rank to a known key before they reach
+   innerHTML (everything else goes through esc). A crafted profile could
+   otherwise run script in every clan member's app. */
+function safeInt(v, dflt){ v = Math.floor(+v); return isFinite(v) ? v : (dflt || 0); }
+function safeRankKey(k){ for(var i=0;i<RANKS.length;i++) if(RANKS[i].key === k) return k; return "E"; }
 /* Fair leaderboard metric. Deliberately ignores raw self-assigned XP/tier so
    inflating quests to LEGENDARY does nothing here. Only signals that require
    genuinely showing up over real days move this number. */
@@ -3148,17 +3154,18 @@ function renderGuild(){
     var m = list[i];
     var me = cloudUser && m._uid === cloudUser.uid;
     var online = m.lastSeen && (Date.now() - m.lastSeen) < 10 * 60000;
-    var focusTxt = fmtDur((m.focusMin7 || 0) * 60);
-    h += '<div class="gmem' + (me ? " me" : "") + '" data-watch="' + m._uid + '" title="Tap to watch stats">'
+    var focusTxt = fmtDur(safeInt(m.focusMin7, 0) * 60);
+    var rk = safeRankKey(m.rank);
+    h += '<div class="gmem' + (me ? " me" : "") + '" data-watch="' + esc(m._uid) + '" title="Tap to watch stats">'
       + '<span class="gmem-rank">' + (medals[i] || ("#" + (i+1))) + '</span>'
       + (m.photo ? '<img class="gmem-ava" src="' + esc(m.photo) + '" alt="">' : '<span class="gmem-ava gmem-ava-fallback">⚔️</span>')
       + '<div class="gmem-main"><div class="gmem-name">' + esc(m.name || "Hunter")
-      + ' <span class="rank-badge ' + ("rank-" + (m.rank || "E")) + '" style="width:20px;height:20px;font-size:.6rem">' + (m.rank || "E") + '</span>'
+      + ' <span class="rank-badge rank-' + rk + '" style="width:20px;height:20px;font-size:.6rem">' + rk + '</span>'
       + (online ? ' <span class="gmem-on" title="Active recently"></span>' : '') + '</div>'
-      + '<div class="gmem-sub">LV.' + (m.level || 1) + ' • 📅 ' + (m.activeDays7 || 0) + '/7 days • 🔥 ' + (m.streak || 0) + ' • ⏱ ' + focusTxt + '</div></div>'
+      + '<div class="gmem-sub">LV.' + safeInt(m.level, 1) + ' • 📅 ' + safeInt(m.activeDays7, 0) + '/7 days • 🔥 ' + safeInt(m.streak, 0) + ' • ⏱ ' + focusTxt + '</div></div>'
       + '<div class="gmem-xp"><b>' + disciplineScore(m) + '</b><span>DISCIPLINE</span></div>'
-      + '<button class="mini-btn" data-watch-btn="' + m._uid + '" title="Watch stats">👁</button>'
-      + (me ? '' : '<button class="mini-btn" data-cheer="' + m._uid + '" data-cname="' + esc(m.name || "Hunter") + '" title="Send respect">👊</button>')
+      + '<button class="mini-btn" data-watch-btn="' + esc(m._uid) + '" title="Watch stats">👁</button>'
+      + (me ? '' : '<button class="mini-btn" data-cheer="' + esc(m._uid) + '" data-cname="' + esc(m.name || "Hunter") + '" title="Send respect">👊</button>')
       + '</div>';
   }
   document.getElementById("guildMembers").innerHTML = h || '<div class="empty-note">Loading members…</div>';
@@ -3206,7 +3213,7 @@ function openWatchStats(uid){
   if(m.stats){
     h += '<div class="form-lbl">ATTRIBUTES</div><div class="chip-list" style="margin-bottom:14px">';
     var sk = ["INT","STR","CON","END"];
-    for(var s=0;s<sk.length;s++) h += '<span class="tag tag-stat">' + sk[s] + ' ' + (m.stats[sk[s]] || 0) + '</span>';
+    for(var s=0;s<sk.length;s++) h += '<span class="tag tag-stat">' + sk[s] + ' ' + safeInt(m.stats[sk[s]], 0) + '</span>';
     h += '</div>';
   }
   /* titles */
@@ -3384,7 +3391,7 @@ document.getElementById("acLoadUsers").addEventListener("click", function(){
       try{ st = JSON.parse(all[uidK].json); }catch(e){}
       if(!st) continue;
       h += '<div class="adm-list-item"><span class="ali-name">⚔️ ' + esc(st.hunterName || "Hunter")
-        + ' — LV.' + (st.level || 1) + ' · ' + (st.totalCompleted || 0) + ' done</span>'
+        + ' — LV.' + safeInt(st.level, 1) + ' · ' + safeInt(st.totalCompleted, 0) + ' done</span>'
         + '<button class="mini-btn" data-acedit="' + esc(uidK) + '" title="Edit">✎</button></div>';
     }
     box.innerHTML = h || '<div class="empty-note">' + esc(tr("No users found (check database rules in README).")) + '</div>';
@@ -3699,7 +3706,9 @@ function setupAuthListener(){
       /* ordinary Google hunter — record the entrance choice and open the gate */
       if(!state.entryChoice){ state.entryChoice = "google"; save(); }
       hideEntrance();
-      if(state.guildId){ attachGuild(); publishGuildProfile(); }
+      /* publish first: the tightened rules let only members read the clan, and the
+         write is queued ahead of the reads on the same connection */
+      if(state.guildId){ publishGuildProfile(); attachGuild(); }
       cloudRef = fbDb.ref("hunters/" + user.uid);
       cloudRef.once("value", function(snap){
         var remote = snap.val();
