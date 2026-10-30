@@ -67,6 +67,7 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `manifest.webmanifest` | PWA identity (name, icons, colors) for "Add to Home screen" |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons |
 | `tests/` | The safety net — see **section 2b** below. Not part of the app; the live site ignores it |
+| `database.rules.json` | The Firebase Realtime Database security rules, kept in the repo so they are reviewed like code. **Firebase does not read this file** — paste it into the console (section 4, step 5) |
 | `package.json`, `playwright.config.js` | Only used to run the tests |
 | `.github/workflows/tests.yml` | Runs the tests on GitHub after every commit |
 
@@ -96,7 +97,7 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
 2. **Authentication → Users → Add user** → enter YOUR admin email and a strong password.
 3. Copy that new user's **UID** (shown in the users table).
 4. **Realtime Database → Data** → create: `admins → <paste the UID> → true`.
-5. **Realtime Database → Rules** → replace with the rules below → **Publish**:
+5. **Realtime Database → Rules** → replace with the contents of `database.rules.json` (copied below) → **Publish**. Before publishing, try it in the console's **Rules Playground**: read `hunters/<your uid>` as yourself (allowed) and as another uid (denied).
 
 ```json
 {
@@ -109,7 +110,9 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
       }
     },
     "admins": {
-      ".read": "auth != null",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      },
       ".write": false
     },
     "broadcast": {
@@ -128,17 +131,56 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
       ".read": true,
       ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
     },
-    "guilds": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
     "codes": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.isString()"
+      }
+    },
+    "guilds": {
+      "$gid": {
+        "info": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.child('createdBy').val() === auth.uid) || (data.exists() && data.child('createdBy').val() === auth.uid))"
+        },
+        "members": {
+          ".read": "auth != null && data.child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('level').isNumber() && newData.child('rank').isString() && newData.child('rank').val().length <= 3"
+          }
+        },
+        "chat": {
+          ".read": "auth != null && root.child('guilds').child($gid).child('members').child(auth.uid).exists()",
+          "$msg": {
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && root.child('guilds').child($gid).child('members').child(auth.uid).exists()",
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 300 && newData.child('name').isString() && newData.child('at').isNumber()"
+          }
+        },
+        "cheers": {
+          "$to": {
+            ".read": "auth != null && auth.uid === $to",
+            "$c": {
+              ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('guilds').child($gid).child('members').child(auth.uid).exists()) || (!newData.exists() && auth.uid === $to))"
+            }
+          }
+        }
+      }
     }
   }
 }
 ```
+
+**What the November 2026 rules changed, and why.** The old rules let *any* signed-in account write *anywhere* under `guilds` and `codes`: overwrite another clan's name, post chat as someone else, delete other members, or list every invite code. Now:
+
+- a clan profile (`guilds/<id>/members/<uid>`) can be written only by that hunter, and must have a text name, a numeric level and a short rank;
+- members and chat can be read only by the clan's members; a chat message must carry its sender's own uid and is at most 300 characters; nobody can edit or delete someone else's message;
+- a respect boost can be sent only by a member and removed only by its receiver;
+- clan info can be changed only by its creator; an invite code can be claimed once and never overwritten, and the full list of codes can no longer be downloaded;
+- `admins` can no longer be listed: each account can only check itself.
+
+The app publishes its own clan profile **before** it starts reading the clan, so the member-only reads succeed on the first try.
+
 
 After that: entrance screen → ADMIN → your email + password → the app switches into a **console-only view**: no navigation, no quests, no play — just the admin panel. There you can load every user, edit a chosen user (name, level, XP, stat points), seal/unseal sections for everyone, broadcast a System announcement, and launch season events. These rules — not the app — are what actually protects user data: only each user and the admin UID can touch a save. Press **🚪 EXIT ADMIN MODE** to leave — it signs the admin account out and returns the device to its own hunter (guest or Google), untouched.
 
@@ -591,3 +633,24 @@ STORY → 📜 **THE CHRONICLE**. Every calendar month since the save was create
 A chapter's title is **earned, never decorative**. It is chosen by comparing the month with the one before it, so *"The winter you nearly stopped"* appears only when you really went from showing up most days to fewer than a third of them, and *"The spring you came back"* only when the reverse is true. *"Strongest"* is not said until there are at least three months to compare.
 
 **It stores nothing.** The Chronicle is computed from the save every time it opens, so it can never disagree with the record and adds nothing to the save's size. The one new field it relies on is `doneOn` on a dream, written when a dream is ticked — dreams achieved before this existed are simply not dated. Months whose day rows were folded into the archive (older than 400 days) say so honestly and still quote what you wrote. The titles and sentences are in English only; the Russian dictionary does not cover them yet.
+
+## 4r. YOUR DATA, THE BREAK REMINDER, PREMIUM PREVIEW (November 2026)
+
+Three promises from the business plan, made true in the app. All three live in **SETTINGS**.
+
+### 🔒 YOUR DATA & PRIVACY
+Says in plain words where a save is kept (this device; the cloud if signed in, where the administrator can open it to fix problems; clan members see name, photo, level, rank, weekly progress and chat) and that there are no ads, no tracking and nothing sent to any AI service. **Keep that last sentence true**: if an AI feature is ever added, this text must change in the same commit.
+
+- **💾 EXPORT MY DATA** is the same full JSON backup as EXPORT JSON BACKUP.
+- **🗑 DELETE MY DATA** asks the hunter to type `DELETE` (or `УДАЛИТЬ`). Signed in, it first removes the cloud save (`hunters/<uid>`) and the clan profile, then signs out; then it clears this device: the save, the IndexedDB vault **and** the daily snapshots, so the vault recovery cannot bring it back on reload.
+- **Nothing is half-deleted.** Offline, or if the cloud refuses, the app deletes nothing at all and says so. While a deletion runs, `save()` and the cloud sync are switched off (`dataWiping`), so no last write can resurrect the record.
+- The old **FULL RESET** is unchanged: it clears this device only, and a signed-in hunter gets the cloud copy back on the next sync. DELETE MY DATA is the one that removes everything.
+
+### ⏳ BREAK REMINDER
+A gentle "time for a short break" after **20 / 30 / 45 / 60 minutes of active use** (default 30, or Off). Only active use counts: the app visible, touched in the last minute, and **no focus session running**, because that is work, not scrolling. Five minutes away counts as a break and starts the count again. Saved as `breakMins` (0 = off); older saves get 30, and a corrupt value is reset to 30 so it can never fire every tick.
+
+### ⭐ LEVEL UP PREMIUM (preview)
+Shows the planned price (**37,500 so'm a month**), what Premium will add (AI training plans, a diet calculator with standard medical formulas for 18+, deeper statistics, extra themes) and what is **always free**. **Nothing is sold: there is no payment in the app.** I'M INTERESTED stores the day in `premiumInterest`, which the administrator can count in cloud saves. It is a feature in the registry (`premium`), so the Administrator can seal it by level or remove it like any other.
+
+### Security fixes
+Clan profiles and other hunters' saves are written by *other people's devices*, so they are untrusted. The clan leaderboard, the 👁 stats card and the admin user list used to put a member's rank, level, streak, days and attributes into the page without checking them; a crafted profile could have run script in every clan member's app. Those values are now forced to numbers or a known rank before they are shown (`safeInt`, `safeRankKey`), and member ids are escaped. The database rules were tightened too: see section 4, step 5. **Those rules only take effect once you paste them into the Firebase console.**

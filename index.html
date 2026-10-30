@@ -844,6 +844,7 @@ body.dock-open #fab{bottom:calc(96px + env(safe-area-inset-bottom,0px)) !importa
 .modal{position:fixed;inset:0;z-index:250;display:none;align-items:flex-start;justify-content:center;
   background:rgba(2,3,10,.8);backdrop-filter:blur(5px);padding:20px;overflow-y:auto}
 .modal.show{display:flex}
+.premium-list{list-style:none;padding:0;margin:6px 0 14px;display:flex;flex-direction:column;gap:6px;font-size:.95rem;line-height:1.4}
 [aria-modal="true"]:focus{outline:none}
 .modal-box{width:100%;max-width:520px;margin:auto;border-radius:16px;border:1px solid var(--line);
   background:linear-gradient(160deg,rgba(14,18,42,.99),rgba(6,8,20,.99));padding:22px;
@@ -2056,6 +2057,36 @@ main section{animation:pagein .28s ease}
         </div>
         <input type="file" id="admImportFile" accept=".json,application/json" style="display:none">
       </div>
+
+      <div class="panel" id="premiumPanel">
+        <div class="panel-title">⭐ LEVEL UP PREMIUM</div>
+        <div class="empty-note" style="margin-bottom:10px">Coming soon. The free app stays complete; Premium will add extra tools for those who want them.</div>
+        <button class="btn gold" id="premiumOpen" style="width:100%">⭐ SEE WHAT'S COMING</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">⏳ BREAK REMINDER</div>
+        <div class="empty-note" style="margin-bottom:10px">A gentle reminder to rest your eyes. Only time you actively spend in the app counts, and a running focus timer never triggers it.</div>
+        <select class="sel" id="breakMinsSel">
+          <option value="0">Off</option>
+          <option value="20">After 20 minutes</option>
+          <option value="30">After 30 minutes</option>
+          <option value="45">After 45 minutes</option>
+          <option value="60">After 60 minutes</option>
+        </select>
+      </div>
+
+      <div class="panel" id="privacyPanel">
+        <div class="panel-title">🔒 YOUR DATA &amp; PRIVACY</div>
+        <div class="empty-note" style="margin-bottom:6px">On this device: your whole save, kept in this browser's storage.</div>
+        <div class="empty-note" style="margin-bottom:6px">If you sign in with Google: a copy of your save in our cloud database, so it syncs between your devices. The app administrator can open cloud saves to fix problems.</div>
+        <div class="empty-note" style="margin-bottom:6px">If you join a clan: its members see your name, photo, level, rank and weekly progress, and the messages you send.</div>
+        <div class="empty-note" style="margin-bottom:12px">No ads, no tracking, and nothing is sent to any AI service.</div>
+        <div class="adm-row">
+          <button class="btn gold" id="privacyExport">&#128190; EXPORT MY DATA</button>
+          <button class="btn danger" id="privacyDelete">&#128465; DELETE MY DATA</button>
+        </div>
+      </div>
       <!-- story path is admin-controlled now; users never edit it -->
       <div class="panel" style="display:none">
         <button class="btn primary" id="openRoadEditor" style="width:100%">✎ EDIT STORY PATH AWARDS</button>
@@ -2380,6 +2411,36 @@ main section{animation:pagein .28s ease}
   </div>
 </div>
 
+<!-- Premium preview: what is coming, and the price. No payment exists in the app. -->
+<div class="modal" id="premiumModal" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title">⭐ LEVEL UP PREMIUM</div>
+    <div class="chip-list" style="margin-bottom:12px">
+      <span class="tag tag-legendary">COMING SOON</span>
+      <span class="tag tag-stat" id="premiumPrice" style="text-transform:none">37,500 so'm / month</span>
+    </div>
+    <div class="form-lbl">PREMIUM WILL ADD</div>
+    <ul class="premium-list">
+      <li>🧭 AI training plans, explained step by step</li>
+      <li>🥗 A diet calculator with standard medical formulas (18+ only)</li>
+      <li>📈 Deeper statistics and yearly reports</li>
+      <li>🎨 Extra themes and focus wallpapers</li>
+    </ul>
+    <div class="form-lbl">ALWAYS FREE</div>
+    <ul class="premium-list">
+      <li>⚔️ Quests, XP, levels and ranks</li>
+      <li>⏱ The focus timer</li>
+      <li>📜 The Chronicle</li>
+      <li>🏰 Clans and leaderboards</li>
+      <li>💰 The budget</li>
+      <li>💾 Exporting and deleting your data</li>
+    </ul>
+    <div class="empty-note" style="margin:10px 0">Nothing is sold yet: there is no payment in the app.</div>
+    <button class="btn gold" id="premiumInterest" style="width:100%">🔔 I'M INTERESTED</button>
+    <button class="btn" id="premiumClose" style="width:100%;margin-top:8px">CLOSE</button>
+  </div>
+</div>
+
 <!-- adjust today's completion modal -->
 <div class="modal" id="adjModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:380px">
@@ -2695,6 +2756,7 @@ var SYS_VOICE = {
 
 /* ---------------- state ---------------- */
 var SKEY = "leveluphunter_v1";
+var dataWiping = false; /* true while DELETE MY DATA runs: nothing may be saved or synced */
 var state = null;
 
 function defaultState(){
@@ -2707,6 +2769,8 @@ function defaultState(){
     rank:"",             /* the rank the Association has actually GRANTED (earned, never lost) */
     rankNoticed:"",      /* the rank whose evaluation opening has already been announced */
     roadSpV3:true,       /* new saves are already on the reduced road payout */
+    breakMins:30,        /* break reminder after this many minutes of ACTIVE use; 0 = off */
+    premiumInterest:"",  /* day the hunter tapped I'M INTERESTED on the Premium preview */
     quests:[], collections:[],
     rolls:{easy:0,medium:0,epic:0,mythic:0,legendary:0},
     storage:[],          /* earned roll tickets: {id,tier,colId,earnedAt,from} */
@@ -2796,6 +2860,8 @@ function defaultState(){
   };
 }
 function save(){
+  /* DELETE MY DATA is in progress: writing now would bring the record back */
+  if(dataWiping) return;
   state.savedAt = new Date().toISOString();
   state.saveCount = (state.saveCount || 0) + 1;
   var t = todayStr();
@@ -2865,9 +2931,11 @@ function initCloud(){
   }catch(e){ return false; }
 }
 function cloudPush(){
+  if(dataWiping) return;
   if(!cloudAvailable || !cloudUser || !cloudRef) return;
   if(cloudPushTimer) clearTimeout(cloudPushTimer);
   cloudPushTimer = setTimeout(function(){
+    if(dataWiping || !cloudRef) return;
     cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
     publishGuildProfile();
   }, 1200);
@@ -3800,6 +3868,11 @@ function load(){
   migrateState();
 }
 function migrateState(){
+  /* Nov 2026 additions: saves from before they existed get the defaults and
+     keep everything else untouched. A hand-edited or corrupt value is reset
+     rather than trusted, so the break reminder can never fire every tick. */
+  if(typeof state.breakMins !== "number" || !(state.breakMins >= 0) || state.breakMins > 600) state.breakMins = 30;
+  if(typeof state.premiumInterest !== "string") state.premiumInterest = "";
   /* migrate old collections (identical pieces) to prize crates */
   for(var i=0;i<state.collections.length;i++){
     var c = state.collections[i];
@@ -4773,7 +4846,61 @@ var I18N_RU = {
   "Leveling:":"Уровни:","Earning XP:":"Получение XP:","Focus timer:":"Таймер фокуса:","Completing:":"Выполнение:",
   "XP Debt:":"Долг XP:","Penalty Quest:":"Штрафной квест:",
   "⏱ Timer-required quests:":"⏱ Квесты с обязательным таймером:","🎒 Item boosts:":"🎒 Бонусы предметов:",
-  "🚧 Priority lock (one-time goals):":"🚧 Приоритетная блокировка (разовые цели):"
+  "🚧 Priority lock (one-time goals):":"🚧 Приоритетная блокировка (разовые цели):",
+  /* privacy, break reminder and Premium preview (Nov 2026) */
+  "⭐ LEVEL UP PREMIUM":"⭐ LEVEL UP PREMIUM",
+  "Coming soon. The free app stays complete; Premium will add extra tools for those who want them.":"Скоро. Бесплатное приложение остаётся полным; Premium добавит дополнительные инструменты для тех, кому они нужны.",
+  "⭐ SEE WHAT'S COMING":"⭐ ЧТО БУДЕТ В PREMIUM",
+  "⏳ BREAK REMINDER":"⏳ НАПОМИНАНИЕ О ПЕРЕРЫВЕ",
+  "A gentle reminder to rest your eyes. Only time you actively spend in the app counts, and a running focus timer never triggers it.":"Мягкое напоминание дать глазам отдохнуть. Считается только время, когда вы активно пользуетесь приложением, а запущенный таймер фокуса его никогда не вызывает.",
+  "Off":"Выкл.",
+  "After 20 minutes":"Через 20 минут",
+  "After 30 minutes":"Через 30 минут",
+  "After 45 minutes":"Через 45 минут",
+  "After 60 minutes":"Через 60 минут",
+  "🔒 YOUR DATA & PRIVACY":"🔒 ВАШИ ДАННЫЕ И КОНФИДЕНЦИАЛЬНОСТЬ",
+  "On this device: your whole save, kept in this browser's storage.":"На этом устройстве: всё ваше сохранение, в хранилище этого браузера.",
+  "If you sign in with Google: a copy of your save in our cloud database, so it syncs between your devices. The app administrator can open cloud saves to fix problems.":"Если вы входите через Google: копия сохранения в нашей облачной базе данных, чтобы оно синхронизировалось между устройствами. Администратор приложения может открывать облачные сохранения, чтобы исправлять проблемы.",
+  "If you join a clan: its members see your name, photo, level, rank and weekly progress, and the messages you send.":"Если вы вступаете в клан: его участники видят ваше имя, фото, уровень, ранг и прогресс за неделю, а также ваши сообщения.",
+  "No ads, no tracking, and nothing is sent to any AI service.":"Без рекламы и слежки; ничего не отправляется в сервисы ИИ.",
+  "💾 EXPORT MY DATA":"💾 ЭКСПОРТ МОИХ ДАННЫХ",
+  "🗑 DELETE MY DATA":"🗑 УДАЛИТЬ МОИ ДАННЫЕ",
+  "COMING SOON":"СКОРО",
+  "37,500 so'm / month":"37 500 сум / месяц",
+  "PREMIUM WILL ADD":"PREMIUM ДОБАВИТ",
+  "🧭 AI training plans, explained step by step":"🧭 Планы тренировок от ИИ с объяснением каждого шага",
+  "🥗 A diet calculator with standard medical formulas (18+ only)":"🥗 Калькулятор питания по стандартным медицинским формулам (только 18+)",
+  "📈 Deeper statistics and yearly reports":"📈 Расширенная статистика и годовые отчёты",
+  "🎨 Extra themes and focus wallpapers":"🎨 Дополнительные темы и обои для фокуса",
+  "ALWAYS FREE":"ВСЕГДА БЕСПЛАТНО",
+  "⚔️ Quests, XP, levels and ranks":"⚔️ Квесты, опыт, уровни и ранги",
+  "⏱ The focus timer":"⏱ Таймер фокуса",
+  "📜 The Chronicle":"📜 Хроника",
+  "🏰 Clans and leaderboards":"🏰 Кланы и рейтинги",
+  "💰 The budget":"💰 Бюджет",
+  "💾 Exporting and deleting your data":"💾 Экспорт и удаление ваших данных",
+  "Nothing is sold yet: there is no payment in the app.":"Пока ничего не продаётся: в приложении нет оплаты.",
+  "🔔 I'M INTERESTED":"🔔 МНЕ ИНТЕРЕСНО",
+  "✓ NOTED — THANK YOU":"✓ ОТМЕЧЕНО — СПАСИБО",
+  "Thank you — this helps us decide what to build first.":"Спасибо — это помогает нам решить, что делать в первую очередь.",
+  "Premium preview":"Превью Premium",
+  "PREMIUM PREVIEW UNLOCKED":"ПРЕВЬЮ PREMIUM ОТКРЫТО",
+  "See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app.":"Посмотрите, что добавит LEVEL UP Premium (НАСТРОЙКИ → ⭐ LEVEL UP PREMIUM).\n\nБесплатное приложение остаётся полным. Пока ничего не продаётся — в приложении нет оплаты.",
+  "DELETE MY DATA":"УДАЛИТЬ МОИ ДАННЫЕ",
+  "This permanently deletes your hunter from this device AND from the cloud, and removes you from your clan.":"Это навсегда удалит вашего охотника с этого устройства И из облака, а также уберёт вас из клана.",
+  "This permanently deletes your hunter from this device.":"Это навсегда удалит вашего охотника с этого устройства.",
+  "Export a backup first if you might want it back.":"Сначала экспортируйте резервную копию, если данные могут понадобиться.",
+  "Type DELETE to confirm:":"Введите DELETE или УДАЛИТЬ для подтверждения:",
+  "Nothing was deleted.":"Ничего не удалено.",
+  "You are offline, so nothing was deleted. Connect to the internet and try again.":"Вы не в сети, поэтому ничего не удалено. Подключитесь к интернету и попробуйте снова.",
+  "Deleting your data…":"Удаляем ваши данные…",
+  "The cloud copy could not be deleted, so nothing was deleted.":"Не удалось удалить облачную копию, поэтому ничего не удалено.",
+  "TIME FOR A SHORT BREAK":"ВРЕМЯ КОРОТКОГО ПЕРЕРЫВА",
+  "You have been using LEVEL UP for a while.":"Вы уже давно в LEVEL UP.",
+  "Stand up, stretch, drink some water and look away from the screen for a few minutes. Your quests will be here when you come back.":"Встаньте, потянитесь, выпейте воды и несколько минут не смотрите на экран. Ваши квесты дождутся вас.",
+  "I'LL TAKE A BREAK":"СДЕЛАЮ ПЕРЕРЫВ",
+  "Break reminder on.":"Напоминание о перерыве включено.",
+  "Break reminder off.":"Напоминание о перерыве выключено."
 };
 function tr(s){
   if(state && state.lang === "ru" && Object.prototype.hasOwnProperty.call(I18N_RU, s)) return I18N_RU[s];
@@ -4929,7 +5056,8 @@ var FEATURES = [
   {key:"timer",     type:"function", name:"Focus Timer",            def:0},
   {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0},
   {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
-  {key:"mentor",    type:"function", name:"System Mentor",          def:0}
+  {key:"mentor",    type:"function", name:"System Mentor",          def:0},
+  {key:"premium",   type:"function", name:"Premium preview",        def:0}
 ];
 var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget"];
 /* short guides shown the moment a feature is unlocked on the story path */
@@ -4945,7 +5073,8 @@ var FEATURE_GUIDE = {
   timer:     {ico:"⏱", title:"FOCUS TIMER UNLOCKED", body:"The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work."},
   dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."},
   store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
-  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."}
+  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
+  premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
 };
 function announceFeatureUnlocks(lv){
   for(var i=0;i<FEATURES.length;i++){
@@ -9877,6 +10006,8 @@ function renderAdmin(){
   document.getElementById("admSound").value = state.sound === false ? "off" : "on";
   document.getElementById("admLang").value = state.lang || "en";
   renderNotifySettings();
+  renderBreakSettings();
+  renderPremiumPanel();
   renderAdminConsole();
   /* quests list */
   var qh = "";
@@ -10456,6 +10587,151 @@ document.getElementById("admWipe").addEventListener("click", function(){
   localStorage.removeItem(SKEY);
   idbDel("kv", "state");
   setTimeout(function(){ location.reload(); }, 250);
+});
+
+/* ---------------- your data & privacy ---------------- */
+/* DELETE MY DATA removes the hunter everywhere it is kept: the cloud save and the
+   clan profile first (when signed in), then this device's storage, IndexedDB vault
+   and daily snapshots included. If the cloud can't be reached, NOTHING is deleted,
+   so a hunter is never told their data is gone while a copy survives somewhere. */
+function wipeLocalData(done){
+  var finished = false;
+  function finish(){ if(finished) return; finished = true; done(); }
+  try{ localStorage.removeItem(SKEY); }catch(e){}
+  try{ localStorage.removeItem("lu_admin_door"); }catch(e){}
+  try{ if(idb){ idb.close(); idb = null; } }catch(e){}
+  if(!window.indexedDB){ finish(); return; }
+  try{
+    var rq = indexedDB.deleteDatabase("leveluphunter_db");
+    rq.onsuccess = finish; rq.onerror = finish; rq.onblocked = finish;
+  }catch(e){ finish(); }
+  setTimeout(finish, 2000);
+}
+function deleteMyData(){
+  var signedIn = !!(cloudAvailable && cloudUser && fbDb);
+  var msg = tr("DELETE MY DATA") + "\n\n"
+    + (signedIn ? tr("This permanently deletes your hunter from this device AND from the cloud, and removes you from your clan.")
+                : tr("This permanently deletes your hunter from this device."))
+    + "\n" + tr("Export a backup first if you might want it back.")
+    + "\n\n" + tr("Type DELETE to confirm:");
+  var typed = prompt(msg, "");
+  if(typed === null) return;
+  var word = String(typed).trim().toUpperCase();
+  if(word !== "DELETE" && word !== "УДАЛИТЬ"){ toast(tr("Nothing was deleted."), "sys"); return; }
+  function wipeHere(){ wipeLocalData(function(){ location.reload(); }); }
+  if(!signedIn){
+    dataWiping = true;
+    if(cloudPushTimer){ clearTimeout(cloudPushTimer); cloudPushTimer = null; }
+    wipeHere();
+    return;
+  }
+  var uid = cloudUser.uid, gid = state.guildId;
+  /* offline, the cloud would only queue the deletion and lose it on close */
+  fbDb.ref(".info/connected").once("value").then(function(snap){
+    if(!snap.val()){
+      toast(tr("You are offline, so nothing was deleted. Connect to the internet and try again."), "err");
+      return;
+    }
+    dataWiping = true;
+    if(cloudPushTimer){ clearTimeout(cloudPushTimer); cloudPushTimer = null; }
+    toast(tr("Deleting your data…"), "sys");
+    var jobs = [];
+    if(gid) jobs.push(fbDb.ref("guilds/" + gid + "/members/" + uid).remove());
+    jobs.push(fbDb.ref("hunters/" + uid).remove());
+    return Promise.all(jobs).then(function(){
+      if(cloudRef){ try{ cloudRef.off(); }catch(e){} cloudRef = null; }
+      detachGuild();
+      var out = null;
+      try{ out = fbAuth && fbAuth.signOut(); }catch(e){}
+      if(out && out.then) out.then(wipeHere, wipeHere); else wipeHere();
+    });
+  }).catch(function(err){
+    dataWiping = false;
+    toast(tr("The cloud copy could not be deleted, so nothing was deleted.") + " " + (err && err.message ? err.message : ""), "err");
+  });
+}
+document.getElementById("privacyDelete").addEventListener("click", deleteMyData);
+document.getElementById("privacyExport").addEventListener("click", function(){
+  document.getElementById("admExport").click();
+});
+
+/* ---------------- break reminder (screen time) ---------------- */
+/* Counts only ACTIVE use: the app is visible, the hunter touched it in the last
+   minute, and no focus session is running (that is work, not scrolling). Five
+   minutes away from the app counts as a break and starts the count again. */
+var BREAK_TICK_MS = 15000;
+var breakActiveMs = 0, breakLastTick = Date.now(), breakLastInput = Date.now(), breakHiddenAt = 0;
+["pointerdown","keydown","wheel","touchstart"].forEach(function(ev){
+  window.addEventListener(ev, function(){ breakLastInput = Date.now(); }, {passive:true, capture:true});
+});
+function focusSessionRunning(){
+  return !!(state && state.activeTimer && !state.activeTimer.paused);
+}
+function breakTick(now){
+  now = now || Date.now();
+  var gap = Math.max(0, now - breakLastTick); /* a clock moved backwards adds nothing */
+  breakLastTick = now;
+  if(!state || adminMode || dataWiping) return;
+  var mins = +state.breakMins || 0;
+  if(mins <= 0){ breakActiveMs = 0; return; }
+  if(gap > 5 * 60000) breakActiveMs = 0;
+  if(document.visibilityState === "hidden") return;
+  if(focusSessionRunning()) return;
+  if(now - breakLastInput > 60000) return;
+  breakActiveMs += Math.min(gap, BREAK_TICK_MS * 2);
+  if(breakActiveMs >= mins * 60000){
+    breakActiveMs = 0;
+    announce(tr("TIME FOR A SHORT BREAK"),
+      tr("You have been using LEVEL UP for a while.") + "\n\n"
+      + tr("Stand up, stretch, drink some water and look away from the screen for a few minutes. Your quests will be here when you come back."),
+      "⏳", tr("I'LL TAKE A BREAK"));
+  }
+}
+setInterval(function(){ breakTick(); }, BREAK_TICK_MS);
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden"){ breakHiddenAt = Date.now(); return; }
+  if(breakHiddenAt && Date.now() - breakHiddenAt >= 5 * 60000) breakActiveMs = 0;
+  breakHiddenAt = 0;
+  breakLastTick = Date.now();
+});
+document.getElementById("breakMinsSel").addEventListener("change", function(){
+  state.breakMins = Math.max(0, parseInt(this.value, 10) || 0);
+  breakActiveMs = 0;
+  save();
+  toast(state.breakMins ? tr("Break reminder on.") : tr("Break reminder off."), "sys");
+});
+function renderBreakSettings(){
+  var sel = document.getElementById("breakMinsSel");
+  if(sel) sel.value = String(state.breakMins || 0);
+}
+
+/* ---------------- Premium preview ---------------- */
+/* Shows what Premium will add and its price. Nothing is sold: there is no payment
+   anywhere in the app. The Administrator can seal or remove it like any feature. */
+function premiumSealed(){ return (featureRemoved("premium") || featureSealedLv("premium")) && !adminMode; }
+function renderPremiumPanel(){
+  var p = document.getElementById("premiumPanel");
+  if(p) p.style.display = premiumSealed() ? "none" : "";
+}
+function renderPremiumInterest(){
+  document.getElementById("premiumInterest").textContent = state.premiumInterest
+    ? tr("✓ NOTED — THANK YOU") : tr("🔔 I'M INTERESTED");
+}
+function openPremium(){
+  if(premiumSealed()) return;
+  renderPremiumInterest();
+  document.getElementById("premiumModal").classList.add("show");
+}
+document.getElementById("premiumOpen").addEventListener("click", openPremium);
+document.getElementById("premiumClose").addEventListener("click", function(){ document.getElementById("premiumModal").classList.remove("show"); });
+document.getElementById("premiumModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
+document.getElementById("premiumInterest").addEventListener("click", function(){
+  if(!state.premiumInterest){
+    state.premiumInterest = todayStr();
+    save();
+    toast(tr("Thank you — this helps us decide what to build first."), "gold", "PREMIUM");
+  }
+  renderPremiumInterest();
 });
 
 /* ---------------- quest modal ---------------- */
