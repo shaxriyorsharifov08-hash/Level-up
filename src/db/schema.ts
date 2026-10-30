@@ -4,9 +4,13 @@
  * Column names are written in camelCase here and mapped to snake_case in the
  * database automatically (`casing: "snake_case"` in drizzle.config.ts and src/db/index.ts).
  *
- * Every table has Row Level Security enabled with no policies. The app connects as the table
- * owner, which bypasses RLS, while Supabase's public REST API (anon/authenticated roles) can't
- * read or write anything. See docs/SUPABASE.md.
+ * Everything lives in its own PostgreSQL schema, `campus`, instead of the shared `public`
+ * schema, so this app's tables, types and migration history never mix with other apps that use
+ * the same database (for example several projects in one Supabase project).
+ *
+ * Every table also has Row Level Security enabled with no policies. The app connects as the table
+ * owner, which bypasses RLS, while Supabase's REST API roles (anon/authenticated) can't read or
+ * write anything. See docs/SUPABASE.md.
  */
 import { relations } from "drizzle-orm";
 import {
@@ -14,14 +18,17 @@ import {
   boolean,
   index,
   integer,
-  pgEnum,
-  pgTable,
+  pgSchema,
   primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+/** Name of the PostgreSQL schema that holds all of this app's tables. */
+export const DB_SCHEMA = "campus";
+export const campus = pgSchema(DB_SCHEMA);
 
 const createdAt = () => timestamp({ withTimezone: true }).notNull().defaultNow();
 const updatedAt = () =>
@@ -34,32 +41,32 @@ const updatedAt = () =>
 /*                                   Enums                                    */
 /* -------------------------------------------------------------------------- */
 
-export const userRole = pgEnum("user_role", ["student", "admin"]);
-export const orgKind = pgEnum("org_kind", ["organization", "club"]);
-export const joinPolicy = pgEnum("join_policy", ["open", "request"]);
-export const memberRole = pgEnum("member_role", ["owner", "admin", "member"]);
-export const membershipStatus = pgEnum("membership_status", ["active", "pending"]);
-export const eventStatus = pgEnum("event_status", ["draft", "published", "cancelled"]);
-export const registrationStatus = pgEnum("registration_status", [
+export const userRole = campus.enum("user_role", ["student", "admin"]);
+export const orgKind = campus.enum("org_kind", ["organization", "club"]);
+export const joinPolicy = campus.enum("join_policy", ["open", "request"]);
+export const memberRole = campus.enum("member_role", ["owner", "admin", "member"]);
+export const membershipStatus = campus.enum("membership_status", ["active", "pending"]);
+export const eventStatus = campus.enum("event_status", ["draft", "published", "cancelled"]);
+export const registrationStatus = campus.enum("registration_status", [
   "registered",
   "waitlisted",
   "cancelled",
 ]);
-export const projectStatus = pgEnum("project_status", [
+export const projectStatus = campus.enum("project_status", [
   "planning",
   "active",
   "on_hold",
   "completed",
 ]);
-export const taskStatus = pgEnum("task_status", ["todo", "in_progress", "review", "done"]);
-export const taskPriority = pgEnum("task_priority", ["low", "medium", "high"]);
-export const conversationType = pgEnum("conversation_type", ["direct", "group", "channel"]);
+export const taskStatus = campus.enum("task_status", ["todo", "in_progress", "review", "done"]);
+export const taskPriority = campus.enum("task_priority", ["low", "medium", "high"]);
+export const conversationType = campus.enum("conversation_type", ["direct", "group", "channel"]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Users & sessions                             */
 /* -------------------------------------------------------------------------- */
 
-export const users = pgTable("users", {
+export const users = campus.table("users", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
   email: text().notNull().unique(),
@@ -74,7 +81,7 @@ export const users = pgTable("users", {
   createdAt: createdAt(),
 }).enableRLS();
 
-export const sessions = pgTable(
+export const sessions = campus.table(
   "sessions",
   {
     // SHA-256 hash of the random token stored in the cookie. The raw token never touches the DB.
@@ -97,7 +104,7 @@ export const sessions = pgTable(
  * Clubs are organizations with `kind = "club"`. A club can be managed by a parent
  * organization (`parentId`); admins of the parent can manage the club as well.
  */
-export const organizations = pgTable(
+export const organizations = campus.table(
   "organizations",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -121,7 +128,7 @@ export const organizations = pgTable(
   (t) => [index("organizations_parent_idx").on(t.parentId)],
 ).enableRLS();
 
-export const memberships = pgTable(
+export const memberships = campus.table(
   "memberships",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -143,7 +150,7 @@ export const memberships = pgTable(
   ],
 ).enableRLS();
 
-export const follows = pgTable(
+export const follows = campus.table(
   "follows",
   {
     userId: uuid()
@@ -161,7 +168,7 @@ export const follows = pgTable(
 ).enableRLS();
 
 /** Announcements / activity posts published by an organization. */
-export const posts = pgTable(
+export const posts = campus.table(
   "posts",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -179,7 +186,7 @@ export const posts = pgTable(
 /*                                   Events                                   */
 /* -------------------------------------------------------------------------- */
 
-export const events = pgTable(
+export const events = campus.table(
   "events",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -207,7 +214,7 @@ export const events = pgTable(
   ],
 ).enableRLS();
 
-export const eventRegistrations = pgTable(
+export const eventRegistrations = campus.table(
   "event_registrations",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -233,7 +240,7 @@ export const eventRegistrations = pgTable(
 /*                              Projects & tasks                              */
 /* -------------------------------------------------------------------------- */
 
-export const projects = pgTable(
+export const projects = campus.table(
   "projects",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -257,7 +264,7 @@ export const projects = pgTable(
   (t) => [index("projects_org_idx").on(t.organizationId)],
 ).enableRLS();
 
-export const tasks = pgTable(
+export const tasks = campus.table(
   "tasks",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -288,7 +295,7 @@ export const tasks = pgTable(
 /*                                  Meetings                                  */
 /* -------------------------------------------------------------------------- */
 
-export const meetings = pgTable(
+export const meetings = campus.table(
   "meetings",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -316,7 +323,7 @@ export const meetings = pgTable(
  * - `group`: ad-hoc group chat created by a student
  * - `channel`: internal chat channel of an organization (members are synced with the org)
  */
-export const conversations = pgTable(
+export const conversations = campus.table(
   "conversations",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -331,7 +338,7 @@ export const conversations = pgTable(
   (t) => [index("conversations_org_idx").on(t.organizationId)],
 ).enableRLS();
 
-export const conversationMembers = pgTable(
+export const conversationMembers = campus.table(
   "conversation_members",
   {
     conversationId: uuid()
@@ -349,7 +356,7 @@ export const conversationMembers = pgTable(
   ],
 ).enableRLS();
 
-export const messages = pgTable(
+export const messages = campus.table(
   "messages",
   {
     // Monotonic identity column: clients poll with `?after=<lastId>` to fetch only new messages.
@@ -368,7 +375,7 @@ export const messages = pgTable(
 /*                                Notifications                               */
 /* -------------------------------------------------------------------------- */
 
-export const notifications = pgTable(
+export const notifications = campus.table(
   "notifications",
   {
     id: uuid().primaryKey().defaultRandom(),

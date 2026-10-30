@@ -1,15 +1,13 @@
 /**
- * Drops this app's tables and types so `npm run db:reset` can rebuild the database from
- * migrations and fill it with demo data. Only objects defined in src/db/schema.ts are removed,
- * so Supabase's own schemas, extensions and grants are left untouched.
+ * Deletes this app's database schema (`campus`: all tables, types and the migration history)
+ * so `npm run db:reset` can rebuild it from migrations and fill it with demo data.
+ * Nothing outside that schema is touched, so other apps in the same database are safe.
  *
  * Refuses to touch a remote database (e.g. Supabase) unless ALLOW_REMOTE_RESET=yes is set.
  */
 import { config } from "dotenv";
-import { getTableName, is } from "drizzle-orm";
-import { isPgEnum, PgTable } from "drizzle-orm/pg-core";
 import postgres from "postgres";
-import * as schema from "../src/db/schema";
+import { DB_SCHEMA } from "../src/db/schema";
 import { directDatabaseUrl, isLocalDatabase } from "../src/db/url";
 
 config({ path: [".env.local", ".env"], quiet: true });
@@ -28,18 +26,10 @@ async function main() {
     process.exit(1);
   }
 
-  const values: unknown[] = Object.values(schema);
-  const tables = values.filter((v): v is PgTable => is(v, PgTable)).map((t) => `"${getTableName(t)}"`);
-  const enums = values.filter(isPgEnum).map((e) => `"${e.enumName}"`);
-
   const sql = postgres(url, { onnotice: () => {} });
-  await sql.unsafe(`
-    DROP TABLE IF EXISTS ${tables.join(", ")} CASCADE;
-    DROP TYPE IF EXISTS ${enums.join(", ")} CASCADE;
-    DROP SCHEMA IF EXISTS drizzle CASCADE;
-  `);
+  await sql.unsafe(`DROP SCHEMA IF EXISTS "${DB_SCHEMA}" CASCADE`);
   await sql.end();
-  console.log(`✔ Dropped ${tables.length} tables and ${enums.length} types.`);
+  console.log(`✔ Dropped schema "${DB_SCHEMA}".`);
 }
 
 main().catch((error) => {

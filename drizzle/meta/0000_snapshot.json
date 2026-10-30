@@ -1,12 +1,12 @@
 {
-  "id": "d84db3b4-09e4-4bf7-bff7-b6cac1fdcc03",
+  "id": "05eadd28-35f3-4057-ba86-ac632ca1fae6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.conversation_members": {
+    "campus.conversation_members": {
       "name": "conversation_members",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "conversation_id": {
           "name": "conversation_id",
@@ -57,6 +57,7 @@
           "name": "conversation_members_conversation_id_conversations_id_fk",
           "tableFrom": "conversation_members",
           "tableTo": "conversations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "conversation_id"
           ],
@@ -70,6 +71,7 @@
           "name": "conversation_members_user_id_users_id_fk",
           "tableFrom": "conversation_members",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -92,11 +94,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.conversations": {
+    "campus.conversations": {
       "name": "conversations",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -108,7 +110,7 @@
         "type": {
           "name": "type",
           "type": "conversation_type",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true
         },
@@ -173,6 +175,7 @@
           "name": "conversations_organization_id_organizations_id_fk",
           "tableFrom": "conversations",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -186,6 +189,7 @@
           "name": "conversations_created_by_id_users_id_fk",
           "tableFrom": "conversations",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -208,11 +212,11 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.event_registrations": {
+    "campus.event_registrations": {
       "name": "event_registrations",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -236,7 +240,7 @@
         "status": {
           "name": "status",
           "type": "registration_status",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'registered'"
@@ -305,6 +309,7 @@
           "name": "event_registrations_event_id_events_id_fk",
           "tableFrom": "event_registrations",
           "tableTo": "events",
+          "schemaTo": "campus",
           "columnsFrom": [
             "event_id"
           ],
@@ -318,6 +323,7 @@
           "name": "event_registrations_user_id_users_id_fk",
           "tableFrom": "event_registrations",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -332,11 +338,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.events": {
+    "campus.events": {
       "name": "events",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -405,7 +411,7 @@
         "status": {
           "name": "status",
           "type": "event_status",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'published'"
@@ -475,6 +481,7 @@
           "name": "events_organization_id_organizations_id_fk",
           "tableFrom": "events",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -488,6 +495,7 @@
           "name": "events_created_by_id_users_id_fk",
           "tableFrom": "events",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -502,11 +510,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.follows": {
+    "campus.follows": {
       "name": "follows",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "user_id": {
           "name": "user_id",
@@ -550,6 +558,7 @@
           "name": "follows_user_id_users_id_fk",
           "tableFrom": "follows",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -563,6 +572,7 @@
           "name": "follows_organization_id_organizations_id_fk",
           "tableFrom": "follows",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -585,11 +595,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.meetings": {
+    "campus.meetings": {
       "name": "meetings",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -684,6 +694,7 @@
           "name": "meetings_organization_id_organizations_id_fk",
           "tableFrom": "meetings",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -697,6 +708,7 @@
           "name": "meetings_created_by_id_users_id_fk",
           "tableFrom": "meetings",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -711,11 +723,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.memberships": {
+    "campus.memberships": {
       "name": "memberships",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -739,7 +751,7 @@
         "role": {
           "name": "role",
           "type": "member_role",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'member'"
@@ -747,7 +759,7 @@
         "status": {
           "name": "status",
           "type": "membership_status",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'active'"
@@ -809,6 +821,7 @@
           "name": "memberships_organization_id_organizations_id_fk",
           "tableFrom": "memberships",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -822,6 +835,7 @@
           "name": "memberships_user_id_users_id_fk",
           "tableFrom": "memberships",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -836,11 +850,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.messages": {
+    "campus.messages": {
       "name": "messages",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -850,7 +864,7 @@
           "identity": {
             "type": "always",
             "name": "messages_id_seq",
-            "schema": "public",
+            "schema": "campus",
             "increment": "1",
             "startWith": "1",
             "minValue": "1",
@@ -913,6 +927,7 @@
           "name": "messages_conversation_id_conversations_id_fk",
           "tableFrom": "messages",
           "tableTo": "conversations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "conversation_id"
           ],
@@ -926,6 +941,7 @@
           "name": "messages_sender_id_users_id_fk",
           "tableFrom": "messages",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "sender_id"
           ],
@@ -940,11 +956,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.notifications": {
+    "campus.notifications": {
       "name": "notifications",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1019,6 +1035,7 @@
           "name": "notifications_user_id_users_id_fk",
           "tableFrom": "notifications",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -1033,11 +1050,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.organizations": {
+    "campus.organizations": {
       "name": "organizations",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1061,7 +1078,7 @@
         "kind": {
           "name": "kind",
           "type": "org_kind",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'club'"
@@ -1125,7 +1142,7 @@
         "join_policy": {
           "name": "join_policy",
           "type": "join_policy",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'open'"
@@ -1173,6 +1190,7 @@
           "name": "organizations_parent_id_organizations_id_fk",
           "tableFrom": "organizations",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "parent_id"
           ],
@@ -1186,6 +1204,7 @@
           "name": "organizations_created_by_id_users_id_fk",
           "tableFrom": "organizations",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -1208,11 +1227,11 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.posts": {
+    "campus.posts": {
       "name": "posts",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1275,6 +1294,7 @@
           "name": "posts_organization_id_organizations_id_fk",
           "tableFrom": "posts",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -1288,6 +1308,7 @@
           "name": "posts_author_id_users_id_fk",
           "tableFrom": "posts",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "author_id"
           ],
@@ -1302,11 +1323,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.projects": {
+    "campus.projects": {
       "name": "projects",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1344,7 +1365,7 @@
         "status": {
           "name": "status",
           "type": "project_status",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'planning'"
@@ -1418,6 +1439,7 @@
           "name": "projects_organization_id_organizations_id_fk",
           "tableFrom": "projects",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -1431,6 +1453,7 @@
           "name": "projects_created_by_id_users_id_fk",
           "tableFrom": "projects",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -1445,11 +1468,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.sessions": {
+    "campus.sessions": {
       "name": "sessions",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1499,6 +1522,7 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "user_id"
           ],
@@ -1513,11 +1537,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.tasks": {
+    "campus.tasks": {
       "name": "tasks",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1560,7 +1584,7 @@
         "status": {
           "name": "status",
           "type": "task_status",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'todo'"
@@ -1568,7 +1592,7 @@
         "priority": {
           "name": "priority",
           "type": "task_priority",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'medium'"
@@ -1664,6 +1688,7 @@
           "name": "tasks_organization_id_organizations_id_fk",
           "tableFrom": "tasks",
           "tableTo": "organizations",
+          "schemaTo": "campus",
           "columnsFrom": [
             "organization_id"
           ],
@@ -1677,6 +1702,7 @@
           "name": "tasks_project_id_projects_id_fk",
           "tableFrom": "tasks",
           "tableTo": "projects",
+          "schemaTo": "campus",
           "columnsFrom": [
             "project_id"
           ],
@@ -1690,6 +1716,7 @@
           "name": "tasks_event_id_events_id_fk",
           "tableFrom": "tasks",
           "tableTo": "events",
+          "schemaTo": "campus",
           "columnsFrom": [
             "event_id"
           ],
@@ -1703,6 +1730,7 @@
           "name": "tasks_assignee_id_users_id_fk",
           "tableFrom": "tasks",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "assignee_id"
           ],
@@ -1716,6 +1744,7 @@
           "name": "tasks_created_by_id_users_id_fk",
           "tableFrom": "tasks",
           "tableTo": "users",
+          "schemaTo": "campus",
           "columnsFrom": [
             "created_by_id"
           ],
@@ -1730,11 +1759,11 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.users": {
+    "campus.users": {
       "name": "users",
-      "schema": "",
+      "schema": "campus",
       "columns": {
         "id": {
           "name": "id",
@@ -1764,7 +1793,7 @@
         "role": {
           "name": "role",
           "type": "user_role",
-          "typeSchema": "public",
+          "typeSchema": "campus",
           "primaryKey": false,
           "notNull": true,
           "default": "'student'"
@@ -1827,64 +1856,64 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     }
   },
   "enums": {
-    "public.conversation_type": {
+    "campus.conversation_type": {
       "name": "conversation_type",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "direct",
         "group",
         "channel"
       ]
     },
-    "public.event_status": {
+    "campus.event_status": {
       "name": "event_status",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "draft",
         "published",
         "cancelled"
       ]
     },
-    "public.join_policy": {
+    "campus.join_policy": {
       "name": "join_policy",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "open",
         "request"
       ]
     },
-    "public.member_role": {
+    "campus.member_role": {
       "name": "member_role",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "owner",
         "admin",
         "member"
       ]
     },
-    "public.membership_status": {
+    "campus.membership_status": {
       "name": "membership_status",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "active",
         "pending"
       ]
     },
-    "public.org_kind": {
+    "campus.org_kind": {
       "name": "org_kind",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "organization",
         "club"
       ]
     },
-    "public.project_status": {
+    "campus.project_status": {
       "name": "project_status",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "planning",
         "active",
@@ -1892,27 +1921,27 @@
         "completed"
       ]
     },
-    "public.registration_status": {
+    "campus.registration_status": {
       "name": "registration_status",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "registered",
         "waitlisted",
         "cancelled"
       ]
     },
-    "public.task_priority": {
+    "campus.task_priority": {
       "name": "task_priority",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "low",
         "medium",
         "high"
       ]
     },
-    "public.task_status": {
+    "campus.task_status": {
       "name": "task_status",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "todo",
         "in_progress",
@@ -1920,16 +1949,18 @@
         "done"
       ]
     },
-    "public.user_role": {
+    "campus.user_role": {
       "name": "user_role",
-      "schema": "public",
+      "schema": "campus",
       "values": [
         "student",
         "admin"
       ]
     }
   },
-  "schemas": {},
+  "schemas": {
+    "campus": "campus"
+  },
   "sequences": {},
   "roles": {},
   "policies": {},

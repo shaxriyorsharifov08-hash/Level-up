@@ -80,7 +80,7 @@ On a fresh database without demo data, **the first account you register becomes 
 | `npm run db:generate` | Create a new SQL migration after editing `src/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Load demo data (only into an empty database) |
-| `npm run db:reset` | **Delete all app data**, re-migrate and re-seed (refuses in production and, unless confirmed, on remote databases like Supabase) |
+| `npm run db:reset` | **Delete all app data** (the `campus` schema), re-migrate and re-seed (refuses in production and, unless confirmed, on remote databases like Supabase) |
 | `npm run db:studio` | Browse the database in Drizzle Studio |
 
 ---
@@ -113,7 +113,7 @@ Step-by-step walkthrough: **[docs/SUPABASE.md](docs/SUPABASE.md)**.
 3. **App:** import the repository on [Vercel](https://vercel.com), add `DATABASE_URL` (transaction pooler), `DATABASE_POOL_MAX=1` and your `NEXT_PUBLIC_*` settings, and deploy.
 4. After schema changes, run `npm run db:migrate` against Supabase before deploying the new code.
 
-Every table has Row Level Security enabled, so Supabase's public REST API can't read or change data; the app itself connects as the table owner. Any other PostgreSQL host (Neon, Railway, a VPS) works too: just set `DATABASE_URL`. The app is a standard Node.js server (`npm run build && npm start`), so it also runs on Render, Railway, Fly.io or any VPS.
+All tables live in their own `campus` schema, so the app never mixes with other apps' tables in the same database, and every table has Row Level Security enabled, so Supabase's REST API can't read or change data. The app itself connects as the table owner. Any other PostgreSQL host (Neon, Railway, a VPS) works too: just set `DATABASE_URL`. The app is a standard Node.js server (`npm run build && npm start`), so it also runs on Render, Railway, Fly.io or any VPS.
 
 ---
 

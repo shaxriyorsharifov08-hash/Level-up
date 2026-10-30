@@ -65,6 +65,7 @@ erDiagram
 
 Key decisions:
 
+- **Everything lives in its own PostgreSQL schema, `campus`** (tables, enum types and the migration history), never in the shared `public` schema, so the app can share a database with other apps without any name clashes.
 - **One `organizations` table for both organizations and clubs** (`kind`). A club can have a `parentId` (e.g. *Coding Club* belongs to the *Student Union*). Every feature (events, projects, tasks, meetings, chat) works identically for both.
 - **Memberships** carry a `role` (owner / admin / member) for permissions and a free-text `responsibility` ("Head of PR", "Treasurer") for describing who does what. `status = pending` represents a join request.
 - **Registrations** are unique per (event, user). Cancelling keeps the row with `status = cancelled`. `updatedAt` doubles as the waitlist position.
@@ -129,7 +130,7 @@ The university's time zone (`NEXT_PUBLIC_UNIVERSITY_TIMEZONE`) is used for displ
 - CSV exports neutralise spreadsheet formulas (`=`, `+`, `-`, `@`).
 - Server Actions have built-in CSRF protection (origin checks). Cookies are httpOnly, `Secure` in production.
 - Drafts, private projects, attendee exports, meetings and conversations return 404 to people without access.
-- Every table has Row Level Security enabled with no policies (`drizzle/0001_enable_rls.sql`). The app connects as the table owner and is unaffected, but Supabase's auto-generated REST API (`anon` / `authenticated` roles) can't read or write anything. See [SUPABASE.md](SUPABASE.md).
+- All tables live in a dedicated `campus` schema (not Supabase's API-exposed `public` schema), and every table has Row Level Security enabled with no policies. The app connects as the table owner and is unaffected, but Supabase's REST API roles (`anon` / `authenticated`) can't read or write anything. See [SUPABASE.md](SUPABASE.md).
 
 **Before a real launch, add:** rate limiting on login and registration (for example Upstash's free tier), e-mail verification or SSO with the university, and password reset.
 

@@ -63,7 +63,7 @@ npm run db:migrate     # creates all tables in Supabase
 npm run db:seed        # optional: demo data (only into an empty database)
 ```
 
-Open **Table Editor** in the Supabase dashboard: you should see `users`, `organizations`, `events`, `tasks` and the rest, each marked **RLS enabled**.
+Open **Table Editor** in the Supabase dashboard and switch the **schema** dropdown (top left) from `public` to **`campus`**: you should see `users`, `organizations`, `events`, `tasks` and the rest, each marked **RLS enabled**. (`public` stays empty: see "Kept separate from other apps" below.)
 
 <details>
 <summary>No Node.js on your computer? Run migrations from GitHub instead</summary>
@@ -96,18 +96,44 @@ With demo data, sign in as `student@demo.edu`, `organizer@demo.edu` or `admin@de
 
 ---
 
+## Kept separate from other apps
+
+Everything this app creates lives in its **own schema, `campus`**: all 15 tables, all enum types and its migration history (`campus.__drizzle_migrations`). Nothing goes into the shared `public` schema. So:
+
+- you can use the same Supabase project (or any Postgres database) for other apps, even ones with their own `users` or `events` tables, without any clash;
+- the migration tool only ever looks at and changes `campus` (`schemaFilter` in `drizzle.config.ts`);
+- `npm run db:reset` deletes only the `campus` schema.
+
+Still, the simplest setup is **one Supabase project per app**, which the free plan allows.
+
+<details>
+<summary>Already ran an earlier version of the migrations? Remove the old tables from <code>public</code></summary>
+
+Earlier versions of this project put their tables in `public`. After running the new migrations (which create `campus`), you can remove the old copies in **SQL Editor**. ⚠️ **Only do this if this Supabase project is used by this app alone.** Another app could have its own tables with the same names.
+
+```sql
+DROP TABLE IF EXISTS public.conversation_members, public.conversations, public.event_registrations,
+  public.events, public.follows, public.meetings, public.memberships, public.messages,
+  public.notifications, public.organizations, public.posts, public.projects, public.sessions,
+  public.tasks, public.users CASCADE;
+DROP TYPE IF EXISTS public.conversation_type, public.event_status, public.join_policy,
+  public.member_role, public.membership_status, public.org_kind, public.project_status,
+  public.registration_status, public.task_priority, public.task_status, public.user_role;
+DROP SCHEMA IF EXISTS drizzle CASCADE;  -- the old migration history
+```
+
+</details>
+
 ## Security: why every table has Row Level Security
 
-Supabase automatically exposes tables in the `public` schema through its REST API (`https://<ref>.supabase.co/rest/v1/...`). Anyone with the project's *anon* key can call that API, and the key is designed to be public. Without protection, that API could read the `users` table, including password hashes.
-
-Level Up doesn't use that API: the server talks to Postgres directly. So every table has **RLS enabled with no policies** (migration `drizzle/0001_enable_rls.sql`):
+Supabase can expose database tables through its REST API (`https://<ref>.supabase.co/rest/v1/...`), which anyone with the project's public *anon* key can call. By default it only exposes the `public` schema, and this app's tables live in `campus`, so they aren't reachable that way at all. As a second line of defense, in case someone later adds `campus` to the exposed schemas, every table also has **RLS enabled with no policies**:
 
 - the app connects as the table owner, which is not restricted by RLS, so everything works;
 - the REST API roles (`anon`, `authenticated`) see **no rows** and can't insert, update or delete anything.
 
 Supabase's **Security Advisor** will list "RLS enabled, no policy" for these tables. That's informational and intended. If you want, you can also switch off the REST API entirely under **Project Settings → Data API**.
 
-The Supabase dashboard's own **Authentication** section (`auth.users`) stays empty. Level Up uses its own accounts in `public.users`.
+The Supabase dashboard's own **Authentication** section (`auth.users`) stays empty. Level Up uses its own accounts in `campus.users`.
 
 ## Free plan notes
 
@@ -124,7 +150,8 @@ The Supabase dashboard's own **Authentication** section (`auth.users`) stays emp
 | `getaddrinfo ENOTFOUND db.<ref>.supabase.co` / `ENETUNREACH` | You used the IPv6-only direct connection. Use the pooler strings instead. |
 | `prepared statement "…" already exists` | Only happens with custom clients on port 6543. The app's client already disables prepared statements (`prepare: false`). |
 | Migrations hang or fail on port 6543 | `DIRECT_URL` must be the **session pooler** (port 5432), not the transaction pooler. |
-| `npm run db:reset` refuses to run | Safety guard: it would delete all data in Supabase. If you really mean it: `ALLOW_REMOTE_RESET=yes npm run db:reset`. |
+| `npm run db:reset` refuses to run | Safety guard: it would delete all of this app's data (the `campus` schema) in Supabase. If you really mean it: `ALLOW_REMOTE_RESET=yes npm run db:reset`. |
+| Table Editor shows no tables | Switch the schema dropdown from `public` to `campus`. |
 
 ## Local development with the Supabase CLI (optional)
 
