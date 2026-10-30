@@ -35,11 +35,11 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | File | What breaks if it fails |
 |---|---|
 | `smoke.spec.js` | The app opens at all: no JavaScript errors, every page exists, the Oath cannot be skipped, the dock leads with the daily loop. |
-| `data-safety.spec.js` | A hunter's record. HTML injection through icon fields, a failed save going unnoticed, one error killing the app, an old save losing fields, and the storage key never changing. |
+| `data-safety.spec.js` | A hero's record. HTML injection through icon fields, a failed save going unnoticed, one error killing the app, an old save losing fields, and the storage key never changing. |
 | `progression.spec.js` | The rules that make the game worth playing: rank cannot be bought with banked points, a rank is never taken back, stat points stay scarce, an Academy task becomes a real quest, and the System can no longer seal a quest shut. |
 | `reports.spec.js` | Report deadlines (1 / 3 / 7 days), no report ever demanded retroactively, late filings earning nothing, and debt charged exactly once. |
 | `quest-view.spec.js` | One quest, full screen: the window opens and closes, it shows that quest's own record and streak, and its interval timer belongs to that quest alone. |
-| `pruning.spec.js` | The save cannot grow forever: mechanical rows fold into the archive, all-time totals survive the fold, and nothing the hunter wrote is ever deleted. |
+| `pruning.spec.js` | The save cannot grow forever: mechanical rows fold into the archive, all-time totals survive the fold, and nothing the hero wrote is ever deleted. |
 | `accessibility.spec.js` | Every control has a name, panels rendered later are repaired by the observer, dialogs say they are dialogs, and announcements are spoken. |
 | `calendar-currency.spec.js` | The quest calendar shows the right day and does not collide with the old date picker, and changing currency converts every amount both ways. |
 | `budget-days.spec.js` | The separate interval timer is gone for good, one focus window serves quests, challenges, goals and to-dos alike, and money reads a day at a time in both BUDGET and the calendar. |
@@ -48,11 +48,12 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `focus-time.spec.js` | The focus window covers the screen and keeps running when closed, and every tracked second is attributed to its section without losing time logged before the split existed. |
 | `todo-money.spec.js` | The to-do list stays out of the game (flat XP paid once, no trophy, no rank), overdue items reach the Hall of Shame, and money fields group thousands while you type without corrupting the saved amount. |
 | `focus-trap.spec.js` | Tab and Shift+Tab never leave an open dialog, focus pushed behind it is pulled back, opening does not raise a phone keyboard, closing returns focus to the opener, and the focus window's own panels trap on their own. |
-| `chronicle.spec.js` | A chapter per month, newest first; a collapse or a return is named only when the record shows it; the hunter's words are quoted and never executed; the Oath is the prologue; reading the Chronicle never writes to the save. |
+| `chronicle.spec.js` | A chapter per month, newest first; a collapse or a return is named only when the record shows it; the hero's words are quoted and never executed; the Oath is the prologue; reading the Chronicle never writes to the save. |
 | `privacy.spec.js` | YOUR DATA & PRIVACY: the panel tells the truth, export downloads the save, cancelling or a wrong word deletes nothing, DELETE clears the save, the vault and the snapshots, signed in the cloud save and clan profile go first, and offline or a refused cloud deletes nothing anywhere. |
 | `break-reminder.spec.js` | The break reminder fires after the chosen active minutes; idle time, a running focus session and Off never count; five minutes away resets it; old saves get the default and keep their data. |
 | `premium.spec.js` | The Premium preview shows the price, has nothing to pay with, remembers I'M INTERESTED once, obeys the Administrator's locks, and speaks Russian. |
 | `security.spec.js` | A crafted clan profile or cloud save cannot run script on the leaderboard, the stats card or the admin user list. |
+| `names-and-uzbek.spec.js` | An old save gets the new original names once and loses nothing (the hero's own text is never renamed); no anime-derived name is left in the source or on any page in English, Russian or Uzbek; Uzbek covers every Russian string in correct Latin orthography; DELETE MY DATA accepts OʻCHIRISH. |
 | `quest-hub.spec.js` | The four squares on QUESTS: the list is still one tap away, every quest belongs to exactly one square, nothing is stranded off all of them, the counts are live, and a new goal is followed to its square. |
 | *(removed)* | `world.spec.js` is gone — the walkable world was removed on 2026-09-16. `smoke.spec.js` now guards that it stays gone. |
 

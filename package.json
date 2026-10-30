@@ -2,7 +2,7 @@
   "name": "level-up-hunter-system",
   "version": "1.0.0",
   "private": true,
-  "description": "LEVEL UP — Hunter System. The app itself is a single index.html with no build step; this package exists only to run the tests.",
+  "description": "LEVEL UP. The app itself is a single index.html with no build step; this package exists only to run the tests.",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",

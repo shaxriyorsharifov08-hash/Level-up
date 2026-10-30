@@ -19,7 +19,7 @@ And a section must also pass all three of these:
 2. Would the same person open two sections in one sitting? Then they are one section.
 3. Is it used daily? Then it belongs at the front of the dock, not behind another tap.
 
-**The architecture rule (revised 2026-09-16):** every action is **one tap from the dock**. Nothing may be placed between the hunter and the thing they came to do — that is the mistake the walkable world made, and it is why the world is gone. Depth goes into the **writing**, never into the navigation.
+**The architecture rule (revised 2026-09-16):** every action is **one tap from the dock**. Nothing may be placed between the hero and the thing they came to do — that is the mistake the walkable world made, and it is why the world is gone. Depth goes into the **writing**, never into the navigation.
 
 ---
 
@@ -57,7 +57,7 @@ And a section must also pass all three of these:
 | Upload a ringtone or song and pick 30 seconds of it | 2026-09-18 — trimmed, mono, stored in the vault |
 | Remove the separate interval timer | 2026-09-18 — GRIND does it better; one timer for everything now |
 | Transactions packed per day, in BUDGET and the calendar | 2026-09-18 — the calendar is now an overview of a whole date |
-| The Chronicle — the app narrates the hunter's own history back | 2026-10-28 — STORY → 📜 THE CHRONICLE; a chapter per month, titles earned by comparison, quotes the hunter's own pages |
+| The Chronicle — the app narrates the hero's own history back | 2026-10-28 — STORY → 📜 THE CHRONICLE; a chapter per month, titles earned by comparison, quotes the hero's own pages |
 | Focus is trapped inside modals | 2026-10-28 — one observer for every dialog; focus returns to the opener on close |
 
 ---
@@ -79,7 +79,7 @@ And a section must also pass all three of these:
 
 | Idea | Why not |
 |---|---|
-| **The walkable world, the isometric Academy and the 3D Academy — all of it** | **Built 2026-09-02, deleted 2026-09-16.** It put a walk between the hunter and every action; the dock already did the same job in one tap. ~57,000 characters of renderer, collision, joystick, isometric projection and Three.js scene served zero habits, and every line of it could break the part of the app that matters. The 3D room depended on a CDN fetch, so its best case was a feature you could not rely on seeing. *Simple, but compelling* — and compelling comes from the writing, not from graphics this project has no artist for. **Do not rebuild this.** |
+| **The walkable world, the isometric Academy and the 3D Academy — all of it** | **Built 2026-09-02, deleted 2026-09-16.** It put a walk between the hero and every action; the dock already did the same job in one tap. ~57,000 characters of renderer, collision, joystick, isometric projection and Three.js scene served zero habits, and every line of it could break the part of the app that matters. The 3D room depended on a CDN fetch, so its best case was a feature you could not rely on seeing. *Simple, but compelling* — and compelling comes from the writing, not from graphics this project has no artist for. **Do not rebuild this.** |
 | NPCs, buildings under construction, more walkable interiors, converting other maps to isometric | All of these were extensions of the world. The world is gone, so they are too. |
 | "Combine all features of every app — habit breaker, running, sport, study, finance, everything" | Unbounded scope is how solo projects die. The app already has budgeting, quests, focus timing, clans, ranks and journaling. Features are not the differentiator; the content and the voice are. |
 | A separate SELF-IMPROVEMENT building with a "be disciplined" room | Duplicates the Academy's Discipline road. One home per intent. |

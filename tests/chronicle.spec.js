@@ -52,7 +52,7 @@ test.describe("the chronicle", () => {
     expect(ch.slice(1)).toEqual([k.k1, k.k2, k.k3]);
     await expect(page.locator(".chron-ch").first().locator(".chron-num")).toContainText("CHAPTER 4");
     await expect(page.locator(".chron-ch").first()).toContainText("still being written");
-    await expect(page.locator(".chron-ch").last().locator(".chron-title")).toHaveText("The Awakening");
+    await expect(page.locator(".chron-ch").last().locator(".chron-title")).toHaveText("The Beginning");
   });
 
   test("a collapse and a return are named only because they happened", async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe("the chronicle", () => {
     await bootAsGuest(page);
     await openChronicle(page);
     const titles = await page.$$eval(".chron-title", (els) => els.map((e) => e.textContent));
-    expect(titles).toEqual(["The Awakening"]);
+    expect(titles).toEqual(["The Beginning"]);
     await expect(page.locator(".chron-ch")).toContainText("page is blank");
   });
 

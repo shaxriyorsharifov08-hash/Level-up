@@ -1,4 +1,4 @@
-# LEVEL UP — Hunter System
+# LEVEL UP
 
 A Solo-Leveling-style habit RPG. Real actions earn XP, XP raises your level, and the System rewards discipline. The whole app is **one file: `index.html`** — HTML, CSS and JavaScript together. No build step, no framework, no server of its own.
 
@@ -102,7 +102,7 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
 ```json
 {
   "rules": {
-    "hunters": {
+    "heroes": {
       ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
@@ -173,7 +173,7 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
 
 **What the November 2026 rules changed, and why.** The old rules let *any* signed-in account write *anywhere* under `guilds` and `codes`: overwrite another clan's name, post chat as someone else, delete other members, or list every invite code. Now:
 
-- a clan profile (`guilds/<id>/members/<uid>`) can be written only by that hunter, and must have a text name, a numeric level and a short rank;
+- a clan profile (`guilds/<id>/members/<uid>`) can be written only by that hero, and must have a text name, a numeric level and a short rank;
 - members and chat can be read only by the clan's members; a chat message must carry its sender's own uid and is at most 300 characters; nobody can edit or delete someone else's message;
 - a respect boost can be sent only by a member and removed only by its receiver;
 - clan info can be changed only by its creator; an invite code can be claimed once and never overwritten, and the full list of codes can no longer be downloaded;
@@ -182,10 +182,10 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
 The app publishes its own clan profile **before** it starts reading the clan, so the member-only reads succeed on the first try.
 
 
-After that: entrance screen → ADMIN → your email + password → the app switches into a **console-only view**: no navigation, no quests, no play — just the admin panel. There you can load every user, edit a chosen user (name, level, XP, stat points), seal/unseal sections for everyone, broadcast a System announcement, and launch season events. These rules — not the app — are what actually protects user data: only each user and the admin UID can touch a save. Press **🚪 EXIT ADMIN MODE** to leave — it signs the admin account out and returns the device to its own hunter (guest or Google), untouched.
+After that: entrance screen → ADMIN → your email + password → the app switches into a **console-only view**: no navigation, no quests, no play — just the admin panel. There you can load every user, edit a chosen user (name, level, XP, stat points), seal/unseal sections for everyone, broadcast a System announcement, and launch season events. These rules — not the app — are what actually protects user data: only each user and the admin UID can touch a save. Press **🚪 EXIT ADMIN MODE** to leave — it signs the admin account out and returns the device to its own hero (guest or Google), untouched.
 
 ### 🚫 Admin never plays, by design
-Logging in as admin (any email/password account) is treated as an administrator login, never as a hunter — even if that account isn't yet listed under `admins/`, it's rejected with a message rather than silently becoming a new hunter. This keeps the two identities completely separate: the admin's local device save (whatever guest/Google hunter was active before) is never read from or written to while in admin mode.
+Logging in as admin (any email/password account) is treated as an administrator login, never as a hero — even if that account isn't yet listed under `admins/`, it's rejected with a message rather than silently becoming a new hero. This keeps the two identities completely separate: the admin's local device save (whatever guest/Google hero was active before) is never read from or written to while in admin mode.
 
 ---
 
@@ -197,7 +197,7 @@ It is documented here so nobody — no future you, no AI you ask for help — re
 
 **Why it went:**
 
-- It put a **walk** between the hunter and every single action. The whole point of this app is that you open it and do the thing. A lobby is a toll booth.
+- It put a **walk** between the hero and every single action. The whole point of this app is that you open it and do the thing. A lobby is a toll booth.
 - It was **~57,000 characters of engine** (renderer, collision, joystick, isometric projection, Three.js scene) serving zero habits. Every one of those lines was a line that could break the app that actually matters.
 - The 3D interior made the room depend on a **CDN fetch**. Offline, it fell back — which means the best case was a feature nobody could rely on seeing.
 - It competed with the **+1% dock**, which already reaches every section in one tap and always did it faster.
@@ -343,18 +343,18 @@ GRIND (section 4d) does the same job better and in one place. Two timers that bo
 
 An old save is cleaned up on open: `migrateState()` drops the `q.iv` rounds each quest used to carry, and `reconcileNav()` removes the dead tab from a customised dock. The `interval` time bucket **stays** in `TIME_KINDS` so days recorded before the removal still show where their hours went instead of sliding into the unsplit bucket.
 
-## 4f. THE OATH — the hunter's own words, used against them
+## 4f. THE OATH — the hero's own words, used against them
 
-Before the System opens, every hunter answers four questions **in their own words** and signs them:
+Before the System opens, every hero answers four questions **in their own words** and signs them:
 
 1. What are you running from?
 2. What have you already failed at?
 3. Who will you be?
 4. **What do I say to you when you want to quit?** — they write the exact words; the System uses them verbatim.
 
-Each answer needs at least 20 characters and the oath **cannot be skipped**. Existing hunters are asked once, on their next open. Everything is stored in `state.oath` — on the device, and in their own Firebase account if signed in. Nobody else can read it.
+Each answer needs at least 20 characters and the oath **cannot be skipped**. Existing heroes are asked once, on their next open. Everything is stored in `state.oath` — on the device, and in their own Firebase account if signed in. Nobody else can read it.
 
-**The point is not the form. It is where the words come back.** `oathLine(kind)` returns the hunter's own sentence, and it is appended to:
+**The point is not the form. It is where the words come back.** `oathLine(kind)` returns the hero's own sentence, and it is appended to:
 
 | Moment | What it quotes |
 |---|---|
@@ -375,11 +375,11 @@ To change the questions, edit `OATH_Q` (`k` is the storage key, `n` the question
 Two punishments remain, and they share a rule: **they cost you, but they never take the work away.**
 
 - **XP debt** — each fully empty day adds 60 XP of debt; half of every gain is seized until it is repaid.
-- **Penalty quest** — miss the Daily Package and the Penalty Zone opens; all XP is frozen until you serve the penalty task and confirm it.
+- **Penalty quest** — miss the Daily Package and the Penalty Round opens; all XP is frozen until you serve the penalty task and confirm it.
 
 **QUEST LOCKDOWN was removed on 2026-09-16.** Two consecutive empty days used to make the System pick two of your quests at random and **seal them for seven days** — you could not complete them, and a `⛔ SEALED · 5d left` tag sat on the card.
 
-It is the one punishment that works against the app. Every other penalty makes returning *expensive*; this one made returning *impossible* for the specific things you came back to do. A hunter who disappears for two days and opens the app on the third has already done the hard part. Locking their quests tells them to come back later, and later is how it ends.
+It is the one punishment that works against the app. Every other penalty makes returning *expensive*; this one made returning *impossible* for the specific things you came back to do. A hero who disappears for two days and opens the app on the third has already done the hard part. Locking their quests tells them to come back later, and later is how it ends.
 
 Removing it is not free: it was the only caller of `oathLine("quit")`, the moment that quoted your own anti-quitting sentence back at you. That sentence now surfaces only through the **System Mentor**, after three or more empty days in a week. If you want it announced at the moment of failure again, it belongs on the XP-debt announcement, not on a seal.
 
@@ -399,7 +399,7 @@ Before you write, the System hands you the numbers it already has for that perio
 
 **Missing a deadline costs XP debt** (40 weekly, 120 monthly, 300 annual), announced by the System and never charged twice for the same period. A missed report can still be filed; the record permanently says LATE, and a late filing earns no XP. Filing on time pays 30 / 80 / 200.
 
-**No report is ever demanded retroactively.** `state.reportsSince` is stamped the first time the feature runs, so a hunter who was already playing is never billed for weeks that closed before the rule existed.
+**No report is ever demanded retroactively.** `state.reportsSince` is stamped the first time the feature runs, so a hero who was already playing is never billed for weeks that closed before the rule existed.
 
 ## 4i. ONE QUEST, FULL SCREEN
 
@@ -443,7 +443,7 @@ Across 99 levels that is **243 attribute points before, 105 after**. Existing sa
 Three defects found in an audit, each proven with a test before it was fixed:
 
 - **Icon and emoji fields are free text and are rendered as HTML.** A quest icon of `<img src=x onerror=...>` used to execute. Every icon/emoji is now passed through `esc()` at render. **If you add a new place that prints `q.icon`, `col.emoji` or `it.emoji`, wrap it in `esc()`.**
-- **A save that fails must never be silent.** `localStorage.setItem` was wrapped in `try{}catch(e){}` with an empty catch, so a full quota meant the hunter kept playing while nothing was written. `save()` now detects the failure and raises a full-screen warning telling them to export a backup. Never restore the empty catch.
+- **A save that fails must never be silent.** `localStorage.setItem` was wrapped in `try{}catch(e){}` with an empty catch, so a full quota meant the hero kept playing while nothing was written. `save()` now detects the failure and raises a full-screen warning telling them to export a backup. Never restore the empty catch.
 - **One uncaught error used to kill the app.** `window.onerror` and `unhandledrejection` now show a red recovery bar with RELOAD, instead of a frozen screen with no way back.
 
 ### Pruning the save
@@ -452,7 +452,7 @@ Three defects found in an audit, each proven with a test before it was fixed:
 
 **All-time totals stay exactly right** — `allTimeCleared()`, `allTimeXp()` and `questTimesCleared()` add the archive back, so a rank evaluation still sees every quest you ever cleared. STATS shows a line saying what was folded away.
 
-**Nothing you wrote is ever pruned.** Journals, reports, honors, dreams and the Oath are untouched, by design. If you add a new store of the hunter's own words, do not add it to `pruneState()`.
+**Nothing you wrote is ever pruned.** Journals, reports, honors, dreams and the Oath are untouched, by design. If you add a new store of the hero's own words, do not add it to `pruneState()`.
 
 Honest measurement: this cuts the *mechanical* half of the save by about 38% and, more importantly, stops `completions` and `streakHistory` growing without limit. It does **not** shrink the save dramatically, because after two years the bulk is your own journal — roughly 200 KB a year against a ~5 MB browser limit, which is about 25 years of writing. That is not a problem and should not be "fixed" by deleting it.
 
@@ -531,17 +531,17 @@ A `type="number"` input **cannot hold a comma** — the browser rejects the valu
 
 ## 5. Features you may want to adjust later
 
-- **Language**: ADMIN → 🌐 LANGUAGE. English is the base; Russian is a dictionary at the top of the JS in `index.html` (search for `I18N_RU`). Any string missing from the dictionary simply stays English — it can never break the app. To add Uzbek: copy the `I18N_RU` table to `I18N_UZ`, translate values, add `<option value="uz">O'zbekcha</option>` in the LANGUAGE panel, and extend `tr()` / `trTextNode()` / `startI18n()` where they check `=== "ru"`.
-- **Finalize the Day** now asks three things: *what interesting thing happened*, *what mistake did you make and how will you fix it*, and *what you expect from tomorrow*. Pages written under the old questions (learned / changed me) still display correctly in PROFILE → Pages of the Hunter — nothing written is ever lost.
+- **Language**: SETTINGS → 🌐 LANGUAGE: English, Русский or Oʻzbekcha. English is the base; Russian and Uzbek are dictionaries in the JS of `index.html` (`I18N_RU`, `I18N_UZ`, keyed by the same English strings; `i18nDict()` picks one). Any string missing from a dictionary simply stays English, so it can never break the app. To add a string, add it to **both** tables; a test fails if Uzbek falls behind Russian. To add another language: copy `I18N_RU` to a new table, translate the values, add an `<option>` in the LANGUAGE panel and one line in `i18nDict()`.
+- **Finalize the Day** now asks three things: *what interesting thing happened*, *what mistake did you make and how will you fix it*, and *what you expect from tomorrow*. Pages written under the old questions (learned / changed me) still display correctly in PROFILE → Pages of the Hero — nothing written is ever lost.
 - **Notifications**: ADMIN → 🔔 NOTIFICATIONS. A daily reminder fires at the chosen time if quests are unfinished. It works while the app is open in a tab or installed on the home screen; it is *local* (no push server), so a fully-closed phone browser won't ring — that is a platform limit, not a bug.
 - **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **+1%** button opens/closes the menu.
-- **The progression model (single mode)** — every hunter climbs the same story path to **Level 100**:
+- **The progression model (single mode)** — every hero climbs the same story path to **Level 100**:
   - Levels 1–4: only the 4 Daily Quest package items (editable, capped at exactly 4) plus **one-time goals** (max 10 per rolling week).
   - Recurring custom quests need **quest slots**, granted by the story path (+2 at Lv.10 by default, more at 14/18/22/26/30/40/60/80). Weekly goal capacity also grows on the road (Lv.12/20/35/55).
   - Sections open by level (defaults: STATS 4, REWARDS+INVENTORY 6, HONOR 8, CLAN 12, BUDGET 15) — override any of them for everyone in 🛡 ADMIN CONSOLE → SECTION LOCKS. HOME, PROFILE, QUESTS, STORY, GUIDE and SETTINGS can never be locked.
   - XP curve: `100 + lv^1.7` per level — early levels come in days, late levels take a week+; the full road ≈ a year of daily discipline.
 - **The user page is now ⚙ SETTINGS** (was ADMIN): cloud sync, theme, sounds, language, notifications, name, tab labels, hero portraits, backups, quotes, their own quest/collection lists and daily package. The story-road editor and the skill/equipment item editor are **admin-only** (they influence progression).
-- **Story path is admin-owned**: 🛡 ADMIN CONSOLE → "🗺 Story path" → EDIT (opens the road editor) → **PUBLISH TO ALL USERS**. Every hunter's road is replaced by your template (already-claimed levels stay claimed). Row types include rolls, stat points, ⚔ QUEST UNLOCK (creates a named quest at that level), **🎫 QUEST SLOTS** and **🎯 WEEKLY GOALS +** permits.
+- **Story path is admin-owned**: 🛡 ADMIN CONSOLE → "🗺 Story path" → EDIT (opens the road editor) → **PUBLISH TO ALL USERS**. Every hero's road is replaced by your template (already-claimed levels stay claimed). Row types include rolls, stat points, ⚔ QUEST UNLOCK (creates a named quest at that level), **🎫 QUEST SLOTS** and **🎯 WEEKLY GOALS +** permits.
 - **Season events**: 🛡 ADMIN CONSOLE → "🌀 Season event" — write a title, message, end date and up to 8 quests, press LAUNCH. Every user receives the announcement and the 🌀 quests; after the end date the quests remove themselves. Launching a new season replaces the old one (each user gets each season exactly once).
 - **Sign-in inside the installed app**: the home-screen app uses the popup sign-in flow (the redirect flow cannot finish in standalone mode). If sign-in still fails there, sign in once in the normal browser tab first — the installed app shares the same storage.
 - **Daily package, story road awards, inventory, quotes, hero portraits** — all editable inside ADMIN, no code needed.
@@ -642,9 +642,9 @@ Three promises from the business plan, made true in the app. All three live in *
 Says in plain words where a save is kept (this device; the cloud if signed in, where the administrator can open it to fix problems; clan members see name, photo, level, rank, weekly progress and chat) and that there are no ads, no tracking and nothing sent to any AI service. **Keep that last sentence true**: if an AI feature is ever added, this text must change in the same commit.
 
 - **💾 EXPORT MY DATA** is the same full JSON backup as EXPORT JSON BACKUP.
-- **🗑 DELETE MY DATA** asks the hunter to type `DELETE` (or `УДАЛИТЬ`). Signed in, it first removes the cloud save (`hunters/<uid>`) and the clan profile, then signs out; then it clears this device: the save, the IndexedDB vault **and** the daily snapshots, so the vault recovery cannot bring it back on reload.
+- **🗑 DELETE MY DATA** asks the hero to type `DELETE` (or `УДАЛИТЬ`). Signed in, it first removes the cloud save (`hunters/<uid>`) and the clan profile, then signs out; then it clears this device: the save, the IndexedDB vault **and** the daily snapshots, so the vault recovery cannot bring it back on reload.
 - **Nothing is half-deleted.** Offline, or if the cloud refuses, the app deletes nothing at all and says so. While a deletion runs, `save()` and the cloud sync are switched off (`dataWiping`), so no last write can resurrect the record.
-- The old **FULL RESET** is unchanged: it clears this device only, and a signed-in hunter gets the cloud copy back on the next sync. DELETE MY DATA is the one that removes everything.
+- The old **FULL RESET** is unchanged: it clears this device only, and a signed-in hero gets the cloud copy back on the next sync. DELETE MY DATA is the one that removes everything.
 
 ### ⏳ BREAK REMINDER
 A gentle "time for a short break" after **20 / 30 / 45 / 60 minutes of active use** (default 30, or Off). Only active use counts: the app visible, touched in the last minute, and **no focus session running**, because that is work, not scrolling. Five minutes away counts as a break and starts the count again. Saved as `breakMins` (0 = off); older saves get 30, and a corrupt value is reset to 30 so it can never fire every tick.
@@ -653,4 +653,37 @@ A gentle "time for a short break" after **20 / 30 / 45 / 60 minutes of active us
 Shows the planned price (**37,500 so'm a month**), what Premium will add (AI training plans, a diet calculator with standard medical formulas for 18+, deeper statistics, extra themes) and what is **always free**. **Nothing is sold: there is no payment in the app.** I'M INTERESTED stores the day in `premiumInterest`, which the administrator can count in cloud saves. It is a feature in the registry (`premium`), so the Administrator can seal it by level or remove it like any other.
 
 ### Security fixes
-Clan profiles and other hunters' saves are written by *other people's devices*, so they are untrusted. The clan leaderboard, the 👁 stats card and the admin user list used to put a member's rank, level, streak, days and attributes into the page without checking them; a crafted profile could have run script in every clan member's app. Those values are now forced to numbers or a known rank before they are shown (`safeInt`, `safeRankKey`), and member ids are escaped. The database rules were tightened too: see section 4, step 5. **Those rules only take effect once you paste them into the Firebase console.**
+Clan profiles and other heroes' saves are written by *other people's devices*, so they are untrusted. The clan leaderboard, the 👁 stats card and the admin user list used to put a member's rank, level, streak, days and attributes into the page without checking them; a crafted profile could have run script in every clan member's app. Those values are now forced to numbers or a known rank before they are shown (`safeInt`, `safeRankKey`), and member ids are escaped. The database rules were tightened too: see section 4, step 5. **Those rules only take effect once you paste them into the Firebase console.**
+
+## 4s. ORIGINAL NAMES AND OʻZBEKCHA (November 2026)
+
+### Why the names changed
+Several names were borrowed from an anime and could look like copying protected work, so they were replaced with LEVEL UP's own words. Only the names changed: every mechanic, number and record works as before.
+
+| Before | Now |
+|---|---|
+| HUNTER SYSTEM (subtitle) | DISCIPLINE GAME |
+| Hunter (the player) | Hero (RU *герой*, UZ *qahramon*) |
+| NAT'L rank, "National Level Hunter" | LEGEND rank, "Legendary Hero" |
+| The Hunter Association | The Council |
+| Penalty Zone | Penalty Round |
+| Titles: The Awakened · Arisen · Shadow Monarch | The Beginner · Rising Star · Master of Discipline |
+| Starter quest "Awakening Ritual" | "First Step Ritual" |
+| Chronicle prologue "The Awakening" | "The Beginning" |
+| Story chapters, System voice lines, quotes | rewritten as original text |
+
+New saves also start with a lighter daily package (30 push-ups, 30 sit-ups, 30 squats, a 3 km run). Existing saves keep the package they have.
+
+**Kept on purpose:** the storage keys (`leveluphunter_v1`, `leveluphunter_db`), the database path `hunters/<uid>` and a few CSS/element names still say "hunter". They are never shown, and renaming them would orphan every existing save. The letter ranks E to S and "the System" are common game terms and stay.
+
+### What happens to an existing save
+`migrateState()` runs once per save (flag `namesV2`; it is **not** in `defaultState()`, or old saves would skip it). It renames, by exact match, only strings the app itself wrote: the three old titles (merged, so "The Beginner" is never held twice), a hero still named exactly "Hunter", the system starter quest and the active penalty task. Quests, rewards and names the hero typed are never touched. Level, XP, streaks and history are unchanged. A cloud save is migrated the same way when it is adopted.
+
+### Oʻzbekcha
+SETTINGS → 🌐 LANGUAGE → **Oʻzbekcha**. The table `I18N_UZ` has the same 803 keys as `I18N_RU`, in Latin script, with oʻ and gʻ written with the modifier letter **ʻ** (U+02BB) and the tutuq belgisi with **ʼ** (U+02BC), never a typed apostrophe. Anything not in the table (for example the Chronicle's generated sentences) falls back to English. DELETE MY DATA accepts `DELETE`, `УДАЛИТЬ` or `OʻCHIRISH`, however the oʻ is typed.
+
+Some Uzbek sentences put the number in the middle ("…soat 21:00 da…", "5-darajada ochiladi"), so a few dictionary pieces start with a space or a suffix. That is deliberate; keep it when editing.
+
+**Have a native speaker read it.** The translation was written carefully, but an app's tone is best checked by the people who use it.
+
+Tests: `tests/names-and-uzbek.spec.js` (the migration, no retired names in the source or on any page in EN/RU/UZ, Uzbek coverage and orthography, the Uzbek delete word).
