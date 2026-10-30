@@ -12,18 +12,18 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: levelup
-          POSTGRES_PASSWORD: levelup
-          POSTGRES_DB: levelup
+          POSTGRES_USER: student_platform
+          POSTGRES_PASSWORD: student_platform
+          POSTGRES_DB: student_platform
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U levelup"
+          --health-cmd "pg_isready -U student_platform"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://levelup:levelup@localhost:5432/levelup
+      DATABASE_URL: postgres://student_platform:student_platform@localhost:5432/student_platform
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

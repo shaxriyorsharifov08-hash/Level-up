@@ -172,8 +172,8 @@ async function main() {
         description: o.description,
         joinPolicy: o.joinPolicy ?? "open",
         verified: o.verified ?? false,
-        telegramUrl: `https://t.me/levelup_demo_${slug.replace(/-/g, "_")}`,
-        instagramUrl: `https://instagram.com/levelup_demo_${slug.replace(/-/g, "")}`,
+        telegramUrl: `https://t.me/sp_demo_${slug.replace(/-/g, "_")}`,
+        instagramUrl: `https://instagram.com/sp_demo_${slug.replace(/-/g, "")}`,
         createdById: u.amina,
       })
       .returning({ id: s.organizations.id });

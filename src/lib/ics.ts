@@ -39,7 +39,7 @@ export function buildIcs(events: IcsEvent[], calendarName = "Events", now = new 
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Level Up//Campus Platform//EN",
+    "PRODID:-//Student Platform//Campus Platform//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeIcsText(calendarName)}`,

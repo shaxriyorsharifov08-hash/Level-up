@@ -1,8 +1,8 @@
-# Level Up
+# Student Platform
 
-**Building your dreams by acting.**
+A web platform for one university's students and student organizations. It combines event management, student communities and team collaboration in one place.
 
-Level Up is a web platform for one university's students and student organizations. It combines event management, student communities and team collaboration in one place.
+> The name shown inside the app defaults to **"Level Up"**. Set `NEXT_PUBLIC_APP_NAME` to use any other name.
 
 | For students | For student organizations |
 | --- | --- |

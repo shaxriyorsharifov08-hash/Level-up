@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains how Level Up is put together and why. It's written for students who will continue building the platform.
+This document explains how Student Platform is put together and why. It's written for students who will continue building the platform.
 
 ## 1. The big picture
 

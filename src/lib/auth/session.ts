@@ -5,7 +5,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 
-export const SESSION_COOKIE = "lu_session";
+// App-specific name: browsers share cookies between apps on the same host (e.g. localhost),
+// so a generic name could collide with another project running locally.
+export const SESSION_COOKIE = "student_platform_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export function hashToken(token: string) {

@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: RouteContext<"/api/meeti
   const ics = buildIcs(
     [
       {
-        uid: `${meeting.id}@level-up`,
+        uid: `${meeting.id}@student-platform`,
         title: `${organization.name}: ${meeting.title}`,
         description: [meeting.description, meeting.meetingUrl].filter(Boolean).join("\n\n"),
         location: meeting.location || meeting.meetingUrl || "",

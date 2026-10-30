@@ -20,7 +20,7 @@ export async function GET(request: Request, { params }: RouteContext<"/api/event
   const ics = buildIcs(
     [
       {
-        uid: `${event.id}@level-up`,
+        uid: `${event.id}@student-platform`,
         title: event.status === "cancelled" ? `CANCELLED: ${event.title}` : event.title,
         description: `${event.description}\n\nOrganized by ${event.organization.name}\n${url}`.trim(),
         location: event.location,

@@ -1,6 +1,6 @@
-# Running Level Up on Supabase
+# Running Student Platform on Supabase
 
-Supabase gives you a hosted PostgreSQL database with a friendly dashboard (table editor, SQL editor, backups) on a free plan. Level Up uses Supabase **as its database**: the app connects with a normal Postgres connection string, and all tables, migrations and permissions work as described in [ARCHITECTURE.md](ARCHITECTURE.md).
+Supabase gives you a hosted PostgreSQL database with a friendly dashboard (table editor, SQL editor, backups) on a free plan. The platform uses Supabase **as its database**: the app connects with a normal Postgres connection string, and all tables, migrations and permissions work as described in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 **Overview:** create a project → copy two connection strings → put them in `.env` → run migrations → run the app → deploy to Vercel.
 
@@ -9,7 +9,7 @@ Supabase gives you a hosted PostgreSQL database with a friendly dashboard (table
 ## 1. Create the Supabase project
 
 1. Sign in at [supabase.com](https://supabase.com) and click **New project**.
-2. Choose a name (e.g. `level-up`) and the **region closest to your university**. For Central Asia, Frankfurt (`eu-central-1`) is a good choice.
+2. Choose a name (e.g. `student-platform`) and the **region closest to your university**. For Central Asia, Frankfurt (`eu-central-1`) is a good choice.
 3. Set a **database password** and save it somewhere safe.
    > Tip: use only letters and digits. Special characters (`@ # / ? %`) must be URL-encoded in connection strings (`@` → `%40`), which is a common source of "password authentication failed" errors.
 4. Wait about a minute for the project to start.
@@ -133,7 +133,7 @@ Supabase can expose database tables through its REST API (`https://<ref>.supabas
 
 Supabase's **Security Advisor** will list "RLS enabled, no policy" for these tables. That's informational and intended. If you want, you can also switch off the REST API entirely under **Project Settings → Data API**.
 
-The Supabase dashboard's own **Authentication** section (`auth.users`) stays empty. Level Up uses its own accounts in `campus.users`.
+The Supabase dashboard's own **Authentication** section (`auth.users`) stays empty. The platform uses its own accounts in `campus.users`.
 
 ## Free plan notes
 

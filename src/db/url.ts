@@ -9,7 +9,7 @@
  * Kept free of `server-only` so drizzle.config.ts and the scripts can import it too.
  */
 
-export const LOCAL_DATABASE_URL = "postgres://levelup:levelup@localhost:5432/levelup";
+export const LOCAL_DATABASE_URL = "postgres://student_platform:student_platform@localhost:5432/student_platform";
 
 const REQUIRES_TLS = /\.supabase\.(co|com)$/i;
 
