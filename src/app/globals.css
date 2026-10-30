@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Components use semantic names (bg-card, text-muted-foreground, ...)
+ * so light/dark themes only need to swap the variables below.
+ */
+:root {
+  --background: #f7f7fb;
+  --foreground: #0f1020;
+  --card: #ffffff;
+  --card-foreground: #0f1020;
+  --muted: #f0f0f6;
+  --muted-foreground: #5e6178;
+  --border: #e4e4ee;
+  --input: #d9d9e6;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+  --primary-soft: #eef0ff;
+  --primary-text: #4338ca;
+  --accent: #f2f2fb;
+  --destructive: #dc2626;
+  --destructive-soft: #fef2f2;
+  --success: #059669;
+  --success-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --ring: #6366f1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0c14;
+    --foreground: #ecedf6;
+    --card: #12131f;
+    --card-foreground: #ecedf6;
+    --muted: #1a1b2a;
+    --muted-foreground: #9a9cb5;
+    --border: #252638;
+    --input: #303148;
+    --primary: #5b55ea;
+    --primary-hover: #6d68f0;
+    --primary-foreground: #ffffff;
+    --primary-soft: #1d1c3d;
+    --primary-text: #a5b4fc;
+    --accent: #1a1b2a;
+    --destructive: #f05252;
+    --destructive-soft: #2a1416;
+    --success: #34d399;
+    --success-soft: #0f241d;
+    --warning: #fbbf24;
+    --warning-soft: #2a2110;
+    --ring: #818cf8;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-text: var(--primary-text);
+  --color-accent: var(--accent);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}

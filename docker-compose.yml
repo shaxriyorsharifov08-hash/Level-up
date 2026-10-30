@@ -1,0 +1,19 @@
+# Local PostgreSQL for development: `docker compose up -d`
+# A fixed project name keeps these containers and volumes separate from other projects.
+name: student-platform
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: student_platform
+      POSTGRES_PASSWORD: student_platform
+      POSTGRES_DB: student_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
