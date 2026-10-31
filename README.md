@@ -712,3 +712,28 @@ The Administrator's feature locks still decide what is open. A sealed section sh
 **First run is one tap.** The entrance shows ▶ START (guest) and Google sign-in straight away; the hidden admin door is unchanged. The Oath now waits for the first finished day and accepts any length (see the Oath section).
 
 Tests: `tests/redesign.spec.js`; the smoke test now checks the new Oath timing.
+
+
+## 4u. SOLID THEMES AND STURDIER TYPE (November 2026)
+
+The neon look (glowing purple on near-black, thin narrow letters, widely spaced capitals) gave users headaches. Research behind the change, with real screenshots of every theme, is on the "LEVEL UP Themes" page shared in chat: Strava and Duolingo use a white page with one strong colour for the main action, Habitica offers light and dark, and body text needs at least 4.5:1 contrast (WCAG 1.4.3), more if the letters are thin.
+
+**Type, in every theme.** Nunito (rounded, heavy, with Cyrillic) replaces Rajdhani and Orbitron; the logo keeps Orbitron. Body text is weight 600, titles 800–900, and letter-spacing above 0.12em was cut to 0.06em. Fonts are the `--fd` / `--fb` tokens. Offline, the system font is used.
+
+**Solid themes** (`THEMES` entries with `tok:true`; the body gets the `tok` class). Every colour comes from tokens on `body[data-theme="…"]`: `--bg`, `--card`, `--soft`, `--line`, `--ink`, `--text`, `--dim`, `--purple` (the one action colour), `--violet` (its pressed shade), `--blue`, `--onp` (text on the action colour), `--legendary`, `--easy`, `--mythic`. The `body.tok …` block maps every hard-coded dark surface, white text and glowing button of the original CSS to those tokens, with 1.5px borders and no glow.
+
+| Theme | Look | Text / grey text / buttons contrast |
+|---|---|---|
+| ☁️ Sky (default) | white & blue | 14.5 / 6.2 / 5.2 |
+| 📄 Paper | warm white & navy | 14.5 / 6.4 / 8.3 |
+| 🌿 Mint | white & green | 13.8 / 6.1 / 5.0 |
+| 💜 Lilac | white & purple | 15.5 / 6.8 / 6.4 |
+| 🧡 Sunrise | white & orange | 14.9 / 6.5 / 5.2 |
+| 🤍 Blossom | white & pink (rebuilt) | 14.0 / 5.9 / 5.9 |
+| 🌙 Night | soft dark blue, no neon | 12.4 / 7.1 / 7.3 |
+
+The classic neon themes (Shadow, Rose, Emerald, Ember) are unchanged and still selectable. Chart labels read their colours from the theme (`chartInk`). The phone's status bar takes each theme's background colour.
+
+**Existing users.** `migrateState()` moves a save still on Shadow (the old default) to Sky once (`themeV2`, deliberately not in `defaultState()`), and keeps any theme the hero picked. Shadow stays one tap away in SETTINGS → APPEARANCE. An unknown theme id falls back to Sky. Nothing else in the save changes.
+
+**Adding a theme:** copy one `body[data-theme="sky"]{…}` token block, add an entry with `tok:true` to `THEMES`, translate its name in both dictionaries, and check it with `tests/themes.spec.js`, which fails if any solid theme drops below 4.5:1.
