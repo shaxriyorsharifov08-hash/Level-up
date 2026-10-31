@@ -59,26 +59,35 @@ test.describe("boot", () => {
     expect(result.homeStillThere).toBe(1);
   });
 
-  test("a brand new hunter is asked to swear the Oath, and cannot skip it", async ({ page }) => {
+  test("a brand-new hero goes straight in; the Oath waits for the first finished day and takes any answer", async ({ page }) => {
     await page.route(/^https?:\/\//, (route) => route.abort());
     await page.goto(APP_URL, { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => typeof window.state === "object" && window.state !== null);
-    await page.click("#entUserBtn");
     await page.click("#entGuestBtn");
+    await page.waitForTimeout(1700); /* longer than the Oath's own 1.2 s delay */
+    expect(await page.evaluate(() => document.getElementById("oathOv").classList.contains("show"))).toBe(false);
+
+    /* a day was finished yesterday: the next open asks */
+    await page.evaluate(() => {
+      state.history[addDays(todayStr(), -1)] = { xp: 10, count: 1 };
+      save();
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForSelector("#oathOv.show", { timeout: 15000 });
-
     expect(await page.locator(".oath-in").count()).toBe(4);
-    expect(await page.locator("#oathSeal").isDisabled()).toBe(true);
-    expect(await page.locator("#oathLater").isVisible()).toBe(false);
+    expect(await page.locator("#oathSeal").isDisabled()).toBe(true); /* nothing written yet */
 
-    /* answers under the minimum length are refused */
+    /* one character each is enough: the hero decides how much to write */
     await page.evaluate(() => {
       document.querySelectorAll(".oath-in").forEach((t) => {
-        t.value = "too short";
+        t.value = "x";
         t.dispatchEvent(new Event("input", { bubbles: true }));
       });
+      const sign = document.getElementById("oathSign");
+      sign.value = "A";
+      sign.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    expect(await page.locator("#oathSeal").isDisabled()).toBe(true);
+    expect(await page.locator("#oathSeal").isDisabled()).toBe(false);
   });
 
   test("every registered page can be opened", async ({ page }) => {

@@ -20,7 +20,7 @@ async function drainAnnouncements(page) {
   }
 }
 
-/* Boot the app as a guest hunter with the Oath already sworn, which is the
+/* Boot the app as a guest hero with the Oath already sworn, which is the
    state every test other than the first-run ones cares about. */
 async function bootAsGuest(page, opts) {
   opts = opts || {};
@@ -38,11 +38,11 @@ async function bootAsGuest(page, opts) {
     null, { timeout: 20000 }
   );
 
-  await page.click("#entUserBtn");
+  /* the gate offers START (guest) straight away; the Oath now waits for the
+     hero's first finished day, so a new guest goes straight to TODAY */
   await page.click("#entGuestBtn");
-
-  /* the Oath is raised a moment after the gate opens */
-  await page.waitForSelector("#oathOv.show", { timeout: 10000 }).catch(() => {});
+  /* a new save is welcomed by a System announcement a moment later */
+  await page.waitForSelector("#announceOv.show", { timeout: 5000 }).catch(() => {});
 
   if (!opts.keepOath) {
     await page.evaluate(() => {

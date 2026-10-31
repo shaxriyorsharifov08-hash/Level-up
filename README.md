@@ -352,7 +352,7 @@ Before the System opens, every hero answers four questions **in their own words*
 3. Who will you be?
 4. **What do I say to you when you want to quit?** — they write the exact words; the System uses them verbatim.
 
-Each answer needs at least 20 characters and the oath **cannot be skipped**. Existing heroes are asked once, on their next open. Everything is stored in `state.oath` — on the device, and in their own Firebase account if signed in. Nobody else can read it.
+**Changed November 2026 (4t):** the Oath is no longer asked before the first quest. It is asked on the first open **after a finished day** (`firstDayDone()`), and any answer of one character or more is accepted. It can also be sworn any time from PROGRESS → PROFILE → THE OATH. Everything is stored in `state.oath` — on the device, and in their own Firebase account if signed in. Nobody else can read it.
 
 **The point is not the form. It is where the words come back.** `oathLine(kind)` returns the hero's own sentence, and it is appended to:
 
@@ -534,7 +534,7 @@ A `type="number"` input **cannot hold a comma** — the browser rejects the valu
 - **Language**: SETTINGS → 🌐 LANGUAGE: English, Русский or Oʻzbekcha. English is the base; Russian and Uzbek are dictionaries in the JS of `index.html` (`I18N_RU`, `I18N_UZ`, keyed by the same English strings; `i18nDict()` picks one). Any string missing from a dictionary simply stays English, so it can never break the app. To add a string, add it to **both** tables; a test fails if Uzbek falls behind Russian. To add another language: copy `I18N_RU` to a new table, translate the values, add an `<option>` in the LANGUAGE panel and one line in `i18nDict()`.
 - **Finalize the Day** now asks three things: *what interesting thing happened*, *what mistake did you make and how will you fix it*, and *what you expect from tomorrow*. Pages written under the old questions (learned / changed me) still display correctly in PROFILE → Pages of the Hero — nothing written is ever lost.
 - **Notifications**: ADMIN → 🔔 NOTIFICATIONS. A daily reminder fires at the chosen time if quests are unfinished. It works while the app is open in a tab or installed on the home screen; it is *local* (no push server), so a fully-closed phone browser won't ring — that is a platform limit, not a bug.
-- **Navigation**: ADMIN → ✎ RENAME & REORDER TABS. The bottom **+1%** button opens/closes the menu.
+- **Navigation**: five fixed tabs at the bottom (TODAY · QUESTS · PROGRESS · REWARDS · MORE), see 4t. SETTINGS → ✎ RENAME & REORDER TABS renames sections, orders the MORE list and hides sections from it.
 - **The progression model (single mode)** — every hero climbs the same story path to **Level 100**:
   - Levels 1–4: only the 4 Daily Quest package items (editable, capped at exactly 4) plus **one-time goals** (max 10 per rolling week).
   - Recurring custom quests need **quest slots**, granted by the story path (+2 at Lv.10 by default, more at 14/18/22/26/30/40/60/80). Weekly goal capacity also grows on the road (Lv.12/20/35/55).
@@ -687,3 +687,28 @@ Some Uzbek sentences put the number in the middle ("…soat 21:00 da…", "5-dar
 **Have a native speaker read it.** The translation was written carefully, but an app's tone is best checked by the people who use it.
 
 Tests: `tests/names-and-uzbek.spec.js` (the migration, no retired names in the source or on any page in EN/RU/UZ, Uzbek coverage and orthography, the Uzbek delete word).
+
+
+## 4t. A LIGHTER LAYOUT (November 2026)
+
+New users said the app felt heavy: on first open, the home page was 2.5 screens long, today's tasks started a screen and a half down, navigation was hidden behind a "+1%" button (7 tabs, 4 visible) and duplicated by an 11-tile Command Center, and 20 elements glowed over a moving particle background. The comparison with Habitica, Duolingo, Finch, Todoist, Streaks and Forest is in the design review page shared in chat. The changes:
+
+**Five tabs, always on screen** (`TABS`, `renderNav`, `renderSubnav`, `renderMore`):
+
+| Tab | Holds |
+|---|---|
+| 🏠 TODAY | the home page |
+| 📜 QUESTS | the quest log |
+| 📈 PROGRESS | PROFILE · STORY · STATS · HONOR, as sub-tabs at the top |
+| 🎁 REWARDS | REWARDS · INVENTORY |
+| ☰ MORE | a sheet with every other section: LEARN, CLAN, BUDGET, GUIDE, SETTINGS |
+
+The Administrator's feature locks still decide what is open. A sealed section shows the level that opens it (🔒) instead of being invisible, and tapping it explains; a removed section disappears; if every page of a tab is removed, the tab disappears. A tab remembers the sub-tab you last used. SETTINGS → RENAME & REORDER TABS still renames sections and orders/hides the MORE list; SETTINGS can never be hidden.
+
+**TODAY does one job.** A slim card (rank, name, level, XP, streak 🔥), then the daily package, then one line with today's quests (tap → QUESTS), one first-steps tip that can be closed, and the next road reward. The portrait and the System Mentor moved to PROGRESS → PROFILE; the Command Center is gone because the tabs do its job. The ＋ button now also works on TODAY.
+
+**Calm by default, with a switch.** `state.effects` (default `false`): the body gets the `calm` class, which hides the particle canvas (and stops drawing it), removes glows and looping decorative animations, and flattens panel backgrounds. SETTINGS → APPEARANCE → ✨ Effects → *Full* brings everything back. Older saves get `false` like new ones; a corrupt value is reset to `false` in `migrateState()`. No other save field changed.
+
+**First run is one tap.** The entrance shows ▶ START (guest) and Google sign-in straight away; the hidden admin door is unchanged. The Oath now waits for the first finished day and accepts any length (see the Oath section).
+
+Tests: `tests/redesign.spec.js`; the smoke test now checks the new Oath timing.

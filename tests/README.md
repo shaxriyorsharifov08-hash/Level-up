@@ -34,7 +34,7 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 
 | File | What breaks if it fails |
 |---|---|
-| `smoke.spec.js` | The app opens at all: no JavaScript errors, every page exists, the Oath cannot be skipped, the dock leads with the daily loop. |
+| `smoke.spec.js` | The app opens at all: no JavaScript errors, every page exists, a new hero goes straight in and the Oath is asked after the first finished day (any length accepted), the section order leads with the daily loop. |
 | `data-safety.spec.js` | A hero's record. HTML injection through icon fields, a failed save going unnoticed, one error killing the app, an old save losing fields, and the storage key never changing. |
 | `progression.spec.js` | The rules that make the game worth playing: rank cannot be bought with banked points, a rank is never taken back, stat points stay scarce, an Academy task becomes a real quest, and the System can no longer seal a quest shut. |
 | `reports.spec.js` | Report deadlines (1 / 3 / 7 days), no report ever demanded retroactively, late filings earning nothing, and debt charged exactly once. |
@@ -53,6 +53,7 @@ The tests open `index.html` straight from disk in a throwaway browser profile, s
 | `break-reminder.spec.js` | The break reminder fires after the chosen active minutes; idle time, a running focus session and Off never count; five minutes away resets it; old saves get the default and keep their data. |
 | `premium.spec.js` | The Premium preview shows the price, has nothing to pay with, remembers I'M INTERESTED once, obeys the Administrator's locks, and speaks Russian. |
 | `security.spec.js` | A crafted clan profile or cloud save cannot run script on the leaderboard, the stats card or the admin user list. |
+| `redesign.spec.js` | The five tabs are always on screen; PROGRESS, REWARDS and MORE hold every other section; sealed ones show their level and removed ones disappear; renamed or hidden sections follow the hero; every section is still reachable; TODAY puts the package on the first screen; the calm look is the default and the Effects switch is remembered; START is one tap; tabs speak Russian and Uzbek. |
 | `names-and-uzbek.spec.js` | An old save gets the new original names once and loses nothing (the hero's own text is never renamed); no anime-derived name is left in the source or on any page in English, Russian or Uzbek; Uzbek covers every Russian string in correct Latin orthography; DELETE MY DATA accepts OʻCHIRISH. |
 | `quest-hub.spec.js` | The four squares on QUESTS: the list is still one tap away, every quest belongs to exactly one square, nothing is stranded off all of them, the counts are live, and a new goal is followed to its square. |
 | *(removed)* | `world.spec.js` is gone — the walkable world was removed on 2026-09-16. `smoke.spec.js` now guards that it stays gone. |

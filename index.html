@@ -179,61 +179,48 @@ header{
 .rank-N{color:#fff;border-color:#fff;box-shadow:0 0 10px rgba(0,209,255,.8),0 0 26px rgba(124,97,255,.8);
   background:linear-gradient(135deg,rgba(124,97,255,.25),rgba(0,209,255,.25))}
 
-/* ---------- nav (bottom "+1%" dock) ---------- */
-nav{position:fixed;left:86px;right:8px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:80;
-  display:flex;flex-wrap:nowrap;gap:6px;padding:6px;border-radius:20px;align-items:stretch;
-  background:linear-gradient(160deg,rgba(16,20,46,.97),rgba(8,11,26,.97));
-  border:1px solid rgba(124,97,255,.55);
-  box-shadow:0 0 26px rgba(124,97,255,.35),0 14px 40px rgba(0,0,0,.6);
-  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  opacity:0;pointer-events:none;transform:translateX(-16px) scaleX(.9);transform-origin:left center;
-  transition:opacity .22s ease,transform .24s cubic-bezier(.2,.9,.3,1.2)}
-nav.open{opacity:1;pointer-events:auto;transform:none}
-nav::-webkit-scrollbar{display:none}
-.nav-btn{
-  flex:0 0 auto;min-width:66px;min-height:54px;padding:8px 8px;border-radius:14px;
-  background:rgba(11,15,34,.75);border:1px solid rgba(124,97,255,.18);
-  color:var(--dim);font-family:'Orbitron',monospace;font-size:.52rem;font-weight:700;
-  letter-spacing:.05em;transition:.15s;white-space:nowrap;
-  box-shadow:0 2px 0 rgba(40,30,90,.6);
-}
-/* staggered pop-in when the dock opens */
-nav.open .nav-btn{animation:navpop .3s cubic-bezier(.2,.9,.3,1.3) both}
-nav.open .nav-btn:nth-child(1){animation-delay:.02s}
-nav.open .nav-btn:nth-child(2){animation-delay:.05s}
-nav.open .nav-btn:nth-child(3){animation-delay:.08s}
-nav.open .nav-btn:nth-child(4){animation-delay:.11s}
-nav.open .nav-btn:nth-child(5){animation-delay:.14s}
-nav.open .nav-btn:nth-child(6){animation-delay:.17s}
-nav.open .nav-btn:nth-child(7){animation-delay:.20s}
-nav.open .nav-btn:nth-child(8){animation-delay:.23s}
-nav.open .nav-btn:nth-child(9){animation-delay:.26s}
-nav.open .nav-btn:nth-child(10){animation-delay:.29s}
-nav.open .nav-btn:nth-child(11){animation-delay:.32s}
-@keyframes navpop{from{opacity:0;transform:translateX(-14px) scale(.85)}to{opacity:1;transform:none}}
-.nav-btn:hover{transform:translateY(-1px)}
-.nav-btn .nv-ico{display:block;font-size:.95rem;margin-bottom:2px;font-family:'Rajdhani'}
-.nav-btn.active{
-  color:#fff;border-color:var(--purple);
-  background:linear-gradient(180deg,rgba(124,97,255,.25),rgba(124,97,255,.08));
-  box-shadow:var(--glow);text-shadow:0 0 10px rgba(124,97,255,.9);
-}
-/* the single "+1%" button the dock collapses into */
-#navToggle{position:fixed;left:14px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:81;
-  width:64px;height:64px;border-radius:50%;border:1px solid var(--purple);color:#fff;
-  font-family:'Orbitron',monospace;font-weight:900;font-size:.92rem;letter-spacing:.01em;
-  background:linear-gradient(135deg,rgba(124,97,255,.95),rgba(0,209,255,.55));
-  box-shadow:0 0 18px rgba(124,97,255,.65),0 6px 24px rgba(0,0,0,.5);
-  display:flex;align-items:center;justify-content:center;
-  transition:transform .25s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s,background .2s,border-color .2s}
-#navToggle:hover{transform:scale(1.06)}
-#navToggle.open{border-color:var(--blue);transform:rotate(-8deg) scale(1.05);
-  background:linear-gradient(135deg,rgba(0,209,255,.85),rgba(124,97,255,.8));
-  box-shadow:0 0 26px rgba(0,209,255,.85),0 6px 24px rgba(0,0,0,.5)}
-#navToggle .nav-badge{top:-3px;right:-3px}
-#navBackdrop{position:fixed;inset:0;z-index:79;background:rgba(3,4,13,.35);
+/* ---------- bottom tab bar: five fixed tabs, always on screen (README 4t) ---------- */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:87;
+  display:flex;justify-content:center;align-items:stretch;gap:2px;
+  padding:6px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-right,0px));
+  background:rgba(8,11,26,.97);border-top:1px solid var(--line)}
+.nav-btn{flex:1 1 0;min-width:0;max-width:128px;min-height:54px;padding:6px 2px;border-radius:12px;border:0;background:none;
+  color:var(--dim);font-family:'Rajdhani',system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:0;
+  position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s,background .15s}
+.nav-btn.long{font-size:.6rem}
+@media (max-width:370px){ .nav-btn{font-size:.62rem} .nav-btn.long{font-size:.54rem} }
+.nav-btn .nv-ico{display:block;font-size:1.2rem;line-height:1.25;margin-bottom:1px}
+.nav-btn.active{color:var(--blue);background:rgba(0,209,255,.08)}
+.nav-btn.locked{opacity:.55}
+.nav-btn .nav-badge{top:2px;right:calc(50% - 26px)}
+#navBackdrop{position:fixed;inset:0;z-index:84;background:rgba(3,4,13,.6);
   opacity:0;pointer-events:none;transition:opacity .2s}
 #navBackdrop.show{opacity:1;pointer-events:auto}
+/* MORE: every section no tab owns, in the hero's own order and names */
+#moreSheet{position:fixed;left:0;right:0;bottom:0;z-index:86;max-height:80vh;overflow-y:auto;
+  padding:16px max(16px,env(safe-area-inset-left,0px)) calc(80px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));
+  background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+  transform:translateY(105%);visibility:hidden;transition:transform .22s ease,visibility .22s}
+#moreSheet.show{transform:none;visibility:visible}
+.more-box{max-width:560px;margin:0 auto}
+.more-title{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.18em;color:var(--dim);margin:0 0 6px 4px}
+.more-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 8px;border:0;border-bottom:1px solid var(--line);
+  background:none;color:var(--text);font-size:1.02rem;font-weight:600;text-align:left;border-radius:0}
+.more-row:last-child{border-bottom:0}
+.more-row .mr-ico{font-size:1.2rem;width:30px;text-align:center;flex:0 0 auto}
+.more-row .mr-go{margin-left:auto;color:var(--dim);font-size:.85rem;white-space:nowrap}
+.more-row.active{color:var(--blue)}
+.more-row.locked{color:var(--dim)}
+/* sub-tabs inside a tab that holds several sections (PROGRESS, REWARDS) */
+#subnav{display:flex;gap:4px;padding:4px;margin-bottom:14px;border-radius:12px;background:rgba(11,15,34,.85);
+  border:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+#subnav::-webkit-scrollbar{display:none}
+#subnav:empty{display:none}
+.sub-btn{flex:1 0 auto;min-height:42px;padding:6px 12px;border-radius:9px;border:0;background:none;
+  color:var(--dim);font-weight:700;font-size:.86rem;letter-spacing:.04em;white-space:nowrap}
+.sub-btn.active{background:rgba(0,209,255,.12);color:var(--text)}
+.sub-btn.locked{opacity:.55}
+.sub-btn .sb-lock{font-size:.75rem}
 
 /* ---------- panels ---------- */
 .panel{
@@ -753,7 +740,8 @@ body.play-only #fab{display:none !important}
 
 /* admin mode: pure back-office — no nav, no play, console only */
 body.admin-mode nav,
-body.admin-mode #navToggle,
+body.admin-mode #moreSheet,
+body.admin-mode #subnav,
 body.admin-mode #navBackdrop,
 body.admin-mode #fab,
 body.admin-mode #timerPill{display:none !important}
@@ -784,8 +772,7 @@ body.admin-mode #finalizeBtn{display:none !important}
   box-shadow:0 0 20px rgba(0,209,255,.6),0 0 40px rgba(124,97,255,.4);
   transition:transform .2s,bottom .32s cubic-bezier(.2,.9,.3,1.25);
   display:none;align-items:center;justify-content:center;font-weight:300}
-/* the +1% dock slides open along the bottom — the + button glides up out of its way */
-body.dock-open #fab{bottom:calc(96px + env(safe-area-inset-bottom,0px)) !important}
+body.more-open #fab{display:none !important}
 #fab.show{display:flex}
 #fab:hover{transform:scale(1.08) rotate(90deg)}
 
@@ -970,10 +957,10 @@ button:not(:disabled):active{transform:scale(.96)}
 button:focus-visible,.inp:focus-visible,.sel:focus-visible,.ta:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 main section{animation:pagein .28s ease}
 @keyframes pagein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-#fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
-#timerPill{bottom:calc(94px + env(safe-area-inset-bottom,0px))}
-#navToggle{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
-#app{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+/* the tab bar is ~66px tall: the + button sits above it, a running timer above that */
+#fab{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+#timerPill{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+#app{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 .mini-btn{width:34px;height:34px}
 /* first-steps onboarding card */
 .fs-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
@@ -1333,27 +1320,58 @@ main section{animation:pagein .28s ease}
   text-transform:uppercase;margin-bottom:5px}
 .oath-seal{font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.12em;color:var(--blue);
   text-align:right;margin-top:6px}
+
+/* ---------- TODAY: the home page does one job (README 4t) ---------- */
+.today-head{display:flex;align-items:center;gap:12px}
+.today-head .th-who{flex:1;min-width:0}
+.today-head .hero-name{font-size:1.15rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.today-head .hunter-sub{font-size:.72rem;letter-spacing:.1em;margin-top:2px}
+.today-head .th-streak{font-family:'Orbitron',monospace;font-weight:700;font-size:.85rem;color:var(--legendary);white-space:nowrap}
+.today-head + .xp-wrap{margin-top:12px}
+#homeChips:empty{display:none}
+#homeChips{margin-top:10px}
+.today-row{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;margin-bottom:14px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(11,15,34,.85);color:var(--text);font-size:.95rem;font-weight:600;text-align:left}
+.today-row .tr-go{margin-left:auto;color:var(--dim)}
+.today-tip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:14px;border:1px dashed var(--line);
+  border-radius:12px;color:var(--dim);font-size:.9rem;font-weight:600}
+.today-tip span{flex:1}
+.today-tip button{border:0;background:none;color:var(--dim);font-size:1rem;min-width:36px;min-height:36px}
+.today-next{display:block;width:100%;text-align:left;border:0;background:none;color:var(--dim);font-size:.9rem;font-weight:600;padding:2px 4px 12px}
+.today-next b{color:var(--legendary)}
+#profileArt{display:flex;justify-content:center}
+#pkgEditBtn{font-size:1rem}
+/* TODAY's own card already shows level and rank */
+body[data-page="home"] header .hdr-right{display:none}
+
+/* ---------- CALM: the default look. SETTINGS → ✨ EFFECTS brings the glow back ---------- */
+body.calm, body.calm[data-theme]{background:var(--bg);--glow:0 0 0 transparent;--glowblue:0 0 0 transparent}
+body.calm #particles{display:none}
+body.calm #app *:not(#fab){text-shadow:none !important}
+body.calm #app *:not(#fab):not(:focus-visible){box-shadow:none !important}
+body.calm .panel{background:var(--panel)}
+body.calm .panel::before{display:none}
+body.calm .panel-title{letter-spacing:.14em}
+body.calm header{background:var(--panel);backdrop-filter:none}
+body.calm .hero-art{filter:none}
+body.calm .fp, body.calm .eye-glow, body.calm .sflame, body.calm .sigil-spin, body.calm .plume,
+body.calm .arcf, body.calm .crownf, body.calm #finalizeBtn{animation:none !important}
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
 
-<!-- entrance: USER (big) / admin (small) -->
+<!-- entrance: START (guest) or Google; the admin door is hidden (README 4t) -->
 <div id="entranceOv" role="dialog" aria-modal="true" aria-label="Entrance">
   <div class="ent-box">
     <div class="ent-logo" id="entLogo">LEVEL UP<small>DISCIPLINE GAME</small></div>
     <div id="entMain">
-      <div class="ent-sub">Turn your life into the game. Who enters?</div>
-      <button class="ent-user" id="entUserBtn">⚔️ USER</button>
+      <div class="ent-sub">Turn your life into the game.</div>
+      <button class="btn primary ent-opt" id="entGuestBtn">▶ START</button>
+      <button class="btn ent-opt" id="entGoogleBtn">🔑 SIGN UP / SIGN IN WITH GOOGLE</button>
+      <div class="empty-note" style="font-size:.72rem">Without an account your progress stays on this device. Sign in with Google any time to keep it on every device.</div>
       <button class="ent-admin" id="entAdminBtn" style="display:none">🛡 ADMIN</button>
       <div><button class="ent-back" id="entClose" style="display:none">✕ close</button></div>
-    </div>
-    <div id="entUser" style="display:none">
-      <div class="ent-sub">Your progress, your account</div>
-      <button class="btn primary ent-opt" id="entGoogleBtn">🔑 SIGN UP / SIGN IN WITH GOOGLE</button>
-      <button class="btn ent-opt" id="entGuestBtn">👤 USE AS A GUEST</button>
-      <div class="empty-note" style="font-size:.72rem">Guest progress stays on this device only. You can sign in later any time (ADMIN → CLOUD SYNC).</div>
-      <button class="ent-back" id="entUserBack">← back</button>
     </div>
     <div id="entAdmin" style="display:none">
       <div class="ent-sub">System Administrator access</div>
@@ -1366,11 +1384,11 @@ main section{animation:pagein .28s ease}
   </div>
 </div>
 
-<!-- THE OATH: sworn once, in the hero's own words, before the System opens -->
+<!-- THE OATH: sworn once, in the hero's own words, after the first finished day -->
 <div id="oathOv" role="dialog" aria-modal="true" aria-label="The Oath">
   <div class="oath-box">
     <div class="oath-title">THE OATH</div>
-    <div class="oath-sub" id="oathSubTitle">BEFORE THE SYSTEM OPENS</div>
+    <div class="oath-sub" id="oathSubTitle">WHO IS PLAYING</div>
     <div class="oath-pre" id="oathPre"></div>
     <div id="oathFields"></div>
     <label class="form-lbl">Sign it — type your name</label>
@@ -1391,12 +1409,18 @@ main section{animation:pagein .28s ease}
   </header>
 
   <div id="navBackdrop"></div>
-  <nav id="nav"></nav>
-  <button id="navToggle" aria-label="Sections menu" aria-expanded="false">+1%<span class="nav-badge" id="toggleRollBadge" style="display:none"></span></button>
+  <nav id="nav" aria-label="Sections"></nav>
+  <div id="moreSheet" role="dialog" aria-modal="true" aria-label="More sections">
+    <div class="more-box">
+      <div class="more-title">MORE</div>
+      <div id="moreList"></div>
+    </div>
+  </div>
 
   <button id="finalizeBtn" style="display:none">🌙 FINALIZE THE DAY</button>
 
   <main>
+    <div id="subnav" aria-label="Sections in this tab"></div>
     <!-- ============ LEARN &amp; GROW ============ -->
     <section id="page-learn" style="display:none">
       <div class="panel">
@@ -1410,41 +1434,32 @@ main section{animation:pagein .28s ease}
       </div>
     </section>
 
-    <!-- ============ HOME / DASHBOARD ============ -->
+    <!-- ============ TODAY (home): today's work and nothing else. README 4t ============ -->
     <section id="page-home" style="display:none">
       <div class="panel">
-        <div class="hero">
-          <div class="hero-art" id="heroArt"></div>
-          <div class="hero-info">
+        <div class="today-head">
+          <span class="rank-badge rank-E" id="homeRank">E</span>
+          <div class="th-who">
             <div class="hero-name" id="homeName">Hero</div>
             <div class="hunter-sub" id="homeSub">E-RANK HERO</div>
-            <div class="xp-wrap">
-              <div class="xp-row"><span>LEVEL <b id="homeLvl">1</b></span><span id="homeXpTxt"></span></div>
-              <div class="bar"><div class="bar-fill" id="homeXpBar" style="width:0%"></div></div>
-            </div>
-            <div class="chip-list" style="margin-top:14px" id="homeChips"></div>
           </div>
+          <span class="th-streak" id="homeStreak" title="Days in a row with a cleared quest"></span>
         </div>
+        <div class="xp-wrap">
+          <div class="xp-row"><span>LEVEL <b id="homeLvl">1</b></span><span id="homeXpTxt"></span></div>
+          <div class="bar"><div class="bar-fill" id="homeXpBar" style="width:0%"></div></div>
+        </div>
+        <div class="chip-list" id="homeChips"></div>
       </div>
 
-      <div id="firstSteps"></div>
       <div id="punishHome"></div>
-      <div class="panel" id="mentorPanel">
-        <div class="panel-title">🧭 SYSTEM MENTOR</div>
-        <div id="mentorInsights"></div>
-        <div class="adm-row" style="margin-top:10px">
-          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="120" placeholder="Ask the Mentor: how to improve focus, sleep, reading…">
-          <button class="btn primary" id="mentorAsk">ASK</button>
-        </div>
-        <div id="mentorAnswer" style="margin-top:10px"></div>
-      </div>
       <div class="panel">
         <div class="panel-title">DAILY QUEST — SYSTEM MANDATE</div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <span class="pkg-timer">&#9203; RESETS IN <b id="pkgTimer">--:--:--</b></span>
           <span style="display:inline-flex;align-items:center;gap:8px">
             <span class="streak-pill" id="pkgStreak" style="display:none"></span>
-            <button class="mini-btn" id="pkgEditBtn" title="Edit the daily quest package">✎ EDIT</button>
+            <button class="mini-btn" id="pkgEditBtn" title="Edit the daily quest package" aria-label="Edit the daily quest package">✎</button>
           </span>
         </div>
         <div id="pkgList"></div>
@@ -1454,14 +1469,14 @@ main section{animation:pagein .28s ease}
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-title">COMMAND CENTER</div>
-        <div class="quick-grid" id="quickGrid"></div>
-      </div>
+      <button class="today-row" id="todayQuests"></button>
+      <div id="firstSteps"></div>
+      <button class="today-next" id="todayNext" style="display:none"></button>
     </section>
 
     <!-- ============ PROFILE ============ -->
     <section id="page-profile" style="display:none">
+      <div class="panel" id="profileArt"><div class="hero-art" id="heroArt"></div></div>
       <div class="panel">
         <div class="panel-title">HERO PROFILE</div>
         <div class="profile-top">
@@ -1478,6 +1493,15 @@ main section{animation:pagein .28s ease}
         <div class="sp-banner" id="spBanner" style="display:none">&#10024; <span id="spTxt"></span></div>
       </div>
 
+      <div class="panel" id="mentorPanel">
+        <div class="panel-title">🧭 SYSTEM MENTOR</div>
+        <div id="mentorInsights"></div>
+        <div class="adm-row" style="margin-top:10px">
+          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="120" placeholder="Ask the Mentor: how to improve focus, sleep, reading…">
+          <button class="btn primary" id="mentorAsk">ASK</button>
+        </div>
+        <div id="mentorAnswer" style="margin-top:10px"></div>
+      </div>
       <div class="panel" id="rankTrialPanel">
         <div class="panel-title">⚖ RANK EVALUATION</div>
         <div class="empty-note" style="margin-bottom:12px">Attributes make you <b>eligible</b>. They do not promote you. The Council weighs what you have actually sustained — and a rank, once earned, is never taken back.</div>
@@ -2014,6 +2038,11 @@ main section{animation:pagein .28s ease}
         <select class="sel" id="admSound">
           <option value="on">🔊 On — every action has its sound</option>
           <option value="off">🔇 Off — silent mode</option>
+        </select>
+        <label class="form-lbl" style="margin-top:14px">✨ Effects</label>
+        <select class="sel" id="admEffects">
+          <option value="off">🌙 Calm — no glow or moving background</option>
+          <option value="on">✨ Full — glow, particles and animations</option>
         </select>
         <div class="edit-only">
           <label class="form-lbl" style="margin-top:14px">Navigation Tabs</label>
@@ -2817,6 +2846,7 @@ function defaultState(){
     storyView:"path",    /* which story sub-view was last open */
     theme:"shadow",      /* color theme */
     sound:true,          /* sound effects on/off */
+    effects:false,       /* false = the calm look (default); true = glow, particles, animations */
     lang:"en",           /* interface language: en | ru */
     autoLocks:null,      /* cached copy of the admin's global section locks (synced from Firebase, read-only on the client) */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
@@ -3323,7 +3353,6 @@ document.getElementById("guildMembers").addEventListener("click", function(e){
 var adminMode = false;
 function entStep(s){
   document.getElementById("entMain").style.display = s === "main" ? "" : "none";
-  document.getElementById("entUser").style.display = s === "user" ? "" : "none";
   document.getElementById("entAdmin").style.display = s === "admin" ? "" : "none";
 }
 function showEntrance(){
@@ -3378,9 +3407,7 @@ document.getElementById("openAdminLogin").addEventListener("click", function(){
   showEntrance();
   entStep("admin");
 });
-document.getElementById("entUserBtn").addEventListener("click", function(){ entStep("user"); });
 document.getElementById("entAdminBtn").addEventListener("click", function(){ entStep("admin"); });
-document.getElementById("entUserBack").addEventListener("click", function(){ entStep("main"); });
 document.getElementById("entAdminBack").addEventListener("click", function(){ entStep("main"); });
 document.getElementById("entGoogleBtn").addEventListener("click", function(){
   cloudSignIn(); /* the auth listener records the choice and opens the gate */
@@ -3874,6 +3901,8 @@ function migrateState(){
      rather than trusted, so the break reminder can never fire every tick. */
   if(typeof state.breakMins !== "number" || !(state.breakMins >= 0) || state.breakMins > 600) state.breakMins = 30;
   if(typeof state.premiumInterest !== "string") state.premiumInterest = "";
+  /* the calm look is the default for everyone; only a real true keeps the glow */
+  if(typeof state.effects !== "boolean") state.effects = false;
   /* Nov 2026: the anime-derived names were retired (see README 4s). Only strings
      the app itself wrote are renamed, by exact match, never anything the hero
      typed. Runs once; without it the new titles would be awarded a second time. */
@@ -4340,6 +4369,11 @@ function esc(s){
     });
   }
   function tick(t){
+    /* calm look: the canvas is hidden, so don't spend battery drawing it */
+    if(document.body.classList.contains("calm")){
+      setTimeout(function(){ requestAnimationFrame(tick); }, 1000);
+      return;
+    }
     ctx.clearRect(0,0,cv.width,cv.height);
     for(var i=0;i<parts.length;i++){
       var p = parts[i];
@@ -4773,7 +4807,7 @@ var I18N_RU = {
   "STORE UNLOCKED":"МАГАЗИН ОТКРЫТ",
   "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"МАГАЗИН теперь открыт (страница БЮДЖЕТ).\n\nДобавляйте то, что действительно хотите купить, с ценой. Когда баланс — или связанная цель накопления — покроет её, кнопка КУПИТЬ загорится. Покупка запишет расход и поставит вещь на полку заслуженного. Желание превращается в цель, а не в порыв.",
   "SYSTEM MENTOR UNLOCKED":"СИСТЕМНЫЙ НАСТАВНИК ОТКРЫТ",
-  "The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"СИСТЕМНЫЙ НАСТАВНИК теперь открыт (страница ГЛАВНАЯ).\n\nВаш наставник читает ваши реальные данные и указывает на слабые места — отстающий атрибут, пустые дни, мало времени фокуса. Спросите, как что-то улучшить (фокус, сон, язык, прыжки, накопления), и он даст конкретный план, всегда возвращая к одному: сделай это ежедневным квестом.",
+  "The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"СИСТЕМНЫЙ НАСТАВНИК теперь открыт (ПРОГРЕСС → ПРОФИЛЬ).\n\nВаш наставник читает ваши реальные данные и указывает на слабые места — отстающий атрибут, пустые дни, мало времени фокуса. Спросите, как что-то улучшить (фокус, сон, язык, прыжки, накопления), и он даст конкретный план, всегда возвращая к одному: сделай это ежедневным квестом.",
   /* store + mentor */
   "🛍 STORE — THINGS I WANT":"🛍 МАГАЗИН — ЧТО Я ХОЧУ",
   "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Ваш личный магазин. Добавьте то, что хотите купить. Когда баланс (или связанная цель) покроет цену, кнопка КУПИТЬ загорится — покупка запишет расход и переместит вещь на полку купленного.",
@@ -4796,7 +4830,7 @@ var I18N_RU = {
   /* feature-unlock guides */
   "BEGIN":"НАЧАТЬ",
   "STATS UNLOCKED":"СТАТИСТИКА ОТКРЫТА",
-  "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the +1% menu.":"Раздел СТАТИСТИКА теперь открыт.\n\nЗдесь Система отображает вашу дисциплину: XP по дням, выполненные квесты, самый сильный день недели, историю серий и карту активных дней. Следите за закономерностями — они показывают, когда вы действительно работаете.\n\nОткрывайте его в любой момент из меню +1%.",
+  "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab.":"Раздел СТАТИСТИКА теперь открыт.\n\nЗдесь Система отображает вашу дисциплину: XP по дням, выполненные квесты, самый сильный день недели, историю серий и карту активных дней. Следите за закономерностями — они показывают, когда вы действительно работаете.\n\nОткрывайте его в любой момент на вкладке ПРОГРЕСС.",
   "REWARDS UNLOCKED":"НАГРАДЫ ОТКРЫТЫ",
   "The REWARDS section is now open.\n\nBuild reward crates — you decide the prizes (a treat, an episode, an hour of gaming). Fully completing hard quests earns rare ROLLS; spend a roll on a crate and the System reveals a random prize, gacha-style.\n\nRolls are precious — earn them, then enjoy what you've won.":"Раздел НАГРАДЫ теперь открыт.\n\nСоздавайте ящики наград — призы выбираете вы (лакомство, серия, час игры). Полное выполнение сложных квестов даёт редкие РОЛЛЫ; потратьте ролл на ящик, и Система откроет случайный приз в стиле гача.\n\nРоллы ценны — заработайте их, затем наслаждайтесь выигрышем.",
   "INVENTORY UNLOCKED":"ИНВЕНТАРЬ ОТКРЫТ",
@@ -4922,7 +4956,24 @@ var I18N_RU = {
   "Stand up, stretch, drink some water and look away from the screen for a few minutes. Your quests will be here when you come back.":"Встаньте, потянитесь, выпейте воды и несколько минут не смотрите на экран. Ваши квесты дождутся вас.",
   "I'LL TAKE A BREAK":"СДЕЛАЮ ПЕРЕРЫВ",
   "Break reminder on.":"Напоминание о перерыве включено.",
-  "Break reminder off.":"Напоминание о перерыве выключено."
+  "Break reminder off.":"Напоминание о перерыве выключено.",
+  /* README 4t: tab bar, Today, calm look, first run */
+  "PROGRESS":"ПРОГРЕСС",
+  "🔒 Lv ":"🔒 Ур. ",
+  " quests done today":" квестов выполнено сегодня",
+  "🎁 Next reward · Lv ":"🎁 Следующая награда · Ур. ",
+  "Days in a row with a cleared quest":"Дней подряд с выполненным квестом",
+  "✨ Effects":"✨ Эффекты",
+  "🌙 Calm — no glow or moving background":"🌙 Спокойно — без свечения и движущегося фона",
+  "✨ Full — glow, particles and animations":"✨ Полностью — свечение, частицы и анимации",
+  "✨ Full effects on.":"✨ Все эффекты включены.",
+  "🌙 Calm look on.":"🌙 Спокойный вид включён.",
+  "Turn your life into the game.":"Преврати свою жизнь в игру.",
+  "▶ START":"▶ НАЧАТЬ",
+  "Without an account your progress stays on this device. Sign in with Google any time to keep it on every device.":"Без аккаунта прогресс хранится только на этом устройстве. Войдите через Google в любой момент, чтобы он был на всех устройствах.",
+  "Hide":"Скрыть",
+  " cleared":" выполнено",
+  "Edit the daily quest package":"Изменить ежедневный пакет квестов"
 };
 
 /* Uzbek (Latin script, oʻ/gʻ written with ʻ U+02BB). Same keys as I18N_RU;
@@ -5187,7 +5238,7 @@ var I18N_UZ = {
   "training to next point":"keyingi ochkogacha mashq","STORE UNLOCKED":"DOʻKON OCHILDI",
   "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"DOʻKON endi ochiq (BYUDJET sahifasi).\n\nHaqiqatan sotib olmoqchi boʻlgan narsalaringizni narxi bilan qoʻshing. Balansingiz — yoki bogʻlangan jamgʻarma maqsadi — yetganda, SOTIB OLISH tugmasi yonadi. Xarid xarajat sifatida yoziladi va buyum qoʻlga kiritilgan deb javonga qoʻyiladi. U istakni oniy havasdan maqsadga aylantiradi.",
   "SYSTEM MENTOR UNLOCKED":"TIZIM MURABBIYI OCHILDI",
-  "The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"TIZIM MURABBIYI endi ochiq (BOSH SAHIFA).\n\nMurabbiyingiz haqiqiy maʼlumotlaringizni oʻqib, zaif tomonlaringizni koʻrsatadi — orqada qolgan atribut, boʻsh kunlar, kam fokus vaqti. Undan istalgan narsani yaxshilash yoʻlini soʻrang (fokus, uyqu, til, sakrash, jamgʻarish) — u aniq reja beradi va doim sizni shunga qaytaradi: buni kunlik kvestga aylantiring.",
+  "The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"TIZIM MURABBIYI endi ochiq (TARAQQIYOT → PROFIL).\n\nMurabbiyingiz haqiqiy maʼlumotlaringizni oʻqib, zaif tomonlaringizni koʻrsatadi — orqada qolgan atribut, boʻsh kunlar, kam fokus vaqti. Undan istalgan narsani yaxshilash yoʻlini soʻrang (fokus, uyqu, til, sakrash, jamgʻarish) — u aniq reja beradi va doim sizni shunga qaytaradi: buni kunlik kvestga aylantiring.",
   "🛍 STORE — THINGS I WANT":"🛍 DOʻKON — ISTAGAN NARSALARIM",
   "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Shaxsiy doʻkoningiz. Sotib olmoqchi boʻlgan narsani qoʻshing. Balansingiz (yoki bogʻlangan maqsad) yetganda SOTIB OLISH tugmasi yonadi — xarid xarajat sifatida yoziladi va sotib olinganlar javoniga oʻtadi.",
   "No linked goal":"Bogʻlangan maqsad yoʻq","ADD TO STORE":"DOʻKONGA QOʻSHISH","🗄 PURCHASED SHELF":"🗄 SOTIB OLINGANLAR JAVONI",
@@ -5207,7 +5258,7 @@ var I18N_UZ = {
   "Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.":"Biror narsani qanday yaxshilashni soʻrang — fokus, uyqu, til, sakrash, pul jamgʻarish — men haqiqiy reja beraman.",
   "I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.":"Bunga hali tayyor rejam yoʻq — lekin usul har doim bir xil: buni kunlik kvestga aylantiring, bema’ni darajada kichikdan boshlang, ikki marta ketma-ket oʻtkazib yubormang va seriyani shu yerda kuzating. Soʻragan narsangizni kvestga aylantiring va Tizim sizni olib borsin.",
   "BEGIN":"BOSHLASH","STATS UNLOCKED":"STATISTIKA OCHILDI",
-  "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the +1% menu.":"STATISTIKA boʻlimi endi ochiq.\n\nBu yerda Tizim intizomingizni grafikda koʻrsatadi: kuniga topilgan XP, bajarilgan kvestlar, eng kuchli hafta kuningiz, seriyalar tarixi va faol kunlaringiz xaritasi. Qonuniyatlarni kuzating — ular qachon haqiqatan harakat qilishingizni koʻrsatadi.\n\nUni istalgan payt +1% menyusidan oching.",
+  "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab.":"STATISTIKA boʻlimi endi ochiq.\n\nBu yerda Tizim intizomingizni grafikda koʻrsatadi: kuniga topilgan XP, bajarilgan kvestlar, eng kuchli hafta kuningiz, seriyalar tarixi va faol kunlaringiz xaritasi. Qonuniyatlarni kuzating — ular qachon haqiqatan harakat qilishingizni koʻrsatadi.\n\nUni istalgan payt TARAQQIYOT boʻlimidan oching.",
   "REWARDS UNLOCKED":"MUKOFOTLAR OCHILDI",
   "The REWARDS section is now open.\n\nBuild reward crates — you decide the prizes (a treat, an episode, an hour of gaming). Fully completing hard quests earns rare ROLLS; spend a roll on a crate and the System reveals a random prize, gacha-style.\n\nRolls are precious — earn them, then enjoy what you've won.":"MUKOFOTLAR boʻlimi endi ochiq.\n\nMukofot sandiqlarini yarating — sovgʻalarni oʻzingiz tanlaysiz (shirinlik, serial qismi, bir soat oʻyin). Qiyin kvestlarni toʻliq bajarish noyob ROLLlar beradi; rollni sandiqqa sarflang va Tizim tasodifiy sovgʻani ochadi.\n\nRolllar qimmatli — ularni qoʻlga kiriting, soʻng yutganingizdan rohatlaning.",
   "INVENTORY UNLOCKED":"INVENTAR OCHILDI",
@@ -5300,7 +5351,24 @@ var I18N_UZ = {
   "The cloud copy could not be deleted, so nothing was deleted.":"Bulutdagi nusxani oʻchirib boʻlmadi, shuning uchun hech narsa oʻchirilmadi.",
   "TIME FOR A SHORT BREAK":"QISQA TANAFFUS VAQTI","You have been using LEVEL UP for a while.":"Siz LEVEL UP dan ancha vaqtdan beri foydalanyapsiz.",
   "Stand up, stretch, drink some water and look away from the screen for a few minutes. Your quests will be here when you come back.":"Turing, kerishing, suv iching va bir necha daqiqa ekrandan koʻz uzing. Kvestlaringiz qaytib kelishingizni kutadi.",
-  "I'LL TAKE A BREAK":"TANAFFUS QILAMAN","Break reminder on.":"Tanaffus eslatmasi yoqildi.","Break reminder off.":"Tanaffus eslatmasi oʻchirildi."
+  "I'LL TAKE A BREAK":"TANAFFUS QILAMAN","Break reminder on.":"Tanaffus eslatmasi yoqildi.","Break reminder off.":"Tanaffus eslatmasi oʻchirildi.",
+  /* README 4t: tab bar, Today, calm look, first run */
+  "PROGRESS":"TARAQQIYOT",
+  "🔒 Lv ":"🔒 Daraja ",
+  " quests done today":" ta kvest bugun bajarildi",
+  "🎁 Next reward · Lv ":"🎁 Keyingi mukofot · Daraja ",
+  "Days in a row with a cleared quest":"Kvest bajarilgan ketma-ket kunlar",
+  "✨ Effects":"✨ Effektlar",
+  "🌙 Calm — no glow or moving background":"🌙 Sokin — yorqin nur va harakatlanuvchi fonsiz",
+  "✨ Full — glow, particles and animations":"✨ Toʻliq — nur, zarrachalar va animatsiyalar",
+  "✨ Full effects on.":"✨ Barcha effektlar yoqildi.",
+  "🌙 Calm look on.":"🌙 Sokin koʻrinish yoqildi.",
+  "Turn your life into the game.":"Hayotingizni oʻyinga aylantiring.",
+  "▶ START":"▶ BOSHLASH",
+  "Without an account your progress stays on this device. Sign in with Google any time to keep it on every device.":"Hisobsiz taraqqiyotingiz faqat shu qurilmada qoladi. Uni barcha qurilmalarda saqlash uchun istalgan payt Google orqali kiring.",
+  "Hide":"Yashirish",
+  " cleared":" bajarildi",
+  "Edit the daily quest package":"Kunlik kvest toʻplamini tahrirlash"
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
 function i18nDict(){
@@ -5424,9 +5492,8 @@ var currentPage = "home";
 var PAGES = ["learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
 var NAV_ICON = {learn:"🌱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
 var NAV_LABEL = {learn:"LEARN", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
-/* daily loop first — the things touched every single day are never more than
-   one tap away. Nothing is ever placed between the hero and the thing they
-   opened the app to do; the dock is the only navigation there is. */
+/* daily loop first. This order (and the hero's renames) now drives the MORE
+   sheet and the sub-tabs; the five tabs themselves are fixed (TABS). */
 var NAV_ORDER = ["home","quests","learn","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
@@ -5473,7 +5540,7 @@ var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","bud
 /* short guides shown the moment a feature is unlocked on the story path */
 var FEATURE_GUIDE = {
   learn:     {ico:"🌱", title:"LEARN & GROW UNLOCKED", body:"The ACADEMY is now open (LEARN & GROW).\n\nFour roads: DISCIPLINE, EDUCATION, PHYSICAL and EMOTIONAL. Each is a ladder — a lesson, then a real task, then the next lesson. A level stays sealed until the one before it is finished.\n\nThis is where you are taught, not just tracked."},
-  stats:     {ico:"📊", title:"STATS UNLOCKED", body:"The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the +1% menu."},
+  stats:     {ico:"📊", title:"STATS UNLOCKED", body:"The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab."},
   rewards:   {ico:"🎁", title:"REWARDS UNLOCKED", body:"The REWARDS section is now open.\n\nBuild reward crates — you decide the prizes (a treat, an episode, an hour of gaming). Fully completing hard quests earns rare ROLLS; spend a roll on a crate and the System reveals a random prize, gacha-style.\n\nRolls are precious — earn them, then enjoy what you've won."},
   inventory: {ico:"📦", title:"INVENTORY UNLOCKED", body:"The INVENTORY section is now open.\n\nEvery prize you win from a crate waits here until you actually use it in real life. Press USE when you spend it — it moves to your ARCHIVE as a permanent record of a reward you earned and enjoyed."},
   honor:     {ico:"🏆", title:"HALL OF HONOR UNLOCKED", body:"The HALL OF HONOR is now open.\n\nEvery one-time goal you achieve and every challenge you conquer is enshrined here forever — permanent proof of who you are becoming. The finished quest leaves your log; its glory stays in the hall."},
@@ -5483,7 +5550,7 @@ var FEATURE_GUIDE = {
   timer:     {ico:"⏱", title:"FOCUS TIMER UNLOCKED", body:"The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work."},
   dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."},
   store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
-  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (HOME page).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
+  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
   premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
 };
 function announceFeatureUnlocks(lv){
@@ -5522,21 +5589,132 @@ function sectionLockLevel(p){
   if(LOCKABLE_PAGES.indexOf(p) === -1) return 0;
   return featureSealedLv(p);
 }
+/* THE TAB BAR (README 4t): five fixed tabs, always on screen. Each tab owns
+   a group of pages; MORE opens a sheet of every page no tab owns, in the
+   hero's own order and names (SETTINGS → RENAME & REORDER). The
+   Administrator's locks still decide what is open: a sealed page shows the
+   level that opens it, a removed one disappears. */
+var TABS = [
+  {tab:"today",    ico:"🏠", label:"TODAY",    pages:["home"]},
+  {tab:"quests",   ico:"📜", label:"QUESTS",   pages:["quests"]},
+  {tab:"progress", ico:"📈", label:"PROGRESS", pages:["profile","story","stats","honor"]},
+  {tab:"rewards",  ico:"🎁", label:"REWARDS",  pages:["rewards","inventory"]},
+  {tab:"more",     ico:"☰",  label:"MORE",     pages:[]}
+];
+var lastInTab = {}, moreOpen = false;
+function tabOf(p){
+  for(var i=0;i<TABS.length-1;i++) if(TABS[i].pages.indexOf(p) !== -1) return TABS[i];
+  return TABS[TABS.length-1];
+}
+function navEntry(p){
+  for(var i=0;i<state.navConfig.length;i++) if(state.navConfig[i].page === p) return state.navConfig[i];
+  return null;
+}
+function navLabelOf(p){ var c = navEntry(p); return (c && c.label) || NAV_LABEL[p]; }
+/* a page the hero can see in a menu: not removed by the Administrator, not
+   hidden by the hero (SETTINGS can never be hidden, so nobody locks themselves out) */
+function pageListed(p){
+  if(featureRemoved(p) && !adminMode) return false;
+  var c = navEntry(p);
+  return !(c && c.hidden && p !== "admin");
+}
+function tabPages(t){
+  if(t.tab === "more"){
+    var out = [];
+    for(var i=0;i<state.navConfig.length;i++){
+      var p = state.navConfig[i].page;
+      if(tabOf(p).tab === "more" && pageListed(p)) out.push(p);
+    }
+    return out;
+  }
+  /* TODAY and QUESTS are the daily loop: always there */
+  if(t.tab === "today" || t.tab === "quests") return t.pages.slice();
+  return t.pages.filter(pageListed);
+}
+/* 0 when something in the tab is open, else the lowest level that opens it */
+function tabSealedLv(t){
+  var pages = tabPages(t), lv = 0;
+  for(var i=0;i<pages.length;i++){
+    var s = sectionLockLevel(pages[i]);
+    if(!s) return 0;
+    lv = lv ? Math.min(lv, s) : s;
+  }
+  return lv;
+}
 function renderNav(){
   reconcileNav();
-  var h = "";
-  for(var i=0;i<state.navConfig.length;i++){
-    var c = state.navConfig[i];
-    if(c.hidden && c.page !== "admin") continue; /* admin can never be hidden — prevents lockout */
-    if(featureRemoved(c.page) && !adminMode) continue; /* removed by the Administrator */
-    if(sectionLockLevel(c.page)) continue; /* not yet earned — invisible until the story path grants it */
-    var badge = c.page === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
-    h += '<button class="nav-btn' + (c.page === currentPage ? " active" : "")
-      + '" data-page="' + c.page + '">'
-      + '<span class="nv-ico">' + (NAV_ICON[c.page] || "•") + '</span>' + esc(c.label || NAV_LABEL[c.page]) + badge + '</button>';
+  var cur = tabOf(currentPage).tab, h = "";
+  for(var i=0;i<TABS.length;i++){
+    var t = TABS[i];
+    if(t.tab !== "more" && !tabPages(t).length) continue; /* every page in it was removed */
+    var lv = t.tab === "more" ? 0 : tabSealedLv(t);
+    var on = t.tab === cur || (t.tab === "more" && moreOpen);
+    var badge = t.tab === "rewards" ? '<span class="nav-badge" id="navRollBadge" style="display:none"></span>' : '';
+    var label = tr(t.label); /* translated here so a long word can be set smaller */
+    h += '<button class="nav-btn' + (on ? " active" : "") + (lv ? " locked" : "") + (label.length > 8 ? " long" : "") + '" data-tab="' + t.tab + '"'
+      + (lv ? ' data-locklv="' + lv + '"' : '')
+      + (t.tab === "more" ? ' aria-haspopup="dialog" aria-expanded="' + (moreOpen ? "true" : "false") + '"' : (t.tab === cur ? ' aria-current="page"' : ''))
+      + '><span class="nv-ico" aria-hidden="true">' + (lv ? "🔒" : t.ico) + '</span>' + esc(label) + badge + '</button>';
   }
   document.getElementById("nav").innerHTML = h;
+  renderSubnav();
+  renderMore();
   renderHeader(); /* re-fill the roll badge that lives inside the nav */
+}
+function renderSubnav(){
+  var el = document.getElementById("subnav");
+  if(!el) return;
+  var t = tabOf(currentPage);
+  var pages = t.tab === "more" ? [] : tabPages(t);
+  if(pages.length < 2 || adminMode){ el.innerHTML = ""; return; }
+  var h = "";
+  for(var i=0;i<pages.length;i++){
+    var p = pages[i], lv = sectionLockLevel(p);
+    h += '<button class="sub-btn' + (p === currentPage ? " active" : "") + (lv ? " locked" : "") + '" data-page="' + p + '"'
+      + (lv ? ' data-locklv="' + lv + '"' : '') + (p === currentPage ? ' aria-current="page"' : '') + '>'
+      + esc(navLabelOf(p)) + (lv ? '<span class="sb-lock"> 🔒' + lv + '</span>' : '') + '</button>';
+  }
+  el.innerHTML = h;
+}
+function renderMore(){
+  var el = document.getElementById("moreList");
+  if(!el) return;
+  var pages = tabPages(TABS[TABS.length-1]), h = "";
+  for(var i=0;i<pages.length;i++){
+    var p = pages[i], lv = sectionLockLevel(p);
+    h += '<button class="more-row' + (p === currentPage ? " active" : "") + (lv ? " locked" : "") + '" data-page="' + p + '"'
+      + (lv ? ' data-locklv="' + lv + '"' : '') + '>'
+      + '<span class="mr-ico" aria-hidden="true">' + (NAV_ICON[p] || "•") + '</span><span>' + esc(navLabelOf(p)) + '</span>'
+      + '<span class="mr-go">' + (lv ? esc(tr("🔒 Lv ")) + lv : "›") + '</span></button>';
+  }
+  el.innerHTML = h;
+}
+function sealedToast(lv){
+  toast(tr("Sealed by the System. Reach Level ") + lv + tr(" to unlock this section."), "err");
+}
+function setMoreOpen(v){
+  var was = moreOpen;
+  moreOpen = !!v && !adminMode;
+  document.getElementById("moreSheet").classList.toggle("show", moreOpen);
+  document.getElementById("navBackdrop").classList.toggle("show", moreOpen);
+  document.body.classList.toggle("more-open", moreOpen);
+  if(moreOpen !== was){
+    sfx(moreOpen ? "open" : "close");
+    renderNav();
+    if(moreOpen){
+      var first = document.querySelector("#moreList .more-row");
+      if(first) try{ first.focus({preventScroll:true}); }catch(e){}
+    }
+  }
+}
+/* open a tab: the page last used inside it, else its first open page */
+function goTab(name){
+  var t = null;
+  for(var i=0;i<TABS.length;i++) if(TABS[i].tab === name) t = TABS[i];
+  if(!t) return;
+  var pages = tabPages(t).filter(function(p){ return !sectionLockLevel(p); });
+  var p = (lastInTab[name] && pages.indexOf(lastInTab[name]) !== -1) ? lastInTab[name] : pages[0];
+  if(p) switchPage(p);
 }
 function switchPage(p){
   if(adminMode && p !== "admin") return; /* the Administrator never plays — console only */
@@ -5547,17 +5725,17 @@ function switchPage(p){
     return;
   }
   currentPage = p;
+  lastInTab[tabOf(p).tab] = p;
+  document.body.setAttribute("data-page", p);
   for(var i=0;i<PAGES.length;i++){
     document.getElementById("page-" + PAGES[i]).style.display = (PAGES[i]===p ? "" : "none");
   }
-  var btns = document.querySelectorAll(".nav-btn");
-  for(var j=0;j<btns.length;j++){
-    btns[j].classList.toggle("active", btns[j].getAttribute("data-page")===p);
-  }
+  if(moreOpen) setMoreOpen(false);
+  renderNav();
   var fab = document.getElementById("fab");
-  if(p === "quests" || p === "rewards"){
+  if(p === "home" || p === "quests" || p === "rewards"){
     fab.classList.add("show");
-    fab.title = p === "quests" ? "Add Quest" : "Add Collection";
+    fab.title = p === "rewards" ? "Add Collection" : "Add Quest";
   } else {
     fab.classList.remove("show");
   }
@@ -5570,43 +5748,29 @@ function switchPage(p){
     }, 80);
   }
 }
-/* bottom "+1%" dock: closed = single button, open = sliding row of tabs */
-var navOpen = false;
-function setNavOpen(v){
-  var was = navOpen;
-  navOpen = !!v;
-  document.getElementById("nav").classList.toggle("open", navOpen);
-  document.getElementById("navBackdrop").classList.toggle("show", navOpen);
-  var t = document.getElementById("navToggle");
-  t.classList.toggle("open", navOpen);
-  t.setAttribute("aria-expanded", navOpen ? "true" : "false");
-  document.body.classList.toggle("dock-open", navOpen); /* lifts the + button above the dock */
-  if(navOpen && !was){
-    sfx("open");
-    /* bring the current section's tab into view */
-    var act = document.querySelector("#nav .nav-btn.active");
-    if(act && act.scrollIntoView){
-      try{ act.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"}); }catch(e){}
-    }
-  } else if(!navOpen && was){
-    sfx("close");
-  }
-}
-document.getElementById("navToggle").addEventListener("click", function(){ setNavOpen(!navOpen); });
-document.getElementById("navBackdrop").addEventListener("click", function(){ setNavOpen(false); });
-document.addEventListener("keydown", function(e){ if(e.key === "Escape" && navOpen) setNavOpen(false); });
 document.getElementById("nav").addEventListener("click", function(e){
   var b = e.target.closest(".nav-btn");
   if(!b) return;
-  if(b.getAttribute("data-locklv")){
-    toast(tr("Sealed by the System. Reach Level ") + b.getAttribute("data-locklv") + tr(" to unlock this section."), "err");
-    return; /* keep the dock open so the hero can pick an unlocked section */
-  }
-  switchPage(b.getAttribute("data-page"));
-  setNavOpen(false);
+  var t = b.getAttribute("data-tab");
+  if(t === "more"){ setMoreOpen(!moreOpen); return; }
+  if(moreOpen) setMoreOpen(false);
+  var lv = b.getAttribute("data-locklv");
+  if(lv){ sealedToast(lv); return; }
+  goTab(t);
 });
+function pageButtonClick(e, sel){
+  var b = e.target.closest(sel);
+  if(!b) return;
+  var lv = b.getAttribute("data-locklv");
+  if(lv){ sealedToast(lv); return; }
+  switchPage(b.getAttribute("data-page"));
+}
+document.getElementById("subnav").addEventListener("click", function(e){ pageButtonClick(e, ".sub-btn"); });
+document.getElementById("moreList").addEventListener("click", function(e){ pageButtonClick(e, ".more-row"); });
+document.getElementById("navBackdrop").addEventListener("click", function(){ setMoreOpen(false); });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && moreOpen) setMoreOpen(false); });
 document.getElementById("fab").addEventListener("click", function(){
-  if(currentPage === "quests") openQuestModal(null);
+  if(currentPage === "quests" || currentPage === "home") openQuestModal(null);
   else if(currentPage === "rewards") openColModal(null);
 });
 
@@ -8771,20 +8935,17 @@ function renderHeader(){
   hr.className = "rank-badge " + r.cls + (r.key==="N" ? " nat" : "");
   hr.textContent = r.label;
   document.getElementById("hdrLvl").textContent = "LV." + state.level;
-  /* unspent-rolls badge on the REWARDS tab + mirrored on the 1% button */
+  /* unspent-rolls badge on the REWARDS tab */
   var n = state.storage.length;
   var badge = document.getElementById("navRollBadge");
   if(badge){
     badge.style.display = n > 0 ? "" : "none";
     badge.textContent = n > 9 ? "9+" : n;
   }
-  var tb = document.getElementById("toggleRollBadge");
-  if(tb){
-    tb.style.display = n > 0 ? "" : "none";
-    tb.textContent = n > 9 ? "9+" : n;
-  }
 }
 function renderProfile(){
+  renderHeroArt();
+  renderMentor();
   renderRankTrial();
   renderOathPanel();
   var r = rankForLevel(state.level);
@@ -10414,6 +10575,7 @@ function renderAdmin(){
   }
   themeSel.value = state.theme || "shadow";
   document.getElementById("admSound").value = state.sound === false ? "off" : "on";
+  document.getElementById("admEffects").value = state.effects === true ? "on" : "off";
   document.getElementById("admLang").value = state.lang || "en";
   renderNotifySettings();
   renderBreakSettings();
@@ -10850,6 +11012,12 @@ document.getElementById("admSound").addEventListener("change", function(){
   save();
   if(state.sound){ sfx("reward"); sysToast(tr("🔊 Sounds on.")); }
   else sysToast(tr("🔇 Sounds off."));
+});
+document.getElementById("admEffects").addEventListener("change", function(){
+  state.effects = this.value === "on";
+  save();
+  applyEffects();
+  sysToast(tr(state.effects ? "✨ Full effects on." : "🌙 Calm look on."));
 });
 document.getElementById("admLang").addEventListener("change", function(){
   state.lang = this.value;
@@ -11790,13 +11958,11 @@ function renderFirstSteps(){
   ];
   var allDone = steps.every(function(s){ return s.ok; });
   if(state.firstStepsDismissed || allDone){ el.innerHTML = ""; return; }
-  var doneN = steps.filter(function(s){ return s.ok; }).length;
-  var h = '<div class="panel"><div class="panel-title">' + esc(tr('🧭 FIRST STEPS — ')) + doneN + '/' + steps.length + '</div>';
-  for(var i=0;i<steps.length;i++){
-    h += '<div class="fs-row' + (steps[i].ok ? " done" : "") + '"><span class="fs-mark">' + (steps[i].ok ? "✓" : "○") + '</span><span>' + steps[i].t + '</span></div>';
-  }
-  h += '<button class="btn" id="fsDismiss" style="margin-top:8px">HIDE THIS</button></div>';
-  el.innerHTML = h;
+  /* one tip at a time: the next unfinished step, with a way to close it */
+  var doneN = steps.filter(function(s){ return s.ok; }).length, next = null;
+  for(var i=0;i<steps.length;i++) if(!steps[i].ok){ next = steps[i]; break; }
+  el.innerHTML = '<div class="today-tip"><span>' + esc(tr('🧭 FIRST STEPS — ')) + doneN + '/' + steps.length + ': ' + esc(tr(next.t)) + '</span>'
+    + '<button id="fsDismiss" aria-label="Hide first steps" title="Hide">✕</button></div>';
   document.getElementById("fsDismiss").onclick = function(){
     state.firstStepsDismissed = true;
     save(); renderHome();
@@ -11893,24 +12059,41 @@ document.getElementById("mentorQ").addEventListener("keydown", function(e){
 });
 
 /* ---------------- render: home dashboard ---------------- */
+/* TODAY: a slim game header, today's package, today's quests, one tip.
+   Totals, the portrait and the Mentor live on PROGRESS (README 4t). */
+function nextRewardLevel(){
+  var best = 0, road = state.levelRewards || [];
+  for(var i=0;i<road.length;i++){
+    var lv = +road[i].level;
+    if(lv > state.level && (!best || lv < best)) best = lv;
+  }
+  return best;
+}
 function renderHome(){
-  renderHeroArt();
-  renderMentor();
   renderFirstSteps();
   renderPunishBanners();
   var r = rankForLevel(state.level);
+  var hr = document.getElementById("homeRank");
+  hr.className = "rank-badge " + r.cls + (r.key==="N" ? " nat" : "");
+  hr.textContent = r.label;
   document.getElementById("homeName").textContent = state.hunterName;
   document.getElementById("homeSub").textContent = r.name.toUpperCase();
+  var run = rkActiveStreak();
+  document.getElementById("homeStreak").textContent = run > 0 ? "🔥 " + run : "";
   document.getElementById("homeLvl").textContent = state.level;
   var need = xpForLevel(state.level);
   document.getElementById("homeXpTxt").innerHTML = "<b>" + state.xp + "</b> / " + need + " XP";
   document.getElementById("homeXpBar").style.width = Math.min(100, (state.xp/need*100)) + "%";
-  var chips = '<span class="title-chip">⚔️ ' + state.totalCompleted + esc(tr(' quests done')) + '</span>'
-    + '<span class="title-chip">💠 ' + state.totalXp + esc(tr(' total XP')) + '</span>'
-    + '<span class="title-chip">🎟 ' + state.storage.length + esc(i18nDict() ? tr(' rolls stored') : (' roll' + (state.storage.length===1?"":"s") + ' stored')) + '</span>'
-    + '<span class="title-chip">⏱ ' + fmtDur(state.timeHistory[todayStr()] || 0) + esc(tr(' active today')) + '</span>';
-  if(state.statPoints > 0) chips += '<span class="title-chip" style="color:var(--legendary);border-color:rgba(251,191,36,.5)">✨ ' + state.statPoints + esc(tr(' stat points')) + '</span>';
-  document.getElementById("homeChips").innerHTML = chips;
+  /* only what asks for an action: unspent attribute points */
+  document.getElementById("homeChips").innerHTML = state.statPoints > 0
+    ? '<button class="title-chip" id="homeSpChip" style="color:var(--legendary);border-color:rgba(251,191,36,.5);background:none">✨ ' + state.statPoints + esc(tr(' stat points')) + '</button>'
+    : "";
+  var qc = qTabCounts();
+  document.getElementById("todayQuests").innerHTML = '<span>📜</span><span>' + qc.doneToday + " / " + qc.sched
+    + esc(tr(" quests done today")) + '</span><span class="tr-go">›</span>';
+  var nr = nextRewardLevel(), nx = document.getElementById("todayNext");
+  nx.style.display = nr ? "" : "none";
+  if(nr) nx.innerHTML = esc(tr("🎁 Next reward · Lv ")) + "<b>" + nr + "</b> ›";
   /* package */
   checkPackageReset();
   var pk = state.dailyPackage;
@@ -11927,7 +12110,7 @@ function renderHome(){
   if(pk.items.length === 0) h = '<div class="empty-note">No package quests. Add some in ADMIN → Manage Daily Quest Package.</div>';
   document.getElementById("pkgList").innerHTML = h;
   var tot = pk.items.length || 1;
-  document.getElementById("pkgProgTxt").textContent = doneN + " / " + pk.items.length + " cleared";
+  document.getElementById("pkgProgTxt").textContent = doneN + " / " + pk.items.length + tr(" cleared");
   document.getElementById("pkgPct").textContent = Math.round(doneN/tot*100) + "%";
   document.getElementById("pkgBar").style.width = Math.round(doneN/tot*100) + "%";
   var sp = document.getElementById("pkgStreak");
@@ -11935,25 +12118,6 @@ function renderHome(){
   else sp.style.display = "none";
   var el = document.getElementById("pkgTimer");
   if(el) el.textContent = pkgCountdown();
-  /* command center */
-  var qs = [
-    {p:"profile", i:"⚔️", l:"PROFILE"},
-    {p:"quests", i:"📜", l:"QUESTS"},
-    {p:"quests", i:"🔥", l:"CHALLENGES", f:"challenge"},
-    {p:"rewards", i:"🎁", l:"REWARDS"},
-    {p:"stats", i:"📊", l:"STATS"},
-    {p:"story", i:"📖", l:"STORY"},
-    {p:"honor", i:"🏆", l:"HONOR"},
-    {p:"guild", i:"⚔️", l:"CLAN"},
-    {p:"budget", i:"💰", l:"BUDGET"},
-    {p:"guide", i:"📘", l:"GUIDE"},
-    {p:"admin", i:"⚙️", l:"ADMIN"}
-  ];
-  var qh = "";
-  for(var q=0;q<qs.length;q++){
-    qh += '<button class="quick-btn" data-goto="' + qs[q].p + '"' + (qs[q].f ? ' data-f="' + qs[q].f + '"' : '') + '><span class="qb-ico">' + qs[q].i + '</span>' + qs[q].l + '</button>';
-  }
-  document.getElementById("quickGrid").innerHTML = qh;
 }
 document.getElementById("pkgList").addEventListener("click", function(e){
   var b = e.target.closest("button[data-pk]"); if(!b) return;
@@ -11963,11 +12127,10 @@ document.getElementById("pkgEditBtn").addEventListener("click", function(){
   switchPage("admin");
   sysToast("Edit the Daily Quest package below — every field is editable.");
 });
-document.getElementById("quickGrid").addEventListener("click", function(e){
-  var b = e.target.closest("button[data-goto]"); if(!b) return;
-  var f = b.getAttribute("data-f");
-  freqFilter = f || "all";
-  switchPage(b.getAttribute("data-goto"));
+document.getElementById("todayQuests").addEventListener("click", function(){ switchPage("quests"); });
+document.getElementById("todayNext").addEventListener("click", function(){ switchPage("story"); });
+document.getElementById("homeChips").addEventListener("click", function(e){
+  if(e.target.closest("#homeSpChip")) switchPage("profile");
 });
 
 /* ---------------- budget ---------------- */
@@ -12469,11 +12632,12 @@ document.getElementById("savingsList").addEventListener("click", function(e){
 
 /* ---------------- render dispatcher ---------------- */
 /* ================= THE OATH =================
-   Sworn once, in the hero's own words, before the System opens. The System
+   Sworn once, in the hero's own words, after their first finished day (it used
+   to block the app before the first quest; README 4t). Any length counts. The System
    never invents motivation for them again — at every moment that matters it
    quotes them back to themselves. Nothing here leaves the device except
    through their own account. */
-var OATH_MIN = 20;
+var OATH_MIN = 1; /* any honest word counts; the hero decides how much to write */
 var OATH_Q = [
   {k:"running", n:"What are you running from?",
    h:"Name the life you refuse to live. Be specific — not \"being lazy\", but the exact picture that frightens you.",
@@ -12488,13 +12652,13 @@ var OATH_Q = [
    h:"Write the exact words you would need to hear at 23:40 on a day you did nothing. The System will use them, word for word.",
    p:"Get up. You…"}
 ];
-var OATH_PRE = "Before the System opens, it needs to know who is entering.\n\n"
+var OATH_PRE = "The System wants to know who is playing.\n\n"
   + "These answers are not a form. The System will quote them back to you — on the night you break a streak, on the day you rise a rank, and every single time you consider quitting.\n\n"
   + "Nobody else reads this. It stays on your device, and in your own account if you sign in.\n\n"
-  + "Write them so that they will hurt when you need them to.";
+  + "Write as much or as little as you like. One honest word is enough.";
 var oathAmending = false, oathTimer = null;
-/* asked after the gate opens, and delayed so a cloud save (which may already
-   carry an oath) has landed before the System decides it is missing */
+/* asked on the first open after a finished day, and delayed so a cloud save
+   (which may already carry an oath) has landed before the System decides it is missing */
 function maybeOath(delay){
   if(oathTimer) clearTimeout(oathTimer);
   oathTimer = setTimeout(function(){
@@ -12503,8 +12667,14 @@ function maybeOath(delay){
   }, delay === undefined ? 1200 : delay);
 }
 function oathSworn(){ return !!(state && state.oath && state.oath.sworn); }
+/* the hero has cleared something on a day before today */
+function firstDayDone(){
+  var t = todayStr();
+  for(var k in (state.history || {})) if(k < t && state.history[k] && state.history[k].count > 0) return true;
+  return false;
+}
 function oathNeeded(){
-  return !!state && !adminMode && !!state.entryChoice && !oathSworn();
+  return !!state && !adminMode && !!state.entryChoice && !oathSworn() && firstDayDone();
 }
 function renderOathForm(){
   var o = (oathAmending && state.oath) ? state.oath : {};
@@ -12522,7 +12692,7 @@ function renderOathForm(){
   document.getElementById("oathFields").innerHTML = h;
   document.getElementById("oathPre").textContent = OATH_PRE;
   document.getElementById("oathSign").value = (oathAmending && state.oath) ? (state.oath.signed || "") : (state.hunterName || "");
-  document.getElementById("oathSubTitle").textContent = oathAmending ? "AMENDING A SWORN OATH" : "BEFORE THE SYSTEM OPENS";
+  document.getElementById("oathSubTitle").textContent = oathAmending ? "AMENDING A SWORN OATH" : "WHO IS PLAYING";
   document.getElementById("oathSeal").textContent = oathAmending ? "⚔ RE-SWEAR" : "⚔ SEAL THE OATH";
   document.getElementById("oathLater").style.display = oathAmending ? "" : "none";
   oathCheck();
@@ -12534,12 +12704,12 @@ function oathCheck(){
     var lbl = document.querySelector('[data-c="' + k + '"]');
     var need = OATH_MIN - v.length;
     if(lbl){
-      lbl.textContent = need > 0 ? (need + " more characters") : "✔";
+      lbl.textContent = need > 0 ? "" : "✔";
       lbl.className = "oath-count" + (need > 0 ? "" : " ok");
     }
     if(need > 0) ok = false;
   }
-  if(document.getElementById("oathSign").value.trim().length < 2) ok = false;
+  if(document.getElementById("oathSign").value.trim().length < 1) ok = false;
   document.getElementById("oathSeal").disabled = !ok;
   document.getElementById("oathWarn").textContent = ok
     ? (oathAmending ? "Re-swearing does not erase the old oath. The System keeps every version." : "Once sealed, these words belong to the System.")
@@ -12904,7 +13074,12 @@ document.getElementById("lrnMClose").addEventListener("click", function(){
 });
 document.getElementById("lrnMDone").addEventListener("click", completeLearnLevel);
 
+/* calm unless the hero switched the full effects on (SETTINGS → APPEARANCE) */
+function applyEffects(){
+  document.body.classList.toggle("calm", !(state && state.effects === true));
+}
 function renderAll(){
+  applyEffects();
   renderHeader();
   if(currentPage === "learn"){ renderLearn(); return; }
   if(currentPage === "home") renderHome();
