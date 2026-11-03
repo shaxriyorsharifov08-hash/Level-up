@@ -89,28 +89,34 @@ test.describe("solid themes", () => {
       .toEqual({ a: null, tok: false });
   });
 
-  test("a save on Sky goes back to Shadow once and keeps its data; any other chosen theme is kept", async ({ page }) => {
+  test("every existing save enters in Shadow once and keeps its data; after that the hero's choice is kept", async ({ page }) => {
     await bootAsGuest(page);
-    for (const [before, after, v2] of [["sky", "shadow", true], ["shadow", "shadow", false], ["ember", "ember", true], ["night", "night", true]]) {
-      await page.evaluate(([th, hadV2]) => {
+    for (const before of ["sky", "ember", "night", "shadow"]) {
+      await page.evaluate((th) => {
         const old = JSON.parse(JSON.stringify(state));
-        delete old.themeV3;
-        if (!hadV2) delete old.themeV2; /* a save from before Sky existed */
+        delete old.themeV3; delete old.themeV4; /* a save from before the switch back */
         old.theme = th;
         old.hunterName = "Old Save";
         old.saveCount = (state.saveCount || 0) + 500; /* newer than the vault copy */
         localStorage.setItem("leveluphunter_v1", JSON.stringify(old));
-      }, [before, v2]);
+      }, before);
       await page.reload({ waitUntil: "domcontentloaded" });
       await ready(page);
-      expect(await page.evaluate(() => ({ t: state.theme, n: state.hunterName, f: state.themeV3 })))
-        .toEqual({ t: after, n: "Old Save", f: true });
+      expect(await page.evaluate(() => ({ t: state.theme, n: state.hunterName, f: state.themeV4 })))
+        .toEqual({ t: "shadow", n: "Old Save", f: true });
     }
-    /* once moved back, choosing Sky again sticks */
-    await page.evaluate(() => { state.theme = "sky"; save(); });
+    /* once moved, a theme the hero picks sticks */
+    await page.evaluate(() => { state.theme = "night"; save(); });
     await page.reload({ waitUntil: "domcontentloaded" });
     await ready(page);
-    expect(await page.evaluate(() => state.theme)).toBe("sky");
+    expect(await page.evaluate(() => state.theme)).toBe("night");
+  });
+
+  test("calm Shadow keeps its own purple background", async ({ page }) => {
+    await bootAsGuest(page);
+    const bg = await page.evaluate(() => ({ calm: document.body.classList.contains("calm"), img: getComputedStyle(document.body).backgroundImage }));
+    expect(bg.calm).toBe(true);
+    expect(bg.img).toContain("radial-gradient");
   });
 
   test("an unknown theme falls back to Shadow", async ({ page }) => {

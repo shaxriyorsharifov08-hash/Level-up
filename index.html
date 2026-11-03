@@ -1305,7 +1305,8 @@ main section{animation:pagein .28s ease}
 body[data-page="home"] header .hdr-right{display:none}
 
 /* ---------- CALM: the default look. SETTINGS → ✨ EFFECTS brings the glow back ---------- */
-body.calm, body.calm[data-theme]{background:var(--bg);--glow:0 0 0 transparent;--glowblue:0 0 0 transparent}
+/* calm keeps each theme's own background colour: only glow and motion go */
+body.calm{--glow:0 0 0 transparent;--glowblue:0 0 0 transparent}
 body.calm #particles{display:none}
 body.calm #app *:not(#fab){text-shadow:none !important}
 body.calm #app *:not(#fab):not(:focus-visible):not(.panel){box-shadow:none !important}
@@ -1534,6 +1535,13 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
   #tourHand span, #tourSpot::after, .tb-bot, .tb-bot .px-eyes, .ti-check, .ti-xp, .ti-bar i, .ti-lvl{animation:none !important}
   .ti-check{background:#00d1ff;color:#06222a} .ti-bar i{width:100%} .ti-lvl{opacity:1;transform:translateX(-50%)}
 }
+
+/* a closed panel is one row you can tap: the arrow and OPEN tell you so */
+.panel.collapsible > .panel-title{min-height:44px}
+.panel.collapsible > .panel-title::after{content:"−";flex:0 0 auto;height:auto;margin-left:auto;background:none;
+  width:30px;line-height:26px;text-align:center;font-size:1.1rem;font-weight:900;color:var(--blue);
+  border:1.5px solid var(--line);border-radius:50%}
+.panel.collapsible.closed > .panel-title::after{content:"+"}
 </style>
 </head>
 <body>
@@ -1574,6 +1582,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
     <div class="oath-warn" id="oathWarn"></div>
     <button class="btn primary" id="oathSeal" disabled style="width:100%;margin-top:14px">⚔ SEAL THE OATH</button>
     <div style="text-align:center"><button class="ent-back" id="oathLater" style="display:none">← keep the old oath</button></div>
+    <div style="text-align:center;margin-top:6px"><button class="btn" id="oathSkip" style="width:100%;min-height:46px">SKIP FOR NOW</button></div>
   </div>
 </div>
 
@@ -1686,7 +1695,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
         <div id="rankTrialBody"></div>
       </div>
 
-      <div class="panel" id="oathPanel">
+      <div class="panel collapsible closed" id="oathPanel">
         <div class="panel-title">⚔ THE OATH</div>
         <div id="oathPanelBody"></div>
       </div>
@@ -1727,7 +1736,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
         <div class="badge-grid" id="badgesList"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel collapsible closed" id="journalPanel">
         <div class="panel-title">📓 PAGES OF THE HERO</div>
         <div class="empty-note" style="margin-bottom:10px">Your evening reflections, night by night. Written with the 🌙 FINALIZE THE DAY button.</div>
         <div id="journalList"></div>
@@ -3061,6 +3070,7 @@ function defaultState(){
     theme:"shadow",      /* color theme: the classic Shadow look (README 4u, 4v) */
     sound:true,          /* sound effects on/off */
     effects:false,       /* false = the calm look (default); true = glow, particles, animations */
+    oathSkipped:"",      /* the day the hero pressed SKIP on the Oath; "" = never skipped */
     lang:"en",           /* interface language: en | ru */
     autoLocks:null,      /* cached copy of the admin's global section locks (synced from Firebase, read-only on the client) */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
@@ -4132,6 +4142,12 @@ function migrateState(){
   if(!state.themeV3){
     if(!state.theme || state.theme === "sky") state.theme = "shadow";
     state.themeV3 = true;
+  }
+  /* Nov 2026: the team wants everyone to enter in Shadow. Every save starts
+     on it once; after that, a theme the hero picks in SETTINGS is kept. */
+  if(!state.themeV4){
+    state.theme = "shadow";
+    state.themeV4 = true;
   }
   /* Nov 2026: the anime-derived names were retired (see README 4s). Only strings
      the app itself wrote are renamed, by exact match, never anything the hero
@@ -5253,7 +5269,10 @@ var I18N_RU = {
   "🎬 VIDEO GUIDE · 1 MINUTE":"🎬 ВИДЕОГИД · 1 МИНУТА",
   "One minute, with subtitles: start the app, add a quest, complete it and level up.":"Одна минута с субтитрами: запуск, новый квест, выполнение и новый уровень.",
   "🧭 REPLAY THE TOUR":"🧭 ПРОЙТИ ТУР ЗАНОВО",
-  "The video needs an internet connection.":"Для видео нужен интернет."
+  "The video needs an internet connection.":"Для видео нужен интернет.",
+  "SKIP FOR NOW":"ПРОПУСТИТЬ ПОКА",
+  "Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH.":"Пропущено. Дать клятву можно в любой момент: ПРОГРЕСС → ПРОФИЛЬ → КЛЯТВА.",
+  "⚔ THE OATH":"⚔ КЛЯТВА"
 };
 
 /* Uzbek (Latin script, oʻ/gʻ written with ʻ U+02BB). Same keys as I18N_RU;
@@ -5692,7 +5711,10 @@ var I18N_UZ = {
   "🎬 VIDEO GUIDE · 1 MINUTE":"🎬 VIDEO QOʻLLANMA · 1 DAQIQA",
   "One minute, with subtitles: start the app, add a quest, complete it and level up.":"Bir daqiqa, subtitrlar bilan: ilovani ochish, kvest qoʻshish, uni bajarish va darajani oshirish.",
   "🧭 REPLAY THE TOUR":"🧭 SAYOHATNI QAYTA KOʻRISH",
-  "The video needs an internet connection.":"Video uchun internet kerak."
+  "The video needs an internet connection.":"Video uchun internet kerak.",
+  "SKIP FOR NOW":"HOZIRCHA OʻTKAZIB YUBORISH",
+  "Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH.":"Oʻtkazib yuborildi. Qasamni istalgan payt TARAQQIYOT → PROFIL → QASAM boʻlimida qabul qilishingiz mumkin.",
+  "⚔ THE OATH":"⚔ QASAM"
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
 function i18nDict(){
@@ -11246,15 +11268,17 @@ document.getElementById("pkgAddBtn").addEventListener("click", function(){
   save(); renderAdmin();
   sysToast("Added to Daily Quest package: " + name);
 });
+/* collapsible panels anywhere (SETTINGS, PROFILE): tap the title to open / close */
+document.addEventListener("click", function(e){
+  var pt = e.target.closest && e.target.closest(".panel.collapsible > .panel-title");
+  if(!pt) return;
+  var pnl = pt.parentNode;
+  pnl.classList.toggle("closed");
+  pt.setAttribute("aria-expanded", pnl.classList.contains("closed") ? "false" : "true");
+  sfx(pnl.classList.contains("closed") ? "close" : "open");
+});
 document.getElementById("page-admin").addEventListener("click", function(e){
-  /* collapsible settings panels: tap the title to open / close */
-  var pt = e.target.closest(".panel.collapsible > .panel-title");
-  if(pt){
-    var pnl = pt.parentNode;
-    pnl.classList.toggle("closed");
-    sfx(pnl.classList.contains("closed") ? "close" : "open");
-    return;
-  }
+  if(e.target.closest(".panel.collapsible > .panel-title")) return; /* handled above */
   var b = e.target.closest("button[data-aact]"); if(!b) return;
   var act = b.getAttribute("data-aact"), id = b.getAttribute("data-id");
   if(act === "qedit") openQuestModal(id);
@@ -13010,7 +13034,8 @@ function firstDayDone(){
   return false;
 }
 function oathNeeded(){
-  return !!state && !adminMode && !!state.entryChoice && !oathSworn() && firstDayDone();
+  /* a hero who pressed SKIP is not asked again; PROFILE → THE OATH still works */
+  return !!state && !adminMode && !!state.entryChoice && !oathSworn() && !state.oathSkipped && firstDayDone();
 }
 function renderOathForm(){
   var o = (oathAmending && state.oath) ? state.oath : {};
@@ -13031,6 +13056,7 @@ function renderOathForm(){
   document.getElementById("oathSubTitle").textContent = oathAmending ? "AMENDING A SWORN OATH" : "WHO IS PLAYING";
   document.getElementById("oathSeal").textContent = oathAmending ? "⚔ RE-SWEAR" : "⚔ SEAL THE OATH";
   document.getElementById("oathLater").style.display = oathAmending ? "" : "none";
+  document.getElementById("oathSkip").style.display = oathAmending ? "none" : "";
   oathCheck();
 }
 function oathCheck(){
@@ -13132,6 +13158,13 @@ document.getElementById("oathSign").addEventListener("input", oathCheck);
 document.getElementById("oathSeal").addEventListener("click", sealOath);
 document.getElementById("oathLater").addEventListener("click", function(){
   document.getElementById("oathOv").classList.remove("show");
+});
+document.getElementById("oathSkip").addEventListener("click", function(){
+  state.oathSkipped = todayStr();
+  save();
+  document.getElementById("oathOv").classList.remove("show");
+  sysToast(tr("Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH."));
+  if(annQueue.length && !annOpen) nextAnnounce(); /* anything that waited behind the Oath speaks now */
 });
 document.getElementById("oathViewClose").addEventListener("click", function(){
   document.getElementById("oathViewModal").classList.remove("show");

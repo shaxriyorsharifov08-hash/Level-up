@@ -756,3 +756,11 @@ The classic neon themes (Shadow, Rose, Emerald, Ember) are unchanged and still s
 To re-record it after the interface changes: `node tools/record-guide-video.js <work folder>` (drives the app with Playwright and saves frames and caption times), then `python3 tools/build-guide-video.py <work folder> guide 27` (needs ffmpeg with libx264; writes the MP4 and the three .vtt files), then make the poster with `ffmpeg -ss 9.5 -i guide/level-up-guide.mp4 -frames:v 1 -vf scale=540:-2 -q:v 4 guide/level-up-guide-poster.jpg`. Russian and Uzbek subtitle texts live in the build script.
 
 Tests: `tests/tutorial.spec.js`; `tests/themes.spec.js` updated for the Shadow default. The test helper marks the tour as done (`keepTour` keeps it).
+
+## 4w. SKIP THE OATH, SHADOW FOR EVERYONE, ONE-TAP PANELS (November 2026)
+
+- **The Oath has SKIP FOR NOW.** It stores the day in `state.oathSkipped` (`""` by default) and the Oath is not asked again automatically; PROGRESS → PROFILE → ⚔ THE OATH → SWEAR THE OATH still opens it. Anything that waited behind the Oath is announced right after.
+- **Everyone enters in Shadow.** `migrateState()` sets every save to Shadow once (`themeV4`, not in `defaultState`); after that, a theme the hero picks in SETTINGS is kept. The calm look no longer flattens the background, so Shadow keeps its own purple glow behind the cards (only glows and motion are switched off).
+- **Long Profile panels open with one tap.** 📓 PAGES OF THE HERO and ⚔ THE OATH are collapsed to one row with a + button, like the SETTINGS panels. The collapse handler now works on any page (`.panel.collapsible`).
+
+Tests: `tests/smoke.spec.js` (skip, one-tap panels), `tests/themes.spec.js` (Shadow for everyone, calm Shadow background).

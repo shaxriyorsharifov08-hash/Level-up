@@ -90,6 +90,43 @@ test.describe("boot", () => {
     expect(await page.locator("#oathSeal").isDisabled()).toBe(false);
   });
 
+  test("the Oath can be skipped, and is not asked again", async ({ page }) => {
+    await bootAsGuest(page, { keepOath: true });
+    await page.evaluate(() => {
+      state.oath = null;
+      state.history[addDays(todayStr(), -1)] = { xp: 10, count: 1 };
+      save();
+      maybeOath(0);
+    });
+    await page.waitForSelector("#oathOv.show", { timeout: 5000 });
+    await page.click("#oathSkip");
+    await expect(page.locator("#oathOv")).not.toHaveClass(/show/);
+    expect(await page.evaluate(() => ({ skipped: !!state.oathSkipped, needed: oathNeeded(), sworn: oathSworn() })))
+      .toEqual({ skipped: true, needed: false, sworn: false });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => typeof window.state === "object" && window.state !== null);
+    await page.waitForTimeout(1700);
+    await expect(page.locator("#oathOv")).not.toHaveClass(/show/);
+    /* PROFILE → THE OATH still lets them swear it */
+    await page.evaluate(() => { document.getElementById("entranceOv").classList.remove("show"); switchPage("profile"); });
+    await page.click("#oathPanel > .panel-title");
+    await page.click("#oathPanelEdit");
+    await expect(page.locator("#oathOv")).toHaveClass(/show/);
+  });
+
+  test("long Profile panels open with one tap", async ({ page }) => {
+    await bootAsGuest(page);
+    await page.evaluate(() => switchPage("profile"));
+    for (const id of ["#journalPanel", "#oathPanel"]) {
+      await expect(page.locator(id)).toHaveClass(/closed/);
+      await expect(page.locator(id + " > :not(.panel-title)").first()).toBeHidden();
+      await page.click(id + " > .panel-title");
+      await expect(page.locator(id)).not.toHaveClass(/closed/);
+      await page.click(id + " > .panel-title");
+      await expect(page.locator(id)).toHaveClass(/closed/);
+    }
+  });
+
   test("every registered page can be opened", async ({ page }) => {
     await bootAsGuest(page);
     const result = await page.evaluate(() => {
