@@ -1293,6 +1293,38 @@ main section{animation:pagein .28s ease}
 .today-row{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;margin-bottom:14px;border-radius:14px;
   border:1px solid var(--line);background:rgba(11,15,34,.85);color:var(--text);font-size:.95rem;font-weight:600;text-align:left}
 .today-row .tr-go{margin-left:auto;color:var(--dim)}
+/* the Mentor (README 4x) */
+.today-row.m-today{font-size:.88rem;padding:11px 14px}
+.m-h{font-size:.74rem;font-weight:900;letter-spacing:.06em;color:var(--dim);margin:2px 0 8px}
+.m-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.m-list li{display:flex;gap:10px;align-items:flex-start;line-height:1.45}
+.m-ico{flex:0 0 1.6em;text-align:center;font-size:1.05rem}
+.m-sec{margin-top:12px;border-top:1.5px solid var(--line);padding-top:4px}
+.m-sec > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:40px;font-size:.78rem;font-weight:900;letter-spacing:.06em;color:var(--dim)}
+.m-sec > summary::-webkit-details-marker{display:none}
+.m-sec > summary::after{content:"+";margin-left:auto;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:.95rem}
+.m-sec[open] > summary::after{content:"−"}
+.m-count{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;border:1.5px solid var(--line);text-align:center;font-size:.72rem}
+.m-sec-body{padding:6px 0 4px}
+.m-week{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px}
+.m-tile{border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
+.m-tile b{display:block;font-size:1.2rem;font-weight:900;font-variant-numeric:tabular-nums}
+.m-tile b i{font-style:normal;font-size:.7rem;margin-left:3px;color:var(--dim)}
+.m-tile b i.m-up{color:#16a34a}
+.m-tile b i.m-down{color:var(--legendary)}
+.m-tile small{display:block;font-size:.7rem;color:var(--dim);font-weight:700}
+.m-habit{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.m-habit-t{flex:1;min-width:150px;display:flex;flex-direction:column}
+.m-habit-t small{color:var(--dim);font-size:.8rem}
+.m-mode{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--dim);font-weight:700}
+.mini-link{border:0;background:none;color:var(--purple);font-weight:900;text-decoration:underline;cursor:pointer;padding:6px 2px;min-height:32px;font-size:.78rem}
+.m-ans{border:1.5px solid var(--line);border-radius:12px;padding:12px}
+.m-ans.m-care{border-color:var(--legendary)}
+.m-you{font-size:.82rem;color:var(--dim);margin-bottom:6px;word-break:break-word}
+.m-src{font-size:.72rem;font-weight:900;letter-spacing:.04em;color:var(--dim);margin-bottom:6px}
+.m-text{white-space:pre-line;line-height:1.5}
+.m-note{margin-top:8px}
+.m-consent-p{margin:0 0 10px;line-height:1.5;font-size:.9rem}
 .today-tip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:14px;border:1px dashed var(--line);
   border-radius:12px;color:var(--dim);font-size:.9rem;font-weight:600}
 .today-tip span{flex:1}
@@ -1658,6 +1690,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 
       <button class="today-row" id="todayQuests"></button>
       <div id="firstSteps"></div>
+      <button class="today-row m-today" id="todayMentor" style="display:none"></button>
       <button class="today-next" id="todayNext" style="display:none"></button>
     </section>
 
@@ -1683,11 +1716,12 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
       <div class="panel" id="mentorPanel">
         <div class="panel-title">🧭 SYSTEM MENTOR</div>
         <div id="mentorInsights"></div>
-        <div class="adm-row" style="margin-top:10px">
-          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="120" placeholder="Ask the Mentor: how to improve focus, sleep, reading…">
+        <div class="adm-row" style="margin-top:14px">
+          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="400" aria-label="Ask the Mentor" placeholder="Ask: how to focus, sleep, study, stop scrolling…">
           <button class="btn primary" id="mentorAsk">ASK</button>
         </div>
-        <div id="mentorAnswer" style="margin-top:10px"></div>
+        <div id="mentorMode"></div>
+        <div id="mentorAnswer" style="margin-top:10px" aria-live="polite"></div>
       </div>
       <div class="panel" id="rankTrialPanel">
         <div class="panel-title">⚖ RANK EVALUATION</div>
@@ -2311,7 +2345,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
         <div class="empty-note" style="margin-bottom:6px">On this device: your whole save, kept in this browser's storage.</div>
         <div class="empty-note" style="margin-bottom:6px">If you sign in with Google: a copy of your save in our cloud database, so it syncs between your devices. The app administrator can open cloud saves to fix problems.</div>
         <div class="empty-note" style="margin-bottom:6px">If you join a clan: its members see your name, photo, level, rank and weekly progress, and the messages you send.</div>
-        <div class="empty-note" style="margin-bottom:12px">No ads, no tracking, and nothing is sent to any AI service.</div>
+        <div class="empty-note" style="margin-bottom:12px">No ads and no tracking. Nothing is sent to an AI service unless you turn on Mentor AI (Google sign-in needed). It shows exactly what it sends before you agree, and health questions never leave this device.</div>
         <div class="adm-row">
           <button class="btn gold" id="privacyExport">&#128190; EXPORT MY DATA</button>
           <button class="btn danger" id="privacyDelete">&#128465; DELETE MY DATA</button>
@@ -2596,6 +2630,17 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 </div>
 
 <!-- customize navigation -->
+<!-- Mentor AI: what is sent, asked once before anything leaves the device (README 4x) -->
+<div class="modal" id="aiConsentModal" role="dialog" aria-modal="true" aria-labelledby="aiConsentTitle">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-title" id="aiConsentTitle">MENTOR AI</div>
+    <div id="aiConsentBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="aiConsentNo">NO</button>
+      <button class="btn primary" id="aiConsentYes">YES</button>
+    </div>
+  </div>
+</div>
 <!-- the oath, read back -->
 <div class="modal" id="oathViewModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:520px">
@@ -3071,6 +3116,7 @@ function defaultState(){
     sound:true,          /* sound effects on/off */
     effects:false,       /* false = the calm look (default); true = glow, particles, animations */
     oathSkipped:"",      /* the day the hero pressed SKIP on the Oath; "" = never skipped */
+    aiConsent:"",        /* Mentor AI: "" = never asked, "yes" = agreed to what is sent, "no" = on-device only */
     lang:"en",           /* interface language: en | ru */
     autoLocks:null,      /* cached copy of the admin's global section locks (synced from Firebase, read-only on the client) */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
@@ -4005,6 +4051,7 @@ function setupAuthListener(){
     detachGuild();
     cloudUser = user;
     renderCloudStatus();
+    if(state) renderMentorMode();
     if(currentPage === "guild") renderGuild();
     if(!user){ if(adminMode) exitAdminMode(); return; }
     /* Every account is checked against admins/ before it's treated as anything.
@@ -5070,15 +5117,8 @@ var I18N_RU = {
   "Buy this now? ":"Купить это сейчас? ","well spent — you saved for this and earned it. Enjoy it, Hero.":"потрачено с умом — вы копили и заслужили это. Наслаждайтесь, Герой.",
   "🛍 PURCHASED":"🛍 КУПЛЕНО","ENJOY IT":"НАСЛАЖДАЙТЕСЬ",
   "🧭 SYSTEM MENTOR":"🧭 СИСТЕМНЫЙ НАСТАВНИК","ASK":"СПРОСИТЬ",
-  "Your weakest attribute is ":"Ваш самый слабый атрибут — ",
-  " Assign your next quest to it — balanced heroes last longer than lopsided ones.":" Назначьте ему следующий квест — сбалансированные герои держатся дольше однобоких.",
-  " of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.":" из последних 7 дней были пустыми. Пропасть между тем, кто вы есть, и тем, кем хотите стать, строится из таких дней. Закройте хотя бы один квест сегодня.",
-  "Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.":"Семь дней, ноль пропусков. Именно так куётся дисциплина — не разрывайте цепь.",
-  "Under 30 minutes of tracked focus this week. Deep work is a muscle — press ⏱ before a task and protect the time.":"Меньше 30 минут отслеженного фокуса за неделю. Глубокая работа — это мышца: нажмите ⏱ перед задачей и защитите время.",
-  "All your quests are EASY. Growth lives just past comfort — raise one quest to MEDIUM and feel the difference.":"Все ваши квесты ЛЁГКИЕ. Рост живёт сразу за зоной комфорта — поднимите один квест до СРЕДНЕГО и почувствуйте разницу.",
-  "You're on a steady path, Hero. Keep showing up — ask me anything about building a skill or habit below.":"Вы на верном пути, Герой. Продолжайте появляться — спросите меня о развитии навыка или привычки ниже.",
-  "Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.":"Спросите, как что-то улучшить — фокус, сон, язык, прыжки, накопления — и я дам вам настоящий план.",
-  "I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.":"Готового плана для этого пока нет — но метод всегда один: сделайте это ежедневным квестом, начните с абсурдно малого, не пропускайте дважды подряд и отслеживайте серию здесь. Превратите то, о чём спросили, в квест, и пусть Система несёт вас.",
+  "MENTOR AI UNLOCKED":"ИИ-НАСТАВНИК ОТКРЫТ",
+  "Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"ИИ-наставник теперь открыт (ПРОГРЕСС → ПРОФИЛЬ → СИСТЕМНЫЙ НАСТАВНИК).\n\nВойдя через Google, вы можете задавать ИИ-наставнику несколько вопросов в день. Он читает краткую сводку вашего прогресса, но никогда — ваше имя, Клятву или заметки, и спрашивает разрешения, прежде чем что-либо отправить. Без него наставник по-прежнему отвечает на устройстве.",
   /* feature-unlock guides */
   "BEGIN":"НАЧАТЬ",
   "STATS UNLOCKED":"СТАТИСТИКА ОТКРЫТА",
@@ -5170,7 +5210,7 @@ var I18N_RU = {
   "On this device: your whole save, kept in this browser's storage.":"На этом устройстве: всё ваше сохранение, в хранилище этого браузера.",
   "If you sign in with Google: a copy of your save in our cloud database, so it syncs between your devices. The app administrator can open cloud saves to fix problems.":"Если вы входите через Google: копия сохранения в нашей облачной базе данных, чтобы оно синхронизировалось между устройствами. Администратор приложения может открывать облачные сохранения, чтобы исправлять проблемы.",
   "If you join a clan: its members see your name, photo, level, rank and weekly progress, and the messages you send.":"Если вы вступаете в клан: его участники видят ваше имя, фото, уровень, ранг и прогресс за неделю, а также ваши сообщения.",
-  "No ads, no tracking, and nothing is sent to any AI service.":"Без рекламы и слежки; ничего не отправляется в сервисы ИИ.",
+  "No ads and no tracking. Nothing is sent to an AI service unless you turn on Mentor AI (Google sign-in needed). It shows exactly what it sends before you agree, and health questions never leave this device.":"Без рекламы и слежки. В сервисы ИИ ничего не отправляется, пока вы не включите ИИ-наставника (нужен вход через Google). Перед согласием он показывает, что именно отправит, а вопросы о здоровье никогда не покидают это устройство.",
   "💾 EXPORT MY DATA":"💾 ЭКСПОРТ МОИХ ДАННЫХ",
   "🗑 DELETE MY DATA":"🗑 УДАЛИТЬ МОИ ДАННЫЕ",
   "COMING SOON":"СКОРО",
@@ -5547,15 +5587,8 @@ var I18N_UZ = {
   "Buy this now? ":"Hozir sotib olasizmi? ",
   "well spent — you saved for this and earned it. Enjoy it, Hero.":"toʻgʻri sarflandi — siz buning uchun jamgʻardingiz va unga loyiqsiz. Rohatlaning, Qahramon.",
   "🛍 PURCHASED":"🛍 SOTIB OLINDI","ENJOY IT":"ROHATLANING","🧭 SYSTEM MENTOR":"🧭 TIZIM MURABBIYI","ASK":"SOʻRASH",
-  "Your weakest attribute is ":"Eng zaif atributingiz — ",
-  " Assign your next quest to it — balanced heroes last longer than lopsided ones.":" Keyingi kvestingizni unga bogʻlang — muvozanatli qahramonlar bir tomonlamalardan uzoqroq chidaydi.",
-  " of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.":" ta kun soʻnggi 7 kunda boʻsh oʻtdi. Hozirgi siz va boʻlmoqchi boʻlgan siz orasidagi masofa aynan shunday kunlardan iborat. Bugun hech boʻlmasa bitta kvestni bajaring.",
-  "Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.":"Yetti kun, birorta ham oʻtkazib yuborilmagan. Intizom aynan shunday shakllanadi — zanjirni uzmang.",
-  "Under 30 minutes of tracked focus this week. Deep work is a muscle — press ⏱ before a task and protect the time.":"Bu hafta 30 daqiqadan kam kuzatilgan fokus. Chuqur ish — mushak; vazifadan oldin ⏱ ni bosing va vaqtni himoya qiling.",
-  "All your quests are EASY. Growth lives just past comfort — raise one quest to MEDIUM and feel the difference.":"Barcha kvestlaringiz OSON. Oʻsish qulaylikdan sal narida — bitta kvestni OʻRTACHAga koʻtaring va farqni his qiling.",
-  "You're on a steady path, Hero. Keep showing up — ask me anything about building a skill or habit below.":"Siz barqaror yoʻldasiz, Qahramon. Kelishda davom eting — quyida istalgan koʻnikma yoki odat haqida soʻrang.",
-  "Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.":"Biror narsani qanday yaxshilashni soʻrang — fokus, uyqu, til, sakrash, pul jamgʻarish — men haqiqiy reja beraman.",
-  "I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.":"Bunga hali tayyor rejam yoʻq — lekin usul har doim bir xil: buni kunlik kvestga aylantiring, bema’ni darajada kichikdan boshlang, ikki marta ketma-ket oʻtkazib yubormang va seriyani shu yerda kuzating. Soʻragan narsangizni kvestga aylantiring va Tizim sizni olib borsin.",
+  "MENTOR AI UNLOCKED":"SI-MURABBIY OCHILDI",
+  "Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"SI-murabbiy endi ochiq (TARAQQIYOT → PROFIL → TIZIM MURABBIYI).\n\nGoogle orqali kirgan boʻlsangiz, SI-murabbiyga kuniga bir nechta savol bera olasiz. U taraqqiyotingizning qisqa xulosasini oʻqiydi, lekin hech qachon ismingiz, Qasamingiz yoki yozuvlaringizni emas, va biror narsa yuborishdan oldin ruxsat soʻraydi. Usiz ham murabbiy qurilmada javob beradi.",
   "BEGIN":"BOSHLASH","STATS UNLOCKED":"STATISTIKA OCHILDI",
   "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab.":"STATISTIKA boʻlimi endi ochiq.\n\nBu yerda Tizim intizomingizni grafikda koʻrsatadi: kuniga topilgan XP, bajarilgan kvestlar, eng kuchli hafta kuningiz, seriyalar tarixi va faol kunlaringiz xaritasi. Qonuniyatlarni kuzating — ular qachon haqiqatan harakat qilishingizni koʻrsatadi.\n\nUni istalgan payt TARAQQIYOT boʻlimidan oching.",
   "REWARDS UNLOCKED":"MUKOFOTLAR OCHILDI",
@@ -5625,7 +5658,7 @@ var I18N_UZ = {
   "On this device: your whole save, kept in this browser's storage.":"Shu qurilmada: butun saqlovingiz shu brauzer xotirasida.",
   "If you sign in with Google: a copy of your save in our cloud database, so it syncs between your devices. The app administrator can open cloud saves to fix problems.":"Google orqali kirsangiz: saqlovingiz nusxasi bulutli maʼlumotlar bazamizda, qurilmalaringiz orasida sinxronlanishi uchun. Ilova administratori muammolarni tuzatish uchun bulutdagi saqlovlarni ochishi mumkin.",
   "If you join a clan: its members see your name, photo, level, rank and weekly progress, and the messages you send.":"Klanga qoʻshilsangiz: uning aʼzolari ismingiz, rasmingiz, darajangiz, martabangiz va haftalik natijangizni, shuningdek yuborgan xabarlaringizni koʻradi.",
-  "No ads, no tracking, and nothing is sent to any AI service.":"Reklama yoʻq, kuzatuv yoʻq va hech narsa sunʼiy intellekt xizmatlariga yuborilmaydi.",
+  "No ads and no tracking. Nothing is sent to an AI service unless you turn on Mentor AI (Google sign-in needed). It shows exactly what it sends before you agree, and health questions never leave this device.":"Reklama va kuzatuv yoʻq. SI-murabbiyni yoqmaguningizcha (Google orqali kirish kerak) sunʼiy intellekt xizmatlariga hech narsa yuborilmaydi. U rozilik berishdan oldin nima yuborishini aniq koʻrsatadi, sogʻliq haqidagi savollar esa bu qurilmadan hech qachon chiqmaydi.",
   "💾 EXPORT MY DATA":"💾 MAʼLUMOTLARIMNI EKSPORT QILISH","🗑 DELETE MY DATA":"🗑 MAʼLUMOTLARIMNI OʻCHIRISH","COMING SOON":"TEZ ORADA",
   "37,500 so'm / month":"37 500 soʻm / oy","PREMIUM WILL ADD":"PREMIUM QOʻSHADI",
   "🧭 AI training plans, explained step by step":"🧭 Sunʼiy intellekt mashgʻulot rejalari, har qadami tushuntirilgan",
@@ -5880,6 +5913,7 @@ var FEATURES = [
   {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0},
   {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
   {key:"mentor",    type:"function", name:"System Mentor",          def:0},
+  {key:"mentorAI",  type:"function", name:"Mentor AI chat",         def:0},
   {key:"premium",   type:"function", name:"Premium preview",        def:0}
 ];
 var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget"];
@@ -5897,6 +5931,7 @@ var FEATURE_GUIDE = {
   dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."},
   store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
   mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
+  mentorAI:  {ico:"🤖", title:"MENTOR AI UNLOCKED", body:"Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device."},
   premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
 };
 function announceFeatureUnlocks(lv){
@@ -11883,19 +11918,20 @@ function updateTargetLabel(freq){
     (freq === "longterm" || freq === "challenge") ? "" : "none";
   document.getElementById("qmBlockWrap").style.display = freq === "longterm" ? "" : "none";
 }
-function openQuestModal(id){
+function openQuestModal(id, preset){
   qmEditId = id;
   var q = id ? questById(id) : null;
+  var pr = (!q && preset) || null; /* a Mentor suggestion: shown first, saved only by the hero */
   qmSel = {
-    emoji: q ? q.icon : "⚔️",
-    freq: q ? q.freq : "daily",
+    emoji: q ? q.icon : (pr && pr.icon) || "⚔️",
+    freq: q ? q.freq : (pr && pr.freq) || "daily",
     tier: q ? q.tier : "easy",
-    stat: q ? (q.stat || "STR") : "STR",
+    stat: q ? (q.stat || "STR") : (pr && pr.stat) || "STR",
     days: q ? q.days.slice() : []
   };
   document.getElementById("qmTitle").textContent = q ? "EDIT QUEST" + (q.system ? " (SYSTEM)" : "") : "NEW QUEST";
-  document.getElementById("qmName").value = q ? q.name : "";
-  document.getElementById("qmDesc").value = q ? q.desc : "";
+  document.getElementById("qmName").value = q ? q.name : (pr ? pr.name || "" : "");
+  document.getElementById("qmDesc").value = q ? q.desc : (pr ? pr.desc || "" : "");
   buildEmojiGrid("qmEmoji", qmSel.emoji, function(e){ qmSel.emoji = e; });
   buildSeg("qmFreq", FREQS, [FREQ_LABEL.daily,FREQ_LABEL.weekly,FREQ_LABEL.longterm,FREQ_LABEL.custom,FREQ_LABEL.challenge], qmSel.freq, function(v){
     qmSel.freq = v;
@@ -11909,7 +11945,7 @@ function openQuestModal(id){
   buildSeg("qmStat", STATS, STATS, qmSel.stat, function(v){ qmSel.stat = v; });
   fillLinkOptions(q ? q.link : "");
   fillArmOptions(q ? q.armed : null);
-  document.getElementById("qmTarget").value = q ? (q.target || 1) : 7;
+  document.getElementById("qmTarget").value = q ? (q.target || 1) : (pr && pr.target) || 7;
   document.getElementById("qmStart").value = q ? (q.startDate || "") : "";
   document.getElementById("qmEnd").value = q ? (q.endDate || "") : "";
   document.getElementById("qmRepeat").value = q ? (q.repeatDays || 0) : 0;
@@ -12329,64 +12365,659 @@ function renderFirstSteps(){
   };
 }
 
-/* ---------------- System Mentor (data-driven coach + knowledge base) ---------------- */
-function mentorInsights(){
-  var out = [], t = todayStr();
-  /* weakest attribute */
-  var sk = ["INT","STR","CON","END"], weak = sk[0];
-  for(var i=1;i<sk.length;i++) if(state.stats[sk[i]] < state.stats[weak]) weak = sk[i];
-  var strong = sk[0];
-  for(var j=1;j<sk.length;j++) if(state.stats[sk[j]] > state.stats[strong]) strong = sk[j];
-  if(state.stats[weak] < state.stats[strong]){
-    out.push({ico:"⚖️", text:tr("Your weakest attribute is ") + STAT_NAME[weak] + " (" + state.stats[weak] + "). " + tr("Assign your next quest to it — balanced heroes last longer than lopsided ones.")});
+/* ================= THE SYSTEM MENTOR (README 4x) =================
+   Two brains, one panel.
+   ON-DEVICE (always there): reads the hero's own record (the last two weeks,
+   each recurring quest's real rate on the days it was due, weekday patterns,
+   streaks at risk) and answers questions from a built-in library in English,
+   Russian and Uzbek. Works offline and sends nothing anywhere.
+   MENTOR AI (optional): a signed-in hero who agrees can ask an open model
+   through our own Cloudflare Worker (ai-proxy/worker.mjs). The Worker checks
+   the Google sign-in and allows a few questions a day. The app computes every
+   number; the model receives only a short summary and puts advice into words.
+   Health safety: crisis words, eating-distress words and diet questions are
+   answered here with a fixed, careful message and are never sent. */
+var AI_PROXY_URL = "";      /* the Worker's address (https://...workers.dev) once deployed, README 4x. Not a secret. Empty = Mentor AI stays hidden */
+var AI_DAILY = 3;           /* shown until the Worker reports the real number */
+var AI_TIMEOUT_MS = 25000;
+var mentorChat = [];        /* this session's AI conversation; never saved */
+var mentorLast = null;      /* the answer on screen, redrawn after a language switch */
+var mentorOpen = {};        /* which folded sections the hero opened */
+var aiQuota = {day:"", left:null, limit:0};
+var aiBusy = false, aiPendingQ = "";
+
+/* every sentence the Mentor writes, in the three languages ({x} = a value) */
+var MENTOR_TXT = {
+  planTitle:{en:"TODAY'S PLAN", ru:"ПЛАН НА СЕГОДНЯ", uz:"BUGUNGI REJA"},
+  weekTitle:{en:"📊 THIS WEEK", ru:"📊 ЭТА НЕДЕЛЯ", uz:"📊 SHU HAFTA"},
+  insTitle:{en:"🔎 WHAT I SEE", ru:"🔎 ЧТО Я ВИЖУ", uz:"🔎 MEN NIMANI KOʻRYAPMAN"},
+  tryTitle:{en:"🌱 TRY A NEW HABIT", ru:"🌱 НОВАЯ ПРИВЫЧКА", uz:"🌱 YANGI ODAT"},
+  wQuests:{en:"quests", ru:"квестов", uz:"kvest"},
+  wDays:{en:"active days", ru:"активных дней", uz:"faol kun"},
+  wXp:{en:"XP", ru:"XP", uz:"XP"},
+  wFocus:{en:"focus min", ru:"мин фокуса", uz:"daqiqa fokus"},
+  wPrev:{en:"week before: {n}", ru:"неделей ранее: {n}", uz:"oldingi hafta: {n}"},
+  wNew:{en:"Your first full week is still being written. The comparison appears after 14 days.", ru:"Ваша первая полная неделя ещё пишется. Сравнение появится через 14 дней.", uz:"Birinchi toʻliq haftangiz hali yozilmoqda. Taqqoslash 14 kundan keyin chiqadi."},
+
+  pRisk:{en:"Protect your {n}-day streak on “{q}”. The smallest version counts.", ru:"Сохраните серию {n} дн. в «{q}». Засчитывается и самая маленькая версия.", uz:"«{q}» dagi {n} kunlik seriyani saqlang. Eng kichik varianti ham hisoblanadi."},
+  pPkg:{en:"Finish the daily package ({d} of {t} done).", ru:"Завершите ежедневный пакет (выполнено {d} из {t}).", uz:"Kunlik paketni yakunlang ({t} tadan {d} tasi bajarildi)."},
+  pWeak:{en:"Do “{q}” today, even a small version. It is your shakiest quest ({d} of {s} days).", ru:"Сделайте сегодня «{q}», хотя бы немного. Это ваш самый неустойчивый квест ({d} из {s} дн.).", uz:"Bugun «{q}» ni bajaring, ozgina boʻlsa ham. Bu eng beqaror kvestingiz ({s} kundan {d})."},
+  pNext:{en:"Clear “{q}”.", ru:"Выполните «{q}».", uz:"«{q}» ni bajaring."},
+  pFocus:{en:"One 25-minute focus block: press ⏱ on a quest before you start.", ru:"Один блок фокуса на 25 минут: нажмите ⏱ на квесте перед началом.", uz:"25 daqiqalik bitta fokus bloki: boshlashdan oldin kvestdagi ⏱ ni bosing."},
+  pFinal:{en:"Before bed: 🌙 Finalize the Day.", ru:"Перед сном: 🌙 Завершить день.", uz:"Uxlashdan oldin: 🌙 Kunni yakunlash."},
+  pFirst:{en:"Make your first goal: tap ＋. Small and specific wins.", ru:"Создайте первую цель: нажмите ＋. Побеждает маленькое и конкретное.", uz:"Birinchi maqsadingizni yarating: ＋ ni bosing. Kichik va aniq narsa gʻolib boʻladi."},
+  pDone:{en:"Everything due today is done. Rest well. Tomorrow, same time.", ru:"Всё на сегодня выполнено. Хорошо отдохните. Завтра в то же время.", uz:"Bugungi hamma ish bajarildi. Yaxshi dam oling. Ertaga shu vaqtda."},
+
+  iRisk:{en:"“{q}” has a {n}-day streak and is not done yet today. It ends at midnight.", ru:"У «{q}» серия {n} дн., а сегодня он ещё не выполнен. Серия закончится в полночь.", uz:"«{q}» ning {n} kunlik seriyasi bor, bugun hali bajarilmagan. Seriya yarim tunda tugaydi."},
+  iWeakQ:{en:"“{q}” was done on {d} of the {s} days it was due. Make it easier for a week (a smaller target, a fixed time) instead of skipping it.", ru:"«{q}» выполнен в {d} из {s} нужных дней. Упростите его на неделю (меньше цель, постоянное время), вместо того чтобы пропускать.", uz:"«{q}» kerakli {s} kundan {d} kunida bajarilgan. Uni tashlab ketish oʻrniga bir haftaga osonlashtiring (kichikroq maqsad, doimiy vaqt)."},
+  iStrongQ:{en:"“{q}”: {d} of {s} days. It is becoming a habit. Ready for a harder tier?", ru:"«{q}»: {d} из {s} дн. Это становится привычкой. Готовы к уровню сложнее?", uz:"«{q}»: {s} kundan {d}. Bu odatga aylanmoqda. Qiyinroq darajaga tayyormisiz?"},
+  iUp:{en:"{a} quests in the last 7 days, up from {b}. Whatever you changed, keep it.", ru:"{a} квестов за 7 дней, а неделей ранее {b}. Что бы вы ни изменили, сохраните это.", uz:"Soʻnggi 7 kunda {a} ta kvest, oldin {b} ta edi. Nimani oʻzgartirgan boʻlsangiz, saqlab qoling."},
+  iDown:{en:"{a} quests in the last 7 days, down from {b}. Pick one quest to protect this week.", ru:"{a} квестов за 7 дней, а неделей ранее {b}. Выберите один квест, который будете беречь на этой неделе.", uz:"Soʻnggi 7 kunda {a} ta kvest, oldin {b} ta edi. Bu hafta asraydigan bitta kvestni tanlang."},
+  iDay:{en:"Your strongest day is {best}, your weakest is {worst}. Plan that day the evening before, or give it one tiny quest.", ru:"Ваш самый сильный день — {best}, самый слабый — {worst}. Планируйте этот день накануне вечером или оставьте на него один крошечный квест.", uz:"Eng kuchli kuningiz — {best}, eng zaifi — {worst}. Shu kunni bir kun oldin kechqurun rejalashtiring yoki unga bitta kichik kvest qoldiring."},
+  iEmpty:{en:"{n} of the last 7 days were empty. Clear even one quest today: a small day keeps the chain alive.", ru:"{n} из последних 7 дней были пустыми. Выполните сегодня хотя бы один квест: маленький день сохраняет цепочку.", uz:"Soʻnggi 7 kundan {n} tasi boʻsh oʻtdi. Bugun hech boʻlmasa bitta kvestni bajaring: kichik kun zanjirni saqlaydi."},
+  iOath:{en:"You told me to say this: “{w}”", ru:"Вы просили меня сказать вам это: «{w}»", uz:"Siz menga buni aytishni soʻragandingiz: «{w}»"},
+  iSeven:{en:"Seven days, zero misses. Keep the chain unbroken.", ru:"Семь дней без пропусков. Не разрывайте цепочку.", uz:"Yetti kun, birorta ham qoldirilmagan. Zanjirni uzmang."},
+  iFocus:{en:"Under 30 minutes of tracked focus this week. Press ⏱ before a task and protect that time.", ru:"Меньше 30 минут фокуса за неделю. Нажимайте ⏱ перед задачей и берегите это время.", uz:"Bu hafta 30 daqiqadan kam fokus. Vazifadan oldin ⏱ ni bosing va bu vaqtni asrang."},
+  iEasy:{en:"All your quests are EASY. Raise one to MEDIUM: growth lives just past comfort.", ru:"Все ваши квесты ЛЁГКИЕ. Поднимите один до СРЕДНЕГО: рост начинается сразу за зоной комфорта.", uz:"Barcha kvestlaringiz OSON. Bittasini OʻRTA ga koʻtaring: oʻsish qulaylik chegarasidan keyin boshlanadi."},
+  iMany:{en:"You carry {n} recurring quests but finish about {p}% of them. Fewer quests done daily beat many done sometimes.", ru:"У вас {n} повторяющихся квестов, но выполняется около {p}%. Меньше квестов каждый день лучше, чем много иногда.", uz:"Sizda {n} ta takroriy kvest bor, lekin taxminan {p}% bajariladi. Har kuni bajariladigan oz kvest baʼzan bajariladigan koʻp kvestdan yaxshiroq."},
+  iStat:{en:"Your weakest attribute is {s} ({v}). Give your next quest to it: balanced heroes last longer.", ru:"Ваш самый слабый атрибут — {s} ({v}). Назначьте ему следующий квест: сбалансированные герои держатся дольше.", uz:"Eng zaif atributingiz — {s} ({v}). Keyingi kvestni unga bering: muvozanatli qahramonlar uzoqroq chidaydi."},
+  iSteady:{en:"You're on a steady path. Keep showing up, and ask me anything below.", ru:"Вы на верном пути. Продолжайте приходить и спрашивайте меня о чём угодно ниже.", uz:"Siz barqaror yoʻldasiz. Kelishda davom eting va pastda mendan istalgan narsani soʻrang."},
+  iNew:{en:"I learn from your record. Complete quests for a few days and I will show you your patterns here.", ru:"Я учусь на вашей истории. Выполняйте квесты несколько дней, и я покажу здесь ваши закономерности.", uz:"Men tarixingizdan oʻrganaman. Bir necha kun kvestlarni bajaring, men bu yerda qonuniyatlaringizni koʻrsataman."},
+
+  askPh:{en:"Ask: how to focus, sleep, study, stop scrolling…", ru:"Спросите: как сосредоточиться, спать, учиться, меньше листать ленту…", uz:"Soʻrang: qanday diqqat qilish, uxlash, oʻqish, lentani kamroq aylantirish…"},
+  askBtn:{en:"ASK", ru:"СПРОСИТЬ", uz:"SOʻRASH"},
+  askLbl:{en:"Ask the Mentor", ru:"Спросить наставника", uz:"Murabbiydan soʻrash"},
+  askEmpty:{en:"Ask me how to improve something (focus, sleep, study, a morning routine, your phone time) and I'll give you a real plan. Or ask “how am I doing?” or “what should I do today?”.", ru:"Спросите, как что-то улучшить (фокус, сон, учёбу, утро, время в телефоне), и я дам настоящий план. Или спросите «как у меня дела?» или «что делать сегодня?».", uz:"Biror narsani qanday yaxshilashni soʻrang (diqqat, uyqu, oʻqish, tong, telefon vaqti), men haqiqiy reja beraman. Yoki «ishlarim qanday?» yoki «bugun nima qilay?» deb soʻrang."},
+  askNone:{en:"I have no prepared plan for that yet. The method is always the same: make it a daily quest, start absurdly small, never miss twice, and watch the streak here.", ru:"Готового плана на это у меня пока нет. Метод всегда один: сделайте это ежедневным квестом, начните до смешного мало, не пропускайте дважды и следите за серией здесь.", uz:"Bunga hozircha tayyor rejam yoʻq. Usul doim bir xil: buni kunlik kvestga aylantiring, juda kichikdan boshlang, ikki marta qoldirmang va seriyani shu yerda kuzating."},
+  addQuest:{en:"＋ MAKE IT A QUEST", ru:"＋ СДЕЛАТЬ КВЕСТОМ", uz:"＋ KVESTGA AYLANTIRISH"},
+  goalNote:{en:"No recurring quest slot yet, so it starts as a 7-step goal. Save it to begin.", ru:"Свободного слота для повторяющегося квеста пока нет, поэтому это цель из 7 шагов. Сохраните, чтобы начать.", uz:"Takroriy kvest uchun boʻsh oʻrin hali yoʻq, shuning uchun bu 7 qadamli maqsad boʻladi. Boshlash uchun saqlang."},
+  you:{en:"You:", ru:"Вы:", uz:"Siz:"},
+  srcLocal:{en:"📱 On-device Mentor", ru:"📱 Наставник на устройстве", uz:"📱 Qurilmadagi murabbiy"},
+  srcAI:{en:"🤖 Mentor AI", ru:"🤖 ИИ-наставник", uz:"🤖 SI-murabbiy"},
+  aiDisclaimer:{en:"AI can be wrong. Not medical advice.", ru:"ИИ может ошибаться. Это не медицинский совет.", uz:"SI xato qilishi mumkin. Bu tibbiy maslahat emas."},
+  thinking:{en:"Thinking…", ru:"Думаю…", uz:"Oʻylayapman…"},
+
+  modeLocal:{en:"📱 On-device answers. Nothing leaves this device.", ru:"📱 Ответы на устройстве. Ничего не покидает это устройство.", uz:"📱 Javoblar qurilmada. Hech narsa bu qurilmadan chiqmaydi."},
+  modeAI:{en:"🤖 Mentor AI on: {n} of {l} questions left today.", ru:"🤖 ИИ-наставник включён: осталось {n} из {l} вопросов на сегодня.", uz:"🤖 SI-murabbiy yoqilgan: bugun {l} ta savoldan {n} tasi qoldi."},
+  modeAINew:{en:"🤖 Mentor AI on: {l} questions a day.", ru:"🤖 ИИ-наставник включён: {l} вопроса в день.", uz:"🤖 SI-murabbiy yoqilgan: kuniga {l} ta savol."},
+  modeSign:{en:"🤖 Mentor AI needs Google sign-in. Until then the on-device Mentor answers.", ru:"🤖 Для ИИ-наставника нужен вход через Google. До тех пор отвечает наставник на устройстве.", uz:"🤖 SI-murabbiy uchun Google orqali kirish kerak. Ungacha qurilmadagi murabbiy javob beradi."},
+  aiOn:{en:"TURN ON MENTOR AI", ru:"ВКЛЮЧИТЬ ИИ", uz:"SI NI YOQISH"},
+  aiOff:{en:"TURN OFF", ru:"ВЫКЛЮЧИТЬ", uz:"OʻCHIRISH"},
+  signIn:{en:"SIGN IN WITH GOOGLE", ru:"ВОЙТИ ЧЕРЕЗ GOOGLE", uz:"GOOGLE ORQALI KIRISH"},
+  aiOffline:{en:"You are offline, so the on-device Mentor answered.", ru:"Вы не в сети, поэтому ответил наставник на устройстве.", uz:"Siz oflaynsiz, shuning uchun qurilmadagi murabbiy javob berdi."},
+  aiLast:{en:"That was today's last AI question. The on-device Mentor answers until {t}. Premium will raise the limit.", ru:"Это был последний вопрос ИИ на сегодня. До {t} отвечает наставник на устройстве. Premium повысит лимит.", uz:"Bu bugungi oxirgi SI savoli edi. {t} gacha qurilmadagi murabbiy javob beradi. Premium chegarani oshiradi."},
+  aiLimit:{en:"Today's AI questions are used up, so the on-device Mentor answered. More at {t}.", ru:"Вопросы ИИ на сегодня закончились, поэтому ответил наставник на устройстве. Новые в {t}.", uz:"Bugungi SI savollari tugadi, shuning uchun qurilmadagi murabbiy javob berdi. Yangilari {t} da."},
+  aiBusy:{en:"Mentor AI is busy or today's free allowance is used up, so the on-device Mentor answered.", ru:"ИИ-наставник занят или бесплатный лимит на сегодня исчерпан, поэтому ответил наставник на устройстве.", uz:"SI-murabbiy band yoki bugungi bepul limit tugagan, shuning uchun qurilmadagi murabbiy javob berdi."},
+  aiAuth:{en:"Your sign-in could not be checked. Sign out and in again; the on-device Mentor answered for now.", ru:"Не удалось проверить вход. Выйдите и войдите снова; пока ответил наставник на устройстве.", uz:"Kirishingizni tekshirib boʻlmadi. Chiqib, qayta kiring; hozircha qurilmadagi murabbiy javob berdi."},
+  aiError:{en:"Mentor AI could not be reached, so the on-device Mentor answered.", ru:"Не удалось связаться с ИИ-наставником, поэтому ответил наставник на устройстве.", uz:"SI-murabbiyga ulanib boʻlmadi, shuning uchun qurilmadagi murabbiy javob berdi."},
+  aiLocalOnly:{en:"Health and safety questions are answered here on the device and are never sent.", ru:"Вопросы о здоровье и безопасности решаются здесь, на устройстве, и никуда не отправляются.", uz:"Sogʻliq va xavfsizlik savollariga shu yerda, qurilmada javob beriladi va ular hech qayerga yuborilmaydi."},
+
+  cTitle:{en:"🤖 MENTOR AI: BEFORE YOU START", ru:"🤖 ИИ-НАСТАВНИК: ПРЕЖДЕ ЧЕМ НАЧАТЬ", uz:"🤖 SI-MURABBIY: BOSHLASHDAN OLDIN"},
+  c1:{en:"Your question goes to our small server on Cloudflare. It asks an open AI model (Gemma, run by Cloudflare Workers AI) and sends the answer back. Cloudflare says it does not use these messages to train models.", ru:"Ваш вопрос уходит на наш небольшой сервер в Cloudflare. Он спрашивает открытую ИИ-модель (Gemma, работает в Cloudflare Workers AI) и возвращает ответ. Cloudflare заявляет, что не обучает модели на этих сообщениях.", uz:"Savolingiz Cloudflare dagi kichik serverimizga boradi. U ochiq SI modelidan (Gemma, Cloudflare Workers AI da ishlaydi) soʻraydi va javobni qaytaradi. Cloudflare bu xabarlarda modellarni oʻqitmasligini aytadi."},
+  c2:{en:"Sent with it: your level, rank and attribute numbers; this week's and last week's counts; your recurring quests' names and how often you did them; up to three open goals; your language; and the last few messages of this chat.", ru:"Вместе с ним отправляется: ваш уровень, ранг и значения атрибутов; итоги этой и прошлой недели; названия ваших повторяющихся квестов и как часто вы их выполняли; до трёх открытых целей; ваш язык; последние сообщения этого чата.", uz:"U bilan birga yuboriladi: darajangiz, martabangiz va atribut qiymatlari; shu va oʻtgan hafta natijalari; takroriy kvestlaringiz nomlari va ularni qanchalik tez-tez bajarganingiz; uchtagacha ochiq maqsad; tilingiz; shu suhbatning oxirgi xabarlari."},
+  c3:{en:"Never sent: your name, the Oath, your Finalize the Day answers, budget, photos, or anything else in your save. Questions about health, food or safety are answered on this device and are never sent.", ru:"Никогда не отправляется: ваше имя, Клятва, ответы «Завершить день», бюджет, фото и всё остальное в вашем сохранении. Вопросы о здоровье, еде и безопасности решаются на устройстве и не отправляются.", uz:"Hech qachon yuborilmaydi: ismingiz, Qasam, «Kunni yakunlash» javoblari, byudjet, rasmlar va saqlanmangizdagi boshqa hamma narsa. Sogʻliq, ovqat va xavfsizlik haqidagi savollarga qurilmada javob beriladi va ular yuborilmaydi."},
+  c4:{en:"Your Google sign-in proves it is you. The server reads only your account ID from it, to count {l} questions a day. It does not keep your messages; the counter deletes itself after two days.", ru:"Вход через Google подтверждает, что это вы. Сервер берёт из него только ID аккаунта, чтобы считать {l} вопроса в день. Он не хранит ваши сообщения; счётчик удаляется сам через два дня.", uz:"Google orqali kirish bu siz ekaningizni tasdiqlaydi. Server undan faqat hisob ID sini oladi, kuniga {l} ta savolni sanash uchun. U xabarlaringizni saqlamaydi; hisoblagich ikki kundan keyin oʻzi oʻchadi."},
+  c5:{en:"AI can be wrong. It is not a doctor, and this is not medical advice. If you are under 18, ask a parent or guardian before turning it on.", ru:"ИИ может ошибаться. Он не врач, и это не медицинский совет. Если вам меньше 18 лет, спросите родителя или опекуна, прежде чем включать.", uz:"SI xato qilishi mumkin. U shifokor emas va bu tibbiy maslahat emas. Agar 18 yoshga toʻlmagan boʻlsangiz, yoqishdan oldin ota-onangiz yoki vasiyingizdan soʻrang."},
+  c6:{en:"Without AI, the Mentor still answers on this device. You can turn AI off any time in this panel.", ru:"Без ИИ наставник всё равно отвечает на устройстве. Выключить ИИ можно в любой момент в этой панели.", uz:"SI siz ham murabbiy qurilmada javob beradi. SI ni istalgan vaqtda shu panelda oʻchirish mumkin."},
+  cNo:{en:"NO, ON-DEVICE ONLY", ru:"НЕТ, ТОЛЬКО НА УСТРОЙСТВЕ", uz:"YOʻQ, FAQAT QURILMADA"},
+  cYes:{en:"YES, USE MENTOR AI", ru:"ДА, ВКЛЮЧИТЬ ИИ", uz:"HA, SI NI YOQISH"},
+  cOnToast:{en:"Mentor AI is on. Ask your question again.", ru:"ИИ-наставник включён. Задайте вопрос ещё раз.", uz:"SI-murabbiy yoqildi. Savolingizni qayta bering."},
+  cOffToast:{en:"Mentor AI is off. Answers stay on this device.", ru:"ИИ-наставник выключен. Ответы остаются на устройстве.", uz:"SI-murabbiy oʻchirildi. Javoblar qurilmada qoladi."},
+
+  crisis:{en:"I'm really glad you told me. You deserve support right now, and this is bigger than a habit app. If you might be in danger, call your local emergency number now. Please talk today to someone you trust: a parent, a teacher, a doctor. You can find a free helpline for your country at findahelpline.com.", ru:"Я очень рад, что вы сказали мне. Вы заслуживаете поддержки прямо сейчас, и это больше, чем приложение для привычек. Если вам может угрожать опасность, позвоните сейчас по местному номеру экстренной помощи. Пожалуйста, поговорите сегодня с тем, кому доверяете: с родителем, учителем, врачом. Бесплатную линию помощи для вашей страны можно найти на findahelpline.com.", uz:"Menga aytganingizdan juda xursandman. Siz hozir yordamga loyiqsiz va bu odatlar ilovasidan kattaroq masala. Agar sizga xavf tugʻilishi mumkin boʻlsa, hozir mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. Iltimos, bugun ishongan odamingiz bilan gaplashing: ota-onangiz, oʻqituvchingiz yoki shifokor. Mamlakatingiz uchun bepul yordam liniyasini findahelpline.com saytidan topishingiz mumkin."},
+  eating:{en:"It sounds like eating might be hard right now. That matters, and you don't have to handle it alone. Please talk to a doctor or someone you trust soon. If you ever feel in danger, call your local emergency number. findahelpline.com lists free helplines for your country.", ru:"Похоже, с едой сейчас может быть непросто. Это важно, и справляться с этим в одиночку не нужно. Пожалуйста, скоро поговорите с врачом или с тем, кому доверяете. Если почувствуете опасность, звоните по местному номеру экстренной помощи. На findahelpline.com есть бесплатные линии помощи для вашей страны.", uz:"Hozir ovqatlanish qiyin boʻlayotganga oʻxshaydi. Bu muhim va siz u bilan yolgʻiz kurashishingiz shart emas. Iltimos, tez orada shifokor yoki ishongan odamingiz bilan gaplashing. Agar xavf his qilsangiz, mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. findahelpline.com saytida mamlakatingiz uchun bepul yordam liniyalari bor."},
+  diet:{en:"Food and body weight are health questions, so I don't give numbers or diets. A doctor or a registered dietitian can. What I can help with is the habit side: regular meal times, water within reach, vegetables on the plate, and enough sleep. Not medical advice.", ru:"Еда и вес тела — вопросы здоровья, поэтому я не даю цифр и диет. Это может врач или дипломированный диетолог. Я могу помочь с привычками: регулярное время еды, вода под рукой, овощи на тарелке и достаточно сна. Это не медицинский совет.", uz:"Ovqat va tana vazni — sogʻliq masalasi, shuning uchun men raqamlar va parhez bermayman. Buni shifokor yoki diplomli dietolog qila oladi. Men odat tomonida yordam bera olaman: muntazam ovqat vaqti, qoʻl ostida suv, likopchada sabzavot va yetarli uyqu. Bu tibbiy maslahat emas."},
+
+  rvHead:{en:"Last 7 days: {a} quests on {d} of 7 days, {x} XP, {f} focus minutes.", ru:"За 7 дней: {a} квестов в {d} из 7 дней, {x} XP, {f} мин фокуса.", uz:"Soʻnggi 7 kun: 7 kundan {d} kunida {a} ta kvest, {x} XP, {f} daqiqa fokus."},
+  rvPrev:{en:"The week before: {a} quests on {d} days.", ru:"Неделей ранее: {a} квестов за {d} дн.", uz:"Oldingi hafta: {d} kunda {a} ta kvest."},
+  ownQ:{en:"You already have “{q}”: done on {d} of the last {s} due days. Strengthen it before adding more.", ru:"У вас уже есть «{q}»: выполнен в {d} из {s} нужных дней. Сначала укрепите его, потом добавляйте новое.", uz:"Sizda allaqachon «{q}» bor: kerakli {s} kundan {d} kunida bajarilgan. Yangisini qoʻshishdan oldin uni mustahkamlang."},
+  planHead:{en:"Your plan for today:", ru:"Ваш план на сегодня:", uz:"Bugungi rejangiz:"},
+  todayRow:{en:"Mentor: {t}", ru:"Наставник: {t}", uz:"Murabbiy: {t}"}
+};
+var MENTOR_WD = {
+  en:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+  ru:["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"],
+  uz:["yakshanba","dushanba","seshanba","chorshanba","payshanba","juma","shanba"]
+};
+/* habits the Mentor may suggest for the weakest attribute; every one is small,
+   safe for any age, and becomes a real quest only when the hero saves it */
+var MENTOR_HABITS = [
+  {stat:"INT", icon:"📖", n:{en:"Read 10 pages", ru:"Прочитать 10 страниц", uz:"10 bet kitob oʻqish"}, d:{en:"Any book. Ten pages, then you may stop.", ru:"Любая книга. Десять страниц, потом можно остановиться.", uz:"Istalgan kitob. Oʻn bet, keyin toʻxtasangiz boʻladi."}},
+  {stat:"INT", icon:"🧠", n:{en:"Learn 5 new words", ru:"Выучить 5 новых слов", uz:"5 ta yangi soʻz oʻrganish"}, d:{en:"Write them down and use each one once today.", ru:"Запишите их и используйте каждое сегодня хотя бы раз.", uz:"Ularni yozib oling va bugun har birini bir marta ishlating."}},
+  {stat:"STR", icon:"💪", n:{en:"20 push-ups (knees are fine)", ru:"20 отжиманий (можно с колен)", uz:"20 marta yerdan itarilish (tizzadan ham boʻladi)"}, d:{en:"Split them into sets if you need to.", ru:"Если нужно, разбейте на подходы.", uz:"Kerak boʻlsa, setlarga boʻling."}},
+  {stat:"STR", icon:"🏃", n:{en:"20-minute walk", ru:"Прогулка 20 минут", uz:"20 daqiqa piyoda yurish"}, d:{en:"Outside if you can. No phone needed.", ru:"Лучше на улице. Телефон не нужен.", uz:"Iloji boʻlsa, tashqarida. Telefon shart emas."}},
+  {stat:"CON", icon:"🎯", n:{en:"Do one thing that scares you a little", ru:"Сделать одно немного страшное дело", uz:"Biroz qoʻrqitadigan bitta ishni qilish"}, d:{en:"Ask a question in class, call instead of texting, say hello first.", ru:"Задать вопрос на уроке, позвонить вместо сообщения, поздороваться первым.", uz:"Darsda savol bering, xabar oʻrniga qoʻngʻiroq qiling, birinchi boʻlib salom bering."}},
+  {stat:"CON", icon:"😊", n:{en:"Start one conversation", ru:"Начать один разговор", uz:"Bitta suhbatni boshlash"}, d:{en:"A classmate, a neighbour, a shop assistant. Two minutes is enough.", ru:"Одноклассник, сосед, продавец. Двух минут достаточно.", uz:"Sinfdosh, qoʻshni, sotuvchi. Ikki daqiqa yetarli."}},
+  {stat:"END", icon:"🧘", n:{en:"10 minutes of stretching", ru:"10 минут растяжки", uz:"10 daqiqa choʻzilish mashqi"}, d:{en:"Gently. Stop if anything hurts.", ru:"Мягко. Остановитесь, если что-то болит.", uz:"Ehtiyotkorlik bilan. Biror joy ogʻrisa, toʻxtang."}},
+  {stat:"END", icon:"📵", n:{en:"No phone for the first 30 minutes", ru:"Без телефона первые 30 минут", uz:"Dastlabki 30 daqiqa telefonsiz"}, d:{en:"After waking up. Water, light, move first.", ru:"После подъёма. Сначала вода, свет, движение.", uz:"Uygʻongandan keyin. Avval suv, yorugʻlik, harakat."}}
+];
+/* the built-in library. k = what the question may contain (matched at the
+   start of a word, so "read" finds "reading"; a trailing $ means the whole word).
+   a = the answer, q = the quest it suggests. Specific topics come first; on a
+   tie the earlier entry wins. */
+var MENTOR_KB = [
+  {k:["jump","vertical","dunk","прыг","прыж","sakra"],
+   a:{en:"To jump higher: (1) build your legs with squats and calf raises 3 times a week, (2) train explosive power with box jumps and broad jumps, (3) strengthen your core, (4) stretch your hip flexors daily. Progress is slow but real. Rest when something hurts.",
+      ru:"Чтобы прыгать выше: (1) укрепляйте ноги приседаниями и подъёмами на носки 3 раза в неделю, (2) тренируйте взрывную силу прыжками на тумбу и в длину, (3) укрепляйте мышцы кора, (4) каждый день растягивайте сгибатели бедра. Прогресс медленный, но настоящий. Если что-то болит, отдыхайте.",
+      uz:"Balandroq sakrash uchun: (1) haftasiga 3 marta oʻtirib-turish va oyoq uchida koʻtarilish bilan oyoqlarni kuchaytiring, (2) qutiga va uzunlikka sakrash bilan portlovchi kuchni mashq qiling, (3) qorin va bel mushaklarini mustahkamlang, (4) har kuni son mushaklarini choʻzing. Taraqqiyot sekin, lekin haqiqiy. Biror joyingiz ogʻrisa, dam oling."},
+   q:{stat:"STR", icon:"🏋️", n:{en:"Explosive legs: 3 sets of jumps", ru:"Взрывные ноги: 3 подхода прыжков", uz:"Portlovchi oyoqlar: 3 set sakrash"}}},
+  {k:["listen","hearing","comprehen","слуша","на слух","аудир","tingla","eshit"],
+   a:{en:"To improve listening: (1) 20 minutes a day of audio that is a little above your level, (2) shadowing: repeat what you hear out loud, (3) take short notes without pausing, (4) rewatch without subtitles. Twenty focused minutes beat three hours in the background.",
+      ru:"Чтобы лучше понимать на слух: (1) 20 минут в день аудио чуть сложнее вашего уровня, (2) повторяйте услышанное вслух, (3) коротко записывайте, не ставя на паузу, (4) пересматривайте без субтитров. Двадцать минут с полным вниманием лучше трёх часов фоном.",
+      uz:"Tinglab tushunishni yaxshilash uchun: (1) har kuni darajangizdan biroz qiyinroq audioni 20 daqiqa tinglang, (2) eshitganingizni ovoz chiqarib takrorlang, (3) toʻxtatmasdan qisqa yozib boring, (4) subtitrsiz qayta koʻring. Diqqat bilan 20 daqiqa uch soat fonda tinglashdan yaxshiroq."},
+   q:{stat:"INT", icon:"🎧", n:{en:"20 minutes of active listening", ru:"20 минут активного слушания", uz:"20 daqiqa faol tinglash"}}},
+  {k:["read","book","pages","чита","чтени","книг","o'qi","kitob"],
+   a:{en:"To read more: (1) a fixed daily slot, even 10 pages, (2) keep the book where your phone usually lies, (3) look through the headings first, (4) sum up each chapter in one sentence. A daily reading quest with a 30-day target builds the streak.",
+      ru:"Чтобы читать больше: (1) постоянное время каждый день, хотя бы 10 страниц, (2) держите книгу там, где обычно лежит телефон, (3) сначала просмотрите заголовки, (4) пересказывайте каждую главу одним предложением. Ежедневный квест на чтение с целью 30 дней построит серию.",
+      uz:"Koʻproq oʻqish uchun: (1) har kuni belgilangan vaqt, hatto 10 bet boʻlsa ham, (2) kitobni odatda telefon turadigan joyga qoʻying, (3) avval sarlavhalarni koʻzdan kechiring, (4) har bobni bir gap bilan xulosa qiling. 30 kunlik maqsadli kunlik oʻqish kvesti seriyani quradi."},
+   q:{stat:"INT", icon:"📖", n:{en:"Read 10 pages", ru:"Прочитать 10 страниц", uz:"10 bet kitob oʻqish"}}},
+  {k:["phone","scroll","social media","tiktok","instagram","youtube","screen time","телефон","соцсет","ленту","ленты","лента","тикток","инстаграм","ютуб","telefon","ijtimoiy tarmoq","lenta"],
+   a:{en:"To take your time back from the phone: (1) turn off every notification that is not from a person, (2) move social apps off the home screen, (3) keep the phone out of the bedroom at night, (4) replace the scroll: decide in advance what you will do instead (a page of a book, a stretch). Check your screen time once a week.",
+      ru:"Чтобы вернуть своё время у телефона: (1) отключите все уведомления, кроме сообщений от людей, (2) уберите соцсети с главного экрана, (3) ночью держите телефон вне спальни, (4) замените ленту: заранее решите, что сделаете вместо неё (страница книги, растяжка). Раз в неделю проверяйте экранное время.",
+      uz:"Telefondan vaqtingizni qaytarib olish uchun: (1) odamlardan kelmaydigan barcha bildirishnomalarni oʻchiring, (2) ijtimoiy tarmoqlarni bosh ekrandan olib tashlang, (3) kechasi telefonni yotoqxonadan tashqarida saqlang, (4) lentani almashtiring: oʻrniga nima qilishingizni oldindan hal qiling (bir bet kitob, choʻzilish). Haftada bir marta ekran vaqtini tekshiring."},
+   q:{stat:"END", icon:"📵", n:{en:"No social media before noon", ru:"Без соцсетей до полудня", uz:"Tushgacha ijtimoiy tarmoqsiz"}}},
+  {k:["morning","wake up","waking","early","alarm","утро","утром","утра","утрен","рано","встава","подъем","будильник","ertalab","tong","erta tur","budilnik","uyg'on"],
+   a:{en:"For a strong morning: (1) put the alarm across the room, (2) the same three steps every day: water, light, move, (3) no phone for the first 30 minutes, (4) prepare tomorrow's first task tonight. The morning starts the evening before: a fixed bedtime makes early rising easy.",
+      ru:"Для сильного утра: (1) поставьте будильник в другом конце комнаты, (2) каждый день одни и те же три шага: вода, свет, движение, (3) без телефона первые 30 минут, (4) подготовьте первую задачу завтрашнего дня с вечера. Утро начинается накануне: постоянное время отбоя делает ранний подъём лёгким.",
+      uz:"Kuchli tong uchun: (1) budilnikni xonaning narigi tomoniga qoʻying, (2) har kuni bir xil uch qadam: suv, yorugʻlik, harakat, (3) dastlabki 30 daqiqa telefonsiz, (4) ertangi birinchi vazifani kechqurun tayyorlab qoʻying. Tong bir kun oldin boshlanadi: doimiy uxlash vaqti erta turishni osonlashtiradi."},
+   q:{stat:"END", icon:"☀️", n:{en:"No phone for the first 30 minutes", ru:"Без телефона первые 30 минут", uz:"Dastlabki 30 daqiqa telefonsiz"}}},
+  {k:["focus","concentrat","distract","attention","фокус","концентр","сосредоточ","отвлек","внимани","diqqat","chalg'","e'tibor"],
+   a:{en:"To improve focus: (1) one task at a time, phone in another room, (2) 25-minute sprints with the ⏱ focus timer, (3) a 5-minute break between them, (4) write distractions down instead of chasing them. Focus is trained, not born.",
+      ru:"Чтобы лучше сосредоточиваться: (1) одна задача за раз, телефон в другой комнате, (2) спринты по 25 минут с таймером фокуса ⏱, (3) 5 минут отдыха между ними, (4) записывайте отвлекающие мысли, а не гонитесь за ними. Концентрацию тренируют, с ней не рождаются.",
+      uz:"Diqqatni jamlash uchun: (1) bir vaqtda bitta ish, telefon boshqa xonada, (2) ⏱ fokus taymeri bilan 25 daqiqalik bosqichlar, (3) ular orasida 5 daqiqa tanaffus, (4) chalgʻituvchi fikrlarni quvmang, yozib qoʻying. Diqqat tugʻma emas, u mashq bilan keladi."},
+   q:{stat:"INT", icon:"🎯", n:{en:"One 25-minute focus sprint", ru:"Один спринт фокуса на 25 минут", uz:"25 daqiqalik bitta fokus bosqichi"}}},
+  {k:["sleep","tired","insomnia","bedtime","сон","спать","высып","устал","бессонн","uxla","uyqu","charcha"],
+   a:{en:"To sleep better: (1) the same wake-up time every day, weekends too, (2) no screens in the last hour before bed, (3) a cool, dark, quiet room, (4) no caffeine in the afternoon. If poor sleep goes on for weeks, talk to a doctor.",
+      ru:"Чтобы лучше спать: (1) вставайте в одно и то же время каждый день, и в выходные тоже, (2) никаких экранов за час до сна, (3) прохладная, тёмная и тихая комната, (4) без кофеина после обеда. Если плохой сон длится неделями, обратитесь к врачу.",
+      uz:"Yaxshiroq uxlash uchun: (1) har kuni, dam olish kunlari ham bir vaqtda turing, (2) uxlashdan oldingi soatda ekranga qaramang, (3) xona salqin, qorongʻi va tinch boʻlsin, (4) tushdan keyin kofein ichmang. Yomon uyqu haftalab davom etsa, shifokorga murojaat qiling."},
+   q:{stat:"END", icon:"😴", n:{en:"No screens 1 hour before bed", ru:"Без экранов за час до сна", uz:"Uxlashdan 1 soat oldin ekransiz"}}},
+  {k:["study","exam","homework","test","school","universit","revis","учеб","экзамен","домашк","домашн","сесси","контрольн","o'qish","imtihon","dars","uy vazifa","maktab"],
+   a:{en:"To study well: (1) test yourself instead of rereading (close the book and recall), (2) spread it out: 30 minutes a day beats 5 hours the night before, (3) one subject per focus sprint, (4) explain the topic to someone in your own words. Start exam preparation two weeks early, a little every day.",
+      ru:"Чтобы хорошо учиться: (1) проверяйте себя вместо перечитывания (закройте книгу и вспомните), (2) распределяйте: 30 минут в день лучше 5 часов накануне, (3) один предмет на один спринт фокуса, (4) объясните тему кому-нибудь своими словами. Начинайте готовиться к экзамену за две недели, понемногу каждый день.",
+      uz:"Yaxshi oʻqish uchun: (1) qayta oʻqish oʻrniga oʻzingizni tekshiring (kitobni yopib, eslang), (2) taqsimlang: kuniga 30 daqiqa imtihon oldidan 5 soatdan yaxshiroq, (3) bitta fokus bosqichiga bitta fan, (4) mavzuni kimgadir oʻz soʻzlaringiz bilan tushuntiring. Imtihonga ikki hafta oldin, har kuni ozdan tayyorlaning."},
+   q:{stat:"INT", icon:"🧠", n:{en:"30 minutes of self-testing", ru:"30 минут самопроверки", uz:"30 daqiqa oʻzini tekshirish"}}},
+  {k:["english","language","fluent","speak","vocabular","английск","язык","словар","говорить","ingliz","tilni","tilini","chet tili","so'z","gapir"],
+   a:{en:"To learn a language faster: (1) daily input you enjoy: shows, music, games, (2) speak from day one, mistakes included, (3) learn phrases, not lone words, (4) 20 minutes a day beats a weekend cram. Make separate quests for listening, speaking and words.",
+      ru:"Чтобы быстрее выучить язык: (1) каждый день то, что вам нравится: сериалы, музыка, игры, (2) говорите с первого дня, с ошибками, (3) учите фразы, а не отдельные слова, (4) 20 минут в день лучше зубрёжки в выходные. Сделайте отдельные квесты на слушание, речь и слова.",
+      uz:"Tilni tezroq oʻrganish uchun: (1) har kuni yoqtirgan narsangiz: seriallar, musiqa, oʻyinlar, (2) birinchi kundan gapiring, xatolar bilan birga, (3) alohida soʻzlarni emas, iboralarni oʻrganing, (4) kuniga 20 daqiqa dam olish kunidagi yodlashdan yaxshiroq. Tinglash, gapirish va soʻzlar uchun alohida kvestlar qiling."},
+   q:{stat:"INT", icon:"🧠", n:{en:"Learn 5 new words", ru:"Выучить 5 новых слов", uz:"5 ta yangi soʻz oʻrganish"}}},
+  {k:["skill","learn","coding","code","program","guitar","draw","навык","научит","программ","гитар","рисова","ko'nikma","o'rgan","dasturlash","gitara","chiz"],
+   a:{en:"To learn a skill: (1) 30 minutes of hands-on practice a day beats hours of videos, (2) build one tiny project, then a slightly bigger one, (3) learn only what the next step needs, (4) keep a log of what you made. Make a daily practice quest and a one-time goal for each project.",
+      ru:"Чтобы освоить навык: (1) 30 минут практики в день лучше часов видео, (2) сделайте один крошечный проект, потом чуть больше, (3) изучайте только то, что нужно для следующего шага, (4) ведите журнал сделанного. Сделайте ежедневный квест на практику и разовую цель на каждый проект.",
+      uz:"Koʻnikmani egallash uchun: (1) kuniga 30 daqiqa amaliyot soatlab video koʻrishdan yaxshiroq, (2) bitta juda kichik loyiha qiling, keyin biroz kattarogʻini, (3) faqat keyingi qadamga kerakli narsani oʻrganing, (4) qilgan ishlaringizni yozib boring. Amaliyot uchun kunlik kvest va har bir loyiha uchun bir martalik maqsad qiling."},
+   q:{stat:"INT", icon:"💻", n:{en:"30 minutes of practice", ru:"30 минут практики", uz:"30 daqiqa amaliyot"}}},
+  {k:["strong","muscle","gym","workout","push-up","pushup","сильн","сила","силу","мышц","качат","тренаж","отжим","kuch","mushak","sport zal"],
+   a:{en:"To get stronger: (1) add a little each week (more reps or slightly more weight), (2) the base moves: squat, push, pull, hinge, (3) sleep and regular meals do half the work, (4) consistency beats intensity. Learn the form from a coach, and stop if anything hurts.",
+      ru:"Чтобы стать сильнее: (1) понемногу добавляйте каждую неделю (повторы или чуть больше веса), (2) базовые движения: присед, жим, тяга, наклон, (3) сон и регулярное питание делают половину работы, (4) регулярность важнее интенсивности. Технику ставьте с тренером и останавливайтесь, если что-то болит.",
+      uz:"Kuchliroq boʻlish uchun: (1) har hafta ozgina qoʻshing (takror yoki biroz koʻproq vazn), (2) asosiy harakatlar: oʻtirib-turish, itarish, tortish, egilish, (3) uyqu va muntazam ovqatlanish ishning yarmini bajaradi, (4) muntazamlik shiddatdan muhimroq. Texnikani murabbiydan oʻrganing va biror joy ogʻrisa, toʻxtang."},
+   q:{stat:"STR", icon:"💪", n:{en:"20 push-ups (knees are fine)", ru:"20 отжиманий (можно с колен)", uz:"20 marta yerdan itarilish (tizzadan ham boʻladi)"}}},
+  {k:["run","jog","walk","cardio","steps","бег","бегать","ходьб","прогулк","шаг","yugur","piyoda","yurish","qadam"],
+   a:{en:"To start moving: (1) begin with a 10 to 20 minute walk a day, (2) if you want to run, mix walking and easy running, slow enough to talk, (3) the same time every day, shoes by the door, (4) add a little each week, not each day. Stop and rest if anything hurts, and check with a doctor if you have a health condition.",
+      ru:"Чтобы начать двигаться: (1) начните с прогулки 10–20 минут в день, (2) если хотите бегать, чередуйте ходьбу и лёгкий бег в темпе, при котором можно разговаривать, (3) одно и то же время каждый день, кроссовки у двери, (4) прибавляйте понемногу каждую неделю, а не каждый день. Если что-то болит, остановитесь и отдохните, а при проблемах со здоровьем посоветуйтесь с врачом.",
+      uz:"Harakatni boshlash uchun: (1) kuniga 10–20 daqiqa piyoda yurishdan boshlang, (2) yugurmoqchi boʻlsangiz, yurish va yengil yugurishni gaplasha oladigan tezlikda almashtiring, (3) har kuni bir vaqtda, krossovkalar eshik oldida, (4) har kuni emas, har hafta ozgina qoʻshing. Biror joy ogʻrisa, toʻxtab dam oling, sogʻligʻingizda muammo boʻlsa, shifokor bilan maslahatlashing."},
+   q:{stat:"STR", icon:"🏃", n:{en:"20-minute walk", ru:"Прогулка 20 минут", uz:"20 daqiqa piyoda yurish"}}},
+  {k:["water","hydrat","drink","вода","воды","воду","пить","suv"],
+   a:{en:"To drink more water: (1) a glass right after waking, (2) a bottle you can see on your desk, (3) a glass with every meal, (4) link it to something you already do (after brushing your teeth, before each lesson). How much you need depends on you and the weather; ask a doctor if unsure.",
+      ru:"Чтобы пить больше воды: (1) стакан сразу после подъёма, (2) бутылка на виду на столе, (3) стакан к каждому приёму пищи, (4) привяжите это к тому, что уже делаете (после чистки зубов, перед уроком). Сколько нужно именно вам, зависит от вас и погоды; если сомневаетесь, спросите врача.",
+      uz:"Koʻproq suv ichish uchun: (1) uygʻongandan keyin darhol bir stakan, (2) stol ustida koʻrinib turadigan shisha, (3) har ovqat bilan bir stakan, (4) allaqachon qiladigan ishingizga bogʻlang (tish yuvgandan keyin, darsdan oldin). Sizga qancha kerakligi oʻzingizga va ob-havoga bogʻliq; ikkilansangiz, shifokordan soʻrang."},
+   q:{stat:"END", icon:"💧", n:{en:"A glass of water after waking", ru:"Стакан воды после подъёма", uz:"Uygʻongach bir stakan suv"}}},
+  {k:["meditat","mindful","breath","медитац","осознан","дыхан","meditats","nafas"],
+   a:{en:"To start meditating: (1) 2 minutes a day is enough to begin, (2) sit, breathe normally and count breaths to 10, then start again, (3) when your mind wanders, notice it and come back: that return is the exercise, (4) the same place, the same time. Add a minute each week.",
+      ru:"Чтобы начать медитировать: (1) для начала хватит 2 минут в день, (2) сядьте, дышите спокойно и считайте вдохи до 10, потом заново, (3) когда мысли уходят, заметьте это и вернитесь: это возвращение и есть упражнение, (4) одно и то же место и время. Прибавляйте по минуте в неделю.",
+      uz:"Meditatsiyani boshlash uchun: (1) boshlashga kuniga 2 daqiqa yetarli, (2) oʻtiring, odatdagidek nafas oling va nafaslarni 10 gacha sanang, keyin qaytadan, (3) fikr chalgʻisa, buni payqang va qayting: aynan shu qaytish mashqdir, (4) bir joy, bir vaqt. Har hafta bir daqiqa qoʻshing."},
+   q:{stat:"END", icon:"🧘", n:{en:"2 minutes of meditation", ru:"2 минуты медитации", uz:"2 daqiqa meditatsiya"}}},
+  {k:["journal","diary","writing","write","дневник","писать","kundalik","yozish","yozma"],
+   a:{en:"To start a journal: (1) 3 lines a day is enough, (2) the same three questions: what went well, what was hard, what is tomorrow's one thing, (3) write at the same time, for example before bed, (4) reread once a month to see your patterns. 🌙 Finalize the Day in this app is built for exactly this.",
+      ru:"Чтобы начать вести дневник: (1) хватит 3 строк в день, (2) одни и те же три вопроса: что получилось, что было трудно, какое одно дело завтра, (3) пишите в одно и то же время, например перед сном, (4) раз в месяц перечитывайте, чтобы увидеть закономерности. 🌙 «Завершить день» в этом приложении сделан именно для этого.",
+      uz:"Kundalik yuritishni boshlash uchun: (1) kuniga 3 qator yetarli, (2) bir xil uch savol: nima yaxshi boʻldi, nima qiyin boʻldi, ertaga qaysi bitta ish, (3) bir vaqtda yozing, masalan, uxlashdan oldin, (4) qonuniyatlarni koʻrish uchun oyda bir marta qayta oʻqing. Ilovadagi 🌙 «Kunni yakunlash» aynan shu uchun yaratilgan."},
+   q:{stat:"INT", icon:"✍️", n:{en:"Write 3 lines in a journal", ru:"Написать 3 строки в дневник", uz:"Kundalikka 3 qator yozish"}}},
+  {k:["clean","tidy","mess","room","уборк","порядок","бардак","комнат","tozala","xona","yig'ishtir"],
+   a:{en:"To keep your space tidy: (1) a 5-minute reset every evening: put back everything that is out, (2) a home for every object, (3) one thing in, one thing out, (4) make the bed every morning: a win before 8 a.m. A clean desk makes starting easier.",
+      ru:"Чтобы поддерживать порядок: (1) 5-минутная уборка каждый вечер: верните на место всё, что лежит не там, (2) у каждой вещи своё место, (3) одна новая вещь пришла — одна старая ушла, (4) заправляйте кровать каждое утро: победа до 8 утра. С чистого стола легче начинать.",
+      uz:"Joyingizni tartibli saqlash uchun: (1) har kuni kechqurun 5 daqiqalik tartib: tashqarida qolgan hamma narsani joyiga qaytaring, (2) har bir buyumning oʻz joyi boʻlsin, (3) bitta yangi narsa kirsa, bitta eskisi chiqsin, (4) har tong toʻshakni yigʻing: soat 8 dan oldingi gʻalaba. Toza stoldan boshlash osonroq."},
+   q:{stat:"END", icon:"🧹", n:{en:"5-minute evening reset", ru:"5-минутная уборка вечером", uz:"Kechqurun 5 daqiqalik tartib"}}},
+  {k:["money","saving","save money","budget","spend","rich","деньг","бюджет","накоп","копить","трат","pul","byudjet","jamg'ar","tejash","xarajat"],
+   a:{en:"To handle money: (1) write down every expense (the BUDGET section does this), (2) put your savings aside first, then spend, (3) wait 24 hours before buying any “want”, (4) small regular savings add up. Discipline with time becomes discipline with money.",
+      ru:"Чтобы управлять деньгами: (1) записывайте каждую трату (это делает раздел БЮДЖЕТ), (2) сначала откладывайте, потом тратьте, (3) подождите 24 часа перед любой покупкой «хочу», (4) маленькие регулярные накопления складываются. Дисциплина со временем становится дисциплиной с деньгами.",
+      uz:"Pulni boshqarish uchun: (1) har bir xarajatni yozib boring (BYUDJET boʻlimi shuni qiladi), (2) avval jamgʻarmaga ajrating, keyin sarflang, (3) har qanday «xohlayman» xaridi oldidan 24 soat kuting, (4) kichik, muntazam jamgʻarma yigʻilib boradi. Vaqtdagi intizom puldagi intizomga aylanadi."},
+   q:{stat:"END", icon:"💰", n:{en:"Write down today's spending", ru:"Записать траты за день", uz:"Bugungi xarajatlarni yozish"}}},
+  {k:["stress","anxi","calm","overwhelm","panic","worry","стресс","тревог","нерв","паник","успок","xavotir","asab","tashvish","vahima"],
+   a:{en:"To manage stress: (1) slow breathing: in for 4, out for 6, for two minutes, (2) write the worry down to get it out of your head, (3) move your body every day, (4) break the mountain into one next step. If stress or worry stays for weeks, talk to someone you trust or to a doctor.",
+      ru:"Чтобы справляться со стрессом: (1) медленное дыхание: вдох на 4, выдох на 6, две минуты, (2) запишите тревогу, чтобы выгрузить её из головы, (3) двигайтесь каждый день, (4) разбейте гору на один следующий шаг. Если стресс или тревога держатся неделями, поговорите с тем, кому доверяете, или с врачом.",
+      uz:"Stress bilan kurashish uchun: (1) sekin nafas: 4 gacha sanab nafas oling, 6 gacha sanab chiqaring, ikki daqiqa, (2) xavotirni yozib qoʻying, shunda u boshingizdan chiqadi, (3) har kuni harakat qiling, (4) togʻni bitta keyingi qadamga boʻling. Stress yoki xavotir haftalab ketmasa, ishongan odamingiz yoki shifokor bilan gaplashing."},
+   q:{stat:"END", icon:"🧘", n:{en:"2 minutes of slow breathing", ru:"2 минуты медленного дыхания", uz:"2 daqiqa sekin nafas olish"}}},
+  {k:["sad","depress","mood","unhappy","crying","cry$","грус","депресс","настроени","плач","тоск","g'amgin","xafa","kayfiyat","tushkun","yig'la"],
+   a:{en:"On low days: (1) shrink the day to one small quest and count it as a win, (2) get outside light and move for 10 minutes, (3) talk to someone, even briefly, (4) write down one thing that went okay. If you feel sad most days for two weeks or more, please talk to a doctor or someone you trust. You don't have to carry it alone.",
+      ru:"В тяжёлые дни: (1) сократите день до одного маленького квеста и засчитайте его как победу, (2) выйдите на дневной свет и подвигайтесь 10 минут, (3) поговорите с кем-нибудь, хотя бы недолго, (4) запишите одну вещь, которая прошла нормально. Если вам грустно почти каждый день две недели и дольше, пожалуйста, поговорите с врачом или с тем, кому доверяете. Не обязательно нести это одному.",
+      uz:"Ogʻir kunlarda: (1) kunni bitta kichik kvestga qisqartiring va uni gʻalaba deb hisoblang, (2) kun yorugʻiga chiqing va 10 daqiqa harakat qiling, (3) kim bilandir, hatto qisqa boʻlsa ham, gaplashing, (4) yaxshi oʻtgan bitta narsani yozing. Agar ikki hafta va undan koʻproq deyarli har kuni gʻamgin boʻlsangiz, iltimos, shifokor yoki ishongan odamingiz bilan gaplashing. Buni yolgʻiz koʻtarishingiz shart emas."}},
+  {k:["friend","lonely","alone","social","people","друзь","дружб","друга","другу","одинок","общени","люд","do'st","yolg'iz","odamlar","muloqot"],
+   a:{en:"To build better friendships: (1) reach out first: one message a day to someone you like, (2) ask questions and listen more than you talk, (3) join something regular (a club, a team, a class): friendships grow from repeated contact, (4) keep small promises. If you feel very lonely or low for a long time, tell someone you trust.",
+      ru:"Чтобы укрепить дружбу: (1) пишите первым: одно сообщение в день тому, кто вам нравится, (2) задавайте вопросы и слушайте больше, чем говорите, (3) вступите во что-то регулярное (клуб, команда, кружок): дружба растёт из повторяющихся встреч, (4) держите маленькие обещания. Если вам долго очень одиноко или грустно, расскажите тому, кому доверяете.",
+      uz:"Doʻstlikni mustahkamlash uchun: (1) birinchi boʻlib yozing: yoqtirgan odamingizga kuniga bitta xabar, (2) savol bering va gapirishdan koʻra koʻproq tinglang, (3) muntazam bir narsaga qoʻshiling (klub, jamoa, toʻgarak): doʻstlik takroriy uchrashuvlardan oʻsadi, (4) kichik vaʼdalarni bajaring. Agar uzoq vaqt juda yolgʻiz yoki gʻamgin boʻlsangiz, ishongan odamingizga ayting."},
+   q:{stat:"CON", icon:"😊", n:{en:"Message one friend", ru:"Написать одному другу", uz:"Bitta doʻstga xabar yozish"}}},
+  {k:["confiden","shy","fear","comfort zone","уверен","стесн","страх","боюсь","застенч","ishonch","uyatchan","qo'rq","tortinchoq"],
+   a:{en:"To build confidence: (1) do one slightly uncomfortable thing every day (a CON quest), (2) keep small promises to yourself, (3) prepare, then act before you feel ready, (4) collect proof of your wins. Confidence is a record, not a feeling.",
+      ru:"Чтобы стать увереннее: (1) каждый день делайте одно чуть некомфортное дело (квест на CON), (2) выполняйте маленькие обещания самому себе, (3) подготовьтесь и действуйте, не дожидаясь готовности, (4) собирайте доказательства своих побед. Уверенность — это история поступков, а не чувство.",
+      uz:"Oʻziga ishonchni oshirish uchun: (1) har kuni biroz noqulay bitta ishni qiling (CON kvesti), (2) oʻzingizga bergan kichik vaʼdalarni bajaring, (3) tayyorlaning va tayyor boʻlishni kutmay harakat qiling, (4) gʻalabalaringiz isbotlarini yigʻing. Ishonch his emas, qilingan ishlar tarixidir."},
+   q:{stat:"CON", icon:"🎯", n:{en:"Do one thing that scares you a little", ru:"Сделать одно немного страшное дело", uz:"Biroz qoʻrqitadigan bitta ishni qilish"}}},
+  {k:["bad habit","quit$","quitting","stop doing","addict","smok","vape","sugar","вредн","бросить","зависим","курен","курит","сахар","yomon odat","tashla","qaram","chek","shakar"],
+   a:{en:"To drop a bad habit: (1) find its cue (a time, a place, a feeling) and change that, (2) make it harder: delete the app, don't buy it, keep it out of reach, (3) put a better action on the same cue, (4) count clean days as a quest. If it feels like an addiction, a doctor can help: asking is strength, not weakness.",
+      ru:"Чтобы избавиться от вредной привычки: (1) найдите её сигнал (время, место, чувство) и измените его, (2) усложните её: удалите приложение, не покупайте, уберите подальше, (3) поставьте на тот же сигнал полезное действие, (4) считайте чистые дни квестом. Если это похоже на зависимость, врач может помочь: попросить о помощи — это сила, а не слабость.",
+      uz:"Yomon odatdan qutulish uchun: (1) uning signalini toping (vaqt, joy, his) va uni oʻzgartiring, (2) uni qiyinlashtiring: ilovani oʻchiring, sotib olmang, uzoqroqqa qoʻying, (3) oʻsha signalga foydali harakatni qoʻying, (4) toza kunlarni kvest sifatida sanang. Agar bu qaramlikka oʻxshasa, shifokor yordam bera oladi: yordam soʻrash zaiflik emas, kuch."},
+   q:{stat:"END", icon:"🚭", n:{en:"A clean day (no bad habit)", ru:"Чистый день (без вредной привычки)", uz:"Toza kun (yomon odatsiz)"}}},
+  {k:["streak","broke","failed","missed","gave up","give up","start again","restart","серия","серию","сорвал","пропуст","бросил","заново","сдался","сдалась","seriya","uzil","qoldir","qaytadan"],
+   a:{en:"A broken streak is not a broken hero. (1) Don't try to make up for lost days; just do today's smallest version, (2) never miss twice: the second miss is the one that matters, (3) ask what broke it (time, energy, a task too big) and fix that one thing, (4) shrink the quest for a week. Your record keeps every day you did show up.",
+      ru:"Сорванная серия — не сломанный герой. (1) Не пытайтесь наверстать пропущенное; просто сделайте сегодня самую маленькую версию, (2) не пропускайте дважды: важен именно второй пропуск, (3) спросите себя, что помешало (время, силы, слишком большая задача), и исправьте это одно, (4) уменьшите квест на неделю. Ваша история хранит каждый день, когда вы пришли.",
+      uz:"Uzilgan seriya — sinib qolgan qahramon emas. (1) Qoldirilgan kunlarni qoplashga urinmang; bugun eng kichik variantini bajaring, (2) ikki marta qoldirmang: aynan ikkinchi qoldirish muhim, (3) nima xalaqit berganini soʻrang (vaqt, kuch, juda katta vazifa) va oʻsha bittasini tuzating, (4) kvestni bir haftaga kichraytiring. Tarixingiz siz kelgan har bir kunni saqlaydi."}},
+  {k:["goal","target","dream","ambition","цель","цели","мечт","достич","maqsad","orzu","erish"],
+   a:{en:"To set a goal you will reach: (1) make it specific and visible: not “get fit” but “walk 20 minutes after dinner”, (2) one main goal at a time, (3) turn it into a daily action you control, (4) review it here every week. Write the result as a one-time goal and the action as a daily quest.",
+      ru:"Чтобы поставить цель, которой достигнете: (1) сделайте её конкретной и видимой: не «стать спортивнее», а «20 минут прогулки после ужина», (2) одна главная цель за раз, (3) превратите её в ежедневное действие, которое зависит от вас, (4) проверяйте её здесь каждую неделю. Результат запишите разовой целью, а действие — ежедневным квестом.",
+      uz:"Erishadigan maqsad qoʻyish uchun: (1) uni aniq va koʻrinadigan qiling: «sportchiroq boʻlish» emas, «kechki ovqatdan keyin 20 daqiqa piyoda yurish», (2) bir vaqtda bitta asosiy maqsad, (3) uni oʻzingizga bogʻliq kunlik harakatga aylantiring, (4) har hafta shu yerda koʻrib chiqing. Natijani bir martalik maqsad, harakatni esa kunlik kvest qilib yozing."}},
+  {k:["time management","schedule","busy","organiz","productiv","no time","расписан","успева","занят","продуктив","нет времени","vaqt","jadval","ulgur","unumdor"],
+   a:{en:"To manage your time: (1) each evening, pick tomorrow's top 3 tasks, (2) do the hardest one first, before messages, (3) give tasks a time on the calendar, not just a place on a list, (4) say no to one thing a week. Track where your focus minutes go: what gets measured gets managed.",
+      ru:"Чтобы управлять временем: (1) каждый вечер выбирайте 3 главные задачи на завтра, (2) самую трудную делайте первой, до сообщений, (3) давайте задачам время в календаре, а не только место в списке, (4) раз в неделю отказывайтесь от одного дела. Следите, куда уходят минуты фокуса: чем измеряешь, тем можно управлять.",
+      uz:"Vaqtni boshqarish uchun: (1) har kuni kechqurun ertangi 3 ta asosiy vazifani tanlang, (2) eng qiyinini birinchi, xabarlardan oldin bajaring, (3) vazifalarga roʻyxatda emas, kalendarda vaqt bering, (4) haftada bitta ishga «yoʻq» deng. Fokus daqiqalaringiz qayerga ketayotganini kuzating: oʻlchangan narsani boshqarish mumkin."},
+   q:{stat:"INT", icon:"🧩", n:{en:"Pick tomorrow's top 3 tonight", ru:"Вечером выбрать 3 главные задачи на завтра", uz:"Kechqurun ertangi 3 asosiy vazifani tanlash"}}},
+  {k:["rank","level up","levels","xp","experience","how does","ранг","уровен","уровн","опыт","daraja","martaba","tajriba"],
+   a:{en:"How LEVEL UP rewards you: quests give XP and levels; attributes make you eligible for a rank, and the rank itself is earned by what you keep up over time, so it can't be bought and is never taken back. The fastest path: a few quests you really do every day, a full daily package, and no empty days.",
+      ru:"Как LEVEL UP награждает: квесты дают XP и уровни; атрибуты дают право на ранг, а сам ранг зарабатывается тем, что вы поддерживаете со временем, поэтому его нельзя купить и его никогда не отнимают. Самый быстрый путь: несколько квестов, которые вы правда делаете каждый день, полный ежедневный пакет и ни одного пустого дня.",
+      uz:"LEVEL UP qanday mukofotlaydi: kvestlar XP va daraja beradi; atributlar martabaga huquq beradi, martabaning oʻzi esa vaqt davomida saqlab qolgan ishingiz bilan topiladi, shuning uchun uni sotib olib boʻlmaydi va hech qachon tortib olinmaydi. Eng tez yoʻl: har kuni rostdan bajaradigan bir nechta kvest, toʻliq kunlik paket va birorta ham boʻsh kun yoʻq."}},
+  {k:["procrastin","lazy","motivat","can't start","cannot start","прокраст","лень","ленив","мотивац","откладыв","dangasa","motivats","paysal","kechiktir"],
+   a:{en:"To beat procrastination: (1) shrink the task until it takes 2 minutes, then start, (2) action comes first; motivation follows, (3) remove friction: lay out what you need the night before, (4) let the streak become the reason. Never miss twice in a row.",
+      ru:"Чтобы победить прокрастинацию: (1) уменьшите задачу до 2 минут и начните, (2) сначала действие, мотивация придёт следом, (3) уберите препятствия: подготовьте всё нужное с вечера, (4) пусть серия станет причиной. Никогда не пропускайте два раза подряд.",
+      uz:"Ishni paysalga solishni yengish uchun: (1) vazifani 2 daqiqalik qilib kichraytiring va boshlang, (2) avval harakat, motivatsiya keyin keladi, (3) toʻsiqlarni olib tashlang: keraklisini kechqurun tayyorlab qoʻying, (4) seriya sababga aylansin. Hech qachon ketma-ket ikki marta qoldirmang."},
+   q:{stat:"END", icon:"⚡", n:{en:"2-minute start on the hardest task", ru:"2 минуты на самую трудную задачу", uz:"Eng qiyin vazifaga 2 daqiqa"}}},
+  {k:["discipline","consistent","habit","routine","дисциплин","привычк","регулярн","режим","intizom","odat","muntazam","tartib"],
+   a:{en:"To build discipline: (1) the same action at the same time every day until it is automatic, (2) never miss twice in a row, (3) make the cue obvious and the reward immediate, (4) track it where you can see it. Small and daily beats big and rare.",
+      ru:"Чтобы выработать дисциплину: (1) одно и то же действие в одно и то же время каждый день, пока оно не станет автоматическим, (2) никогда не пропускайте дважды подряд, (3) сделайте сигнал заметным, а награду мгновенной, (4) отмечайте прогресс на виду. Мало, но каждый день лучше, чем много, но редко.",
+      uz:"Intizomni shakllantirish uchun: (1) har kuni bir vaqtda bir xil harakat, toki u avtomatik boʻlib qolguncha, (2) hech qachon ketma-ket ikki marta qoldirmang, (3) eslatma koʻzga tashlansin, mukofot esa darhol boʻlsin, (4) natijani koʻrinadigan joyda belgilang. Oz, lekin har kuni — koʻp, lekin kamdan-kam qilishdan yaxshiroq."}},
+  {id:"review", k:["how am i","how i am doing","my progress","progress","analy","review","my week","statistic","weak point","прогресс","как у меня","как мои","как я","анализ","итог","статистик","слабые","ishlarim","qanday ketyap","tahlil","natija","statistika","holatim","zaif"]},
+  {id:"plan", k:["today","plan","what should i","what to do","what do i do","next step","сегодня","план","что делать","что мне делать","bugun","reja","nima qil"]}
+];
+/* safety first: these are never sent to any AI and never answered with tips */
+var MENTOR_CRISIS = /suicid|kill myself|end my life|want to die|self[- ]?harm|hurt myself|cut myself|no reason to live|being abused|someone hurts me|суицид|покончить с собой|убить себя|не хочу жить|хочу умереть|самоповрежд|навредить себе|порезать себя|меня бьют|насили|o'zimni o'ldir|joniga qasd|o'lmoqchiman|yashashni xohlamayman|yashagim kelmayapti|o'zimga zarar|zo'ravonlik|meni urishadi/;
+var MENTOR_EATING = /starving myself|starve myself|not eating anything|not eating at all|stopped eating|skip meals|skipping meals|make myself (sick|throw up|vomit)|throw up after|purging|binge eat|anorex|bulim|голодаю|ничего не ем|перестал[аи]? есть|не ем весь день|вызыва\S* рвот|анорекс|булими|переедани|ovqat yemayapman|och qolyapman|qayt qilaman|anoreks|bulimi/;
+var MENTOR_DIET = /calori|\bdiet|lose weight|losing weight|weight loss|gain weight|fat loss|\bbmi\b|protein|macros|fasting|meal plan|калори|диет|похуде|сбросить вес|набрать вес|белк|белок|голодани|kaloriya|parhez|\bozish|\bozmoq|vazn|oqsil|dieta/;
+
+var MENTOR_STAT = {
+  INT:{en:"Intelligence", ru:"Интеллект", uz:"Intellekt"},
+  STR:{en:"Strength", ru:"Сила", uz:"Kuch"},
+  CON:{en:"Confidence", ru:"Уверенность", uz:"Ishonch"},
+  END:{en:"Endurance", ru:"Выносливость", uz:"Chidamlilik"}
+};
+function mLang(){ var l = state && state.lang; return (l === "ru" || l === "uz") ? l : "en"; }
+function mPick(o){ return (o && (o[mLang()] || o.en)) || ""; }
+function mFill(s, v){ return String(s).replace(/\{(\w+)\}/g, function(m, k){ return (v && v[k] !== undefined) ? v[k] : m; }); }
+function MT(key, v){ var e = MENTOR_TXT[key]; return e ? mFill(mPick(e), v) : key; }
+/* questions are matched loosely: any case, ё as е, and every kind of
+   apostrophe as ' so oʻ, o' and o` are the same letter */
+function mNorm(s){ return String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[ʻʼ‘’`´]/g, "'"); }
+function mKwHit(qn, kw){
+  var whole = kw.charAt(kw.length - 1) === "$";
+  var w = mNorm(whole ? kw.slice(0, -1) : kw), from = 0, i;
+  while((i = qn.indexOf(w, from)) !== -1){
+    var before = i === 0 ? "" : qn.charAt(i - 1), after = qn.charAt(i + w.length);
+    var startOk = !before || !/[a-z0-9а-я']/.test(before);
+    var endOk = !whole || !after || !/[a-z0-9а-я']/.test(after);
+    if(startOk && endOk) return true;
+    from = i + 1;
   }
-  /* recent empty days */
-  var empty = 0;
-  for(var d=1; d<=7; d++){ var h = state.history[addDays(t,-d)]; if(!h || !h.count) empty++; }
-  if(empty >= 3){
-    /* their own words beat anything the System could invent */
-    if(oathSworn() && state.oath.words) out.push({ico:"⚔", text:'You told me to say this: "' + state.oath.words + '"'});
-    else out.push({ico:"🌑", text:empty + tr(" of the last 7 days were empty. The gap between who you are and who you want to be is built on days like these. Clear even one quest today.")});
+  return false;
+}
+
+/* ---- reading the record. Every number the Mentor shows is computed here. ---- */
+function mBorn(){ return state.created || todayStr(); }
+function mDaysKnown(){
+  /* full days the hero has existed, today not counted */
+  var t = todayStr(), b = mBorn(), n = 0;
+  while(n < 400 && addDays(t, -(n + 1)) >= b) n++;
+  return n;
+}
+function mWeek(offset){
+  /* offset 0 = the last 7 days including today, 1 = the 7 days before them */
+  var t = todayStr(), o = {done:0, xp:0, days:0, focus:0};
+  for(var d = offset * 7; d < offset * 7 + 7; d++){
+    var ds = addDays(t, -d), h = state.history[ds];
+    if(h && h.count){ o.done += h.count; o.days++; }
+    if(h && h.xp) o.xp += h.xp;
+    o.focus += (state.timeHistory && state.timeHistory[ds]) || 0;
   }
-  else if(empty === 0) out.push({ico:"🔥", text:tr("Seven days, zero misses. This is exactly how discipline is forged — keep the chain unbroken.")});
-  /* focus time */
-  var fmin = 0; for(var f=0; f<7; f++) fmin += (state.timeHistory[addDays(t,-f)] || 0);
-  fmin = Math.round(fmin/60);
-  if(fmin < 30 && state.level >= (remoteSystemLocks && remoteSystemLocks.timer !== undefined ? remoteSystemLocks.timer : 0))
-    out.push({ico:"⏱", text:tr("Under 30 minutes of tracked focus this week. Deep work is a muscle — press ⏱ before a task and protect the time.")});
-  /* quests all easy */
-  var real = state.quests.filter(function(q){ return !q.system && q.freq !== "longterm"; });
-  if(real.length >= 2 && real.every(function(q){ return q.tier === "easy"; }))
-    out.push({ico:"📈", text:tr("All your quests are EASY. Growth lives just past comfort — raise one quest to MEDIUM and feel the difference.")});
-  if(out.length === 0) out.push({ico:"🧭", text:tr("You're on a steady path, Hero. Keep showing up — ask me anything about building a skill or habit below.")});
+  o.focus = Math.round(o.focus / 60);
+  return o;
+}
+function mQuestRate(q, span){
+  /* how often a recurring quest was done on the days it was due. Today counts
+     only once it is done, so an unfinished morning is not called a miss. */
+  var t = todayStr(), due = 0, done = 0, comps = q.completions || [], born = mBorn();
+  if(comps.indexOf(t) !== -1){ due++; done++; }
+  for(var d = 1; d <= span; d++){
+    var ds = addDays(t, -d);
+    if(ds < born) break;
+    if(!questScheduledOn(q, ds)) continue;
+    due++;
+    if(comps.indexOf(ds) !== -1) done++;
+  }
+  return {due:due, done:done, rate: due ? done / due : 0};
+}
+function mQuests(){
+  var out = [];
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if(q.freq !== "daily" && q.freq !== "custom") continue;
+    var r = mQuestRate(q, 14);
+    out.push({q:q, due:r.due, done:r.done, rate:r.rate});
+  }
+  return out;
+}
+function mWeekdays(){
+  /* quests per weekday over the last 8 weeks; silent until every weekday has
+     been seen at least twice and the gap is real */
+  var t = todayStr(), born = mBorn(), sum = [0,0,0,0,0,0,0], n = [0,0,0,0,0,0,0], i;
+  for(var d = 1; d <= 56; d++){
+    var ds = addDays(t, -d);
+    if(ds < born) break;
+    var w = new Date(ds + "T00:00:00").getDay(), h = state.history[ds];
+    sum[w] += (h && h.count) || 0; n[w]++;
+  }
+  var avg = [], best = 0, worst = 0;
+  for(i=0;i<7;i++){ if(n[i] < 2) return null; avg[i] = sum[i] / n[i]; }
+  for(i=1;i<7;i++){ if(avg[i] > avg[best]) best = i; if(avg[i] < avg[worst]) worst = i; }
+  if(avg[best] < 1 || avg[worst] > avg[best] * 0.5) return null;
+  return {best:best, worst:worst, avg:avg};
+}
+function mStreakAlive(q){
+  var t = todayStr();
+  if(!(q.streak > 0) || !q.lastCompleted) return false;
+  if(q.freq === "daily") return q.lastCompleted === addDays(t, -1);
+  if(q.freq === "custom") return q.lastCompleted === prevScheduledDay(q, t);
+  return false;
+}
+function mAtRisk(){
+  var t = todayStr(), list = [];
+  for(var i=0;i<state.quests.length;i++){
+    var q = state.quests[i];
+    if((q.freq === "daily" || q.freq === "custom") && questScheduledOn(q, t) && !completedThisPeriod(q)
+       && (q.streak || 0) >= 3 && mStreakAlive(q)) list.push(q);
+  }
+  list.sort(function(a, b){ return (b.streak || 0) - (a.streak || 0); });
+  return list;
+}
+function mFeatureOn(k){ return !featureRemoved(k) && !featureSealedLv(k); }
+
+function mentorPlan(){
+  var t = todayStr(), out = [], risk = mAtRisk();
+  if(!state.quests.some(function(q){ return !q.system; })) out.push({ico:"＋", text:MT("pFirst")});
+  if(risk.length) out.push({ico:"🔥", text:MT("pRisk", {n:risk[0].streak, q:risk[0].name})});
+  var pk = state.dailyPackage, pd = 0;
+  if(pk && pk.items && pk.items.length){
+    for(var i=0;i<pk.items.length;i++) if(pk.items[i].done) pd++;
+    if(pd < pk.items.length) out.push({ico:"📦", text:MT("pPkg", {d:pd, t:pk.items.length})});
+  }
+  var open = mQuests().filter(function(x){
+    return questScheduledOn(x.q, t) && !completedThisPeriod(x.q) && risk.indexOf(x.q) === -1;
+  });
+  var shaky = open.filter(function(x){ return x.due >= 4 && x.rate < 0.6; })
+                  .sort(function(a, b){ return a.rate - b.rate; })[0];
+  if(shaky) out.push({ico:"🎯", text:MT("pWeak", {q:shaky.q.name, d:shaky.done, s:shaky.due})});
+  else if(open.length) out.push({ico:"⚔", text:MT("pNext", {q:open[0].q.name})});
+  if(out.length < 3 && mFeatureOn("timer") && ((state.timeHistory && state.timeHistory[t]) || 0) < 600) out.push({ico:"⏱", text:MT("pFocus")});
+  if(out.length < 3 && new Date().getHours() >= 19 && mFeatureOn("finalize")) out.push({ico:"🌙", text:MT("pFinal")});
+  if(!out.length) out.push({ico:"✔", text:MT("pDone")});
   return out.slice(0, 3);
 }
-/* built-in knowledge base — real, concise coaching by topic keywords */
-var MENTOR_KB = [
-  {k:["jump","vertical","dunk","higher"], a:"To jump higher: (1) build legs with squats and calf raises 3×/week, (2) train explosive power with box jumps and broad jumps, (3) strengthen your core, (4) stretch hip flexors daily. Progress is slow but real — add a STR quest 'Explosive legs' and track it."},
-  {k:["listen","listening","hear","comprehen"], a:"To improve listening (language or focus): (1) daily active listening — podcasts or audio at a level that stretches you, (2) shadowing: repeat what you hear out loud, (3) take notes without pausing, (4) rewatch without subtitles. 20 focused minutes daily beats 3 passive hours. Make it an INT quest."},
-  {k:["read","reading","book","faster"], a:"To read more and faster: (1) fixed daily slot, even 10 pages, (2) stop subvocalizing — glide your eyes in chunks, (3) preview headings first, (4) summarize each chapter in one sentence. Set a daily reading quest with a target of 30 to build the streak."},
-  {k:["focus","concentrat","distract","attention"], a:"To improve focus: (1) one task, phone in another room, (2) 25-minute timed sprints (use the ⏱ Focus Timer here), (3) a 5-minute break between them, (4) note distractions instead of chasing them. Focus is trained, not born."},
-  {k:["sleep","tired","insomnia","rest"], a:"To sleep better: (1) same wake time every day, even weekends, (2) no screens 60 min before bed, (3) cool, dark room, (4) no caffeine after 2pm. Sleep is when your body cashes in the day's work — protect it. Try the 🌙 Finalize the Day ritual before bed."},
-  {k:["procrastin","lazy","motivat","start"], a:"To beat procrastination: (1) shrink the task — commit to just 2 minutes, (2) motivation follows action, not the reverse, (3) remove friction (lay out what you need the night before), (4) let the streak become the reason. The System punishes empty days for exactly this reason."},
-  {k:["discipline","consistent","habit","routine"], a:"To build discipline: (1) same action, same time, every day until it's automatic, (2) never miss twice in a row, (3) make the cue obvious and the reward immediate, (4) track it visibly — that's what this whole System is for. Small and daily beats big and rare."},
-  {k:["english","language","fluent","speak"], a:"To learn a language faster: (1) daily input you enjoy (shows, music), (2) speak from day one, mistakes included, (3) learn phrases, not isolated words, (4) 20 min daily beats a weekend cram. Make separate INT quests for listening, speaking and vocabulary."},
-  {k:["strong","muscle","gym","workout","fit"], a:"To get stronger: (1) progressive overload — add a little each week, (2) compound lifts (squat, push, pull, hinge), (3) protein and sleep do half the work, (4) consistency over intensity. Set a STR quest with a 7-day target and don't break it."},
-  {k:["money","save","budget","spend","rich"], a:"To handle money: (1) track every expense (the BUDGET section does this), (2) pay your savings goal first, then spend, (3) wait 24h before any want — add it to your STORE and let the balance decide, (4) small consistent saving compounds. Discipline with time becomes discipline with money."},
-  {k:["stress","anxiety","calm","overwhelm"], a:"To manage stress: (1) slow breathing — 4 in, 6 out, for two minutes, (2) write the worry down to get it out of your head, (3) move your body daily, (4) break the mountain into one next step. Use the 🌙 Finalize the Day questions to unload the day."},
-  {k:["confiden","shy","fear","comfort"], a:"To build confidence: (1) do one uncomfortable thing daily — that's a CON quest, (2) keep small promises to yourself; self-trust is the root of confidence, (3) prepare, then act before you feel ready, (4) collect evidence of your wins (the Hall of Honor does this)."}
-];
+
+function mentorInsights(){
+  var out = [], t = todayStr(), known = mDaysKnown();
+  var risk = mAtRisk();
+  if(risk.length && new Date().getHours() >= 17) out.push({ico:"🔥", text:MT("iRisk", {q:risk[0].name, n:risk[0].streak})});
+  var qs = mQuests().filter(function(x){ return x.due >= 5; });
+  var weak = qs.slice().sort(function(a, b){ return a.rate - b.rate; })[0];
+  if(weak && weak.rate < 0.5) out.push({ico:"📉", text:MT("iWeakQ", {q:weak.q.name, d:weak.done, s:weak.due})});
+  if(known >= 13){
+    var a = mWeek(0), b = mWeek(1);
+    if(a.done - b.done >= 3 && a.done >= b.done * 1.2) out.push({ico:"📈", text:MT("iUp", {a:a.done, b:b.done})});
+    else if(b.done - a.done >= 3 && a.done <= b.done * 0.8) out.push({ico:"📉", text:MT("iDown", {a:a.done, b:b.done})});
+  }
+  /* empty days count only from the day the hero started */
+  var empty = 0, seen = 0;
+  for(var d=1; d<=7 && d<=known; d++){ seen++; var h = state.history[addDays(t, -d)]; if(!h || !h.count) empty++; }
+  if(empty >= 3){
+    /* their own words beat anything the System could invent */
+    if(oathSworn() && state.oath && state.oath.words) out.push({ico:"⚔", text:MT("iOath", {w:state.oath.words})});
+    else out.push({ico:"🌑", text:MT("iEmpty", {n:empty})});
+  } else if(seen === 7 && empty === 0) out.push({ico:"🔥", text:MT("iSeven")});
+  var wd = mWeekdays();
+  if(wd) out.push({ico:"📅", text:MT("iDay", {best:MENTOR_WD[mLang()][wd.best], worst:MENTOR_WD[mLang()][wd.worst]})});
+  var mine = qs.filter(function(x){ return !x.q.system; });
+  if(mine.length >= 6){
+    var avg = 0; mine.forEach(function(x){ avg += x.rate; }); avg /= mine.length;
+    if(avg < 0.5) out.push({ico:"🎒", text:MT("iMany", {n:mine.length, p:Math.round(avg * 100)})});
+  }
+  var strong = qs.filter(function(x){ return x.rate >= 0.85 && (x.q.tier === "easy" || x.q.tier === "medium"); })
+                 .sort(function(a, b){ return b.rate - a.rate; })[0];
+  if(strong) out.push({ico:"🏅", text:MT("iStrongQ", {q:strong.q.name, d:strong.done, s:strong.due})});
+  if(known >= 7 && mFeatureOn("timer") && mWeek(0).focus < 30) out.push({ico:"⏱", text:MT("iFocus")});
+  var real = state.quests.filter(function(q){ return !q.system && q.freq !== "longterm"; });
+  if(real.length >= 2 && real.every(function(q){ return q.tier === "easy"; })) out.push({ico:"📈", text:MT("iEasy")});
+  var sk = ["INT","STR","CON","END"], lo = sk[0], hi = sk[0];
+  for(var i=1;i<sk.length;i++){ if(state.stats[sk[i]] < state.stats[lo]) lo = sk[i]; if(state.stats[sk[i]] > state.stats[hi]) hi = sk[i]; }
+  if(state.stats[lo] < state.stats[hi]) out.push({ico:"⚖️", text:MT("iStat", {s:mPick(MENTOR_STAT[lo]), v:state.stats[lo]})});
+  if(!out.length) out.push({ico:"🧭", text: known < 3 ? MT("iNew") : MT("iSteady")});
+  return out.slice(0, 4);
+}
+function mWeakStat(){
+  var sk = ["INT","STR","CON","END"], lo = sk[0];
+  for(var i=1;i<sk.length;i++) if(state.stats[sk[i]] < state.stats[lo]) lo = sk[i];
+  return lo;
+}
+function mHasQuestNamed(names){
+  for(var i=0;i<state.quests.length;i++){
+    var n = mNorm(state.quests[i].name);
+    for(var k in names) if(names.hasOwnProperty(k) && n === mNorm(names[k])) return true;
+  }
+  return false;
+}
+function mentorHabits(){
+  var lo = mWeakStat();
+  var list = MENTOR_HABITS.filter(function(h){ return h.stat === lo && !mHasQuestNamed(h.n); });
+  if(list.length < 2) list = list.concat(MENTOR_HABITS.filter(function(h){ return h.stat !== lo && !mHasQuestNamed(h.n); })).slice(0, 2);
+  return list.slice(0, 2);
+}
+/* a suggestion becomes a quest only through the normal NEW QUEST window, so
+   the hero sees it first and the slot rules still apply */
+function mentorCanAdd(){ return !questCreationBlock("daily") || !questCreationBlock("longterm"); }
+function mentorMakeQuest(p){
+  var freq = questCreationBlock("daily") ? "longterm" : "daily";
+  var block = questCreationBlock(freq);
+  if(block){ toast(block, "err"); return; }
+  openQuestModal(null, {icon:p.icon, name:mPick(p.n).slice(0, 60), desc:mPick(p.d).slice(0, 200), stat:p.stat, freq:freq, target:7});
+  if(freq === "longterm") toast(MT("goalNote"));
+}
+
+/* the on-device answer. Safety comes first, then the hero's own record, then the library */
 function mentorAnswer(q){
-  q = (q || "").toLowerCase();
-  if(!q.trim()) return tr("Ask me how to improve something — focus, sleep, a language, jumping, saving money — and I'll give you a real plan.");
+  var raw = String(q || "").trim(), qn = mNorm(raw);
+  if(!raw) return {kind:"empty", text:MT("askEmpty")};
+  if(MENTOR_CRISIS.test(qn)) return {kind:"crisis", text:MT("crisis")};
+  if(MENTOR_EATING.test(qn)) return {kind:"eating", text:MT("eating")};
+  if(MENTOR_DIET.test(qn)) return {kind:"diet", text:MT("diet"), quest:{stat:"END", icon:"💧", n:{en:"A glass of water after waking", ru:"Стакан воды после подъёма", uz:"Uygʻongach bir stakan suv"}}};
   var best = null, bestScore = 0;
   for(var i=0;i<MENTOR_KB.length;i++){
     var score = 0;
-    for(var j=0;j<MENTOR_KB[i].k.length;j++) if(q.indexOf(MENTOR_KB[i].k[j]) !== -1) score++;
+    for(var j=0;j<MENTOR_KB[i].k.length;j++) if(mKwHit(qn, MENTOR_KB[i].k[j])) score++;
     if(score > bestScore){ bestScore = score; best = MENTOR_KB[i]; }
   }
-  if(best) return tr(best.a);
-  return tr("I don't have a prepared plan for that yet — but the method is always the same: make it a daily quest, start absurdly small, never miss twice, and track the streak here. Turn the thing you asked about into a quest and let the System carry you.");
+  if(!best) return {kind:"none", text:MT("askNone")};
+  if(best.id === "review"){
+    var a = mWeek(0), b = mWeek(1), lines = [MT("rvHead", {a:a.done, d:a.days, x:a.xp, f:a.focus})];
+    if(mDaysKnown() >= 13) lines.push(MT("rvPrev", {a:b.done, d:b.days}));
+    mentorInsights().slice(0, 3).forEach(function(x){ lines.push(x.ico + " " + x.text); });
+    return {kind:"review", text:lines.join("\n")};
+  }
+  if(best.id === "plan"){
+    var pl = [MT("planHead")];
+    mentorPlan().forEach(function(x){ pl.push(x.ico + " " + x.text); });
+    return {kind:"plan", text:pl.join("\n")};
+  }
+  /* a quest the hero already has on this topic is named, with its real record */
+  var text = mPick(best.a), own = null;
+  for(var m=0;m<state.quests.length && !own;m++){
+    var nq = mNorm(state.quests[m].name);
+    for(var k=0;k<best.k.length;k++) if(mKwHit(nq, best.k[k])){ own = state.quests[m]; break; }
+  }
+  if(own && (own.freq === "daily" || own.freq === "custom")){
+    var r = mQuestRate(own, 14);
+    if(r.due >= 3) text += "\n\n" + MT("ownQ", {q:own.name, d:r.done, s:r.due});
+  }
+  return {kind:"kb", text:text, quest: own ? null : (best.q || null)};
+}
+
+/* ---- Mentor AI (optional) ---- */
+function aiOffered(){ return !!AI_PROXY_URL && mFeatureOn("mentor") && mFeatureOn("mentorAI"); }
+function aiUtcDay(){ return new Date().toISOString().slice(0, 10); }
+function aiLeftToday(){ return aiQuota.day === aiUtcDay() ? aiQuota.left : null; }
+function aiResetTime(){
+  /* the Worker counts by the UTC day, so show when that is on the hero's clock */
+  var n = new Date(), r = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1));
+  return ("0" + r.getHours()).slice(-2) + ":" + ("0" + r.getMinutes()).slice(-2);
+}
+/* exactly what Mentor AI receives about the hero, and nothing more
+   (the consent window lists the same things) */
+function mentorSummary(){
+  var clip = function(s, n){ s = String(s || "").replace(/["\n\r]/g, "'"); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+  var a = mWeek(0), b = mWeek(1), wd = mWeekdays(), lines = [], t = todayStr();
+  lines.push("Level " + state.level + ", rank " + currentRank().label + ". Attributes: INT " + state.stats.INT + ", STR " + state.stats.STR + ", CON " + state.stats.CON + ", END " + state.stats.END + ".");
+  lines.push("Last 7 days: " + a.done + " quests done on " + a.days + " of 7 days, " + a.xp + " XP, " + a.focus + " focus minutes.");
+  if(mDaysKnown() >= 13) lines.push("The 7 days before: " + b.done + " quests on " + b.days + " days.");
+  else lines.push("New hero: " + mDaysKnown() + " full days of history.");
+  lines.push("Active-day streak: " + rkActiveStreak() + ".");
+  if(wd) lines.push("Strongest weekday: " + MENTOR_WD.en[wd.best] + ". Weakest: " + MENTOR_WD.en[wd.worst] + ".");
+  var qs = mQuests().slice(0, 8);
+  if(qs.length){
+    lines.push("Recurring quests (done on due days, last 14 days):");
+    qs.forEach(function(x){
+      lines.push('- "' + clip(x.q.name, 40) + '" ' + x.q.freq + ", " + (x.q.stat || "") + ", " + x.q.tier + ", " + x.done + "/" + x.due + ", streak " + (x.q.streak || 0) + (completedThisPeriod(x.q) ? ", done today" : ""));
+    });
+  } else lines.push("No recurring quests yet.");
+  var goals = state.quests.filter(function(q){ return q.freq === "longterm" && !q.done && !q.system; }).slice(0, 3);
+  if(goals.length) lines.push("Open goals: " + goals.map(function(q){ return '"' + clip(q.name, 40) + '" (' + (q.progress || 0) + "/" + (q.target || 1) + ")"; }).join(", ") + ".");
+  var pk = state.dailyPackage, pd = 0;
+  if(pk && pk.items && pk.items.length){ pk.items.forEach(function(it){ if(it.done) pd++; }); lines.push("Daily package today: " + pd + "/" + pk.items.length + "."); }
+  lines.push("Local time: " + ("0" + new Date().getHours()).slice(-2) + ":00, " + MENTOR_WD.en[new Date(t + "T00:00:00").getDay()] + ".");
+  return lines.join("\n").slice(0, 1500);
+}
+function aiClean(s){
+  return String(s || "").replace(/\r/g, "").replace(/\*\*|__/g, "").replace(/^#{1,6}\s*/gm, "").replace(/^\s*[\*\-]\s+/gm, "• ").replace(/\n{3,}/g, "\n\n").trim().slice(0, 2000);
+}
+function aiSend(q, local){
+  aiBusy = true;
+  mentorShow({kind:"wait", text:MT("thinking"), q:q, src:"ai"});
+  var done = function(ans){ aiBusy = false; mentorShow(ans); renderMentorMode(); };
+  var fallback = function(note){ var l = JSON.parse(JSON.stringify(local)); l.q = q; l.note = note; done(l); };
+  var tokenP;
+  try{ tokenP = cloudUser.getIdToken(); }catch(e){ fallback(MT("aiAuth")); return; }
+  Promise.resolve(tokenP).then(function(tok){
+    var ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, AI_TIMEOUT_MS);
+    return fetch(AI_PROXY_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json", "Authorization":"Bearer " + tok},
+      body: JSON.stringify({q:q.slice(0, 400), ctx:mentorSummary(), lang:mLang(), turns:mentorChat.slice(-4)}),
+      signal: ctl ? ctl.signal : undefined
+    }).then(function(r){
+      clearTimeout(timer);
+      return r.json().catch(function(){ return {}; }).then(function(j){ return {status:r.status, j:j || {}}; });
+    }, function(e){ clearTimeout(timer); throw e; });
+  }).then(function(res){
+    var j = res.j;
+    if(typeof j.left === "number"){ aiQuota = {day:aiUtcDay(), left:Math.max(0, j.left), limit:+j.limit || AI_DAILY}; }
+    if(res.status === 200 && typeof j.answer === "string" && j.answer.trim()){
+      var text = aiClean(j.answer);
+      mentorChat.push({r:"u", t:q.slice(0, 400)}, {r:"a", t:text.slice(0, 600)});
+      if(mentorChat.length > 4) mentorChat = mentorChat.slice(-4);
+      done({kind:"ai", text:text, q:q, src:"ai", note: aiLeftToday() === 0 ? MT("aiLast", {t:aiResetTime()}) : ""});
+      return;
+    }
+    if(res.status === 429){ aiQuota = {day:aiUtcDay(), left:0, limit:+j.limit || aiQuota.limit || AI_DAILY}; fallback(MT("aiLimit", {t:aiResetTime()})); return; }
+    if(res.status === 401) { fallback(MT("aiAuth")); return; }
+    if(res.status === 503 || res.status === 502) { fallback(MT("aiBusy")); return; }
+    fallback(MT("aiError"));
+  }).catch(function(){ fallback(MT("aiError")); });
+}
+function mentorAsk(){
+  if(aiBusy) return;
+  var el = document.getElementById("mentorQ"), q = String(el.value || "").trim().slice(0, 400);
+  var local = mentorAnswer(q);
+  local.q = q;
+  sfx("open");
+  var safetyOnly = local.kind === "crisis" || local.kind === "eating" || local.kind === "diet";
+  if(!q || !aiOffered() || state.aiConsent === "no"){ mentorShow(local); return; }
+  if(safetyOnly){ if(local.kind === "diet" && state.aiConsent === "yes") local.note = MT("aiLocalOnly"); mentorShow(local); return; }
+  if(state.aiConsent !== "yes"){ aiPendingQ = q; mentorShow(local); openAiConsent(); return; }
+  if(!cloudUser){ local.signIn = true; local.note = MT("modeSign"); mentorShow(local); return; }
+  if(typeof navigator !== "undefined" && navigator.onLine === false){ local.note = MT("aiOffline"); mentorShow(local); return; }
+  if(aiLeftToday() === 0){ local.note = MT("aiLimit", {t:aiResetTime()}); mentorShow(local); return; }
+  aiSend(q, local);
+}
+function openAiConsent(){
+  document.getElementById("aiConsentTitle").textContent = MT("cTitle");
+  var h = "";
+  ["c1","c2","c3","c4","c5","c6"].forEach(function(k){ h += '<p class="m-consent-p">' + esc(MT(k, {l:AI_DAILY})) + '</p>'; });
+  document.getElementById("aiConsentBody").innerHTML = h;
+  document.getElementById("aiConsentNo").textContent = MT("cNo");
+  document.getElementById("aiConsentYes").textContent = MT("cYes");
+  document.getElementById("aiConsentModal").classList.add("show");
+}
+function closeAiConsent(){ document.getElementById("aiConsentModal").classList.remove("show"); }
+document.getElementById("aiConsentYes").addEventListener("click", function(){
+  state.aiConsent = "yes"; save(); closeAiConsent();
+  renderMentorMode();
+  if(aiPendingQ && document.getElementById("mentorQ").value.trim() === aiPendingQ){ aiPendingQ = ""; mentorAsk(); }
+  else { aiPendingQ = ""; toast(MT("cOnToast")); }
+});
+document.getElementById("aiConsentNo").addEventListener("click", function(){
+  state.aiConsent = "no"; aiPendingQ = ""; save(); closeAiConsent(); renderMentorMode();
+});
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape" && document.getElementById("aiConsentModal").classList.contains("show")){ aiPendingQ = ""; closeAiConsent(); }
+});
+
+/* ---- drawing ---- */
+function mentorShow(a){
+  mentorLast = a;
+  var el = document.getElementById("mentorAnswer");
+  if(!el) return;
+  var h = '<div class="m-ans' + (a.kind === "crisis" || a.kind === "eating" ? " m-care" : "") + '">';
+  if(a.q) h += '<div class="m-you">' + esc(MT("you")) + " " + esc(a.q) + '</div>';
+  h += '<div class="m-src">' + esc(a.src === "ai" ? MT("srcAI") : MT("srcLocal")) + (a.src === "ai" && a.kind !== "wait" ? " · " + esc(MT("aiDisclaimer")) : "") + '</div>';
+  h += '<div class="m-text">' + esc(a.text) + '</div>';
+  if(a.quest && mentorCanAdd()) h += '<button class="btn" data-mq="ans" style="margin-top:10px;width:100%">' + esc(MT("addQuest")) + ": " + esc(mPick(a.quest.n)) + '</button>';
+  if(a.note) h += '<div class="empty-note m-note">' + esc(a.note) + '</div>';
+  if(a.signIn && !cloudUser) h += '<button class="btn primary" data-mq="signin" style="margin-top:8px">' + esc(MT("signIn")) + '</button>';
+  h += '</div>';
+  el.innerHTML = h;
+}
+function renderMentorMode(){
+  var el = document.getElementById("mentorMode");
+  if(!el) return;
+  if(!aiOffered()){ el.innerHTML = '<div class="m-mode"><span>' + esc(MT("modeLocal")) + '</span></div>'; return; }
+  var txt, btn;
+  if(state.aiConsent !== "yes"){ txt = MT("modeLocal"); btn = '<button class="mini-link" data-mq="ai-on">' + esc(MT("aiOn")) + '</button>'; }
+  else if(!cloudUser){ txt = MT("modeSign"); btn = '<button class="mini-link" data-mq="signin">' + esc(MT("signIn")) + '</button> <button class="mini-link" data-mq="ai-off">' + esc(MT("aiOff")) + '</button>'; }
+  else {
+    var left = aiLeftToday();
+    txt = left === null ? MT("modeAINew", {l:AI_DAILY}) : MT("modeAI", {n:left, l:aiQuota.limit || AI_DAILY});
+    btn = '<button class="mini-link" data-mq="ai-off">' + esc(MT("aiOff")) + '</button>';
+  }
+  el.innerHTML = '<div class="m-mode"><span>' + esc(txt) + '</span>' + btn + '</div>';
+}
+function mSec(key, title, body, count){
+  return '<details class="m-sec" data-sec="' + key + '"' + (mentorOpen[key] ? " open" : "") + '><summary>' + esc(title)
+    + (count ? ' <span class="m-count">' + count + '</span>' : "") + '</summary><div class="m-sec-body">' + body + '</div></details>';
+}
+function mTile(v, prev, label, hasPrev){
+  var arrow = !hasPrev ? "" : v > prev ? '<i class="m-up">▲</i>' : v < prev ? '<i class="m-down">▼</i>' : '<i>＝</i>';
+  return '<div class="m-tile"><b>' + v + arrow + '</b><small>' + esc(label) + '</small></div>';
 }
 function renderMentor(){
   var mp = document.getElementById("mentorPanel");
@@ -12397,25 +13028,66 @@ function renderMentor(){
   }
   var ins = document.getElementById("mentorInsights");
   if(!ins) return;
-  var data = mentorInsights(), h = "";
-  for(var i=0;i<data.length;i++){
-    h += '<div class="save-goal" style="margin-bottom:8px;display:flex;gap:10px;align-items:flex-start">'
-      + '<span style="font-size:1.2rem;flex:0 0 auto">' + data[i].ico + '</span>'
-      + '<span class="q-desc" style="margin:0">' + esc(data[i].text) + '</span></div>';
+  var h = '<div class="m-h">' + esc(MT("planTitle")) + '</div><ul class="m-list">';
+  mentorPlan().forEach(function(x){ h += '<li><span class="m-ico">' + x.ico + '</span><span>' + esc(x.text) + '</span></li>'; });
+  h += '</ul>';
+  var a = mWeek(0), b = mWeek(1), hasPrev = mDaysKnown() >= 13;
+  var wk = '<div class="m-week">' + mTile(a.done, b.done, MT("wQuests"), hasPrev) + mTile(a.days, b.days, MT("wDays"), hasPrev)
+    + mTile(a.xp, b.xp, MT("wXp"), hasPrev) + (mFeatureOn("timer") ? mTile(a.focus, b.focus, MT("wFocus"), hasPrev) : "") + '</div>'
+    + '<div class="empty-note" style="margin-top:8px">' + esc(hasPrev ? MT("rvPrev", {a:b.done, d:b.days}) : MT("wNew")) + '</div>';
+  h += mSec("week", MT("weekTitle"), wk);
+  var list = mentorInsights(), ih = '<ul class="m-list">';
+  list.forEach(function(x){ ih += '<li><span class="m-ico">' + x.ico + '</span><span>' + esc(x.text) + '</span></li>'; });
+  h += mSec("ins", MT("insTitle"), ih + '</ul>', list.length);
+  if(mentorCanAdd()){
+    var hb = mentorHabits(), th = "";
+    hb.forEach(function(x, i){
+      th += '<div class="m-habit"><span class="m-ico">' + x.icon + '</span><span class="m-habit-t"><b>' + esc(mPick(x.n)) + '</b><small>' + esc(mPick(x.d)) + '</small></span>'
+        + '<button class="btn" data-mq="habit" data-i="' + MENTOR_HABITS.indexOf(x) + '">' + esc(MT("addQuest")) + '</button></div>';
+    });
+    if(th) h += mSec("try", MT("tryTitle"), th);
   }
   ins.innerHTML = h;
+  var qEl = document.getElementById("mentorQ");
+  qEl.setAttribute("placeholder", MT("askPh"));
+  qEl.setAttribute("aria-label", MT("askLbl"));
+  document.getElementById("mentorAsk").textContent = MT("askBtn");
+  renderMentorMode();
+  if(mentorLast && mentorLast.kind !== "wait") mentorShow(mentorLast);
 }
-
-document.getElementById("mentorAsk").addEventListener("click", function(){
-  var q = document.getElementById("mentorQ").value;
-  document.getElementById("mentorAnswer").innerHTML =
-    '<div class="save-goal" style="display:flex;gap:10px;align-items:flex-start">'
-    + '<span style="font-size:1.2rem;flex:0 0 auto">🧭</span>'
-    + '<span class="q-desc" style="margin:0">' + esc(mentorAnswer(q)) + '</span></div>';
-  sfx("open");
+/* TODAY gets the Mentor's first step as one quiet row (not while FIRST STEPS shows) */
+function renderTodayMentor(){
+  var el = document.getElementById("todayMentor");
+  if(!el) return;
+  var fs = document.getElementById("firstSteps");
+  var hide = !mFeatureOn("mentor") || (fs && fs.innerHTML !== "");
+  el.style.display = hide ? "none" : "";
+  if(hide) return;
+  var p = mentorPlan()[0];
+  el.innerHTML = '<span>🧭</span><span>' + esc(MT("todayRow", {t:p.text})) + '</span><span class="tr-go">›</span>';
+}
+document.getElementById("todayMentor").addEventListener("click", function(){
+  switchPage("profile");
+  var mp = document.getElementById("mentorPanel");
+  if(mp && mp.scrollIntoView) mp.scrollIntoView({block:"start"});
 });
+document.getElementById("mentorPanel").addEventListener("click", function(e){
+  var b = e.target.closest("[data-mq]");
+  if(!b) return;
+  var act = b.getAttribute("data-mq");
+  if(act === "habit"){ var hb = MENTOR_HABITS[+b.getAttribute("data-i")]; if(hb) mentorMakeQuest(hb); }
+  else if(act === "ans"){ if(mentorLast && mentorLast.quest) mentorMakeQuest(mentorLast.quest); }
+  else if(act === "signin"){ cloudSignIn(); }
+  else if(act === "ai-on"){ aiPendingQ = ""; openAiConsent(); }
+  else if(act === "ai-off"){ state.aiConsent = "no"; save(); mentorChat = []; renderMentorMode(); toast(MT("cOffToast")); }
+});
+document.getElementById("mentorPanel").addEventListener("toggle", function(e){
+  var d = e.target;
+  if(d && d.classList && d.classList.contains("m-sec")) mentorOpen[d.getAttribute("data-sec")] = d.open;
+}, true);
+document.getElementById("mentorAsk").addEventListener("click", mentorAsk);
 document.getElementById("mentorQ").addEventListener("keydown", function(e){
-  if(e.key === "Enter") document.getElementById("mentorAsk").click();
+  if(e.key === "Enter") mentorAsk();
 });
 
 /* ---------------- render: home dashboard ---------------- */
@@ -12431,6 +13103,7 @@ function nextRewardLevel(){
 }
 function renderHome(){
   renderFirstSteps();
+  renderTodayMentor();
   renderPunishBanners();
   var r = rankForLevel(state.level);
   var hr = document.getElementById("homeRank");

@@ -58,7 +58,9 @@ test.describe("your data & privacy", () => {
     expect(text).toContain("On this device");
     expect(text).toContain("administrator can open cloud saves");
     expect(text).toContain("clan");
-    expect(text).toContain("nothing is sent to any AI service");
+    /* Mentor AI (README 4x) is the only thing that can talk to an AI service, and only when switched on */
+    expect(text).toContain("Nothing is sent to an AI service unless you turn on Mentor AI");
+    expect(text).toContain("health questions never leave this device");
     await expect(page.locator("#privacyExport")).toBeVisible();
     await expect(page.locator("#privacyDelete")).toBeVisible();
   });

@@ -66,6 +66,7 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `sw.js` | Old service worker turned into a kill switch. Keep it — it cleans up old installs |
 | `manifest.webmanifest` | PWA identity (name, icons, colors) for "Add to Home screen" |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons |
+| `ai-proxy/` | The optional Mentor AI server (a Cloudflare Worker, no npm) and how to deploy it — see **section 4x** and `ai-proxy/README.md`. Not part of the page |
 | `tests/` | The safety net — see **section 2b** below. Not part of the app; the live site ignores it |
 | `database.rules.json` | The Firebase Realtime Database security rules, kept in the repo so they are reviewed like code. **Firebase does not read this file** — paste it into the console (section 4, step 5) |
 | `package.json`, `playwright.config.js` | Only used to run the tests |
@@ -639,7 +640,7 @@ A chapter's title is **earned, never decorative**. It is chosen by comparing the
 Three promises from the business plan, made true in the app. All three live in **SETTINGS**.
 
 ### 🔒 YOUR DATA & PRIVACY
-Says in plain words where a save is kept (this device; the cloud if signed in, where the administrator can open it to fix problems; clan members see name, photo, level, rank, weekly progress and chat) and that there are no ads, no tracking and nothing sent to any AI service. **Keep that last sentence true**: if an AI feature is ever added, this text must change in the same commit.
+Says in plain words where a save is kept (this device; the cloud if signed in, where the administrator can open it to fix problems; clan members see name, photo, level, rank, weekly progress and chat) and that there are no ads and no tracking. Since 4x it also says that **nothing is sent to an AI service unless the hero turns on Mentor AI**, which shows what it sends first, and that health questions never leave the device. **Keep that sentence true**: any new AI feature must change this text in the same commit.
 
 - **💾 EXPORT MY DATA** is the same full JSON backup as EXPORT JSON BACKUP.
 - **🗑 DELETE MY DATA** asks the hero to type `DELETE` (or `УДАЛИТЬ`). Signed in, it first removes the cloud save (`hunters/<uid>`) and the clan profile, then signs out; then it clears this device: the save, the IndexedDB vault **and** the daily snapshots, so the vault recovery cannot bring it back on reload.
@@ -764,3 +765,43 @@ Tests: `tests/tutorial.spec.js`; `tests/themes.spec.js` updated for the Shadow d
 - **Long Profile panels open with one tap.** 📓 PAGES OF THE HERO and ⚔ THE OATH are collapsed to one row with a + button, like the SETTINGS panels. The collapse handler now works on any page (`.panel.collapsible`).
 
 Tests: `tests/smoke.spec.js` (skip, one-tap panels), `tests/themes.spec.js` (Shadow for everyone, calm Shadow background).
+
+## 4x. THE SYSTEM MENTOR, WITH OPTIONAL MENTOR AI (November 2026)
+
+The Mentor (PROGRESS → PROFILE → 🧭 SYSTEM MENTOR) is now the app's coach: it analyses the hero's own record, plans the day, suggests habits and answers questions. It has **two brains**.
+
+### 1. The on-device Mentor (always there, free, offline)
+Everything is computed from the save by plain code; nothing is sent anywhere.
+- **TODAY'S PLAN**: up to three steps, in order: a streak about to break (`mAtRisk`: a daily or custom quest with a live streak of 3+ that is not done today), the daily package, the shakiest quest due today, then a focus block or 🌙 Finalize the Day in the evening.
+- **📊 THIS WEEK**: quests, active days, XP and focus minutes for the last 7 days, with ▲▼ against the 7 days before (shown only after 14 days of history).
+- **🔎 WHAT I SEE**: up to four findings. Each quest's **real rate on the days it was due** over the last 14 days (`mQuestRate`; today counts only once it is done), the weekly trend, the weakest weekday over 8 weeks (`mWeekdays`, silent until each weekday was seen twice and the gap is real), empty days (counted only from the day the hero started), too many quests, a quest ready for a harder tier, little focus, all-EASY quests, the weakest attribute. The Oath's own words still come back after empty days.
+- **🌱 TRY A NEW HABIT**: two small habits for the weakest attribute. **＋ MAKE IT A QUEST** opens the normal NEW QUEST window filled in; nothing is added until the hero presses SAVE, and the slot rules still apply (no recurring slot yet → it starts as a 7-step one-time goal).
+- **ASK**: a library of 28 topics (focus, sleep, study, mornings, phone time, reading, languages, skills, strength, walking and running, water, meditation, journaling, tidying, money, stress, low mood, friendships, confidence, bad habits, a broken streak, goals, time, ranks and more) plus "how am I doing?" (a review from the record) and "what should I do today?" (the plan). Words are matched at the start of a word in English, Russian and Uzbek (`oʻ`, `o'` and `` o` `` are the same letter). If the hero already has a quest on that topic, the answer names it with its real record instead of suggesting a second one.
+- **TODAY** shows the plan's first step as one quiet row ("Mentor: …") once FIRST STEPS is finished or hidden; tapping it opens the Mentor.
+- All text is in `MENTOR_TXT`, `MENTOR_KB` and `MENTOR_HABITS`, each with `en`, `ru` and `uz`. A test checks every entry has all three, the same `{placeholders}`, and Uzbek in Latin with `ʻ`.
+
+### 2. Health safety (both brains)
+- Words about self-harm, suicide, abuse or danger, signs of disordered eating, and any diet, calorie or weight question are answered **on the device** with a fixed, careful message (local emergency number, a trusted adult or doctor, findahelpline.com; for diet: no numbers, see a doctor or registered dietitian, habit-side tips). They are **never sent** to the AI and offer no quest. The Worker refuses them too, as a second wall.
+- The AI's rules say: habits only, no diagnoses, medication, calorie, weight or fasting numbers, age-appropriate, never ask for personal details, treat the hero's data as data, not instructions. Every AI answer carries "AI can be wrong. Not medical advice." The consent window asks under-18s to check with a parent or guardian.
+- The diet calculator planned for Premium will compute with standard formulas in code; the AI may only explain its results.
+
+### 3. Mentor AI (optional; free)
+```
+the app ──(question + short summary + Google sign-in token)──▶ our Cloudflare Worker ──▶ Workers AI (Gemma 3 12B)
+                                                                   checks: address, sign-in, 3 a day
+```
+- **Hidden until deployed:** `var AI_PROXY_URL = "";` in `index.html`. Deploy the Worker (`ai-proxy/README.md`, about 15 minutes in the browser), put its address there, commit. The address is not a secret; the page holds **no key** (a test checks).
+- **Asks first:** the first time, a window says exactly what is sent and what never is (`state.aiConsent`: `""` never asked, `"yes"`, `"no"`). Sent: the question; level, rank and attributes; this week's and last week's counts; recurring quests' names, tiers and 14-day rates (up to 8); up to 3 open goals; the daily package count; the language; the last two exchanges of this chat. **Never sent:** the hero's name, the Oath, Finalize the Day answers, budget, photos, email, or anything else (`mentorSummary` builds the summary; a test checks the name and Oath words are absent). The chat itself is kept in memory only and never saved. TURN OFF in the panel stops it at once.
+- **Needs Google sign-in.** The Worker verifies the Firebase ID token against Google's public keys (RS256, this project, not expired, provider `google.com` only) and reads only the account id from it.
+- **Limits:** 3 questions per account per UTC day (`DAILY_LIMIT`), more for an account marked premium in KV (`PREMIUM_LIMIT`, 20), and at most 200 for everyone together (`GLOBAL_DAILY_LIMIT`). Only a delivered answer is counted. The counters are the only thing stored, and they delete themselves after two days.
+- **Always a fallback:** limit used up, offline, signed out, Worker down or busy, or the free allowance gone: the on-device Mentor answers and a line says why.
+- **Admin:** a new feature `mentorAI` (Mentor AI chat, open by default). Sealing or removing it hides only the AI; the on-device Mentor stays. Sealing `mentor` hides both.
+- **Privacy panel** (SETTINGS → YOUR DATA & PRIVACY) now says AI is used only when switched on; this replaces "nothing is sent to any AI service".
+
+### Cost and risks, plainly
+Free on Cloudflare's Workers Free plan: 10,000 neurons a day, about 200 Mentor questions; when they run out Cloudflare stops answering rather than billing, and the app falls back to the device. KV Free allows 1,000 writes a day, 2 per answered question. On the Paid plan ($5/month) extra use costs about $0.0005 a question. The daily limit can be exceeded by one or two questions if someone sends many at the same instant (KV is eventually consistent). The model can be wrong and is weaker in Uzbek. Details and sources: `ai-proxy/README.md`.
+
+### Data and migration
+One new save field, `aiConsent` (default `""`), filled in for old saves by the normal defaults merge; nothing else in the save changes, and the Mentor only reads the record. `openQuestModal(id, preset)` gained an optional preset for suggestions.
+
+Tests: `tests/mentor.spec.js` (the analysis on a seeded record, three languages, safety, suggestions through NEW QUEST, TODAY row, every AI path with a fake Worker, admin locks, old saves, no key in the page), `tests/ai-proxy.spec.js` (the Worker itself), `tests/privacy.spec.js` (the new sentence).
