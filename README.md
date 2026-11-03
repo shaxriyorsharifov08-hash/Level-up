@@ -651,6 +651,7 @@ Says in plain words where a save is kept (this device; the cloud if signed in, w
 A gentle "time for a short break" after **20 / 30 / 45 / 60 minutes of active use** (default 30, or Off). Only active use counts: the app visible, touched in the last minute, and **no focus session running**, because that is work, not scrolling. Five minutes away counts as a break and starts the count again. Saved as `breakMins` (0 = off); older saves get 30, and a corrupt value is reset to 30 so it can never fire every tick.
 
 ### ⭐ LEVEL UP PREMIUM (preview)
+*Since 4y this is its own page, MORE → ⭐ PREMIUM (marked SOON); SETTINGS still has a button to it. The content below is unchanged, plus "Mentor AI with 20 questions a day instead of 3".*
 Shows the planned price (**37,500 so'm a month**), what Premium will add (AI training plans, a diet calculator with standard medical formulas for 18+, deeper statistics, extra themes) and what is **always free**. **Nothing is sold: there is no payment in the app.** I'M INTERESTED stores the day in `premiumInterest`, which the administrator can count in cloud saves. It is a feature in the registry (`premium`), so the Administrator can seal it by level or remove it like any other.
 
 ### Security fixes
@@ -700,9 +701,9 @@ New users said the app felt heavy: on first open, the home page was 2.5 screens 
 |---|---|
 | 🏠 TODAY | the home page |
 | 📜 QUESTS | the quest log |
-| 📈 PROGRESS | PROFILE · STORY · STATS · HONOR, as sub-tabs at the top |
+| 📈 PROGRESS | PROFILE · STORY · STATS · HONOR, as sub-tabs at the top (*since 4y: STORY · STATS · HONOR; the hero opens from TODAY*) |
 | 🎁 REWARDS | REWARDS · INVENTORY |
-| ☰ MORE | a sheet with every other section: LEARN, CLAN, BUDGET, GUIDE, SETTINGS |
+| ☰ MORE | a sheet with every other section: LEARN, CLAN, BUDGET, GUIDE, SETTINGS (*since 4y also MENTOR and PREMIUM*) |
 
 The Administrator's feature locks still decide what is open. A sealed section shows the level that opens it (🔒) instead of being invisible, and tapping it explains; a removed section disappears; if every page of a tab is removed, the tab disappears. A tab remembers the sub-tab you last used. SETTINGS → RENAME & REORDER TABS still renames sections and orders/hides the MORE list; SETTINGS can never be hidden.
 
@@ -760,7 +761,7 @@ Tests: `tests/tutorial.spec.js`; `tests/themes.spec.js` updated for the Shadow d
 
 ## 4w. SKIP THE OATH, SHADOW FOR EVERYONE, ONE-TAP PANELS (November 2026)
 
-- **The Oath has SKIP FOR NOW.** It stores the day in `state.oathSkipped` (`""` by default) and the Oath is not asked again automatically; PROGRESS → PROFILE → ⚔ THE OATH → SWEAR THE OATH still opens it. Anything that waited behind the Oath is announced right after.
+- **The Oath has SKIP FOR NOW.** It stores the day in `state.oathSkipped` (`""` by default) and the Oath is not asked again automatically; the hero's page (tap the hero card on TODAY, 4y) → ⚔ THE OATH → SWEAR THE OATH still opens it. Anything that waited behind the Oath is announced right after.
 - **Everyone enters in Shadow.** `migrateState()` sets every save to Shadow once (`themeV4`, not in `defaultState`); after that, a theme the hero picks in SETTINGS is kept. The calm look no longer flattens the background, so Shadow keeps its own purple glow behind the cards (only glows and motion are switched off).
 - **Long Profile panels open with one tap.** 📓 PAGES OF THE HERO and ⚔ THE OATH are collapsed to one row with a + button, like the SETTINGS panels. The collapse handler now works on any page (`.panel.collapsible`).
 
@@ -768,7 +769,7 @@ Tests: `tests/smoke.spec.js` (skip, one-tap panels), `tests/themes.spec.js` (Sha
 
 ## 4x. THE SYSTEM MENTOR, WITH OPTIONAL MENTOR AI (November 2026)
 
-The Mentor (PROGRESS → PROFILE → 🧭 SYSTEM MENTOR) is now the app's coach: it analyses the hero's own record, plans the day, suggests habits and answers questions. It has **two brains**.
+The Mentor (MORE → 🧭 MENTOR since 4y; it was on PROGRESS → PROFILE) is now the app's coach: it analyses the hero's own record, plans the day, suggests habits and answers questions. It has **two brains**.
 
 ### 1. The on-device Mentor (always there, free, offline)
 Everything is computed from the save by plain code; nothing is sent anywhere.
@@ -805,3 +806,20 @@ Free on Cloudflare's Workers Free plan: 10,000 neurons a day, about 200 Mentor q
 One new save field, `aiConsent` (default `""`), filled in for old saves by the normal defaults merge; nothing else in the save changes, and the Mentor only reads the record. `openQuestModal(id, preset)` gained an optional preset for suggestions.
 
 Tests: `tests/mentor.spec.js` (the analysis on a seeded record, three languages, safety, suggestions through NEW QUEST, TODAY row, every AI path with a fake Worker, admin locks, old saves, no key in the page), `tests/ai-proxy.spec.js` (the Worker itself), `tests/privacy.spec.js` (the new sentence).
+
+## 4y. TODAY AND THE HERO AS ONE PLACE; MENTOR AND PREMIUM IN MORE (November 2026)
+
+TODAY and PROFILE showed the same hero card twice (rank, name, level, XP). Now there is one.
+
+- **TODAY's hero card is the way to the hero.** The card (`#todayHero`, a button with a ›) opens the hero's page. The hero's page belongs to the TODAY tab (`TABS[0].pages = ["home","profile"]`) and has no sub-tabs; **‹ TODAY** at its top and the TODAY tab both go back (`goTab("today")` always opens TODAY). The unspent-points chip on the card still leads there.
+- **The hero's page has no second hero card.** At the top: the portrait with the rank badge, the name (tap to rename) and the rank, and the unspent-points banner. The XP bar is on TODAY only. Then ⚖ RANK EVALUATION and ATTRIBUTES (was titled "STATS", which clashed with the STATS page) stay open; ⚔ THE OATH, 📇 HERO DOSSIER, TITLES, BADGES and 📓 PAGES OF THE HERO are folded to one row each (the existing `.panel.collapsible`).
+- **TODAY is shorter:** the hero card, the Daily Quest, one line of today's quests and at most one tip (FIRST STEPS for a new hero, then the Mentor's next step). The "next reward" line was dropped; the road and its rewards are on PROGRESS → STORY.
+- **PROGRESS** now holds STORY · STATS · HONOR and opens on STORY.
+- **MORE** now lists 🧭 MENTOR, LEARN, CLAN, BUDGET, ⭐ PREMIUM (with a SOON tag), GUIDE and SETTINGS.
+  - **🧭 MENTOR** is its own page with the whole Mentor from 4x. The TODAY tip opens it.
+  - **⭐ PREMIUM** is a "coming soon" page so every hero can see Premium exists: the price (37,500 so'm a month), what it will add (Mentor AI with 20 questions a day instead of 3, AI training plans, the diet calculator for 18+, deeper statistics, extra themes), what is always free, and I'M INTERESTED. **Nothing is sold; there is no payment anywhere.** It replaces the old Premium window; SETTINGS → ⭐ SEE WHAT'S COMING opens the page.
+  - Both are sections in the feature registry now (`mentor`, `premium` are `type:"section"` and in `LOCKABLE_PAGES`), so the Administrator can seal them by level (the MORE row shows the level) or remove them (the row disappears). `mentorAI` still controls only the AI.
+- **Old saves:** no save field changed. `reconcileNav()` now puts a page a save has never seen in front of the next page that follows it in `NAV_ORDER` instead of at the very end, so MENTOR arrives before LEARN and PREMIUM before GUIDE, and the hero's own names, order and hidden entries are kept.
+- The tour, the unlock messages and the Oath's SKIP note now name the new places, in English, Russian and Uzbek. **The guide video still shows the old PROGRESS screen** (about 0:55 to 1:04: the PROGRESS and MORE screens); re-record it with the tools in 4v when convenient.
+
+Tests: `tests/hero-home.spec.js` (new), `tests/premium.spec.js` (now the page), `tests/redesign.spec.js`, `tests/tutorial.spec.js`, `tests/mentor.spec.js` (the Mentor's page), and the page lists in `tests/themes.spec.js` and `tests/names-and-uzbek.spec.js`.

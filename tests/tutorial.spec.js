@@ -47,7 +47,7 @@ test.describe("the first-run tour", () => {
     expect(await page.evaluate(() => currentPage)).toBe("home");
     await page.click('#nav .nav-btn[data-tab="progress"]');
     await expect.poll(() => stepId(page)).toBe("prog");
-    expect(await page.evaluate(() => currentPage)).toBe("profile");
+    expect(await page.evaluate(() => currentPage)).toBe("story"); /* the hero lives on TODAY now (README 4y) */
 
     await next(page);
     expect(await stepId(page)).toBe("gomore");

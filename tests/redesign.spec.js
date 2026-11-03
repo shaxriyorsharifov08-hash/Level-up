@@ -24,21 +24,22 @@ test.describe("the tab bar", () => {
     expect(fits).toBe(true);
   });
 
-  test("PROGRESS holds the profile, the story road, stats and honor; sealed ones show their level", async ({ page }) => {
+  test("PROGRESS holds the story road, stats and honor; sealed ones show their level", async ({ page }) => {
     await bootAsGuest(page);
+    await page.evaluate(() => { state.level = 4; save(); renderNav(); });
     await page.click('#nav .nav-btn[data-tab="progress"]');
-    expect(await page.evaluate(() => currentPage)).toBe("profile");
-    const subs = await page.$$eval("#subnav .sub-btn", (els) => els.map((e) => [e.getAttribute("data-page"), e.getAttribute("data-locklv")]));
-    expect(subs).toEqual([["profile", null], ["story", null], ["stats", "4"], ["honor", "8"]]);
-    await page.click('#subnav .sub-btn[data-page="stats"]');
-    expect(await page.evaluate(() => currentPage)).toBe("profile"); /* sealed: stays put */
-    await expect(page.locator(".toast").last()).toContainText("Reach Level");
-    await page.click('#subnav .sub-btn[data-page="story"]');
     expect(await page.evaluate(() => currentPage)).toBe("story");
+    const subs = await page.$$eval("#subnav .sub-btn", (els) => els.map((e) => [e.getAttribute("data-page"), e.getAttribute("data-locklv")]));
+    expect(subs).toEqual([["story", null], ["stats", null], ["honor", "8"]]);
+    await page.click('#subnav .sub-btn[data-page="honor"]');
+    expect(await page.evaluate(() => currentPage)).toBe("story"); /* sealed: stays put */
+    await expect(page.locator(".toast").last()).toContainText("Reach Level");
+    await page.click('#subnav .sub-btn[data-page="stats"]');
+    expect(await page.evaluate(() => currentPage)).toBe("stats");
     /* the tab remembers where the hero was */
     await page.click('#nav .nav-btn[data-tab="today"]');
     await page.click('#nav .nav-btn[data-tab="progress"]');
-    expect(await page.evaluate(() => currentPage)).toBe("story");
+    expect(await page.evaluate(() => currentPage)).toBe("stats");
   });
 
   test("REWARDS is sealed until its level, then opens", async ({ page }) => {
@@ -57,7 +58,8 @@ test.describe("the tab bar", () => {
     await page.click('#nav .nav-btn[data-tab="more"]');
     await expect(page.locator("#moreSheet")).toHaveClass(/show/);
     const rows = await page.$$eval("#moreList .more-row", (els) => els.map((e) => [e.getAttribute("data-page"), e.getAttribute("data-locklv")]));
-    expect(rows).toEqual([["learn", null], ["guild", "12"], ["budget", "15"], ["guide", null], ["admin", null]]);
+    expect(rows).toEqual([["mentor", null], ["learn", null], ["guild", "12"], ["budget", "15"], ["premium", null], ["guide", null], ["admin", null]]);
+    await expect(page.locator('#moreList .more-row[data-page="premium"] .mr-tag')).toHaveText("SOON");
     await page.click('#moreList .more-row[data-page="admin"]');
     expect(await page.evaluate(() => currentPage)).toBe("admin");
     await expect(page.locator("#moreSheet")).not.toHaveClass(/show/);
@@ -72,7 +74,7 @@ test.describe("the tab bar", () => {
     await bootAsGuest(page);
     const r = await page.evaluate(() => {
       remoteSystemLocks = { guild: -1, stats: 0, rewards: -1, inventory: -1 };
-      renderNav(); switchPage("profile");
+      renderNav(); switchPage("story");
       const more = tabPages(TABS[4]);
       const subs = Array.from(document.querySelectorAll("#subnav .sub-btn")).map((e) => [e.getAttribute("data-page"), e.getAttribute("data-locklv")]);
       const tabsNow = Array.from(document.querySelectorAll("#nav .nav-btn")).map((e) => e.getAttribute("data-tab"));
@@ -125,9 +127,10 @@ test.describe("TODAY", () => {
     });
     expect(m.pkgTop).toBeLessThan(m.screen / 2);
     expect(m.height).toBeLessThan(m.screen * 1.5);
-    expect(m.mentorHere).toBe(false); /* moved to PROGRESS → PROFILE */
+    expect(m.mentorHere).toBe(false); /* the Mentor has its own page in MORE (README 4y) */
     expect(m.artHere).toBe(false);
-    expect(await page.locator("#page-profile #mentorPanel").count()).toBe(1);
+    expect(await page.locator("#page-mentor #mentorPanel").count()).toBe(1);
+    expect(await page.locator("#todayNext").count()).toBe(0); /* one row fewer: the next reward lives on STORY */
   });
 
   test("the + button adds a quest from TODAY, and the quest row leads to QUESTS", async ({ page }) => {

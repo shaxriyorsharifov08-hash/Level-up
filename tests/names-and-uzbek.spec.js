@@ -103,7 +103,7 @@ test.describe("no anime-derived names remain", () => {
     test("every page reads clean in " + lang, async ({ page }) => {
       await bootAsGuest(page);
       await reloadIn(page, lang);
-      const pages = ["home", "profile", "quests", "rewards", "inventory", "stats", "story", "honor", "guild", "budget", "guide", "admin", "learn"];
+      const pages = ["home", "profile", "mentor", "premium", "quests", "rewards", "inventory", "stats", "story", "honor", "guild", "budget", "guide", "admin", "learn"];
       for (const p of pages) {
         const text = await page.evaluate((id) => { switchPage(id); return document.body.innerText; }, p);
         const m = text.match(RETIRED);

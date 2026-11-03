@@ -1293,6 +1293,20 @@ main section{animation:pagein .28s ease}
 .today-row{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;margin-bottom:14px;border-radius:14px;
   border:1px solid var(--line);background:rgba(11,15,34,.85);color:var(--text);font-size:.95rem;font-weight:600;text-align:left}
 .today-row .tr-go{margin-left:auto;color:var(--dim)}
+/* TODAY + the hero's page (README 4y) */
+.today-hero{cursor:pointer}
+.today-hero:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+.today-head .th-go{color:var(--dim);font-size:1.3rem;line-height:1;margin-left:2px}
+.hero-back{border:0;background:none;color:var(--dim);font-weight:800;font-size:.9rem;padding:6px 4px 10px;min-height:40px;cursor:pointer}
+.hero-top{display:flex;flex-direction:column;align-items:center;gap:12px}
+.hero-top .hero-id{display:flex;align-items:center;gap:12px;justify-content:center;text-align:left}
+.hero-top .sp-banner{align-self:stretch}
+.more-row .mr-tag{font-size:.68rem;font-weight:900;letter-spacing:.06em;padding:2px 8px;border-radius:10px;border:1.5px solid var(--legendary);color:var(--legendary)}
+.prem-hero{text-align:center;padding-top:22px;padding-bottom:22px}
+.prem-star{font-size:2.6rem;line-height:1}
+.prem-title{font-family:var(--fd);font-weight:900;font-size:1.35rem;letter-spacing:.06em;margin-top:6px}
+.prem-chips{justify-content:center;margin:12px 0 8px}
+.prem-lede{max-width:34ch;margin:0 auto}
 /* the Mentor (README 4x) */
 .today-row.m-today{font-size:.88rem;padding:11px 14px}
 .m-h{font-size:.74rem;font-weight:900;letter-spacing:.06em;color:var(--dim);margin:2px 0 8px}
@@ -1332,6 +1346,7 @@ main section{animation:pagein .28s ease}
 .today-next{display:block;width:100%;text-align:left;border:0;background:none;color:var(--dim);font-size:.9rem;font-weight:600;padding:2px 4px 12px}
 .today-next b{color:var(--legendary)}
 #profileArt{display:flex;justify-content:center}
+#profileArt.hero-top{flex-direction:column;align-items:center}
 #pkgEditBtn{font-size:1rem}
 /* TODAY's own card already shows level and rank */
 body[data-page="home"] header .hdr-right{display:none}
@@ -1655,7 +1670,8 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 
     <!-- ============ TODAY (home): today's work and nothing else. README 4t ============ -->
     <section id="page-home" style="display:none">
-      <div class="panel">
+      <!-- the hero card: TODAY and the hero's page are one place now (README 4y). Tap it to open the hero -->
+      <div class="panel today-hero" id="todayHero" role="button" tabindex="0" aria-label="Open your hero">
         <div class="today-head">
           <span class="rank-badge rank-E" id="homeRank">E</span>
           <div class="th-who">
@@ -1663,6 +1679,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
             <div class="hunter-sub" id="homeSub">E-RANK HERO</div>
           </div>
           <span class="th-streak" id="homeStreak" title="Days in a row with a cleared quest"></span>
+          <span class="th-go" aria-hidden="true">›</span>
         </div>
         <div class="xp-wrap">
           <div class="xp-row"><span>LEVEL <b id="homeLvl">1</b></span><span id="homeXpTxt"></span></div>
@@ -1691,38 +1708,23 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
       <button class="today-row" id="todayQuests"></button>
       <div id="firstSteps"></div>
       <button class="today-row m-today" id="todayMentor" style="display:none"></button>
-      <button class="today-next" id="todayNext" style="display:none"></button>
     </section>
 
     <!-- ============ PROFILE ============ -->
     <section id="page-profile" style="display:none">
-      <div class="panel" id="profileArt"><div class="hero-art" id="heroArt"></div></div>
-      <div class="panel">
-        <div class="panel-title">HERO PROFILE</div>
-        <div class="profile-top">
+      <button class="hero-back" id="heroBack">‹ TODAY</button>
+      <div class="panel hero-top" id="profileArt">
+        <div class="hero-art" id="heroArt"></div>
+        <div class="hero-id">
           <span class="rank-badge big rank-E" id="profRank">E</span>
-          <div style="flex:1;min-width:200px">
+          <div>
             <span class="hunter-name" id="hunterName" title="Click to edit name">Hero</span>
             <div class="hunter-sub" id="hunterSub">E-RANK HERO</div>
-            <div class="xp-wrap">
-              <div class="xp-row"><span>LEVEL <b id="profLvl">1</b></span><span id="xpTxt"><b>0</b> / 100 XP</span></div>
-              <div class="bar"><div class="bar-fill" id="xpBar" style="width:0%"></div></div>
-            </div>
           </div>
         </div>
         <div class="sp-banner" id="spBanner" style="display:none">&#10024; <span id="spTxt"></span></div>
       </div>
 
-      <div class="panel" id="mentorPanel">
-        <div class="panel-title">🧭 SYSTEM MENTOR</div>
-        <div id="mentorInsights"></div>
-        <div class="adm-row" style="margin-top:14px">
-          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="400" aria-label="Ask the Mentor" placeholder="Ask: how to focus, sleep, study, stop scrolling…">
-          <button class="btn primary" id="mentorAsk">ASK</button>
-        </div>
-        <div id="mentorMode"></div>
-        <div id="mentorAnswer" style="margin-top:10px" aria-live="polite"></div>
-      </div>
       <div class="panel" id="rankTrialPanel">
         <div class="panel-title">⚖ RANK EVALUATION</div>
         <div class="empty-note" style="margin-bottom:12px">Attributes make you <b>eligible</b>. They do not promote you. The Council weighs what you have actually sustained — and a rank, once earned, is never taken back.</div>
@@ -1735,11 +1737,11 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
       </div>
 
       <div class="panel">
-        <div class="panel-title">STATS</div>
+        <div class="panel-title">ATTRIBUTES</div>
         <div id="statsPanel"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel collapsible closed">
         <div class="panel-title">📇 HERO DOSSIER</div>
         <div class="dossier-grid">
           <div><label class="form-lbl">Height</label><input class="inp ds-field" data-ds="height" maxlength="20" placeholder="e.g. 178 cm"></div>
@@ -1760,12 +1762,12 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
         <div class="chip-list" id="skillsList"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel collapsible closed">
         <div class="panel-title">TITLES</div>
         <div class="chip-list" id="titlesList"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel collapsible closed">
         <div class="panel-title">BADGES</div>
         <div class="badge-grid" id="badgesList"></div>
       </div>
@@ -1774,6 +1776,59 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
         <div class="panel-title">📓 PAGES OF THE HERO</div>
         <div class="empty-note" style="margin-bottom:10px">Your evening reflections, night by night. Written with the 🌙 FINALIZE THE DAY button.</div>
         <div id="journalList"></div>
+      </div>
+    </section>
+
+    <!-- ============ MENTOR (README 4x, 4y) ============ -->
+    <section id="page-mentor" style="display:none">
+      <div class="panel" id="mentorPanel">
+        <div class="panel-title">🧭 SYSTEM MENTOR</div>
+        <div id="mentorInsights"></div>
+        <div class="adm-row" style="margin-top:14px">
+          <input class="inp" id="mentorQ" style="flex:1;min-width:150px" maxlength="400" aria-label="Ask the Mentor" placeholder="Ask: how to focus, sleep, study, stop scrolling…">
+          <button class="btn primary" id="mentorAsk">ASK</button>
+        </div>
+        <div id="mentorMode"></div>
+        <div id="mentorAnswer" style="margin-top:10px" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============ PREMIUM: coming soon (README 4r, 4y). Nothing is sold ============ -->
+    <section id="page-premium" style="display:none">
+      <div class="panel prem-hero">
+        <div class="prem-star" aria-hidden="true">⭐</div>
+        <div class="prem-title">LEVEL UP PREMIUM</div>
+        <div class="chip-list prem-chips">
+          <span class="tag tag-legendary">COMING SOON</span>
+          <span class="tag tag-stat" id="premiumPrice" style="text-transform:none">37,500 so'm / month</span>
+        </div>
+        <div class="empty-note prem-lede">For heroes who want more coaching and deeper insight. The free app stays complete.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">PREMIUM WILL ADD</div>
+        <ul class="premium-list">
+          <li>🤖 Mentor AI with 20 questions a day instead of 3</li>
+          <li>🧭 AI training plans, explained step by step</li>
+          <li>🥗 A diet calculator with standard medical formulas (18+ only)</li>
+          <li>📈 Deeper statistics and yearly reports</li>
+          <li>🎨 Extra themes and focus wallpapers</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-title">ALWAYS FREE</div>
+        <ul class="premium-list">
+          <li>⚔️ Quests, XP, levels and ranks</li>
+          <li>🧭 The on-device Mentor and 3 Mentor AI questions a day</li>
+          <li>⏱ The focus timer</li>
+          <li>📜 The Chronicle</li>
+          <li>🏰 Clans and leaderboards</li>
+          <li>💰 The budget</li>
+          <li>💾 Exporting and deleting your data</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="empty-note" style="margin-bottom:10px">Nothing is sold yet: there is no payment in the app.</div>
+        <button class="btn gold" id="premiumInterest" style="width:100%">🔔 I'M INTERESTED</button>
       </div>
     </section>
 
@@ -2710,35 +2765,6 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 </div>
 
 <!-- Premium preview: what is coming, and the price. No payment exists in the app. -->
-<div class="modal" id="premiumModal" role="dialog" aria-modal="true">
-  <div class="modal-box" style="max-width:460px">
-    <div class="modal-title">⭐ LEVEL UP PREMIUM</div>
-    <div class="chip-list" style="margin-bottom:12px">
-      <span class="tag tag-legendary">COMING SOON</span>
-      <span class="tag tag-stat" id="premiumPrice" style="text-transform:none">37,500 so'm / month</span>
-    </div>
-    <div class="form-lbl">PREMIUM WILL ADD</div>
-    <ul class="premium-list">
-      <li>🧭 AI training plans, explained step by step</li>
-      <li>🥗 A diet calculator with standard medical formulas (18+ only)</li>
-      <li>📈 Deeper statistics and yearly reports</li>
-      <li>🎨 Extra themes and focus wallpapers</li>
-    </ul>
-    <div class="form-lbl">ALWAYS FREE</div>
-    <ul class="premium-list">
-      <li>⚔️ Quests, XP, levels and ranks</li>
-      <li>⏱ The focus timer</li>
-      <li>📜 The Chronicle</li>
-      <li>🏰 Clans and leaderboards</li>
-      <li>💰 The budget</li>
-      <li>💾 Exporting and deleting your data</li>
-    </ul>
-    <div class="empty-note" style="margin:10px 0">Nothing is sold yet: there is no payment in the app.</div>
-    <button class="btn gold" id="premiumInterest" style="width:100%">🔔 I'M INTERESTED</button>
-    <button class="btn" id="premiumClose" style="width:100%;margin-top:8px">CLOSE</button>
-  </div>
-</div>
-
 <!-- adjust today's completion modal -->
 <div class="modal" id="adjModal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:380px">
@@ -4894,7 +4920,7 @@ var I18N_RU = {
   "Discipline (rank score)":"Дисциплина (рейтинг)","Active Days (7d)":"Активные дни (7д)","Focus Time (7d)":"Фокус-время (7д)",
   "XP / 7 days":"XP / 7 дней","DISCIPLINE score":"счёту ДИСЦИПЛИНЫ",
   /* filters / periods / tiers */
-  "ALL":"ВСЕ","ALL TIERS":"ВСЕ УРОВНИ","ALL TIME":"ЗА ВСЁ ВРЕМЯ","TODAY":"СЕГОДНЯ",
+  "ALL":"ВСЕ","ALL TIERS":"ВСЕ УРОВНИ","ALL TIME":"ЗА ВСЁ ВРЕМЯ","TODAY":"СЕГОДНЯ","MENTOR":"НАСТАВНИК","PREMIUM":"PREMIUM","SOON":"СКОРО","‹ TODAY":"‹ СЕГОДНЯ","Open your hero":"Открыть героя","LEVEL UP PREMIUM":"LEVEL UP PREMIUM","🧭 The on-device Mentor and 3 Mentor AI questions a day":"🧭 Наставник на устройстве и 3 вопроса ИИ-наставнику в день","🤖 Mentor AI with 20 questions a day instead of 3":"🤖 ИИ-наставник: 20 вопросов в день вместо 3","For heroes who want more coaching and deeper insight. The free app stays complete.":"Для героев, которым нужно больше наставничества и глубже аналитика. Бесплатное приложение остаётся полным.",
   "LAST 7 DAYS":"ПОСЛЕДНИЕ 7 ДНЕЙ","LAST 30 DAYS":"ПОСЛЕДНИЕ 30 ДНЕЙ","🌙 THIS MONTH":"🌙 ЭТОТ МЕСЯЦ","📅 THIS YEAR":"📅 ЭТОТ ГОД",
   "DAILY":"ЕЖЕДНЕВНЫЙ","WEEKLY":"ЕЖЕНЕДЕЛЬНЫЙ","ONE-TIME GOAL":"РАЗОВАЯ ЦЕЛЬ","CUSTOM":"СВОЙ ГРАФИК",
   "🔥 CHALLENGE":"🔥 ЧЕЛЛЕНДЖ","🔥 CHALLENGES":"🔥 ЧЕЛЛЕНДЖИ","CHALLENGES":"ЧЕЛЛЕНДЖИ",
@@ -5106,7 +5132,7 @@ var I18N_RU = {
   "STORE UNLOCKED":"МАГАЗИН ОТКРЫТ",
   "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"МАГАЗИН теперь открыт (страница БЮДЖЕТ).\n\nДобавляйте то, что действительно хотите купить, с ценой. Когда баланс — или связанная цель накопления — покроет её, кнопка КУПИТЬ загорится. Покупка запишет расход и поставит вещь на полку заслуженного. Желание превращается в цель, а не в порыв.",
   "SYSTEM MENTOR UNLOCKED":"СИСТЕМНЫЙ НАСТАВНИК ОТКРЫТ",
-  "The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"СИСТЕМНЫЙ НАСТАВНИК теперь открыт (ПРОГРЕСС → ПРОФИЛЬ).\n\nВаш наставник читает ваши реальные данные и указывает на слабые места — отстающий атрибут, пустые дни, мало времени фокуса. Спросите, как что-то улучшить (фокус, сон, язык, прыжки, накопления), и он даст конкретный план, всегда возвращая к одному: сделай это ежедневным квестом.",
+  "The SYSTEM MENTOR is now open (MORE → MENTOR).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"СИСТЕМНЫЙ НАСТАВНИК теперь открыт (ЕЩЁ → НАСТАВНИК).\n\nВаш наставник читает ваши реальные данные и указывает на слабые места — отстающий атрибут, пустые дни, мало времени фокуса. Спросите, как что-то улучшить (фокус, сон, язык, прыжки, накопления), и он даст конкретный план, всегда возвращая к одному: сделай это ежедневным квестом.",
   /* store + mentor */
   "🛍 STORE — THINGS I WANT":"🛍 МАГАЗИН — ЧТО Я ХОЧУ",
   "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Ваш личный магазин. Добавьте то, что хотите купить. Когда баланс (или связанная цель) покроет цену, кнопка КУПИТЬ загорится — покупка запишет расход и переместит вещь на полку купленного.",
@@ -5118,7 +5144,7 @@ var I18N_RU = {
   "🛍 PURCHASED":"🛍 КУПЛЕНО","ENJOY IT":"НАСЛАЖДАЙТЕСЬ",
   "🧭 SYSTEM MENTOR":"🧭 СИСТЕМНЫЙ НАСТАВНИК","ASK":"СПРОСИТЬ",
   "MENTOR AI UNLOCKED":"ИИ-НАСТАВНИК ОТКРЫТ",
-  "Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"ИИ-наставник теперь открыт (ПРОГРЕСС → ПРОФИЛЬ → СИСТЕМНЫЙ НАСТАВНИК).\n\nВойдя через Google, вы можете задавать ИИ-наставнику несколько вопросов в день. Он читает краткую сводку вашего прогресса, но никогда — ваше имя, Клятву или заметки, и спрашивает разрешения, прежде чем что-либо отправить. Без него наставник по-прежнему отвечает на устройстве.",
+  "Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"ИИ-наставник теперь открыт (ЕЩЁ → НАСТАВНИК).\n\nВойдя через Google, вы можете задавать ИИ-наставнику несколько вопросов в день. Он читает краткую сводку вашего прогресса, но никогда — ваше имя, Клятву или заметки, и спрашивает разрешения, прежде чем что-либо отправить. Без него наставник по-прежнему отвечает на устройстве.",
   /* feature-unlock guides */
   "BEGIN":"НАЧАТЬ",
   "STATS UNLOCKED":"СТАТИСТИКА ОТКРЫТА",
@@ -5134,7 +5160,7 @@ var I18N_RU = {
   "BUDGET UNLOCKED":"БЮДЖЕТ ОТКРЫТ",
   "The BUDGET section is now open.\n\nA money manager inside the System: log income and expenses with categories, watch your monthly balance, and set savings goals with progress bars. Discipline with time becomes discipline with money.":"Раздел БЮДЖЕТ теперь открыт.\n\nМенеджер денег внутри Системы: записывайте доходы и расходы по категориям, следите за балансом месяца и ставьте цели накоплений с полосами прогресса. Дисциплина во времени становится дисциплиной в деньгах.",
   "FINALIZE THE DAY UNLOCKED":"«ЗАВЕРШИТЬ ДЕНЬ» ОТКРЫТО",
-  "The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (PROFILE → Pages of the Hero).":"Ритуал «ЗАВЕРШИТЬ ДЕНЬ» теперь ваш.\n\nВ последние 5 часов каждого дня вверху каждого раздела появляется золотая кнопка. Нажмите её и ответьте на три честных вопроса — что вы узнали, что изменило вас, чего вы ждёте от завтра. Запечатывание дня даёт XP и записывает страницу в ваш дневник (ПРОФИЛЬ → Страницы героя).",
+  "The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (TODAY → tap your hero → Pages of the Hero).":"Ритуал «ЗАВЕРШИТЬ ДЕНЬ» теперь ваш.\n\nВ последние 5 часов каждого дня вверху каждого раздела появляется золотая кнопка. Нажмите её и ответьте на три честных вопроса — что вы узнали, что изменило вас, чего вы ждёте от завтра. Запечатывание дня даёт XP и записывает страницу в ваш дневник (СЕГОДНЯ → нажмите на своего героя → Страницы героя).",
   "FOCUS TIMER UNLOCKED":"ТАЙМЕР ФОКУСА ОТКРЫТ",
   "The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work.":"ТАЙМЕР ФОКУСА теперь ваш.\n\nНажмите ⏱ на карточке квеста перед началом работы, затем СТОП по завершении. Ваше время фокуса записывается по квесту и по дню и появляется в СТАТИСТИКЕ. Некоторые квесты даже требуют сессии по таймеру перед выполнением — доказательство реальной работы.",
   "CHASING AFTER DREAMS UNLOCKED":"«В ПОГОНЕ ЗА МЕЧТАМИ» ОТКРЫТО",
@@ -5233,7 +5259,7 @@ var I18N_RU = {
   "Thank you — this helps us decide what to build first.":"Спасибо — это помогает нам решить, что делать в первую очередь.",
   "Premium preview":"Превью Premium",
   "PREMIUM PREVIEW UNLOCKED":"ПРЕВЬЮ PREMIUM ОТКРЫТО",
-  "See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app.":"Посмотрите, что добавит LEVEL UP Premium (НАСТРОЙКИ → ⭐ LEVEL UP PREMIUM).\n\nБесплатное приложение остаётся полным. Пока ничего не продаётся — в приложении нет оплаты.",
+  "See what LEVEL UP Premium will add (MORE → ⭐ PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app.":"Посмотрите, что добавит LEVEL UP Premium (ЕЩЁ → ⭐ PREMIUM).\n\nБесплатное приложение остаётся полным. Пока ничего не продаётся — в приложении нет оплаты.",
   "DELETE MY DATA":"УДАЛИТЬ МОИ ДАННЫЕ",
   "This permanently deletes your hero from this device AND from the cloud, and removes you from your clan.":"Это навсегда удалит вашего героя с этого устройства И из облака, а также уберёт вас из клана.",
   "This permanently deletes your hero from this device.":"Это навсегда удалит вашего героя с этого устройства.",
@@ -5279,7 +5305,7 @@ var I18N_RU = {
   "Welcome, Hero!":"Добро пожаловать, герой!",
   "I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.":"Я Пиксель, твой гид. За одну минуту я покажу, как LEVEL UP превращает твой день в игру.",
   "This is you":"Это ты",
-  "Your level, your XP bar and your 🔥 streak. Every finished task fills the bar.":"Твой уровень, шкала XP и серия 🔥. Каждое выполненное задание заполняет шкалу.",
+  "Your level, your XP bar and your 🔥 streak. Tap this card any time to open your hero: attributes, rank and the Oath.":"Твой уровень, шкала XP и серия 🔥. Нажми на эту карточку в любой момент, чтобы открыть своего героя: атрибуты, ранг и клятву.",
   "Your Daily Quest":"Твой ежедневный квест",
   "Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP.":"Небольшие задания, которые обновляются каждый день в 01:00. Сделай их по-настоящему, затем нажми ВЫПОЛНИТЬ и получи XP.",
   "Your own quests":"Твои квесты",
@@ -5291,11 +5317,11 @@ var I18N_RU = {
   "Try it: tap PROGRESS":"Попробуй: нажми ПРОГРЕСС",
   "Tap the PROGRESS tab now.":"Нажми сейчас на вкладку ПРОГРЕСС.",
   "Your progress":"Твой прогресс",
-  "Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch.":"Твой герой, дорога уровней с наградами, статистика и почёт. Переключайся этими вкладками.",
+  "The level road with its rewards, your stats and your honors. Use these tabs to switch.":"Дорога уровней с наградами, статистика и почёт. Переключайся этими вкладками.",
   "Now tap MORE":"Теперь нажми ЕЩЁ",
   "Tap MORE to see everything else.":"Нажми ЕЩЁ, чтобы увидеть всё остальное.",
   "Everything else":"Всё остальное",
-  "Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them.":"Учёба и рост, клан, бюджет, этот гид и настройки. На закрытых разделах указан уровень, на котором они откроются.",
+  "Your Mentor, Learn & Grow, Clan, Budget, Premium, this Guide and Settings. Sealed parts show the level that opens them.":"Наставник, учёба и рост, клан, бюджет, Premium, этот гид и настройки. На закрытых разделах указан уровень, на котором они откроются.",
   "You're ready!":"Ты готов!",
   "Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE.":"Выполни сегодняшний ежедневный квест, чтобы достичь 2-го уровня. Тур и видеогид всегда доступны в ЕЩЁ → ГИД.",
   "LET'S GO":"ПОЕХАЛИ",
@@ -5311,7 +5337,7 @@ var I18N_RU = {
   "🧭 REPLAY THE TOUR":"🧭 ПРОЙТИ ТУР ЗАНОВО",
   "The video needs an internet connection.":"Для видео нужен интернет.",
   "SKIP FOR NOW":"ПРОПУСТИТЬ ПОКА",
-  "Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH.":"Пропущено. Дать клятву можно в любой момент: ПРОГРЕСС → ПРОФИЛЬ → КЛЯТВА.",
+  "Skipped. You can swear the Oath any time: tap your hero on TODAY → THE OATH.":"Пропущено. Дать клятву можно в любой момент: нажмите на своего героя в СЕГОДНЯ → КЛЯТВА.",
   "⚔ THE OATH":"⚔ КЛЯТВА"
 };
 
@@ -5410,7 +5436,7 @@ var I18N_UZ = {
   "Income this month":"Shu oy daromadi","Spent this month":"Shu oy sarflandi","Saved in goals":"Maqsadlarga jamgʻarildi","Level":"Daraja",
   "Rank":"Martaba","Honors":"Sharaflar","DISCIPLINE":"INTIZOM","Discipline (rank score)":"Intizom (martaba balli)",
   "Active Days (7d)":"Faol kunlar (7 kun)","Focus Time (7d)":"Fokus vaqti (7 kun)","XP / 7 days":"XP / 7 kun","DISCIPLINE score":"INTIZOM balli",
-  "ALL":"HAMMASI","ALL TIERS":"BARCHA DARAJALAR","ALL TIME":"BUTUN DAVR","TODAY":"BUGUN","LAST 7 DAYS":"SOʻNGGI 7 KUN",
+  "ALL":"HAMMASI","ALL TIERS":"BARCHA DARAJALAR","ALL TIME":"BUTUN DAVR","TODAY":"BUGUN","MENTOR":"MURABBIY","PREMIUM":"PREMIUM","SOON":"TEZ ORADA","‹ TODAY":"‹ BUGUN","Open your hero":"Qahramonni ochish","LEVEL UP PREMIUM":"LEVEL UP PREMIUM","🧭 The on-device Mentor and 3 Mentor AI questions a day":"🧭 Qurilmadagi murabbiy va kuniga 3 ta SI-murabbiy savoli","🤖 Mentor AI with 20 questions a day instead of 3":"🤖 SI-murabbiy: kuniga 3 ta oʻrniga 20 ta savol","For heroes who want more coaching and deeper insight. The free app stays complete.":"Koʻproq murabbiylik va chuqurroq tahlil istagan qahramonlar uchun. Bepul ilova toʻliq qoladi.","LAST 7 DAYS":"SOʻNGGI 7 KUN",
   "LAST 30 DAYS":"SOʻNGGI 30 KUN","🌙 THIS MONTH":"🌙 SHU OY","📅 THIS YEAR":"📅 SHU YIL","DAILY":"KUNLIK","WEEKLY":"HAFTALIK",
   "ONE-TIME GOAL":"BIR MARTALIK MAQSAD","CUSTOM":"MAXSUS","🔥 CHALLENGE":"🔥 SINOV","🔥 CHALLENGES":"🔥 SINOVLAR","CHALLENGES":"SINOVLAR","EASY":"OSON",
   "MEDIUM":"OʻRTACHA","EPIC":"EPIC","MYTHIC":"MYTHIC","LEGENDARY":"LEGENDARY","MORE":"KOʻPROQ","LESS":"KAMROQ","⏳ RESETS IN":"⏳ YANGILANISHGACHA",
@@ -5577,7 +5603,7 @@ var I18N_UZ = {
   "training to next point":"keyingi ochkogacha mashq","STORE UNLOCKED":"DOʻKON OCHILDI",
   "The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse.":"DOʻKON endi ochiq (BYUDJET sahifasi).\n\nHaqiqatan sotib olmoqchi boʻlgan narsalaringizni narxi bilan qoʻshing. Balansingiz — yoki bogʻlangan jamgʻarma maqsadi — yetganda, SOTIB OLISH tugmasi yonadi. Xarid xarajat sifatida yoziladi va buyum qoʻlga kiritilgan deb javonga qoʻyiladi. U istakni oniy havasdan maqsadga aylantiradi.",
   "SYSTEM MENTOR UNLOCKED":"TIZIM MURABBIYI OCHILDI",
-  "The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"TIZIM MURABBIYI endi ochiq (TARAQQIYOT → PROFIL).\n\nMurabbiyingiz haqiqiy maʼlumotlaringizni oʻqib, zaif tomonlaringizni koʻrsatadi — orqada qolgan atribut, boʻsh kunlar, kam fokus vaqti. Undan istalgan narsani yaxshilash yoʻlini soʻrang (fokus, uyqu, til, sakrash, jamgʻarish) — u aniq reja beradi va doim sizni shunga qaytaradi: buni kunlik kvestga aylantiring.",
+  "The SYSTEM MENTOR is now open (MORE → MENTOR).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest.":"TIZIM MURABBIYI endi ochiq (KOʻPROQ → MURABBIY).\n\nMurabbiyingiz haqiqiy maʼlumotlaringizni oʻqib, zaif tomonlaringizni koʻrsatadi — orqada qolgan atribut, boʻsh kunlar, kam fokus vaqti. Undan istalgan narsani yaxshilash yoʻlini soʻrang (fokus, uyqu, til, sakrash, jamgʻarish) — u aniq reja beradi va doim sizni shunga qaytaradi: buni kunlik kvestga aylantiring.",
   "🛍 STORE — THINGS I WANT":"🛍 DOʻKON — ISTAGAN NARSALARIM",
   "Your personal store. Add what you want to buy. When your balance (or a linked goal) can cover it, the BUY button lights up — buying logs the expense and moves it to your purchased shelf.":"Shaxsiy doʻkoningiz. Sotib olmoqchi boʻlgan narsani qoʻshing. Balansingiz (yoki bogʻlangan maqsad) yetganda SOTIB OLISH tugmasi yonadi — xarid xarajat sifatida yoziladi va sotib olinganlar javoniga oʻtadi.",
   "No linked goal":"Bogʻlangan maqsad yoʻq","ADD TO STORE":"DOʻKONGA QOʻSHISH","🗄 PURCHASED SHELF":"🗄 SOTIB OLINGANLAR JAVONI",
@@ -5588,7 +5614,7 @@ var I18N_UZ = {
   "well spent — you saved for this and earned it. Enjoy it, Hero.":"toʻgʻri sarflandi — siz buning uchun jamgʻardingiz va unga loyiqsiz. Rohatlaning, Qahramon.",
   "🛍 PURCHASED":"🛍 SOTIB OLINDI","ENJOY IT":"ROHATLANING","🧭 SYSTEM MENTOR":"🧭 TIZIM MURABBIYI","ASK":"SOʻRASH",
   "MENTOR AI UNLOCKED":"SI-MURABBIY OCHILDI",
-  "Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"SI-murabbiy endi ochiq (TARAQQIYOT → PROFIL → TIZIM MURABBIYI).\n\nGoogle orqali kirgan boʻlsangiz, SI-murabbiyga kuniga bir nechta savol bera olasiz. U taraqqiyotingizning qisqa xulosasini oʻqiydi, lekin hech qachon ismingiz, Qasamingiz yoki yozuvlaringizni emas, va biror narsa yuborishdan oldin ruxsat soʻraydi. Usiz ham murabbiy qurilmada javob beradi.",
+  "Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"SI-murabbiy endi ochiq (KOʻPROQ → MURABBIY).\n\nGoogle orqali kirgan boʻlsangiz, SI-murabbiyga kuniga bir nechta savol bera olasiz. U taraqqiyotingizning qisqa xulosasini oʻqiydi, lekin hech qachon ismingiz, Qasamingiz yoki yozuvlaringizni emas, va biror narsa yuborishdan oldin ruxsat soʻraydi. Usiz ham murabbiy qurilmada javob beradi.",
   "BEGIN":"BOSHLASH","STATS UNLOCKED":"STATISTIKA OCHILDI",
   "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab.":"STATISTIKA boʻlimi endi ochiq.\n\nBu yerda Tizim intizomingizni grafikda koʻrsatadi: kuniga topilgan XP, bajarilgan kvestlar, eng kuchli hafta kuningiz, seriyalar tarixi va faol kunlaringiz xaritasi. Qonuniyatlarni kuzating — ular qachon haqiqatan harakat qilishingizni koʻrsatadi.\n\nUni istalgan payt TARAQQIYOT boʻlimidan oching.",
   "REWARDS UNLOCKED":"MUKOFOTLAR OCHILDI",
@@ -5602,7 +5628,7 @@ var I18N_UZ = {
   "BUDGET UNLOCKED":"BYUDJET OCHILDI",
   "The BUDGET section is now open.\n\nA money manager inside the System: log income and expenses with categories, watch your monthly balance, and set savings goals with progress bars. Discipline with time becomes discipline with money.":"BYUDJET boʻlimi endi ochiq.\n\nTizim ichidagi pul boshqaruvchisi: daromad va xarajatlarni toifalar bilan yozing, oylik balansingizni kuzating va jamgʻarma maqsadlarini toʻlish chiziqlari bilan belgilang. Vaqtdagi intizom puldagi intizomga aylanadi.",
   "FINALIZE THE DAY UNLOCKED":"KUNNI YAKUNLASH OCHILDI",
-  "The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (PROFILE → Pages of the Hero).":"KUNNI YAKUNLASH marosimi endi sizniki.\n\nHar kunning soʻnggi 5 soatida har bir boʻlim tepasida oltin tugma paydo boʻladi. Uni bosing va uchta halol savolga javob bering — nimani oʻrgandingiz, sizni nima oʻzgartirdi, ertadan nima kutasiz. Kunni muhrlash XP beradi va kundaligingizga sahifa yozadi (PROFIL → Qahramon sahifalari).",
+  "The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (TODAY → tap your hero → Pages of the Hero).":"KUNNI YAKUNLASH marosimi endi sizniki.\n\nHar kunning soʻnggi 5 soatida har bir boʻlim tepasida oltin tugma paydo boʻladi. Uni bosing va uchta halol savolga javob bering — nimani oʻrgandingiz, sizni nima oʻzgartirdi, ertadan nima kutasiz. Kunni muhrlash XP beradi va kundaligingizga sahifa yozadi (BUGUN → qahramoningizni bosing → Qahramon sahifalari).",
   "FOCUS TIMER UNLOCKED":"FOKUS TAYMERI OCHILDI",
   "The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work.":"FOKUS TAYMERI endi sizniki.\n\nIshni boshlashdan oldin kvest kartasidagi ⏱ ni bosing, tugatganda TOʻXTATISHni bosing. Fokus vaqtingiz har bir kvest va har bir kun boʻyicha yoziladi va STATISTIKAda koʻrinadi. Baʼzi kvestlar bajarilishidan oldin vaqtli sessiyani talab qilishi mumkin — haqiqiy mehnat isboti.",
   "CHASING AFTER DREAMS UNLOCKED":"ORZULAR SARI OCHILDI",
@@ -5672,7 +5698,7 @@ var I18N_UZ = {
   "✓ NOTED — THANK YOU":"✓ BELGILANDI — RAHMAT",
   "Thank you — this helps us decide what to build first.":"Rahmat — bu bizga avval nimani qurishni hal qilishga yordam beradi.",
   "Premium preview":"Premium koʻrinishi","PREMIUM PREVIEW UNLOCKED":"PREMIUM KOʻRINISHI OCHILDI",
-  "See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app.":"LEVEL UP Premium nimalarni qoʻshishini koʻring (SOZLAMALAR → ⭐ LEVEL UP PREMIUM).\n\nBepul ilova toʻliq qoladi. Hozircha hech narsa sotilmaydi — ilovada toʻlov yoʻq.",
+  "See what LEVEL UP Premium will add (MORE → ⭐ PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app.":"LEVEL UP Premium nimalarni qoʻshishini koʻring (KOʻPROQ → ⭐ PREMIUM).\n\nBepul ilova toʻliq qoladi. Hozircha hech narsa sotilmaydi — ilovada toʻlov yoʻq.",
   "DELETE MY DATA":"MAʼLUMOTLARIMNI OʻCHIRISH",
   "This permanently deletes your hero from this device AND from the cloud, and removes you from your clan.":"Bu qahramoningizni shu qurilmadan VA bulutdan butunlay oʻchiradi hamda sizni klaningizdan chiqaradi.",
   "This permanently deletes your hero from this device.":"Bu qahramoningizni shu qurilmadan butunlay oʻchiradi.",
@@ -5714,7 +5740,7 @@ var I18N_UZ = {
   "Welcome, Hero!":"Xush kelibsiz, Qahramon!",
   "I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.":"Men Pikselman, sizning yoʻlboshchingiz. Bir daqiqada LEVEL UP kuningizni qanday oʻyinga aylantirishini koʻrsataman.",
   "This is you":"Bu — siz",
-  "Your level, your XP bar and your 🔥 streak. Every finished task fills the bar.":"Darajangiz, XP chizigʻingiz va 🔥 seriyangiz. Har bir bajarilgan vazifa chiziqni toʻldiradi.",
+  "Your level, your XP bar and your 🔥 streak. Tap this card any time to open your hero: attributes, rank and the Oath.":"Darajangiz, XP chizigʻingiz va 🔥 seriyangiz. Qahramoningizni ochish uchun bu kartani istalgan payt bosing: atributlar, martaba va qasam.",
   "Your Daily Quest":"Kunlik kvestingiz",
   "Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP.":"Har kuni soat 01:00 da yangilanadigan kichik vazifalar. Ularni haqiqatan bajaring, soʻng XP olish uchun BAJARISH tugmasini bosing.",
   "Your own quests":"Shaxsiy kvestlaringiz",
@@ -5726,11 +5752,11 @@ var I18N_UZ = {
   "Try it: tap PROGRESS":"Sinab koʻring: TARAQQIYOT ni bosing",
   "Tap the PROGRESS tab now.":"Hozir TARAQQIYOT boʻlimini bosing.",
   "Your progress":"Taraqqiyotingiz",
-  "Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch.":"Qahramoningiz, mukofotli darajalar yoʻli, statistika va sharaflar. Ular orasida shu tugmalar bilan oʻting.",
+  "The level road with its rewards, your stats and your honors. Use these tabs to switch.":"Mukofotli darajalar yoʻli, statistika va sharaflar. Ular orasida shu tugmalar bilan oʻting.",
   "Now tap MORE":"Endi KOʻPROQ ni bosing",
   "Tap MORE to see everything else.":"Qolgan hamma narsani koʻrish uchun KOʻPROQ ni bosing.",
   "Everything else":"Qolgan hammasi",
-  "Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them.":"Oʻrganish va oʻsish, klan, byudjet, ushbu qoʻllanma va sozlamalar. Yopiq boʻlimlarda ular ochiladigan daraja koʻrsatilgan.",
+  "Your Mentor, Learn & Grow, Clan, Budget, Premium, this Guide and Settings. Sealed parts show the level that opens them.":"Murabbiy, oʻrganish va oʻsish, klan, byudjet, Premium, ushbu qoʻllanma va sozlamalar. Yopiq boʻlimlarda ular ochiladigan daraja koʻrsatilgan.",
   "You're ready!":"Siz tayyorsiz!",
   "Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE.":"2-darajaga yetish uchun bugungi kunlik kvestni bajaring. Ushbu sayohatni va video qoʻllanmani istalgan payt KOʻPROQ → QOʻLLANMA da koʻrishingiz mumkin.",
   "LET'S GO":"BOSHLADIK",
@@ -5746,7 +5772,7 @@ var I18N_UZ = {
   "🧭 REPLAY THE TOUR":"🧭 SAYOHATNI QAYTA KOʻRISH",
   "The video needs an internet connection.":"Video uchun internet kerak.",
   "SKIP FOR NOW":"HOZIRCHA OʻTKAZIB YUBORISH",
-  "Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH.":"Oʻtkazib yuborildi. Qasamni istalgan payt TARAQQIYOT → PROFIL → QASAM boʻlimida qabul qilishingiz mumkin.",
+  "Skipped. You can swear the Oath any time: tap your hero on TODAY → THE OATH.":"Oʻtkazib yuborildi. Qasamni istalgan payt qabul qilishingiz mumkin: BUGUN da qahramoningizni bosing → QASAM.",
   "⚔ THE OATH":"⚔ QASAM"
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
@@ -5868,12 +5894,12 @@ document.getElementById("annOk").addEventListener("click", nextAnnounce);
 
 /* ---------------- navigation + FAB ---------------- */
 var currentPage = "home";
-var PAGES = ["learn","home","profile","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
-var NAV_ICON = {learn:"🌱", home:"🏠", profile:"⚔️", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
-var NAV_LABEL = {learn:"LEARN", home:"HOME", profile:"PROFILE", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
+var PAGES = ["learn","home","profile","mentor","premium","quests","rewards","inventory","stats","story","honor","guild","budget","guide","admin"];
+var NAV_ICON = {learn:"🌱", home:"🏠", profile:"⚔️", mentor:"🧭", premium:"⭐", quests:"📜", rewards:"🎁", inventory:"📦", stats:"📊", story:"📖", honor:"🏆", guild:"⚔️", budget:"💰", guide:"🔖", admin:"⚙️"};
+var NAV_LABEL = {learn:"LEARN", home:"HOME", profile:"PROFILE", mentor:"MENTOR", premium:"PREMIUM", quests:"QUESTS", rewards:"REWARDS", inventory:"INVENTORY", stats:"STATS", story:"STORY", honor:"HONOR", guild:"CLAN", budget:"BUDGET", guide:"GUIDE", admin:"SETTINGS"};
 /* daily loop first. This order (and the hero's renames) now drives the MORE
    sheet and the sub-tabs; the five tabs themselves are fixed (TABS). */
-var NAV_ORDER = ["home","quests","learn","profile","stats","story","rewards","inventory","honor","guild","budget","guide","admin"];
+var NAV_ORDER = ["home","quests","mentor","learn","profile","stats","story","rewards","inventory","honor","guild","budget","premium","guide","admin"];
 function defaultNav(){ return NAV_ORDER.map(function(p){ return {page:p, label:NAV_LABEL[p], hidden:false}; }); }
 function reconcileNav(){
   if(!state.navConfig || !state.navConfig.length){ state.navConfig = defaultNav(); return; }
@@ -5893,7 +5919,18 @@ function reconcileNav(){
     if(!NAV_ICON[c.page] || seen[c.page]) return false;
     seen[c.page] = true; return true;
   });
-  for(var i=0;i<NAV_ORDER.length;i++) if(!seen[NAV_ORDER[i]]) state.navConfig.push({page:NAV_ORDER[i], label:NAV_LABEL[NAV_ORDER[i]], hidden:false});
+  for(var i=0;i<NAV_ORDER.length;i++){
+    var np = NAV_ORDER[i];
+    if(seen[np]) continue;
+    /* a page this save has never seen goes in front of the next page that
+       follows it in NAV_ORDER, so new sections arrive in their place */
+    var at = state.navConfig.length;
+    for(var j=i+1;j<NAV_ORDER.length && at === state.navConfig.length;j++){
+      for(var c=0;c<state.navConfig.length;c++) if(state.navConfig[c].page === NAV_ORDER[j]){ at = c; break; }
+    }
+    state.navConfig.splice(at, 0, {page:np, label:NAV_LABEL[np], hidden:false});
+    seen[np] = true;
+  }
 }
 /* The FEATURE REGISTRY — everything the story path can grant.
    Sections AND functions unlock by level; the Administrator can override any
@@ -5912,11 +5949,11 @@ var FEATURES = [
   {key:"timer",     type:"function", name:"Focus Timer",            def:0},
   {key:"dreams",    type:"function", name:"Chasing After Dreams",   def:0},
   {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
-  {key:"mentor",    type:"function", name:"System Mentor",          def:0},
+  {key:"mentor",    type:"section",  name:"System Mentor",          def:0},
   {key:"mentorAI",  type:"function", name:"Mentor AI chat",         def:0},
-  {key:"premium",   type:"function", name:"Premium preview",        def:0}
+  {key:"premium",   type:"section",  name:"Premium preview",        def:0}
 ];
-var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget"];
+var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget","mentor","premium"];
 /* short guides shown the moment a feature is unlocked on the story path */
 var FEATURE_GUIDE = {
   learn:     {ico:"🌱", title:"LEARN & GROW UNLOCKED", body:"The ACADEMY is now open (LEARN & GROW).\n\nFour roads: DISCIPLINE, EDUCATION, PHYSICAL and EMOTIONAL. Each is a ladder — a lesson, then a real task, then the next lesson. A level stays sealed until the one before it is finished.\n\nThis is where you are taught, not just tracked."},
@@ -5926,13 +5963,13 @@ var FEATURE_GUIDE = {
   honor:     {ico:"🏆", title:"HALL OF HONOR UNLOCKED", body:"The HALL OF HONOR is now open.\n\nEvery one-time goal you achieve and every challenge you conquer is enshrined here forever — permanent proof of who you are becoming. The finished quest leaves your log; its glory stays in the hall."},
   guild:     {ico:"⚔️", title:"CLAN UNLOCKED", body:"The CLAN section is now open.\n\nTeam up with friends (Google sign-in needed). Create a clan for a 6-letter invite code, or join with one. Members share a fair weekly leaderboard ranked by real discipline — showing up, streaks, focus time — never raw XP. Send respect, talk in clan chat, climb together."},
   budget:    {ico:"💰", title:"BUDGET UNLOCKED", body:"The BUDGET section is now open.\n\nA money manager inside the System: log income and expenses with categories, watch your monthly balance, and set savings goals with progress bars. Discipline with time becomes discipline with money."},
-  finalize:  {ico:"🌙", title:"FINALIZE THE DAY UNLOCKED", body:"The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (PROFILE → Pages of the Hero)."},
+  finalize:  {ico:"🌙", title:"FINALIZE THE DAY UNLOCKED", body:"The FINALIZE THE DAY ritual is now yours.\n\nIn the last 5 hours of each day a golden button appears at the top of every section. Press it and answer three honest questions — what you learned, what changed you, what you expect from tomorrow. Sealing the day earns XP and writes a page in your journal (TODAY → tap your hero → Pages of the Hero)."},
   timer:     {ico:"⏱", title:"FOCUS TIMER UNLOCKED", body:"The FOCUS TIMER is now yours.\n\nPress ⏱ on a quest card before you start working, then STOP when done. Your focused time is logged per quest and per day and appears in STATS. Some quests can even require a timed session before they can be completed — proof of real work."},
   dreams:    {ico:"✨", title:"CHASING AFTER DREAMS UNLOCKED", body:"CHASING AFTER DREAMS is now open (STORY → Dreams).\n\nYour vision board: capture the big things you're truly chasing — life dreams, this year, this month. Let your daily quests carry you toward them, and tap a dream to mark it achieved."},
   store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
-  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (PROGRESS → PROFILE).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
-  mentorAI:  {ico:"🤖", title:"MENTOR AI UNLOCKED", body:"Mentor AI is now open (PROGRESS → PROFILE → SYSTEM MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device."},
-  premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (SETTINGS → ⭐ LEVEL UP PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
+  mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (MORE → MENTOR).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
+  mentorAI:  {ico:"🤖", title:"MENTOR AI UNLOCKED", body:"Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device."},
+  premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (MORE → ⭐ PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
 };
 function announceFeatureUnlocks(lv){
   for(var i=0;i<FEATURES.length;i++){
@@ -5976,9 +6013,9 @@ function sectionLockLevel(p){
    Administrator's locks still decide what is open: a sealed page shows the
    level that opens it, a removed one disappears. */
 var TABS = [
-  {tab:"today",    ico:"🏠", label:"TODAY",    pages:["home"]},
+  {tab:"today",    ico:"🏠", label:"TODAY",    pages:["home","profile"]}, /* the hero's page opens from TODAY's hero card */
   {tab:"quests",   ico:"📜", label:"QUESTS",   pages:["quests"]},
-  {tab:"progress", ico:"📈", label:"PROGRESS", pages:["profile","story","stats","honor"]},
+  {tab:"progress", ico:"📈", label:"PROGRESS", pages:["story","stats","honor"]},
   {tab:"rewards",  ico:"🎁", label:"REWARDS",  pages:["rewards","inventory"]},
   {tab:"more",     ico:"☰",  label:"MORE",     pages:[]}
 ];
@@ -6046,7 +6083,8 @@ function renderSubnav(){
   var el = document.getElementById("subnav");
   if(!el) return;
   var t = tabOf(currentPage);
-  var pages = t.tab === "more" ? [] : tabPages(t);
+  /* TODAY has no sub-tabs: its hero card is the way to the hero */
+  var pages = (t.tab === "more" || t.tab === "today") ? [] : tabPages(t);
   if(pages.length < 2 || adminMode){ el.innerHTML = ""; return; }
   var h = "";
   for(var i=0;i<pages.length;i++){
@@ -6066,6 +6104,7 @@ function renderMore(){
     h += '<button class="more-row' + (p === currentPage ? " active" : "") + (lv ? " locked" : "") + '" data-page="' + p + '"'
       + (lv ? ' data-locklv="' + lv + '"' : '') + '>'
       + '<span class="mr-ico" aria-hidden="true">' + (NAV_ICON[p] || "•") + '</span><span>' + esc(navLabelOf(p)) + '</span>'
+      + (p === "premium" ? '<span class="mr-tag">' + esc(tr("SOON")) + '</span>' : '')
       + '<span class="mr-go">' + (lv ? esc(tr("🔒 Lv ")) + lv : "›") + '</span></button>';
   }
   el.innerHTML = h;
@@ -6093,6 +6132,7 @@ function goTab(name){
   var t = null;
   for(var i=0;i<TABS.length;i++) if(TABS[i].tab === name) t = TABS[i];
   if(!t) return;
+  if(name === "today"){ switchPage("home"); return; } /* TODAY always opens on today */
   var pages = tabPages(t).filter(function(p){ return !sectionLockLevel(p); });
   var p = (lastInTab[name] && pages.indexOf(lastInTab[name]) !== -1) ? lastInTab[name] : pages[0];
   if(p) switchPage(p);
@@ -6281,7 +6321,7 @@ function checkStatRankUp(){
   announce("⚖ EVALUATION AVAILABLE — " + nxt.label,
     "Your attributes now reach " + nxt.name + ".\n\nThat is not the same as being one.\n\n"
     + "The Council does not promote on numbers. It has opened an EVALUATION, and it will look at what you have actually sustained — your streak, your cleared quests, your studied levels, your filed reports, your record.\n\n"
-    + "Open PROFILE → RANK EVALUATION to see exactly what is still missing."
+    + "Tap your hero on TODAY → RANK EVALUATION to see exactly what is still missing."
     + oathLine("become"),
     "⚖", "SHOW ME");
   if(currentPage === "profile") renderProfile();
@@ -9326,7 +9366,6 @@ function renderHeader(){
 }
 function renderProfile(){
   renderHeroArt();
-  renderMentor();
   renderRankTrial();
   renderOathPanel();
   var r = rankForLevel(state.level);
@@ -9335,10 +9374,6 @@ function renderProfile(){
   pr.textContent = r.label;
   document.getElementById("hunterName").textContent = state.hunterName;
   document.getElementById("hunterSub").textContent = r.name.toUpperCase();
-  document.getElementById("profLvl").textContent = state.level;
-  var need = xpForLevel(state.level);
-  document.getElementById("xpTxt").innerHTML = "<b>" + state.xp + "</b> / " + need + " XP";
-  document.getElementById("xpBar").style.width = Math.min(100, (state.xp/need*100)) + "%";
   var spB = document.getElementById("spBanner");
   if(state.statPoints > 0){
     spB.style.display = "flex";
@@ -11680,14 +11715,13 @@ function renderPremiumInterest(){
   document.getElementById("premiumInterest").textContent = state.premiumInterest
     ? tr("✓ NOTED — THANK YOU") : tr("🔔 I'M INTERESTED");
 }
+function renderPremiumPage(){ renderPremiumInterest(); }
 function openPremium(){
   if(premiumSealed()) return;
-  renderPremiumInterest();
-  document.getElementById("premiumModal").classList.add("show");
+  switchPage("premium");
+  try{ scrollTo(0, 0); }catch(e){}
 }
 document.getElementById("premiumOpen").addEventListener("click", openPremium);
-document.getElementById("premiumClose").addEventListener("click", function(){ document.getElementById("premiumModal").classList.remove("show"); });
-document.getElementById("premiumModal").addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
 document.getElementById("premiumInterest").addEventListener("click", function(){
   if(!state.premiumInterest){
     state.premiumInterest = todayStr();
@@ -13060,17 +13094,13 @@ function renderTodayMentor(){
   var el = document.getElementById("todayMentor");
   if(!el) return;
   var fs = document.getElementById("firstSteps");
-  var hide = !mFeatureOn("mentor") || (fs && fs.innerHTML !== "");
+  var hide = !mFeatureOn("mentor") || sectionLockLevel("mentor") > 0 || (fs && fs.innerHTML !== "");
   el.style.display = hide ? "none" : "";
   if(hide) return;
   var p = mentorPlan()[0];
   el.innerHTML = '<span>🧭</span><span>' + esc(MT("todayRow", {t:p.text})) + '</span><span class="tr-go">›</span>';
 }
-document.getElementById("todayMentor").addEventListener("click", function(){
-  switchPage("profile");
-  var mp = document.getElementById("mentorPanel");
-  if(mp && mp.scrollIntoView) mp.scrollIntoView({block:"start"});
-});
+document.getElementById("todayMentor").addEventListener("click", function(){ switchPage("mentor"); });
 document.getElementById("mentorPanel").addEventListener("click", function(e){
   var b = e.target.closest("[data-mq]");
   if(!b) return;
@@ -13124,9 +13154,6 @@ function renderHome(){
   var qc = qTabCounts();
   document.getElementById("todayQuests").innerHTML = '<span>📜</span><span>' + qc.doneToday + " / " + qc.sched
     + esc(tr(" quests done today")) + '</span><span class="tr-go">›</span>';
-  var nr = nextRewardLevel(), nx = document.getElementById("todayNext");
-  nx.style.display = nr ? "" : "none";
-  if(nr) nx.innerHTML = esc(tr("🎁 Next reward · Lv ")) + "<b>" + nr + "</b> ›";
   /* package */
   checkPackageReset();
   var pk = state.dailyPackage;
@@ -13161,10 +13188,13 @@ document.getElementById("pkgEditBtn").addEventListener("click", function(){
   sysToast("Edit the Daily Quest package below — every field is editable.");
 });
 document.getElementById("todayQuests").addEventListener("click", function(){ switchPage("quests"); });
-document.getElementById("todayNext").addEventListener("click", function(){ switchPage("story"); });
-document.getElementById("homeChips").addEventListener("click", function(e){
-  if(e.target.closest("#homeSpChip")) switchPage("profile");
+/* the whole hero card opens the hero's page; the stat-point chip inside it goes there too */
+function openHero(){ switchPage("profile"); try{ scrollTo(0, 0); }catch(e){} }
+document.getElementById("todayHero").addEventListener("click", openHero);
+document.getElementById("todayHero").addEventListener("keydown", function(e){
+  if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openHero(); }
 });
+document.getElementById("heroBack").addEventListener("click", function(){ switchPage("home"); });
 
 /* ---------------- budget ---------------- */
 function money(n){
@@ -13707,7 +13737,7 @@ function firstDayDone(){
   return false;
 }
 function oathNeeded(){
-  /* a hero who pressed SKIP is not asked again; PROFILE → THE OATH still works */
+  /* a hero who pressed SKIP is not asked again; the hero's page → THE OATH still works */
   return !!state && !adminMode && !!state.entryChoice && !oathSworn() && !state.oathSkipped && firstDayDone();
 }
 function renderOathForm(){
@@ -13836,7 +13866,7 @@ document.getElementById("oathSkip").addEventListener("click", function(){
   state.oathSkipped = todayStr();
   save();
   document.getElementById("oathOv").classList.remove("show");
-  sysToast(tr("Skipped. You can swear the Oath any time in PROGRESS → PROFILE → THE OATH."));
+  sysToast(tr("Skipped. You can swear the Oath any time: tap your hero on TODAY → THE OATH."));
   if(annQueue.length && !annOpen) nextAnnounce(); /* anything that waited behind the Oath speaks now */
 });
 document.getElementById("oathViewClose").addEventListener("click", function(){
@@ -13855,15 +13885,15 @@ document.getElementById("oathAmend").addEventListener("click", function(){
    the tour only points, it never completes a quest for them. */
 var TOUR = [
   {id:"hello", page:"home", title:"Welcome, Hero!", text:"I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.", intro:true, next:"LET'S GO"},
-  {id:"hero", page:"home", target:"#page-home > .panel", title:"This is you", text:"Your level, your XP bar and your 🔥 streak. Every finished task fills the bar."},
+  {id:"hero", page:"home", target:"#page-home > .panel", title:"This is you", text:"Your level, your XP bar and your 🔥 streak. Tap this card any time to open your hero: attributes, rank and the Oath."},
   {id:"daily", page:"home", target:"#pkgList", hand:"#pkgList .pkg-btn", title:"Your Daily Quest", text:"Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP."},
   {id:"quests", page:"home", target:"#todayQuests", title:"Your own quests", text:"This line counts the quests you finished today. Tap it any time to open your quest list."},
   {id:"plus", page:"home", target:"#fab", hand:"#fab", title:"Add a quest", text:"Tap + to add your own goal: study, sport, reading. Daily quests get their own slots as you level up, the first at Level 5."},
   {id:"tabs", page:"home", target:"#nav", title:"Five tabs, always here", text:"TODAY, QUESTS, PROGRESS, REWARDS and MORE. Locked tabs open as you level up 🔒."},
   {id:"goprog", page:"home", target:'#nav .nav-btn[data-tab="progress"]', action:"tap", title:"Try it: tap PROGRESS", text:"Tap the PROGRESS tab now."},
-  {id:"prog", page:"profile", target:"#subnav", title:"Your progress", text:"Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch."},
+  {id:"prog", page:"story", target:"#subnav", title:"Your progress", text:"The level road with its rewards, your stats and your honors. Use these tabs to switch."},
   {id:"gomore", target:'#nav .nav-btn[data-tab="more"]', action:"tap", title:"Now tap MORE", text:"Tap MORE to see everything else."},
-  {id:"more", sheet:true, target:"#moreList", title:"Everything else", text:"Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them."},
+  {id:"more", sheet:true, target:"#moreList", title:"Everything else", text:"Your Mentor, Learn & Grow, Clan, Budget, Premium, this Guide and Settings. Sealed parts show the level that opens them."},
   {id:"done", page:"home", final:true, title:"You're ready!", text:"Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE."}
 ];
 var tourOn = false, tourIdx = 0, tourTyping = null, tourWait = null, tourAdvancing = false;
@@ -14322,6 +14352,8 @@ function renderAll(){
   if(currentPage === "learn"){ renderLearn(); return; }
   if(currentPage === "home") renderHome();
   else if(currentPage === "profile") renderProfile();
+  else if(currentPage === "mentor") renderMentor();
+  else if(currentPage === "premium") renderPremiumPage();
   else if(currentPage === "quests") renderQuests();
   else if(currentPage === "rewards") renderRewards();
   else if(currentPage === "inventory") renderInventory();

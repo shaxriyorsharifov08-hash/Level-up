@@ -59,7 +59,7 @@ test.describe("solid themes", () => {
     const dark = await page.evaluate(() => {
       state.level = 20; state.theme = "sky"; save(); applyTheme("sky"); renderNav();
       const found = [];
-      ["home", "quests", "profile", "story", "admin"].forEach((p) => {
+      ["home", "quests", "profile", "mentor", "premium", "story", "admin"].forEach((p) => {
         switchPage(p);
         document.querySelectorAll("#page-" + p + " .panel, #page-" + p + " .quest-card, #page-" + p + " .pkg-item, nav, header").forEach((el) => {
           const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);

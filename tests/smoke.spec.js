@@ -141,6 +141,6 @@ test.describe("boot", () => {
   test("the navigation dock leads with the daily loop", async ({ page }) => {
     await bootAsGuest(page);
     const nav = await page.evaluate(() => state.navConfig.map((c) => c.page).slice(0, 3));
-    expect(nav).toEqual(["home", "quests", "learn"]);
+    expect(nav).toEqual(["home", "quests", "mentor"]); /* the Mentor leads MORE since README 4y */
   });
 });

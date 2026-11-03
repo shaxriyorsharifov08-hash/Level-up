@@ -34,7 +34,7 @@ async function aiReady(page, consent) {
     cloudUser = { uid: "u1", getIdToken: () => Promise.resolve("tok-123") };
     state.aiConsent = c || "";
     save();
-    switchPage("profile");
+    switchPage("mentor");
   }, consent);
 }
 async function ask(page, q) {
@@ -90,7 +90,7 @@ test.describe("the on-device Mentor", () => {
     expect(r.ins).toContain("5 quests in the last 7 days, down from 24. Pick one quest to protect this week.");
     expect(r.ins.some((s) => s.indexOf("your weakest is Sunday") !== -1)).toBe(true);
     /* the panel shows it, and the folded sections open with one tap */
-    await page.evaluate(() => switchPage("profile"));
+    await page.evaluate(() => switchPage("mentor"));
     await expect(page.locator("#mentorInsights")).toContainText("TODAY'S PLAN");
     await expect(page.locator("#mentorInsights")).toContainText("Protect your 4-day streak");
     await expect(page.locator('.m-sec[data-sec="ins"] .m-sec-body')).toBeHidden();
@@ -157,7 +157,7 @@ test.describe("the on-device Mentor", () => {
     expect(txt.diet).toContain("I don't give numbers or diets");
     expect(txt.diet).not.toMatch(/\d+\s*(kcal|calories|kg)/i);
     /* the on-screen crisis answer is marked, and offers no quest */
-    await page.evaluate(() => switchPage("profile"));
+    await page.evaluate(() => switchPage("mentor"));
     await ask(page, "I want to hurt myself");
     await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
     await expect(page.locator("#mentorAnswer [data-mq='ans']")).toHaveCount(0);
@@ -165,7 +165,7 @@ test.describe("the on-device Mentor", () => {
 
   test("a suggested habit becomes a quest only through NEW QUEST, within the slot rules", async ({ page }) => {
     await bootAsGuest(page);
-    await page.evaluate(() => switchPage("profile"));
+    await page.evaluate(() => switchPage("mentor"));
     await page.click('.m-sec[data-sec="try"] > summary');
     const btn = page.locator('.m-sec[data-sec="try"] [data-mq="habit"]').first();
     await expect(btn).toBeVisible();
@@ -199,7 +199,7 @@ test.describe("the on-device Mentor", () => {
     await expect(page.locator("#todayMentor")).toBeVisible();
     await expect(page.locator("#todayMentor")).toContainText("Mentor:");
     await page.click("#todayMentor");
-    expect(await page.evaluate(() => currentPage)).toBe("profile");
+    expect(await page.evaluate(() => currentPage)).toBe("mentor");
   });
 
   test("every Mentor sentence exists in English, Russian and Uzbek, in the right script", async ({ page }) => {
@@ -230,7 +230,7 @@ test.describe("Mentor AI", () => {
   test("stays hidden until the Worker is deployed, and nothing is sent", async ({ page }) => {
     await bootAsGuest(page);
     const seen = await fakeWorker(page, { body: { answer: "x", left: 2, limit: 3 } });
-    await page.evaluate(() => { cloudUser = { uid: "u1", getIdToken: () => Promise.resolve("t") }; state.aiConsent = "yes"; switchPage("profile"); });
+    await page.evaluate(() => { cloudUser = { uid: "u1", getIdToken: () => Promise.resolve("t") }; state.aiConsent = "yes"; switchPage("mentor"); });
     expect(await page.evaluate(() => AI_PROXY_URL)).toBe("");
     await expect(page.locator("#mentorMode")).toContainText("Nothing leaves this device");
     await expect(page.locator("#mentorMode button")).toHaveCount(0);
@@ -368,9 +368,12 @@ test.describe("Mentor AI", () => {
       await ask(page, "how do I focus?");
       await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
     }
-    /* sealing the Mentor itself hides the whole panel, AI included */
-    await page.evaluate(() => { remoteSystemLocks = { mentor: 30 }; renderMentor(); });
+    /* sealing the Mentor itself seals its page in MORE and hides the panel, AI included */
+    await page.evaluate(() => { remoteSystemLocks = { mentor: 30 }; renderNav(); renderMentor(); });
     await expect(page.locator("#mentorPanel")).toBeHidden();
+    await expect(page.locator('#moreList .more-row[data-page="mentor"]')).toHaveAttribute("data-locklv", "30");
+    await page.evaluate(() => { state.firstStepsDismissed = true; switchPage("home"); renderHome(); });
+    await expect(page.locator("#todayMentor")).toBeHidden(); /* and TODAY does not point at a sealed page */
     expect(seen.length).toBe(0);
   });
 
@@ -380,7 +383,7 @@ test.describe("Mentor AI", () => {
       await page.evaluate((l) => { state.lang = l; save(); }, lang);
       await page.reload({ waitUntil: "domcontentloaded" });
       await ready(page);
-      await page.evaluate(() => { document.getElementById("entranceOv").classList.remove("show"); AI_PROXY_URL = "https://mentor.test/chat"; switchPage("profile"); openAiConsent(); });
+      await page.evaluate(() => { document.getElementById("entranceOv").classList.remove("show"); AI_PROXY_URL = "https://mentor.test/chat"; switchPage("mentor"); openAiConsent(); });
       await expect(page.locator("#aiConsentTitle")).toHaveText(title);
       await expect(page.locator("#aiConsentNo")).toHaveText(no);
       await page.evaluate(() => closeAiConsent());
