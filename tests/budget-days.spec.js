@@ -110,6 +110,12 @@ test.describe("one timer, everywhere", () => {
 });
 
 test.describe("money, a day at a time", () => {
+  /* The seed spans today, yesterday and three days ago, and BUDGET shows one
+     month. On the 1st–3rd of a month that crossed into the previous month and
+     the test failed by date. A mid-month clock (still ticking) keeps it honest. */
+  test.beforeEach(async ({ page }) => {
+    await page.clock.setSystemTime(new Date("2026-06-17T12:00:00"));
+  });
   test("transactions are packed per day, newest day first", async ({ page }) => {
     await bootAsGuest(page);
     await seedMoney(page);

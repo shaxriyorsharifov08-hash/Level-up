@@ -43,6 +43,8 @@ async function bootAsGuest(page, opts) {
   await page.click("#entGuestBtn");
   /* a new save is welcomed by a System announcement a moment later */
   await page.waitForSelector("#announceOv.show", { timeout: 5000 }).catch(() => {});
+  /* the first-run tour (README 4v) has its own spec; everywhere else it stays out of the way */
+  if (!opts.keepTour) await page.evaluate(() => { state.tutorialDone = true; save(); });
 
   if (!opts.keepOath) {
     await page.evaluate(() => {

@@ -700,6 +700,7 @@ body.play-only #fab{display:none !important}
 /* admin mode: pure back-office — no nav, no play, console only */
 body.admin-mode nav,
 body.admin-mode #moreSheet,
+body.admin-mode #tourOv,
 body.admin-mode #subnav,
 body.admin-mode #navBackdrop,
 body.admin-mode #fab,
@@ -1468,6 +1469,71 @@ body.tok .btn-complete{background:var(--purple); border-color:var(--purple); col
 body.tok .btn-complete:hover{background:var(--violet); box-shadow:none}
 body.tok .btn-complete.done{background:var(--soft); border-color:var(--easy); color:var(--easy); box-shadow:none}
 body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)}
+
+/* ================= FIRST-RUN TUTORIAL (README 4v) =================
+   Game-style coach marks: the screen dims, a spotlight opens on one thing,
+   a hand taps where to tap, and Pixel, our guide, explains it. Original art. */
+#tourOv{position:fixed;inset:0;z-index:320;display:none;pointer-events:none}
+#tourOv.show{display:block}
+#tourSpot{position:fixed;left:50%;top:50%;width:0;height:0;border-radius:16px;
+  box-shadow:0 0 0 200vmax rgba(3,4,13,.76);transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1)}
+#tourSpot::after{content:"";position:absolute;inset:-6px;border-radius:20px;border:3px solid #00d1ff;animation:tourring 1.5s ease-out infinite}
+#tourSpot.none::after{display:none}
+@keyframes tourring{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+#tourHand{position:fixed;left:0;top:0;font-size:46px;line-height:1;display:none;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.55));transition:left .35s ease,top .35s ease}
+#tourHand.show{display:block}
+#tourHand span{display:block;animation:tourtap 1.1s ease-in-out infinite}
+#tourHand.nudge span{animation:tournudge .4s ease 2}
+@keyframes tourtap{0%,100%{transform:translate(-30%,0) scale(1)}50%{transform:translate(-30%,-16px) scale(1.1)}}
+@keyframes tournudge{0%,100%{transform:translate(-30%,0)}25%{transform:translate(-55%,0)}75%{transform:translate(-5%,0)}}
+#tourBubble{position:fixed;left:12px;top:12px;width:min(370px,calc(100vw - 24px));pointer-events:auto;
+  background:#10142e;border:2px solid #00d1ff;border-radius:18px;padding:16px 18px 14px;color:#eef1ff;
+  box-shadow:0 18px 50px rgba(0,0,0,.6);transition:left .35s ease,top .35s ease;font-family:var(--fb)}
+#tourBubble.pop{animation:tourpop .35s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes tourpop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+.tb-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.tb-bot{width:56px;height:56px;flex:none;animation:botbob 2.4s ease-in-out infinite}
+.tb-bot svg{width:100%;height:100%;display:block}
+.tb-bot .px-eyes{transform-origin:32px 32px;animation:botblink 4s infinite}
+@keyframes botbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes botblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.tb-name{font-family:var(--fd);font-weight:900;font-size:.8rem;letter-spacing:.06em;color:#7ee8ff}
+.tb-step{font-size:.75rem;color:#a7acd6;font-weight:700}
+.tb-title{font-family:var(--fd);font-weight:900;font-size:1.25rem;line-height:1.2;margin:2px 0 6px;color:#fff}
+.tb-text{font-size:1rem;line-height:1.45;font-weight:600;min-height:2.9em;color:#dfe4ff}
+.tb-dots{display:flex;gap:5px;margin:12px 0 10px}
+.tb-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.22)}
+.tb-dots i.on{background:#00d1ff;width:20px;border-radius:5px}
+.tb-btns{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.tb-btns .btn{min-height:46px;font-weight:900}
+#tourSkip{background:none;border:0;color:#a7acd6;font-weight:800;font-size:.9rem;padding:8px 4px;min-height:44px}
+#tourNext{flex:1;max-width:200px}
+#tourNext[hidden]{display:none}
+#tourVideoBtn{flex:1}
+/* the animated mini-demo on the welcome card */
+.ti-demo{position:relative;height:118px;margin:10px 0 2px;border-radius:14px;background:rgba(255,255,255,.06);border:1.5px solid rgba(126,232,255,.35);overflow:hidden}
+.ti-row{position:absolute;left:12px;right:12px;top:14px;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-weight:800}
+.ti-row .ti-name{flex:1}
+.ti-check{width:28px;height:28px;border-radius:50%;border:2.5px solid #00d1ff;display:flex;align-items:center;justify-content:center;color:transparent;font-weight:900;animation:ticheck 4.5s infinite}
+.ti-xp{position:absolute;right:22px;top:12px;font-family:var(--fd);font-weight:900;color:#4ade80;opacity:0;animation:tixp 4.5s infinite}
+.ti-bar{position:absolute;left:12px;right:12px;bottom:34px;height:10px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden}
+.ti-bar i{display:block;height:100%;width:20%;background:linear-gradient(90deg,#00d1ff,#7c61ff);animation:tibar 4.5s infinite}
+.ti-lvl{position:absolute;left:50%;bottom:6px;transform:translateX(-50%) scale(.6);font-family:var(--fd);font-weight:900;font-size:.85rem;letter-spacing:.06em;color:#fbbf24;opacity:0;animation:tilvl 4.5s infinite;white-space:nowrap}
+@keyframes ticheck{0%,18%{background:transparent;color:transparent}24%,100%{background:#00d1ff;color:#06222a}}
+@keyframes tixp{0%,22%{opacity:0;transform:translateY(10px)}30%{opacity:1;transform:none}55%{opacity:0;transform:translateY(-22px)}100%{opacity:0}}
+@keyframes tibar{0%,30%{width:20%}60%,100%{width:100%}}
+@keyframes tilvl{0%,62%{opacity:0;transform:translateX(-50%) scale(.6)}70%,92%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(1)}}
+/* finish confetti */
+.tour-confetti{position:fixed;top:-12px;width:9px;height:14px;border-radius:2px;z-index:330;pointer-events:none;animation:tourfall 1.9s cubic-bezier(.2,.6,.4,1) forwards}
+@keyframes tourfall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+/* the video guide on the GUIDE page */
+#guideVideo{height:min(64vh,620px);width:auto;max-width:100%;aspect-ratio:720/1558;border-radius:14px;background:#000;display:block}
+.guide-video-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+@media (prefers-reduced-motion: reduce){
+  #tourHand span, #tourSpot::after, .tb-bot, .tb-bot .px-eyes, .ti-check, .ti-xp, .ti-bar i, .ti-lvl{animation:none !important}
+  .ti-check{background:#00d1ff;color:#06222a} .ti-bar i{width:100%} .ti-lvl{opacity:1;transform:translateX(-50%)}
+}
 </style>
 </head>
 <body>
@@ -1993,6 +2059,19 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 
     <!-- ============ GUIDE ============ -->
     <section id="page-guide" style="display:none">
+      <div class="panel" id="guideVideoPanel">
+        <div class="panel-title">🎬 VIDEO GUIDE · 1 MINUTE</div>
+        <div class="guide-video-wrap">
+          <video id="guideVideo" controls playsinline preload="none" poster="guide/level-up-guide-poster.jpg">
+            <source src="guide/level-up-guide.mp4" type="video/mp4">
+            <track kind="captions" srclang="en" label="English" src="guide/level-up-guide.en.vtt" default>
+            <track kind="captions" srclang="ru" label="Русский" src="guide/level-up-guide.ru.vtt">
+            <track kind="captions" srclang="uz" label="Oʻzbekcha" src="guide/level-up-guide.uz.vtt">
+          </video>
+          <div class="empty-note" id="guideVideoNote">One minute, with subtitles: start the app, add a quest, complete it and level up.</div>
+          <button class="btn primary" id="tourReplay" style="width:100%;max-width:360px">🧭 REPLAY THE TOUR</button>
+        </div>
+      </div>
       <div class="panel guide">
         <div class="panel-title">📘 HERO'S MANUAL — HOW THE SYSTEM WORKS</div>
         <p>This app turns your real life into an RPG. Real actions earn XP, XP raises your level, levels raise your rank — and the System watches everything: it rewards discipline and punishes absence.</p>
@@ -2412,6 +2491,29 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
 <div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <!-- fullscreen announcement -->
+<!-- FIRST-RUN TUTORIAL (README 4v): spotlight, a tapping hand and Pixel, our guide -->
+<div id="tourOv">
+  <div id="tourSpot" class="none"></div>
+  <div id="tourHand" aria-hidden="true"><span>👆</span></div>
+  <div id="tourBubble" role="dialog" aria-labelledby="tourTitle" aria-describedby="tourText">
+    <div class="tb-head"><div class="tb-bot"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="pxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00d1ff"/><stop offset="1" stop-color="#7c61ff"/></linearGradient></defs><line x1="32" y1="4" x2="32" y2="15" stroke="#7ee8ff" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="5" r="4.5" fill="#fbbf24"/><rect x="7" y="14" width="50" height="42" rx="15" fill="url(#pxg)"/><rect x="13" y="22" width="38" height="21" rx="10" fill="#0b0f22"/><g class="px-eyes"><circle cx="25" cy="32.5" r="4.2" fill="#5ef2ff"/><circle cx="39" cy="32.5" r="4.2" fill="#5ef2ff"/></g><path d="M25 48 Q32 53 39 48" stroke="#0b0f22" stroke-width="3" fill="none" stroke-linecap="round"/></svg></div><div><div class="tb-name">PIXEL · YOUR GUIDE</div><div class="tb-step" id="tourStep"></div></div></div>
+    <div class="tb-title" id="tourTitle"></div>
+    <div class="tb-text" id="tourText"></div>
+    <div id="tourIntro" class="ti-demo" aria-hidden="true" style="display:none">
+      <div class="ti-row"><span>📚</span><span class="ti-name" id="tiName">Read 20 pages</span><span class="ti-check">✓</span></div>
+      <div class="ti-xp">+15 XP</div>
+      <div class="ti-bar"><i></i></div>
+      <div class="ti-lvl">LEVEL UP!</div>
+    </div>
+    <div class="tb-dots" id="tourDots"></div>
+    <div class="tb-btns">
+      <button id="tourSkip">SKIP</button>
+      <button class="btn" id="tourVideoBtn" hidden>▶ WATCH THE VIDEO</button>
+      <button class="btn primary" id="tourNext">NEXT</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="announceOv" role="alertdialog" aria-modal="true" aria-live="assertive" aria-labelledby="annTitle" aria-describedby="annBody">
   <div class="ann-box">
     <div class="ann-tag">&#9888; SYSTEM &#9888;</div>
@@ -2956,7 +3058,7 @@ function defaultState(){
     guildId:"",          /* heroes guild membership (synced across devices) */
     dreams:[],           /* chasing after dreams: {id, tier, title, note, target, done} */
     storyView:"path",    /* which story sub-view was last open */
-    theme:"sky",         /* color theme: solid Sky by default (README 4u) */
+    theme:"shadow",      /* color theme: the classic Shadow look (README 4u, 4v) */
     sound:true,          /* sound effects on/off */
     effects:false,       /* false = the calm look (default); true = glow, particles, animations */
     lang:"en",           /* interface language: en | ru */
@@ -3091,7 +3193,7 @@ function cloudAdopt(remoteJson){
   try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
   idbPut("kv", "state", JSON.stringify(state));
   if(cloudUser && state.guildId){ publishGuildProfile(); attachGuild(); } /* guild may have changed on another device */
-  applyTheme(state.theme || "sky");
+  applyTheme(state.theme || "shadow");
   renderAll();
 }
 function cloudSignIn(){
@@ -3477,6 +3579,7 @@ function hideEntrance(){
   document.getElementById("entranceOv").classList.remove("show");
   applyModeClasses();
   maybeOath(); /* the gate is open — now the System asks who just walked in */
+  maybeTour(); /* and a new hero is shown around, once the welcome is read */
 }
 document.getElementById("entClose").addEventListener("click", hideEntrance);
 /* ---- the hidden ADMIN DOOR ----
@@ -4015,12 +4118,20 @@ function migrateState(){
   if(typeof state.premiumInterest !== "string") state.premiumInterest = "";
   /* the calm look is the default for everyone; only a real true keeps the glow */
   if(typeof state.effects !== "boolean") state.effects = false;
-  /* Nov 2026: the neon Shadow look strained eyes. Everyone still on it (it
-     was the default) moves to Sky once; a theme they picked themselves is kept,
-     and Shadow stays selectable in SETTINGS. Not in defaultState, so old saves run it. */
+  /* Nov 2026: Sky was the default for a few days (themeV2 moved Shadow saves
+     to it); the team chose Shadow again. Saves on Sky go back to Shadow once,
+     and Sky stays one tap away in SETTINGS. Neither flag is in defaultState. */
   if(!state.themeV2){
-    if(!state.theme || state.theme === "shadow") state.theme = "sky";
-    state.themeV2 = true;
+    state.themeV2 = true; /* never move anyone to Sky again */
+  }
+  /* the first-run tour (README 4v): new heroes get it, anyone who has already
+     played does not. Not in defaultState, so this decides once for every save. */
+  if(typeof state.tutorialDone !== "boolean"){
+    state.tutorialDone = (state.totalCompleted || 0) > 0 || Object.keys(state.history || {}).length > 0;
+  }
+  if(!state.themeV3){
+    if(!state.theme || state.theme === "sky") state.theme = "shadow";
+    state.themeV3 = true;
   }
   /* Nov 2026: the anime-derived names were retired (see README 4s). Only strings
      the app itself wrote are renamed, by exact match, never anything the hero
@@ -5106,7 +5217,43 @@ var I18N_RU = {
   "💜 Lilac (white & purple)":"💜 Сирень (белый и фиолетовый)",
   "🧡 Sunrise (white & orange)":"🧡 Рассвет (белый и оранжевый)",
   "🌙 Night (soft dark blue)":"🌙 Ночь (мягкий тёмно-синий)",
-  "🌑 Shadow (classic neon)":"🌑 Тень (классический неон)"
+  "🌑 Shadow (classic neon)":"🌑 Тень (классический неон)",
+  "🌑 Shadow (default)":"🌑 Тень (по умолчанию)",
+  /* README 4v: first-run tour and video guide */
+  "Welcome, Hero!":"Добро пожаловать, герой!",
+  "I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.":"Я Пиксель, твой гид. За одну минуту я покажу, как LEVEL UP превращает твой день в игру.",
+  "This is you":"Это ты",
+  "Your level, your XP bar and your 🔥 streak. Every finished task fills the bar.":"Твой уровень, шкала XP и серия 🔥. Каждое выполненное задание заполняет шкалу.",
+  "Your Daily Quest":"Твой ежедневный квест",
+  "Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP.":"Небольшие задания, которые обновляются каждый день в 01:00. Сделай их по-настоящему, затем нажми ВЫПОЛНИТЬ и получи XP.",
+  "Your own quests":"Твои квесты",
+  "This line counts the quests you finished today. Tap it any time to open your quest list.":"Эта строка показывает, сколько квестов ты выполнил сегодня. Нажми на неё, чтобы открыть список квестов.",
+  "Add a quest":"Добавь квест",
+  "Tap + to add your own goal: study, sport, reading. Daily quests get their own slots as you level up, the first at Level 5.":"Нажми +, чтобы добавить свою цель: учёба, спорт, чтение. Для ежедневных квестов с ростом уровня открываются слоты, первый — на 5-м уровне.",
+  "Five tabs, always here":"Пять вкладок, всегда под рукой",
+  "TODAY, QUESTS, PROGRESS, REWARDS and MORE. Locked tabs open as you level up 🔒.":"СЕГОДНЯ, КВЕСТЫ, ПРОГРЕСС, НАГРАДЫ и ЕЩЁ. Закрытые вкладки 🔒 открываются с ростом уровня.",
+  "Try it: tap PROGRESS":"Попробуй: нажми ПРОГРЕСС",
+  "Tap the PROGRESS tab now.":"Нажми сейчас на вкладку ПРОГРЕСС.",
+  "Your progress":"Твой прогресс",
+  "Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch.":"Твой герой, дорога уровней с наградами, статистика и почёт. Переключайся этими вкладками.",
+  "Now tap MORE":"Теперь нажми ЕЩЁ",
+  "Tap MORE to see everything else.":"Нажми ЕЩЁ, чтобы увидеть всё остальное.",
+  "Everything else":"Всё остальное",
+  "Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them.":"Учёба и рост, клан, бюджет, этот гид и настройки. На закрытых разделах указан уровень, на котором они откроются.",
+  "You're ready!":"Ты готов!",
+  "Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE.":"Выполни сегодняшний ежедневный квест, чтобы достичь 2-го уровня. Тур и видеогид всегда доступны в ЕЩЁ → ГИД.",
+  "LET'S GO":"ПОЕХАЛИ",
+  "SKIP":"ПРОПУСТИТЬ",
+  "START PLAYING":"НАЧАТЬ ИГРУ",
+  "▶ WATCH THE VIDEO":"▶ СМОТРЕТЬ ВИДЕО",
+  "PIXEL · YOUR GUIDE":"ПИКСЕЛЬ · ТВОЙ ГИД",
+  "Read 20 pages":"Прочитать 20 страниц",
+  "Tour skipped. Replay it any time in MORE → GUIDE.":"Тур пропущен. Его можно пройти снова в ЕЩЁ → ГИД.",
+  "Tap the highlighted button.":"Нажми на подсвеченную кнопку.",
+  "🎬 VIDEO GUIDE · 1 MINUTE":"🎬 ВИДЕОГИД · 1 МИНУТА",
+  "One minute, with subtitles: start the app, add a quest, complete it and level up.":"Одна минута с субтитрами: запуск, новый квест, выполнение и новый уровень.",
+  "🧭 REPLAY THE TOUR":"🧭 ПРОЙТИ ТУР ЗАНОВО",
+  "The video needs an internet connection.":"Для видео нужен интернет."
 };
 
 /* Uzbek (Latin script, oʻ/gʻ written with ʻ U+02BB). Same keys as I18N_RU;
@@ -5509,7 +5656,43 @@ var I18N_UZ = {
   "💜 Lilac (white & purple)":"💜 Nastarin (oq va binafsha)",
   "🧡 Sunrise (white & orange)":"🧡 Tong (oq va toʻq sariq)",
   "🌙 Night (soft dark blue)":"🌙 Tun (yumshoq toʻq koʻk)",
-  "🌑 Shadow (classic neon)":"🌑 Soya (klassik neon)"
+  "🌑 Shadow (classic neon)":"🌑 Soya (klassik neon)",
+  "🌑 Shadow (default)":"🌑 Soya (standart)",
+  /* README 4v: first-run tour and video guide */
+  "Welcome, Hero!":"Xush kelibsiz, Qahramon!",
+  "I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.":"Men Pikselman, sizning yoʻlboshchingiz. Bir daqiqada LEVEL UP kuningizni qanday oʻyinga aylantirishini koʻrsataman.",
+  "This is you":"Bu — siz",
+  "Your level, your XP bar and your 🔥 streak. Every finished task fills the bar.":"Darajangiz, XP chizigʻingiz va 🔥 seriyangiz. Har bir bajarilgan vazifa chiziqni toʻldiradi.",
+  "Your Daily Quest":"Kunlik kvestingiz",
+  "Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP.":"Har kuni soat 01:00 da yangilanadigan kichik vazifalar. Ularni haqiqatan bajaring, soʻng XP olish uchun BAJARISH tugmasini bosing.",
+  "Your own quests":"Shaxsiy kvestlaringiz",
+  "This line counts the quests you finished today. Tap it any time to open your quest list.":"Bu qator bugun nechta kvest bajarganingizni koʻrsatadi. Kvestlar roʻyxatini ochish uchun istalgan payt uni bosing.",
+  "Add a quest":"Kvest qoʻshing",
+  "Tap + to add your own goal: study, sport, reading. Daily quests get their own slots as you level up, the first at Level 5.":"Oʻz maqsadingizni qoʻshish uchun + ni bosing: oʻqish, sport, kitob. Kunlik kvestlar uchun darajangiz oshgani sari slotlar ochiladi, birinchisi 5-darajada.",
+  "Five tabs, always here":"Beshta boʻlim, doim shu yerda",
+  "TODAY, QUESTS, PROGRESS, REWARDS and MORE. Locked tabs open as you level up 🔒.":"BUGUN, KVESTLAR, TARAQQIYOT, MUKOFOTLAR va KOʻPROQ. Yopiq boʻlimlar 🔒 darajangiz oshgani sari ochiladi.",
+  "Try it: tap PROGRESS":"Sinab koʻring: TARAQQIYOT ni bosing",
+  "Tap the PROGRESS tab now.":"Hozir TARAQQIYOT boʻlimini bosing.",
+  "Your progress":"Taraqqiyotingiz",
+  "Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch.":"Qahramoningiz, mukofotli darajalar yoʻli, statistika va sharaflar. Ular orasida shu tugmalar bilan oʻting.",
+  "Now tap MORE":"Endi KOʻPROQ ni bosing",
+  "Tap MORE to see everything else.":"Qolgan hamma narsani koʻrish uchun KOʻPROQ ni bosing.",
+  "Everything else":"Qolgan hammasi",
+  "Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them.":"Oʻrganish va oʻsish, klan, byudjet, ushbu qoʻllanma va sozlamalar. Yopiq boʻlimlarda ular ochiladigan daraja koʻrsatilgan.",
+  "You're ready!":"Siz tayyorsiz!",
+  "Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE.":"2-darajaga yetish uchun bugungi kunlik kvestni bajaring. Ushbu sayohatni va video qoʻllanmani istalgan payt KOʻPROQ → QOʻLLANMA da koʻrishingiz mumkin.",
+  "LET'S GO":"BOSHLADIK",
+  "SKIP":"OʻTKAZIB YUBORISH",
+  "START PLAYING":"OʻYINNI BOSHLASH",
+  "▶ WATCH THE VIDEO":"▶ VIDEONI KOʻRISH",
+  "PIXEL · YOUR GUIDE":"PIKSEL · YOʻLBOSHCHINGIZ",
+  "Read 20 pages":"20 sahifa oʻqish",
+  "Tour skipped. Replay it any time in MORE → GUIDE.":"Sayohat oʻtkazib yuborildi. Uni KOʻPROQ → QOʻLLANMA da qayta koʻrish mumkin.",
+  "Tap the highlighted button.":"Yoritilgan tugmani bosing.",
+  "🎬 VIDEO GUIDE · 1 MINUTE":"🎬 VIDEO QOʻLLANMA · 1 DAQIQA",
+  "One minute, with subtitles: start the app, add a quest, complete it and level up.":"Bir daqiqa, subtitrlar bilan: ilovani ochish, kvest qoʻshish, uni bajarish va darajani oshirish.",
+  "🧭 REPLAY THE TOUR":"🧭 SAYOHATNI QAYTA KOʻRISH",
+  "The video needs an internet connection.":"Video uchun internet kerak."
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
 function i18nDict(){
@@ -10714,7 +10897,7 @@ function renderAdmin(){
     for(var ti=0;ti<THEMES.length;ti++) th += '<option value="' + THEMES[ti].id + '">' + THEMES[ti].name + '</option>';
     themeSel.innerHTML = th;
   }
-  themeSel.value = state.theme || "sky";
+  themeSel.value = state.theme || "shadow";
   document.getElementById("admSound").value = state.sound === false ? "off" : "on";
   document.getElementById("admEffects").value = state.effects === true ? "on" : "off";
   document.getElementById("admLang").value = state.lang || "en";
@@ -11581,6 +11764,7 @@ document.getElementById("dreamTarget").addEventListener("click", function(){ ope
 /* tok: a SOLID theme drawn from colour tokens (README 4u); tc paints the
    phone's status bar, so a light theme gets its own light background there */
 var THEMES = [
+  {id:"shadow",  name:"🌑 Shadow (default)",            tc:"#7c61ff"},
   {id:"sky",     name:"☁️ Sky (white & blue)",          tc:"#edf2f8", tok:true},
   {id:"paper",   name:"📄 Paper (warm white & navy)",   tc:"#f4efe6", tok:true},
   {id:"mint",    name:"🌿 Mint (white & green)",        tc:"#ecf6f0", tok:true},
@@ -11588,7 +11772,6 @@ var THEMES = [
   {id:"sunrise", name:"🧡 Sunrise (white & orange)",    tc:"#fdf3ea", tok:true},
   {id:"blossom", name:"🤍 Blossom (white & pink)",      tc:"#fdf1f6", tok:true},
   {id:"night",   name:"🌙 Night (soft dark blue)",      tc:"#0f172a", tok:true},
-  {id:"shadow",  name:"🌑 Shadow (classic neon)",       tc:"#7c61ff"},
   {id:"rose",    name:"🌸 Rose (pink)",                 tc:"#ec4899"},
   {id:"emerald", name:"💚 Emerald (green)",             tc:"#10b981"},
   {id:"ember",   name:"🔥 Ember (orange)",              tc:"#f97316"}
@@ -11598,7 +11781,7 @@ function themeConf(id){
   return null;
 }
 function applyTheme(id){
-  var t = themeConf(id) || themeConf("sky"); /* an unknown id gets the default */
+  var t = themeConf(id) || themeConf("shadow"); /* an unknown id gets the default */
   if(t.id === "shadow") document.body.removeAttribute("data-theme");
   else document.body.setAttribute("data-theme", t.id);
   document.body.classList.toggle("tok", !!t.tok);
@@ -12958,6 +13141,202 @@ document.getElementById("oathAmend").addEventListener("click", function(){
   showOath(true);
 });
 
+/* ================= FIRST-RUN TUTORIAL (README 4v) =================
+   Shown once to a new hero, right after the welcome announcement, and again
+   whenever they press REPLAY THE TOUR in GUIDE. Steps with action:"tap" wait
+   for the hero to press the highlighted control; every other tap is held back
+   so nobody gets lost halfway. Nothing here changes the hero's record:
+   the tour only points, it never completes a quest for them. */
+var TOUR = [
+  {id:"hello", page:"home", title:"Welcome, Hero!", text:"I'm Pixel, your guide. In one minute I'll show you how LEVEL UP turns your day into a game.", intro:true, next:"LET'S GO"},
+  {id:"hero", page:"home", target:"#page-home > .panel", title:"This is you", text:"Your level, your XP bar and your 🔥 streak. Every finished task fills the bar."},
+  {id:"daily", page:"home", target:"#pkgList", hand:"#pkgList .pkg-btn", title:"Your Daily Quest", text:"Small tasks that reset every day at 01:00. Do the real thing, then tap COMPLETE to earn XP."},
+  {id:"quests", page:"home", target:"#todayQuests", title:"Your own quests", text:"This line counts the quests you finished today. Tap it any time to open your quest list."},
+  {id:"plus", page:"home", target:"#fab", hand:"#fab", title:"Add a quest", text:"Tap + to add your own goal: study, sport, reading. Daily quests get their own slots as you level up, the first at Level 5."},
+  {id:"tabs", page:"home", target:"#nav", title:"Five tabs, always here", text:"TODAY, QUESTS, PROGRESS, REWARDS and MORE. Locked tabs open as you level up 🔒."},
+  {id:"goprog", page:"home", target:'#nav .nav-btn[data-tab="progress"]', action:"tap", title:"Try it: tap PROGRESS", text:"Tap the PROGRESS tab now."},
+  {id:"prog", page:"profile", target:"#subnav", title:"Your progress", text:"Your hero, the level road with its rewards, your stats and your honors. Use these tabs to switch."},
+  {id:"gomore", target:'#nav .nav-btn[data-tab="more"]', action:"tap", title:"Now tap MORE", text:"Tap MORE to see everything else."},
+  {id:"more", sheet:true, target:"#moreList", title:"Everything else", text:"Learn & Grow, Clan, Budget, this Guide and Settings. Sealed parts show the level that opens them."},
+  {id:"done", page:"home", final:true, title:"You're ready!", text:"Finish today's Daily Quest to reach Level 2. You can replay this tour and watch the video guide any time in MORE → GUIDE."}
+];
+var tourOn = false, tourIdx = 0, tourTyping = null, tourWait = null, tourAdvancing = false;
+function tourReduced(){ try{ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } }
+function tourEl(sel){ if(!sel) return null; var el = document.querySelector(sel); return el && el.getClientRects().length ? el : null; }
+/* is something else on screen that must finish first? */
+function tourBlocked(){
+  var ids = ["entranceOv","oathOv","announceOv","gachaOv","focusOv"];
+  for(var i=0;i<ids.length;i++){ var e = document.getElementById(ids[i]); if(e && e.classList.contains("show")) return true; }
+  return !!document.querySelector(".modal.show");
+}
+/* start for a new hero once the welcome is out of the way */
+function maybeTour(){
+  if(tourWait) return;
+  var tries = 0;
+  tourWait = setInterval(function(){
+    tries++;
+    if(!state || state.tutorialDone || adminMode || !state.entryChoice || tourOn || tries > 240){ clearInterval(tourWait); tourWait = null; return; }
+    /* the welcome announcement arrives a moment after START: give it time to appear */
+    if(tries < 4 || tourBlocked() || annOpen || annQueue.length) return;
+    clearInterval(tourWait); tourWait = null;
+    startTour();
+  }, 500);
+}
+function startTour(){
+  if(adminMode) return;
+  tourOn = true; tourIdx = 0;
+  if(moreOpen) setMoreOpen(false);
+  document.getElementById("tourOv").classList.add("show");
+  document.body.classList.add("touring");
+  showTourStep();
+}
+function endTour(finished){
+  tourOn = false;
+  if(tourTyping){ clearInterval(tourTyping); tourTyping = null; }
+  document.getElementById("tourOv").classList.remove("show");
+  document.getElementById("tourHand").classList.remove("show");
+  document.body.classList.remove("touring");
+  state.tutorialDone = true; save();
+  if(moreOpen) setMoreOpen(false);
+  if(!finished) sysToast(tr("Tour skipped. Replay it any time in MORE → GUIDE."));
+}
+function tourType(text){
+  var el = document.getElementById("tourText");
+  if(tourTyping){ clearInterval(tourTyping); tourTyping = null; }
+  if(tourReduced()){ el.textContent = text; return; }
+  var n = 0; el.textContent = "";
+  tourTyping = setInterval(function(){
+    n += 2; el.textContent = text.slice(0, n);
+    if(n >= text.length){ clearInterval(tourTyping); tourTyping = null; el.textContent = text; }
+  }, 22);
+}
+function showTourStep(){
+  var st = TOUR[tourIdx];
+  if(!st){ endTour(true); return; }
+  if(st.page && currentPage !== st.page) switchPage(st.page);
+  if(st.sheet && !moreOpen) setMoreOpen(true);
+  if(!st.sheet && moreOpen) setMoreOpen(false);
+  document.getElementById("tourStep").textContent = (tourIdx + 1) + " / " + TOUR.length;
+  document.getElementById("tourTitle").textContent = tr(st.title);
+  tourType(tr(st.text));
+  document.getElementById("tourIntro").style.display = st.intro ? "" : "none";
+  var dots = "";
+  for(var i=0;i<TOUR.length;i++) dots += '<i class="' + (i === tourIdx ? "on" : "") + '"></i>';
+  document.getElementById("tourDots").innerHTML = dots;
+  var nx = document.getElementById("tourNext");
+  nx.hidden = st.action === "tap";
+  nx.textContent = tr(st.final ? "START PLAYING" : (st.next || "NEXT"));
+  document.getElementById("tourVideoBtn").hidden = !st.final;
+  document.getElementById("tourSkip").style.visibility = st.final ? "hidden" : "";
+  var b = document.getElementById("tourBubble");
+  b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+  if(state.sound !== false) sfx("open");
+  /* targets inside the sliding sheet need it to finish moving first */
+  setTimeout(placeTour, st.sheet ? 320 : 30);
+  if(st.final) tourConfetti();
+}
+function placeTour(){
+  if(!tourOn) return;
+  var st = TOUR[tourIdx], spot = document.getElementById("tourSpot"), hand = document.getElementById("tourHand");
+  var bub = document.getElementById("tourBubble"), vw = window.innerWidth, vh = window.innerHeight;
+  var el = tourEl(st.target);
+  if(el && !st.sheet){
+    var r0 = el.getBoundingClientRect();
+    if(r0.top < 60 || r0.bottom > vh - 80){ try{ el.scrollIntoView({block:"center"}); }catch(e){} }
+  }
+  var bw = bub.offsetWidth, bh = bub.offsetHeight, left = Math.max(12, (vw - bw) / 2), top;
+  if(!el){
+    spot.className = "none"; spot.style.left = vw/2 + "px"; spot.style.top = vh/2 + "px"; spot.style.width = "0px"; spot.style.height = "0px";
+    top = Math.max(12, (vh - bh) / 2);
+  } else {
+    var r = el.getBoundingClientRect(), pad = 8;
+    spot.className = "";
+    spot.style.left = (r.left - pad) + "px"; spot.style.top = (r.top - pad) + "px";
+    spot.style.width = (r.width + pad*2) + "px"; spot.style.height = (r.height + pad*2) + "px";
+    var below = r.bottom + pad + 14, above = r.top - pad - 14 - bh;
+    top = (r.top + r.height/2 < vh/2) ? Math.min(below, vh - bh - 12) : Math.max(12, above);
+    if(top < 12) top = 12;
+  }
+  bub.style.left = left + "px"; bub.style.top = top + "px";
+  var hs = st.action === "tap" ? st.target : st.hand, h = tourEl(hs);
+  if(h){
+    var hr = h.getBoundingClientRect();
+    hand.style.left = (hr.left + hr.width/2) + "px"; hand.style.top = (hr.top + hr.height/2) + "px";
+    hand.classList.add("show");
+  } else hand.classList.remove("show");
+}
+function tourNext(){
+  if(tourTyping){ clearInterval(tourTyping); tourTyping = null; document.getElementById("tourText").textContent = tr(TOUR[tourIdx].text); return; }
+  if(TOUR[tourIdx] && TOUR[tourIdx].final){ endTour(true); if(state.sound !== false) sfx("levelup"); return; }
+  tourIdx++;
+  showTourStep();
+}
+function tourConfetti(){
+  if(tourReduced()) return;
+  var colors = ["#00d1ff","#7c61ff","#fbbf24","#4ade80","#f472b6"];
+  for(var i=0;i<28;i++){
+    var c = document.createElement("div");
+    c.className = "tour-confetti";
+    c.style.left = Math.round(Math.random()*100) + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = (Math.random()*0.5).toFixed(2) + "s";
+    document.body.appendChild(c);
+    setTimeout((function(n){ return function(){ if(n.parentNode) n.parentNode.removeChild(n); }; })(c), 2600);
+  }
+}
+/* while the tour runs, only the bubble and the step's own target respond */
+document.addEventListener("click", function(e){
+  if(!tourOn) return;
+  if(e.target.closest && e.target.closest("#tourBubble")) return;
+  var st = TOUR[tourIdx], t = tourEl(st.target);
+  if(st.action === "tap" && t && t.contains(e.target)){
+    if(tourAdvancing) return;
+    tourAdvancing = true;
+    setTimeout(function(){ tourAdvancing = false; if(tourOn){ tourIdx++; showTourStep(); } }, 380);
+    return;
+  }
+  e.preventDefault(); e.stopPropagation();
+  var hand = document.getElementById("tourHand");
+  if(st.action === "tap"){
+    hand.classList.remove("nudge"); void hand.offsetWidth; hand.classList.add("nudge");
+    sysToast(tr("Tap the highlighted button."));
+  }
+}, true);
+document.addEventListener("keydown", function(e){
+  if(!tourOn) return;
+  if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); endTour(false); }
+}, true);
+window.addEventListener("resize", function(){ if(tourOn) placeTour(); });
+window.addEventListener("scroll", function(){ if(tourOn) placeTour(); }, {passive:true});
+document.getElementById("tourNext").addEventListener("click", tourNext);
+document.getElementById("tourSkip").addEventListener("click", function(){ endTour(false); });
+document.getElementById("tourVideoBtn").addEventListener("click", function(){
+  endTour(true);
+  switchPage("guide");
+  var v = document.getElementById("guideVideo");
+  if(v){ try{ v.scrollIntoView({block:"center"}); }catch(e){} var pr = v.play(); if(pr && pr.catch) pr.catch(function(){}); }
+});
+document.getElementById("tourReplay").addEventListener("click", function(){
+  switchPage("home");
+  startTour();
+});
+/* the video's subtitles follow the app's language */
+(function(){
+  var v = document.getElementById("guideVideo");
+  if(!v) return;
+  function pickTrack(){
+    var lang = (state && state.lang) || "en";
+    for(var i=0;i<v.textTracks.length;i++){
+      v.textTracks[i].mode = v.textTracks[i].language === lang ? "showing" : "disabled";
+    }
+  }
+  v.addEventListener("loadedmetadata", pickTrack);
+  v.addEventListener("play", pickTrack);
+  v.addEventListener("error", function(){
+    document.getElementById("guideVideoNote").textContent = tr("The video needs an internet connection.");
+  }, true);
+})();
+
 /* ================= LEARN & GROW =================
    Four roads. Each is a ladder of levels: a lesson to watch, then a real task
    built on it. A level stays sealed until the one before it is finished. */
@@ -13263,7 +13642,7 @@ function seedIfNew(){
   }, 600);
 }
 load();
-applyTheme(state.theme || "sky");
+applyTheme(state.theme || "shadow");
 startI18n(); /* translate static UI + watch dynamic renders (no-op in English) */
 applyModeClasses();
 renderNav();
@@ -13328,6 +13707,7 @@ switchPage("home");
 renderTimerPill(); /* resume a running session after reload */
 updateFinalizeBtn();
 maybeOath(); /* heroes who were here before the Oath existed are asked on this open */
+maybeTour(); /* a new hero who closed the app mid-tour starts it again */
 /* entrance gate: shown until the hero chooses USER (Google/guest) or ADMIN.
    A signed-in session closes it automatically the moment auth restores. */
 if(!state.entryChoice) showEntrance();

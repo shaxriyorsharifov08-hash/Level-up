@@ -1,32 +1,30 @@
-/* SOLID THEMES (README 4u).
-   The neon look strained eyes. LEVEL UP now opens in Sky (white & blue), with
-   six more solid themes beside it. Every one of them must stay readable
-   (WCAG 4.5:1 for text and buttons), and nobody may lose a theme they chose. */
+/* SOLID THEMES (README 4u, 4v).
+   LEVEL UP opens in the classic Shadow look (Sky was the default for a few
+   days, then the team chose Shadow again). Seven solid themes sit beside it.
+   Every solid theme must stay readable (WCAG 4.5:1 for text and buttons), and
+   nobody may lose a theme they chose. */
 const { test, expect } = require("@playwright/test");
 const { bootAsGuest } = require("./helpers");
 
 const ready = (page) => page.waitForFunction(() => typeof window.state === "object" && window.state !== null && typeof window.switchPage === "function");
 
 test.describe("solid themes", () => {
-  test("a new hero opens in Sky: light, solid, sturdy type", async ({ page }) => {
+  test("a new hero opens in the classic Shadow look, with sturdy type and no glow", async ({ page }) => {
     await bootAsGuest(page);
     const r = await page.evaluate(() => {
       const cs = getComputedStyle(document.body);
-      const bg = cs.backgroundColor.match(/\d+/g).map(Number);
       return {
         theme: state.theme,
         attr: document.body.getAttribute("data-theme"),
         tok: document.body.classList.contains("tok"),
-        light: (bg[0] + bg[1] + bg[2]) / 3 > 200,
         font: cs.fontFamily,
         weight: cs.fontWeight,
         titleGlow: getComputedStyle(document.querySelector(".panel-title")).textShadow
       };
     });
-    expect(r.theme).toBe("sky");
-    expect(r.attr).toBe("sky");
-    expect(r.tok).toBe(true);
-    expect(r.light).toBe(true);
+    expect(r.theme).toBe("shadow");
+    expect(r.attr).toBe(null);
+    expect(r.tok).toBe(false);
     expect(r.font).toContain("Nunito");
     expect(r.weight).toBe("600");
     expect(r.titleGlow).toBe("none");
@@ -59,7 +57,7 @@ test.describe("solid themes", () => {
   test("a light theme leaves no dark card behind on the main pages", async ({ page }) => {
     await bootAsGuest(page);
     const dark = await page.evaluate(() => {
-      state.level = 20; save(); renderNav();
+      state.level = 20; state.theme = "sky"; save(); applyTheme("sky"); renderNav();
       const found = [];
       ["home", "quests", "profile", "story", "admin"].forEach((p) => {
         switchPage(p);
@@ -79,7 +77,7 @@ test.describe("solid themes", () => {
     await bootAsGuest(page);
     await page.evaluate(() => switchPage("admin"));
     const ids = await page.$$eval("#admTheme option", (els) => els.map((e) => e.value));
-    expect(ids).toEqual(["sky", "paper", "mint", "lilac", "sunrise", "blossom", "night", "shadow", "rose", "emerald", "ember"]);
+    expect(ids).toEqual(["shadow", "sky", "paper", "mint", "lilac", "sunrise", "blossom", "night", "rose", "emerald", "ember"]);
     await page.selectOption("#admTheme", "night");
     await page.reload({ waitUntil: "domcontentloaded" });
     await ready(page);
@@ -91,32 +89,33 @@ test.describe("solid themes", () => {
       .toEqual({ a: null, tok: false });
   });
 
-  test("an old save on the neon default moves to Sky once and keeps its data; a chosen theme is kept", async ({ page }) => {
+  test("a save on Sky goes back to Shadow once and keeps its data; any other chosen theme is kept", async ({ page }) => {
     await bootAsGuest(page);
-    for (const [before, after] of [["shadow", "sky"], ["ember", "ember"], ["blossom", "blossom"]]) {
-      await page.evaluate((th) => {
+    for (const [before, after, v2] of [["sky", "shadow", true], ["shadow", "shadow", false], ["ember", "ember", true], ["night", "night", true]]) {
+      await page.evaluate(([th, hadV2]) => {
         const old = JSON.parse(JSON.stringify(state));
-        delete old.themeV2;
+        delete old.themeV3;
+        if (!hadV2) delete old.themeV2; /* a save from before Sky existed */
         old.theme = th;
         old.hunterName = "Old Save";
         old.saveCount = (state.saveCount || 0) + 500; /* newer than the vault copy */
         localStorage.setItem("leveluphunter_v1", JSON.stringify(old));
-      }, before);
+      }, [before, v2]);
       await page.reload({ waitUntil: "domcontentloaded" });
       await ready(page);
-      expect(await page.evaluate(() => ({ t: state.theme, n: state.hunterName, f: state.themeV2 })))
+      expect(await page.evaluate(() => ({ t: state.theme, n: state.hunterName, f: state.themeV3 })))
         .toEqual({ t: after, n: "Old Save", f: true });
     }
-    /* once moved, choosing Shadow again sticks */
-    await page.evaluate(() => { state.theme = "shadow"; save(); });
+    /* once moved back, choosing Sky again sticks */
+    await page.evaluate(() => { state.theme = "sky"; save(); });
     await page.reload({ waitUntil: "domcontentloaded" });
     await ready(page);
-    expect(await page.evaluate(() => state.theme)).toBe("shadow");
+    expect(await page.evaluate(() => state.theme)).toBe("sky");
   });
 
-  test("an unknown theme falls back to Sky", async ({ page }) => {
+  test("an unknown theme falls back to Shadow", async ({ page }) => {
     await bootAsGuest(page);
-    expect(await page.evaluate(() => { applyTheme("no-such-theme"); return document.body.getAttribute("data-theme"); })).toBe("sky");
+    expect(await page.evaluate(() => { applyTheme("no-such-theme"); return document.body.getAttribute("data-theme"); })).toBe(null);
   });
 
   test("theme names speak Russian and Uzbek", async ({ page }) => {

@@ -734,6 +734,25 @@ The neon look (glowing purple on near-black, thin narrow letters, widely spaced 
 
 The classic neon themes (Shadow, Rose, Emerald, Ember) are unchanged and still selectable. Chart labels read their colours from the theme (`chartInk`). The phone's status bar takes each theme's background colour.
 
-**Existing users.** `migrateState()` moves a save still on Shadow (the old default) to Sky once (`themeV2`, deliberately not in `defaultState()`), and keeps any theme the hero picked. Shadow stays one tap away in SETTINGS → APPEARANCE. An unknown theme id falls back to Sky. Nothing else in the save changes.
+**Existing users (superseded, see 4v).** `migrateState()` moved a save still on Shadow (the old default) to Sky once (`themeV2`, deliberately not in `defaultState()`), and keeps any theme the hero picked. Shadow stays one tap away in SETTINGS → APPEARANCE. An unknown theme id falls back to Sky. Nothing else in the save changes.
 
 **Adding a theme:** copy one `body[data-theme="sky"]{…}` token block, add an entry with `tok:true` to `THEMES`, translate its name in both dictionaries, and check it with `tests/themes.spec.js`, which fails if any solid theme drops below 4.5:1.
+
+
+## 4v. SHADOW AGAIN, THE FIRST-RUN TOUR AND THE VIDEO GUIDE (November 2026)
+
+**Shadow is the default again.** The team preferred the original look. `defaultState().theme` is `"shadow"`, and `migrateState()` moves any save on Sky back to Shadow once (`themeV3`, not in `defaultState`); every other theme a hero chose is kept, and Sky and the other solid themes stay in SETTINGS → APPEARANCE. The sturdier type and the calm look from 4t/4u stay.
+
+**The first-run tour** (`TOUR`, `startTour`, `showTourStep`, `placeTour`). Modelled on how mobile games teach new players: the screen dims, a spotlight opens on one control, a hand taps where to tap, and **Pixel**, our own guide character (original SVG, no borrowed art), explains it in a speech bubble with a typing effect. 11 steps: welcome with an animated mini-demo (a task is ticked, +15 XP flies up, the bar fills, LEVEL UP!), the hero card, the Daily Quest, today's quests, the ＋ button, the tab bar, then two steps the hero must do themselves (tap PROGRESS, tap MORE), and a finish with confetti and a button to the video.
+- It starts on its own for a new hero, after the welcome announcement and only when nothing else is on screen (`maybeTour`, `tourBlocked`).
+- During a "tap" step only the highlighted control works; other taps are held back and the hand nudges. During the other steps only the bubble responds.
+- SKIP or Escape ends it; GUIDE → 🧭 REPLAY THE TOUR runs it again. It never completes anything: it only points.
+- `state.tutorialDone`: decided once per save in `migrateState()` (not in `defaultState`): `false` for a brand-new save, `true` for anyone who has already completed something, so existing heroes are not interrupted.
+- All text is in English, Russian and Uzbek; with reduced motion there is no typing, bobbing or confetti. Hidden in admin mode.
+- The tour's "add a quest" step says honestly that a new hero adds one-time goals first: recurring quests need quest slots, the first at Level 5.
+
+**The video guide** (`guide/`). A 71-second walkthrough recorded from the real app on a demo account (start, Daily Quest, adding a goal, the focus timer, completing, levelling up, PROGRESS, MORE, GUIDE), with tap ripples. It is an H.264 MP4 (720×1558, about 2.3 MB) with a poster image and WebVTT subtitles in English, Russian and Uzbek; the player shows the subtitles of the app's language. It is in GUIDE and opens from the end of the tour; `preload="none"`, so nothing downloads until play is pressed. It needs a connection the first time.
+
+To re-record it after the interface changes: `node tools/record-guide-video.js <work folder>` (drives the app with Playwright and saves frames and caption times), then `python3 tools/build-guide-video.py <work folder> guide 27` (needs ffmpeg with libx264; writes the MP4 and the three .vtt files), then make the poster with `ffmpeg -ss 9.5 -i guide/level-up-guide.mp4 -frames:v 1 -vf scale=540:-2 -q:v 4 guide/level-up-guide-poster.jpg`. Russian and Uzbek subtitle texts live in the build script.
+
+Tests: `tests/tutorial.spec.js`; `tests/themes.spec.js` updated for the Shadow default. The test helper marks the tour as done (`keepTour` keeps it).
