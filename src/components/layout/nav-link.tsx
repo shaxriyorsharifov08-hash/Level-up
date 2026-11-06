@@ -13,12 +13,15 @@ export function NavLink({
   href,
   exact,
   badge,
+  meta,
   className,
   children,
 }: {
   href: string;
   exact?: boolean;
   badge?: number;
+  /** Quiet text on the right, e.g. a balance. */
+  meta?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -37,6 +40,7 @@ export function NavLink({
       )}
     >
       {children}
+      {meta && !badge ? <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{meta}</span> : null}
       {badge ? (
         <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {badge > 99 ? "99+" : badge}

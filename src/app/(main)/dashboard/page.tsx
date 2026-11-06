@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck2, CalendarDays, Flag, ListTodo, MessagesSquare, Plus, Users, Video } from "lucide-react";
+import { CalendarCheck2, CalendarDays, Coins, Flag, ListTodo, Plus, Users, Video } from "lucide-react";
 import { SocialLinks } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader, SectionHeader, StatCard } from "@/components/ui/misc";
 import { siteConfig } from "@/config/site";
-import { countUnreadConversations } from "@/features/chat/queries";
 import { DateBadge, EventCard } from "@/features/events/components/event-card";
 import { getMyUpcomingEvents, listEvents } from "@/features/events/queries";
 import { FeedList } from "@/features/feed/components/feed";
@@ -16,6 +15,7 @@ import { getFeed } from "@/features/feed/queries";
 import { getActiveOrgIds, getUpcomingMeetings } from "@/features/meetings/queries";
 import { listOrganizations } from "@/features/organizations/queries";
 import { listTasks } from "@/features/projects/queries";
+import { getBalance } from "@/features/rewards/service";
 import { requireUser } from "@/lib/auth";
 import { formatDateRange, formatDateTime, getZonedParts } from "@/lib/dates";
 import { cn, safeUrl } from "@/lib/utils";
@@ -34,12 +34,12 @@ export default async function DashboardPage() {
   const user = await requireUser("/dashboard");
   const orgIds = await getActiveOrgIds(user.id);
 
-  const [myEvents, tasks, meetings, feed, unread, upcoming, clubs] = await Promise.all([
+  const [myEvents, tasks, meetings, feed, tokens, upcoming, clubs] = await Promise.all([
     getMyUpcomingEvents(user.id, 5),
     listTasks({ assigneeId: user.id, includeDone: false }),
     getUpcomingMeetings(orgIds, 5),
     getFeed(user.id, 10),
-    countUnreadConversations(user.id),
+    getBalance(user.id),
     listEvents({ limit: 12 }),
     listOrganizations({ limit: 30 }),
   ]);
@@ -77,7 +77,16 @@ export default async function DashboardPage() {
           icon={ListTodo}
           hint={overdue ? <span className="text-destructive">{overdue} overdue</span> : undefined}
         />
-        <StatCard label="Unread chats" value={unread} icon={MessagesSquare} />
+        <StatCard
+          label="Tokens"
+          value={tokens.toLocaleString("en-US")}
+          icon={Coins}
+          hint={
+            <Link href="/rewards" className="font-medium text-primary-text hover:underline">
+              Spend in the shop
+            </Link>
+          }
+        />
         <StatCard label="My clubs" value={orgIds.length} icon={Users} />
       </div>
 

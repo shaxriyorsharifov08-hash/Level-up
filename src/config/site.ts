@@ -14,6 +14,8 @@ export const siteConfig = {
     instagramUrl: process.env.NEXT_PUBLIC_UNIVERSITY_INSTAGRAM_URL || "",
     websiteUrl: process.env.NEXT_PUBLIC_UNIVERSITY_WEBSITE_URL || "",
   },
+  /** ISO 4217 currency for event ticket prices, e.g. "UZS", "USD", "EUR". */
+  currency: process.env.NEXT_PUBLIC_CURRENCY || "USD",
 } as const;
 
 export const EVENT_CATEGORIES = [

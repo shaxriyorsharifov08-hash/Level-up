@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, lt, ne, or, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { eventRegistrations, events, organizations, users, type RegistrationStatus } from "@/db/schema";
+import { eventRegistrations, events, organizations, shopOrders, users, type RegistrationStatus } from "@/db/schema";
 
 export type EventWindow = "upcoming" | "week" | "past";
 
@@ -62,6 +62,24 @@ export async function getUserRegistrationMap(userId: string | undefined, eventId
     );
   for (const r of rows) map.set(r.eventId, r.status);
   return map;
+}
+
+/** The user's active registration for one event, with the discount of the voucher it used. */
+export async function getMyRegistration(eventId: string, userId: string | undefined) {
+  if (!userId) return undefined;
+  const [row] = await db
+    .select({ status: eventRegistrations.status, discountPercent: shopOrders.discountPercent })
+    .from(eventRegistrations)
+    .leftJoin(shopOrders, eq(shopOrders.id, eventRegistrations.voucherOrderId))
+    .where(
+      and(
+        eq(eventRegistrations.eventId, eventId),
+        eq(eventRegistrations.userId, userId),
+        ne(eventRegistrations.status, "cancelled"),
+      ),
+    )
+    .limit(1);
+  return row;
 }
 
 /** Published events for the discover page. */
@@ -140,9 +158,11 @@ export async function getAttendees(eventId: string) {
       registeredAt: eventRegistrations.createdAt,
       updatedAt: eventRegistrations.updatedAt,
       user: { id: users.id, name: users.name, email: users.email, faculty: users.faculty, avatarUrl: users.avatarUrl },
+      voucher: { code: shopOrders.code, discountPercent: shopOrders.discountPercent },
     })
     .from(eventRegistrations)
     .innerJoin(users, eq(users.id, eventRegistrations.userId))
+    .leftJoin(shopOrders, eq(shopOrders.id, eventRegistrations.voucherOrderId))
     .where(and(eq(eventRegistrations.eventId, eventId), ne(eventRegistrations.status, "cancelled")))
     .orderBy(asc(eventRegistrations.status), asc(eventRegistrations.updatedAt));
 }

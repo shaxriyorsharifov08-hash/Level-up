@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
@@ -41,6 +41,13 @@ export async function requireUser(returnTo?: string): Promise<CurrentUser> {
   if (!user) {
     redirect(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login");
   }
+  return user;
+}
+
+/** Platform administrators only (university staff); everyone else gets a 404. */
+export async function requirePlatformAdmin(returnTo?: string): Promise<CurrentUser> {
+  const user = await requireUser(returnTo);
+  if (user.role !== "admin") notFound();
   return user;
 }
 

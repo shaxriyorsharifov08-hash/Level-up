@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, count, eq, inArray } from "drizzle-orm";
 import { db, type Transaction } from "@/db";
-import { eventRegistrations, events, type Event } from "@/db/schema";
+import { eventRegistrations, events, shopOrders, tokenTransactions, type Event } from "@/db/schema";
 import { notify } from "@/features/notifications/service";
 
 export class RegistrationError extends Error {}
@@ -30,11 +30,27 @@ export function registrationBlocker(event: Pick<Event, "status" | "registrationO
   return null;
 }
 
+/** Reserve the student's ticket voucher for this registration (inside the registration transaction). */
+async function useTicketVoucher(tx: Transaction, voucherOrderId: string, userId: string, event: Event) {
+  if (event.ticketPrice === null) throw new RegistrationError("This event is free, so no voucher is needed.");
+  const [voucher] = await tx.select().from(shopOrders).where(eq(shopOrders.id, voucherOrderId)).for("update");
+  if (!voucher || voucher.userId !== userId || voucher.kind !== "ticket_voucher" || voucher.status !== "active") {
+    throw new RegistrationError("That voucher can't be used. Pick another one or register without it.");
+  }
+  await tx.update(shopOrders).set({ status: "used", usedAt: new Date() }).where(eq(shopOrders.id, voucher.id));
+  return voucher.id;
+}
+
 /**
  * Register a user for an event. Takes a seat if one is free, otherwise joins the waitlist.
- * Registering again after cancelling re-enters the queue at the back.
+ * Registering again after cancelling re-enters the queue at the back. An optional ticket voucher
+ * from the shop discounts a paid event's ticket.
  */
-export async function registerUser(eventId: string, userId: string): Promise<RegistrationResult> {
+export async function registerUser(
+  eventId: string,
+  userId: string,
+  voucherOrderId: string | null = null,
+): Promise<RegistrationResult> {
   return db.transaction(async (tx) => {
     const event = await lockEvent(tx, eventId);
     if (!event) throw new RegistrationError("Event not found.");
@@ -48,14 +64,15 @@ export async function registerUser(eventId: string, userId: string): Promise<Reg
 
     const full = event.capacity !== null && (await registeredCount(tx, eventId)) >= event.capacity;
     const status: RegistrationResult = full ? "waitlisted" : "registered";
+    const voucherId = voucherOrderId ? await useTicketVoucher(tx, voucherOrderId, userId, event) : null;
 
     if (existing) {
       await tx
         .update(eventRegistrations)
-        .set({ status, checkedInAt: null, updatedAt: new Date() })
+        .set({ status, checkedInAt: null, voucherOrderId: voucherId, updatedAt: new Date() })
         .where(eq(eventRegistrations.id, existing.id));
     } else {
-      await tx.insert(eventRegistrations).values({ eventId, userId, status });
+      await tx.insert(eventRegistrations).values({ eventId, userId, status, voucherOrderId: voucherId });
     }
     return status;
   });
@@ -74,8 +91,19 @@ export async function cancelUserRegistration(eventId: string, userId: string) {
 
     await tx
       .update(eventRegistrations)
-      .set({ status: "cancelled", checkedInAt: null })
+      .set({ status: "cancelled", checkedInAt: null, voucherOrderId: null })
       .where(eq(eventRegistrations.id, existing.id));
+    // Give the ticket voucher back so it can be used for another event, and take back any
+    // attendance reward (checked in, then cancelled).
+    if (existing.voucherOrderId) {
+      await tx
+        .update(shopOrders)
+        .set({ status: "active", usedAt: null })
+        .where(eq(shopOrders.id, existing.voucherOrderId));
+    }
+    await tx
+      .delete(tokenTransactions)
+      .where(and(eq(tokenTransactions.reason, "event_attendance"), eq(tokenTransactions.refId, existing.id)));
 
     if (existing.status === "registered") await promoteFromWaitlist(tx, event);
   });

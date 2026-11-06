@@ -15,6 +15,8 @@ type EventValues = {
   endsAt: string;
   capacity: number | null;
   coverUrl: string | null;
+  ticketPrice: number | null;
+  tokenReward: number;
   status: "draft" | "published" | "cancelled";
   registrationOpen: boolean;
 };
@@ -24,11 +26,13 @@ export function EventForm({
   values,
   submitLabel,
   timezone,
+  currency,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   values?: EventValues;
   submitLabel: string;
   timezone: string;
+  currency: string;
 }) {
   const { state, pending, onSubmit } = useActionForm(action);
   const e = state?.fieldErrors;
@@ -61,6 +65,22 @@ export function EventForm({
         </Field>
         <Field label="Cover image URL" htmlFor="coverUrl" error={e?.coverUrl}>
           <Input id="coverUrl" name="coverUrl" type="url" placeholder="https://…" defaultValue={values?.coverUrl ?? ""} />
+        </Field>
+        <Field
+          label={`Ticket price (${currency})`}
+          htmlFor="ticketPrice"
+          hint="Leave empty for a free event. Paid to organizers; students can use 25%/50% vouchers from the shop."
+          error={e?.ticketPrice}
+        >
+          <Input id="ticketPrice" name="ticketPrice" type="number" min={0} defaultValue={values?.ticketPrice ?? ""} />
+        </Field>
+        <Field
+          label="Bonus tokens for attending"
+          htmlFor="tokenReward"
+          hint="Paid when an attendee is checked in. Only official organizations award tokens."
+          error={e?.tokenReward}
+        >
+          <Input id="tokenReward" name="tokenReward" type="number" min={0} max={100} defaultValue={values?.tokenReward ?? 10} />
         </Field>
       </div>
       <Field label="Description" htmlFor="description" error={e?.description}>

@@ -13,6 +13,8 @@ A web platform for one university's students and student organizations. It combi
 | Add events to your own calendar (.ics) | Manage team members, roles and responsibilities |
 | Find the official university and club Telegram/Instagram pages | Plan meetings on a shared team calendar |
 | Get a personal dashboard, calendar, task list and notifications | Chat in internal team channels; manage the clubs you oversee |
+| **Earn tokens** for attending events, finishing team tasks and study achievements | Set a ticket price and bonus tokens per event |
+| **Spend tokens in the shop**: merch, partner discounts, 25%/50% event ticket vouchers | Platform admins run the shop, redeem codes and award tokens from a CSV file |
 
 It's a working MVP, not a visual prototype. Every screen reads from and writes to a real PostgreSQL database, and permissions are enforced on the server.
 
@@ -63,9 +65,9 @@ After `npm run db:seed`, every demo account uses the password **`password123`**:
 
 | E-mail | Who |
 | --- | --- |
-| `student@demo.edu` | Timur, a student. Member of Coding Club, has tasks, chats and registrations |
+| `student@demo.edu` | Timur, a student. Member of Coding Club, has tasks, chats, registrations, 85 tokens and an unused 25% ticket voucher |
 | `organizer@demo.edu` | Amina, president of the Student Union and lead of the Coding Club |
-| `admin@demo.edu` | Platform administrator. Can manage any organization and mark it "official" |
+| `admin@demo.edu` | Platform administrator. Can manage any organization, mark it "official" and run the rewards shop at `/admin` |
 
 On a fresh database without demo data, **the first account you register becomes the platform administrator**.
 
@@ -96,6 +98,7 @@ All settings live in environment variables (see [`.env.example`](.env.example)):
 | `NEXT_PUBLIC_APP_NAME` | Platform name shown in the UI (default "Level Up") |
 | `NEXT_PUBLIC_UNIVERSITY_NAME` / `_SHORT_NAME` | Your university's name |
 | `NEXT_PUBLIC_UNIVERSITY_TIMEZONE` | IANA time zone for showing and entering times, e.g. `Asia/Tashkent` |
+| `NEXT_PUBLIC_CURRENCY` | ISO currency code for event ticket prices, e.g. `UZS` (default `USD`) |
 | `NEXT_PUBLIC_UNIVERSITY_TELEGRAM_URL` / `_INSTAGRAM_URL` / `_WEBSITE_URL` | Official channels shown on the landing page, footer and dashboard |
 | `ALLOWED_EMAIL_DOMAINS` | Optional comma-separated list to restrict sign-up, e.g. `student.example.edu` |
 | `DATABASE_POOL_MAX` | Optional connection pool size (default 5; use 1–3 on serverless) |
@@ -127,12 +130,14 @@ src/
 │   ├── (main)/               # Everything else; layout picks app shell vs public shell
 │   │   ├── dashboard/  events/  projects/  clubs/  people/
 │   │   ├── messages/   calendar/  tasks/   notifications/  settings/
+│   │   ├── rewards/          # Token balance, shop, bought codes, history
+│   │   ├── admin/            # Platform admins: shop items, orders & codes, token awards
 │   │   └── workspace/[slug]/ # Organization workspace: events, projects, tasks,
 │   │                         #   calendar, chat, members, clubs, settings
-│   └── api/                  # Route handlers: chat polling, .ics and CSV downloads
+│   └── api/                  # Route handlers: chat polling, .ics and CSV downloads/templates
 ├── features/                 # Feature modules (business logic + feature UI)
 │   ├── auth/  organizations/  events/  projects/  meetings/
-│   ├── chat/  feed/  notifications/  shell/
+│   ├── chat/  feed/  notifications/  shell/  rewards/
 │   │   ├── actions.ts        #   Server Actions (mutations, always re-check permissions)
 │   │   ├── queries.ts        #   Server-only data access
 │   │   └── components/       #   Feature-specific UI

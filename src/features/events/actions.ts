@@ -15,12 +15,15 @@ import {
   localDateTime,
   optionalPositiveInt,
   optionalUrl,
+  optionalWholeNumber,
   parseForm,
   requiredText,
 } from "@/lib/forms";
 import { refreshAll } from "@/lib/revalidate";
 import { notify } from "@/features/notifications/service";
 import { getOrgAccess, getOrgAudienceIds } from "@/features/organizations/queries";
+import { DEFAULT_EVENT_REWARD, MAX_EVENT_REWARD } from "@/features/rewards/constants";
+import { syncAttendanceReward } from "@/features/rewards/service";
 import { cancelUserRegistration, registerUser, RegistrationError, syncWaitlist } from "./registration";
 
 const eventSchema = z
@@ -35,6 +38,9 @@ const eventSchema = z
     coverUrl: optionalUrl,
     status: z.enum(["draft", "published"]),
     registrationOpen: checkbox,
+    // 0 or empty means free.
+    ticketPrice: optionalWholeNumber("Ticket price", 100_000_000).transform((v) => v || null),
+    tokenReward: optionalWholeNumber("Bonus tokens", MAX_EVENT_REWARD).transform((v) => v ?? DEFAULT_EVENT_REWARD),
   })
   .refine((v) => v.endsAt > v.startsAt, { path: ["endsAt"], message: "End must be after the start" });
 
@@ -134,10 +140,11 @@ export async function deleteEvent(eventId: string): Promise<FormState> {
   redirect(`/workspace/${ctx.org.slug}/events`);
 }
 
-export async function registerForEvent(eventId: string): Promise<FormState> {
+export async function registerForEvent(eventId: string, voucherOrderId: string | null = null): Promise<FormState> {
   const user = await requireUser(`/events/${eventId}`);
+  if (voucherOrderId !== null && !/^[0-9a-f-]{36}$/i.test(voucherOrderId)) return { error: "Invalid voucher." };
   try {
-    const status = await registerUser(eventId, user.id);
+    const status = await registerUser(eventId, user.id, voucherOrderId);
     refreshAll();
     return {
       ok: true,
@@ -169,6 +176,8 @@ export async function toggleCheckIn(registrationId: string): Promise<FormState> 
     .update(eventRegistrations)
     .set({ checkedInAt: registration.checkedInAt ? null : new Date() })
     .where(and(eq(eventRegistrations.id, registrationId), eq(eventRegistrations.status, "registered")));
+  // Pays the attendance tokens on check-in and takes them back if the check-in is undone.
+  await syncAttendanceReward(registrationId);
   refreshAll();
   return { ok: true };
 }

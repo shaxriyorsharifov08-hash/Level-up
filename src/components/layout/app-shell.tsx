@@ -3,12 +3,14 @@ import {
   Bell,
   CalendarDays,
   CalendarRange,
+  Coins,
   FolderKanban,
   LayoutDashboard,
   ListTodo,
   MessagesSquare,
   Plus,
   Settings,
+  ShieldCheck,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -22,7 +24,7 @@ import { UserMenu } from "./user-menu";
 
 type Props = ShellData & { user: CurrentUser; children: React.ReactNode };
 
-function SidebarContent({ user, workspaces, unreadMessages, unreadNotifications }: Omit<Props, "children">) {
+function SidebarContent({ user, workspaces, unreadMessages, unreadNotifications, tokenBalance }: Omit<Props, "children">) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-4">
@@ -65,6 +67,14 @@ function SidebarContent({ user, workspaces, unreadMessages, unreadNotifications 
           <NavLink href="/tasks">
             <ListTodo /> My tasks
           </NavLink>
+          <NavLink href="/rewards" meta={tokenBalance.toLocaleString("en-US")}>
+            <Coins /> Rewards
+          </NavLink>
+          {user.role === "admin" && (
+            <NavLink href="/admin">
+              <ShieldCheck /> Admin
+            </NavLink>
+          )}
         </div>
 
         <div>

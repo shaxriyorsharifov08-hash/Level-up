@@ -96,3 +96,19 @@ export const optionalPositiveInt = (label = "Value") =>
       }
       return n;
     });
+
+/** Optional whole number between 0 and `max` from a number input; empty means `null`. */
+export const optionalWholeNumber = (label: string, max: number) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((v, ctx) => {
+      if (!v) return null;
+      const n = Number(v);
+      if (!Number.isInteger(n) || n < 0 || n > max) {
+        ctx.addIssue({ code: "custom", message: `${label} must be a whole number from 0 to ${max}` });
+        return z.NEVER;
+      }
+      return n;
+    });

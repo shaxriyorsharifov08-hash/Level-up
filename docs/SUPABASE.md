@@ -50,6 +50,7 @@ DIRECT_URL="postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabas
 
 NEXT_PUBLIC_UNIVERSITY_NAME="Your University"
 NEXT_PUBLIC_UNIVERSITY_TIMEZONE="Asia/Tashkent"
+NEXT_PUBLIC_CURRENCY="UZS"
 # …the rest of the settings from .env.example
 ```
 
@@ -88,7 +89,7 @@ With demo data, sign in as `student@demo.edu`, `organizer@demo.edu` or `admin@de
 2. Under **Environment Variables**, add:
    - `DATABASE_URL`: the **transaction pooler** string (port 6543)
    - `DATABASE_POOL_MAX`: `1`
-   - every `NEXT_PUBLIC_*` value from your `.env` (university name, time zone, Telegram/Instagram links)
+   - every `NEXT_PUBLIC_*` value from your `.env` (university name, time zone, currency, Telegram/Instagram links)
    - `ALLOWED_EMAIL_DOMAINS`, if you want to restrict sign-up
 3. Deploy. `DIRECT_URL` isn't needed on Vercel because migrations run from your computer or the GitHub workflow.
 

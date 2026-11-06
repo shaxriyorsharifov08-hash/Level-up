@@ -19,6 +19,7 @@ import {
 import { refreshAll } from "@/lib/revalidate";
 import { notify } from "@/features/notifications/service";
 import { getOrgAccess } from "@/features/organizations/queries";
+import { syncTaskReward } from "@/features/rewards/service";
 
 async function orgAccessFor(user: CurrentUser, orgId: string) {
   const org = await db.query.organizations.findFirst({ where: eq(organizations.id, orgId) });
@@ -167,6 +168,7 @@ export async function createTask(orgId: string, _prev: FormState, formData: Form
     })
     .returning();
   await notifyAssignee(task, ctx.org.slug, user);
+  await syncTaskReward(task.id);
   refreshAll();
   return { ok: true, message: "Task added." };
 }
@@ -196,6 +198,7 @@ export async function updateTask(taskId: string, _prev: FormState, formData: For
     .where(eq(tasks.id, taskId))
     .returning();
   if (updated.assigneeId !== ctx.task.assigneeId) await notifyAssignee(updated, ctx.org.slug, user);
+  await syncTaskReward(taskId);
   refreshAll();
   return { ok: true, message: "Task saved." };
 }
@@ -211,6 +214,8 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus): Prom
     .update(tasks)
     .set({ status, completedAt: status === "done" ? (ctx.task.completedAt ?? new Date()) : null })
     .where(eq(tasks.id, taskId));
+  // Pays tokens when a task is done and takes them back if it's reopened.
+  await syncTaskReward(taskId);
   refreshAll();
   return { ok: true };
 }

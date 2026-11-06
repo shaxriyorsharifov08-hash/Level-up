@@ -8,7 +8,8 @@ import { SubmitButton } from "./ui/submit-button";
 
 /**
  * A one-click button bound to a Server Action (join, follow, approve, delete...).
- * Shows a pending spinner, an optional confirmation prompt and any error returned.
+ * Shows a pending spinner, an optional confirmation prompt and any error returned
+ * (plus the success message, with `showSuccess`).
  */
 export function ActionButton({
   action,
@@ -17,12 +18,14 @@ export function ActionButton({
   children,
   className,
   formClassName,
+  showSuccess = false,
   ...buttonProps
 }: Omit<ButtonProps, "action"> & {
   action: () => Promise<FormState>;
   confirm?: string;
   pendingText?: string;
   formClassName?: string;
+  showSuccess?: boolean;
 }) {
   const [state, formAction] = useActionState(async () => action(), null);
   return (
@@ -37,6 +40,7 @@ export function ActionButton({
         {children}
       </SubmitButton>
       {state?.error && <p className="text-xs text-destructive">{state.error}</p>}
+      {showSuccess && state?.ok && state.message && <p className="text-xs font-medium text-success">{state.message}</p>}
     </form>
   );
 }

@@ -37,7 +37,8 @@ Code is grouped by feature (`src/features/<feature>`) rather than by file type, 
 | `chat` | Direct messages, group chats, organization channels |
 | `feed` | Organization updates, activity feed, notification queries |
 | `notifications` | `notify()` helper used by other modules |
-| `shell` | Data for the sidebar (workspaces, unread counters) |
+| `rewards` | Token ledger, earning rules, the shop, vouchers and admin awards |
+| `shell` | Data for the sidebar (workspaces, unread counters, token balance) |
 
 ## 3. Data model
 
@@ -61,6 +62,10 @@ erDiagram
   conversations ||--o{ conversation_members : has
   conversations ||--o{ messages : contains
   users ||--o{ notifications : receives
+  users ||--o{ token_transactions : "earns / spends"
+  shop_items ||--o{ shop_orders : "is bought as"
+  users ||--o{ shop_orders : buys
+  shop_orders |o--o| event_registrations : "ticket voucher used for"
 ```
 
 Key decisions:
@@ -94,7 +99,7 @@ All rules live in one pure, unit-tested function: [`src/lib/permissions.ts`](../
 | Admin / owner | Edit the organization, manage events, projects and members, post updates |
 | Owner | Everything above, plus assign owners and delete the organization (the last owner can't leave or be demoted) |
 | Admin of a **parent** organization | Manage its clubs as if they were an admin |
-| Platform admin | Manage any organization, mark organizations "official" |
+| Platform admin | Manage any organization, mark organizations "official", run the rewards shop and award tokens |
 
 ## 6. Event registration and the waitlist
 
@@ -106,7 +111,33 @@ All rules live in one pure, unit-tested function: [`src/lib/permissions.ts`](../
 
 An integration test fires 10 simultaneous registrations at a 3-seat event and checks that exactly 3 get seats.
 
-## 7. Real-time chat (and how to upgrade it)
+## 7. Rewards: tokens, shop and vouchers
+
+[`src/features/rewards/service.ts`](../src/features/rewards/service.ts)
+
+**The balance is a ledger.** Every change is a row in `token_transactions` (positive = earned, negative = spent) and the balance is their sum. Nothing is ever edited in place, so every student can see exactly where each token came from.
+
+**Earning rules** (only *official* organizations award tokens, so nobody can farm them with a club of their own):
+
+| Source | Amount | When |
+| --- | --- | --- |
+| Attending an event | The event's "bonus tokens" (default 10, max 100) | An organizer checks the student in; un-checking removes it again. Organizers of the event's own organization don't earn from it |
+| Finishing a team task | 2 / 5 / 10 by priority | The task is moved to *Done* and was assigned by someone else; reopening it removes the reward |
+| Achievements | Any amount | A platform admin awards it, for one student or a CSV file (e.g. one file per faculty after exams) |
+
+Automatic rewards carry the id of their registration or task, and `(reason, ref_id)` is unique. Rewards are therefore **idempotent**: checking a student in twice, or a double click, can never pay twice.
+
+**Spending.** Buying runs in one transaction that locks the student's user row (the "wallet") and the item row, then checks the balance and stock. Two purchases at the same moment can't overspend a balance or oversell the last hoodie; integration tests fire them in parallel to prove it. The order stores a snapshot of the item (name, price, discount) and a unique `XXXX-XXXX` code.
+
+| Item kind | How it's redeemed |
+| --- | --- |
+| Merch | The student shows the code; an admin finds it under *Admin → Orders & codes* and marks it used |
+| Partner voucher | Shown at the partner (café, cinema…), who honors the discount |
+| Event ticket voucher (25% / 50%) | Chosen by the student when registering for a paid event. It's marked used and linked to the registration, and organizers see the discounted price in the attendee list and CSV. Cancelling the registration gives the voucher back |
+
+Admins can refund any unused order: the tokens are returned and the stock restored.
+
+## 8. Real-time chat (and how to upgrade it)
 
 Free serverless hosting (Vercel) doesn't keep WebSocket connections open, so the MVP uses **efficient polling**:
 
@@ -118,11 +149,11 @@ To make it push-based later, replace the `poll` function in `features/chat/compo
 
 Organization channels mirror team membership: `features/chat/service.ts` adds and removes people whenever they join, are approved, are added, leave or are removed.
 
-## 8. Time zones
+## 9. Time zones
 
 The university's time zone (`NEXT_PUBLIC_UNIVERSITY_TIMEZONE`) is used for display and for interpreting `<input type="datetime-local">`. The server converts wall-clock times to UTC with `zonedTimeToUtc` (DST-safe, unit-tested), so times are correct no matter where the server runs.
 
-## 9. Security checklist
+## 10. Security checklist
 
 - Server-side validation (Zod) and authorization on every action and route handler.
 - Drizzle uses parameterised SQL. Search terms escape `%` and `_`.
@@ -134,7 +165,7 @@ The university's time zone (`NEXT_PUBLIC_UNIVERSITY_TIMEZONE`) is used for displ
 
 **Before a real launch, add:** rate limiting on login and registration (for example Upstash's free tier), e-mail verification or SSO with the university, and password reset.
 
-## 10. Scaling path
+## 11. Scaling path
 
 The MVP comfortably serves a single university. When it grows:
 

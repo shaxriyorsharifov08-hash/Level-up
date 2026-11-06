@@ -67,7 +67,7 @@ export function FormMessage({
   if (!state) return null;
   if (state.error) {
     return (
-      <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+      <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm whitespace-pre-line text-destructive">
         {state.error}
       </p>
     );

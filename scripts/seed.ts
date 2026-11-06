@@ -231,18 +231,18 @@ async function main() {
   await db.insert(s.follows).values(follows).onConflictDoNothing();
 
   /* --------------------------------- Events -------------------------------- */
-  type E = { org: string; title: string; category: string; location: string; start: Date; durationH: number; capacity?: number; description: string };
+  type E = { org: string; title: string; category: string; location: string; start: Date; durationH: number; capacity?: number; price?: number; reward?: number; description: string };
   const eventSeeds: E[] = [
     { org: "coding", title: "Intro to Git & GitHub Workshop", category: "Workshop", location: "Lab 204, IT Building", start: at(2, 17), durationH: 2, capacity: 4, description: "Learn branching, pull requests and code review. Bring your laptop with Git installed." },
-    { org: "union", title: "Welcome Back Festival", category: "Social", location: "Main Campus Square", start: at(5, 15), durationH: 5, description: "Food trucks, live music and stalls from every club on campus. Free entry for students!" },
+    { org: "union", title: "Welcome Back Festival", category: "Social", location: "Main Campus Square", start: at(5, 15), durationH: 5, reward: 20, description: "Food trucks, live music and stalls from every club on campus. Free entry for students!" },
     { org: "debate", title: "Open Debate Night: Should AI write our essays?", category: "Academic", location: "Auditorium B", start: at(3, 18, 30), durationH: 2, capacity: 60, description: "British Parliamentary format. Spectators welcome; speakers sign up at the door." },
-    { org: "startup", title: "Pitch Night #4", category: "Career", location: "Innovation Hub", start: at(9, 18), durationH: 3, capacity: 80, description: "Five student startups pitch to a panel of local founders and investors." },
+    { org: "startup", title: "Pitch Night #4", category: "Career", location: "Innovation Hub", start: at(9, 18), durationH: 3, capacity: 80, price: 10, description: "Five student startups pitch to a panel of local founders and investors." },
     { org: "photo", title: "Golden Hour Photo Walk", category: "Culture", location: "Meet at the Library entrance", start: at(6, 17, 30), durationH: 2, capacity: 20, description: "A relaxed walk around campus at sunset. Any camera (or phone) is fine." },
     { org: "volunteers", title: "City Park Clean-up", category: "Volunteering", location: "Central Park, north gate", start: at(12, 10), durationH: 3, capacity: 40, description: "Gloves and bags provided. Volunteering hours certificates for everyone who attends." },
-    { org: "coding", title: "Hackathon: Build for Campus", category: "Technology", location: "IT Building, floor 2", start: at(16, 10), durationH: 30, capacity: 50, description: "30 hours to build something that makes student life better. Teams of 2-4, mentors on site, prizes for the top three." },
-    { org: "football", title: "Inter-Faculty Football Cup: Final", category: "Sports", location: "University Stadium", start: at(19, 16), durationH: 2, description: "Come cheer for your faculty!" },
+    { org: "coding", title: "Hackathon: Build for Campus", category: "Technology", location: "IT Building, floor 2", start: at(16, 10), durationH: 30, capacity: 50, price: 15, reward: 30, description: "30 hours to build something that makes student life better. Teams of 2-4, mentors on site, prizes for the top three." },
+    { org: "football", title: "Inter-Faculty Football Cup: Final", category: "Sports", location: "University Stadium", start: at(19, 16), durationH: 2, price: 5, description: "Come cheer for your faculty!" },
     { org: "radio", title: "Podcasting 101", category: "Workshop", location: "Media Studio", start: at(23, 14), durationH: 2, capacity: 12, description: "Plan, record and edit your first episode with our studio team." },
-    { org: "union", title: "Career Fair", category: "Career", location: "Sports Hall", start: at(-10, 10), durationH: 6, description: "Over 40 employers looking for interns and graduates." },
+    { org: "union", title: "Career Fair", category: "Career", location: "Sports Hall", start: at(-10, 10), durationH: 6, reward: 15, description: "Over 40 employers looking for interns and graduates." },
   ];
   const eventIds: string[] = [];
   for (const e of eventSeeds) {
@@ -256,6 +256,8 @@ async function main() {
         startsAt: e.start,
         endsAt: hours(e.start, e.durationH),
         capacity: e.capacity ?? null,
+        ticketPrice: e.price ?? null,
+        tokenReward: e.reward ?? 10,
         description: e.description,
         createdById: u.amina,
         createdAt: hours(new Date(), -Math.floor(Math.random() * 72) - 1),
@@ -273,8 +275,13 @@ async function main() {
     ...["ethan", "laylo", "daniel"].map((k) => ({ eventId: eventIds[6], userId: u[k as keyof typeof u], status: "registered" as const })),
     ...["timur", "sara", "ethan"].map((k) => ({ eventId: eventIds[9], userId: u[k as keyof typeof u], status: "registered" as const, checkedInAt: hours(eventSeeds[9].start, 1) })),
   ];
+  const checkIns: { registrationId: string; userId: string }[] = [];
   for (const [i, r] of regs.entries()) {
-    await db.insert(s.eventRegistrations).values({ ...r, updatedAt: new Date(Date.now() - (regs.length - i) * 60000) });
+    const [row] = await db
+      .insert(s.eventRegistrations)
+      .values({ ...r, updatedAt: new Date(Date.now() - (regs.length - i) * 60000) })
+      .returning({ id: s.eventRegistrations.id });
+    if (r.checkedInAt) checkIns.push({ registrationId: row.id, userId: r.userId });
   }
 
   /* --------------------------- Projects & tasks --------------------------- */
@@ -340,7 +347,7 @@ async function main() {
     [festival.id, "union", "Stage & sound equipment", "done", "high", "lucas", -2],
     [festival.id, "union", "Club stalls layout", "todo", "medium", "malika", 3],
   ];
-  await db.insert(s.tasks).values(
+  const taskRows = await db.insert(s.tasks).values(
     taskSeeds.map(([projectId, org, title, status, priority, assignee, dueDays]) => ({
       projectId,
       organizationId: orgIds[org],
@@ -352,7 +359,7 @@ async function main() {
       completedAt: status === "done" ? new Date() : null,
       createdById: u.amina,
     })),
-  );
+  ).returning();
 
   /* -------------------------------- Meetings ------------------------------- */
   await db.insert(s.meetings).values([
@@ -407,18 +414,96 @@ async function main() {
     createdAt: hours(new Date(), -2),
   });
 
+  /* -------------------------------- Rewards -------------------------------- */
+  // Tokens earned the same way the app awards them: Career Fair check-ins, done tasks
+  // assigned by someone else (in official organizations) and achievement awards.
+  const verifiedOrgIds = new Set(orgSeeds.filter((o) => o.verified).map((o) => orgIds[o.key]));
+  const taskReward = { low: 2, medium: 5, high: 10 } as const;
+  const careerFair = eventSeeds[9];
+  await db.insert(s.tokenTransactions).values([
+    ...checkIns.map((c) => ({
+      userId: c.userId,
+      amount: careerFair.reward ?? 10,
+      reason: "event_attendance" as const,
+      description: `Attended ${careerFair.title}`,
+      refId: c.registrationId,
+      createdAt: hours(careerFair.start, 2),
+    })),
+    ...taskRows
+      .filter((t) => t.status === "done" && t.assigneeId && t.assigneeId !== t.createdById && verifiedOrgIds.has(t.organizationId))
+      .map((t) => ({
+        userId: t.assigneeId!,
+        amount: taskReward[t.priority],
+        reason: "task_completed" as const,
+        description: `Completed "${t.title}"`,
+        refId: t.id,
+        createdAt: hours(new Date(), -48),
+      })),
+    { userId: u.timur, amount: 150, reason: "award" as const, description: "Dean's list: Software Engineering, spring semester", createdById: u.admin, createdAt: hours(new Date(), -24 * 6) },
+    { userId: u.laylo, amount: 100, reason: "award" as const, description: "Top grade in Linear Algebra", createdById: u.admin, createdAt: hours(new Date(), -24 * 6) },
+    { userId: u.ethan, amount: 50, reason: "award" as const, description: "Hackathon finalist", createdById: u.admin, createdAt: hours(new Date(), -24 * 3) },
+  ]);
+
+  const shop = await db
+    .insert(s.shopItems)
+    .values([
+      { name: "Campus hoodie", kind: "merch", priceTokens: 300, stock: 25, description: "Heavyweight cotton hoodie with the university crest. Sizes S–XXL; collect it at the Student Union office." },
+      { name: "Notebook & pen set", kind: "merch", priceTokens: 60, stock: 100, description: "A5 dotted notebook and a metal pen. Collect it at the Student Union office." },
+      { name: "Campus Café: 50% off a drink", kind: "partner_voucher", priceTokens: 40, discountPercent: 50, partnerName: "Campus Café", description: "Any hot or cold drink. One code per visit." },
+      { name: "City Cinema: 25% off a ticket", kind: "partner_voucher", priceTokens: 80, discountPercent: 25, partnerName: "City Cinema", description: "Valid for any 2D screening, Monday to Thursday." },
+      { name: "Copy Center: 25% off printing", kind: "partner_voucher", priceTokens: 30, discountPercent: 25, partnerName: "Copy Center", description: "Printing, binding and posters at the Copy Center next to the library." },
+      { name: "25% off an event ticket", kind: "ticket_voucher", priceTokens: 50, discountPercent: 25, description: "Use it on any paid event on the platform: pick it when you register." },
+      { name: "50% off an event ticket", kind: "ticket_voucher", priceTokens: 90, discountPercent: 50, description: "Half price for any paid event on the platform: pick it when you register." },
+    ])
+    .returning();
+  const byName = (name: string) => shop.find((i) => i.name === name)!;
+
+  // Timur bought a 25% ticket voucher (still unused) and a café voucher he already used.
+  const purchases = [
+    { item: byName("25% off an event ticket"), code: "TK25-DEMO", status: "active" as const, daysAgo: 2 },
+    { item: byName("Campus Café: 50% off a drink"), code: "CAFE-DEMO", status: "used" as const, daysAgo: 4 },
+  ];
+  for (const p of purchases) {
+    const createdAt = hours(new Date(), -24 * p.daysAgo);
+    const [order] = await db
+      .insert(s.shopOrders)
+      .values({
+        userId: u.timur,
+        itemId: p.item.id,
+        itemName: p.item.name,
+        kind: p.item.kind,
+        priceTokens: p.item.priceTokens,
+        discountPercent: p.item.discountPercent,
+        partnerName: p.item.partnerName,
+        code: p.code,
+        status: p.status,
+        usedAt: p.status === "used" ? hours(createdAt, 3) : null,
+        createdAt,
+      })
+      .returning({ id: s.shopOrders.id });
+    await db.insert(s.tokenTransactions).values({
+      userId: u.timur,
+      amount: -p.item.priceTokens,
+      reason: "purchase",
+      description: `Bought ${p.item.name}`,
+      refId: order.id,
+      createdAt,
+    });
+  }
+
   /* ----------------------------- Notifications ----------------------------- */
   await db.insert(s.notifications).values([
     { userId: u.timur, title: "Amina Yusupova assigned you: Find 3 sponsors", body: "Due soon", link: "/workspace/coding-club/tasks" },
     { userId: u.timur, title: "New event by Coding Club: Hackathon: Build for Campus", link: `/events/${eventIds[6]}` },
     { userId: u.lucas, title: "Timur Rashidov wants to join Debate Society", body: "Review the request in the members tab.", link: "/workspace/debate-society/members" },
+    { userId: u.timur, title: "+150 tokens: Dean's list: Software Engineering, spring semester", link: "/rewards" },
   ]);
 
   console.log("✔ Demo data created.\n");
   console.log("  Sign in with any of these (password: password123):");
-  console.log("    student@demo.edu    – student, member of Coding Club");
+  console.log("    student@demo.edu    – student, member of Coding Club, has tokens to spend");
   console.log("    organizer@demo.edu  – runs the Student Union and Coding Club");
-  console.log("    admin@demo.edu      – platform administrator");
+  console.log("    admin@demo.edu      – platform administrator (shop, orders and token awards at /admin)");
   process.exit(0);
 }
 

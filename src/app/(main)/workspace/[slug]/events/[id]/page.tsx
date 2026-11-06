@@ -12,7 +12,9 @@ import { deleteEvent, setEventCancelled, toggleCheckIn, updateEvent } from "@/fe
 import { EventForm } from "@/features/events/components/event-form";
 import { getAttendees, getEvent } from "@/features/events/queries";
 import { getWorkspace } from "@/features/organizations/queries";
+import { siteConfig } from "@/config/site";
 import { formatDateRange, formatRelative, TIMEZONE, toDateTimeLocalValue } from "@/lib/dates";
+import { discountedPrice, formatMoney } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Manage event" };
 
@@ -86,7 +88,10 @@ export default async function ManageEventPage({ params }: PageProps<"/workspace/
         <CardHeader>
           <div>
             <CardTitle>Attendees</CardTitle>
-            <CardDescription>Check people in at the door. Waitlisted students are promoted automatically when seats free up.</CardDescription>
+            <CardDescription>
+              Check people in at the door. Waitlisted students are promoted automatically when seats free up.
+              {event.ticketPrice !== null && " The ticket column shows what each attendee pays after vouchers."}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -99,6 +104,7 @@ export default async function ManageEventPage({ params }: PageProps<"/workspace/
                   <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase">
                     <th className="px-5 py-2 font-medium">Student</th>
                     <th className="px-3 py-2 font-medium">Status</th>
+                    {event.ticketPrice !== null && <th className="px-3 py-2 font-medium">Ticket</th>}
                     <th className="px-3 py-2 font-medium">Registered</th>
                     <th className="px-5 py-2 text-right font-medium">Check-in</th>
                   </tr>
@@ -120,6 +126,16 @@ export default async function ManageEventPage({ params }: PageProps<"/workspace/
                           {a.status}
                         </Badge>
                       </td>
+                      {event.ticketPrice !== null && (
+                        <td className="px-3 py-2.5">
+                          <p className="font-medium">{formatMoney(discountedPrice(event.ticketPrice, a.voucher?.discountPercent))}</p>
+                          {a.voucher?.code && (
+                            <p className="text-xs text-success">
+                              {a.voucher.discountPercent}% voucher · {a.voucher.code}
+                            </p>
+                          )}
+                        </td>
+                      )}
                       <td className="px-3 py-2.5 text-muted-foreground">{formatRelative(a.registeredAt)}</td>
                       <td className="px-5 py-2.5 text-right">
                         {a.status === "registered" && (
@@ -157,6 +173,7 @@ export default async function ManageEventPage({ params }: PageProps<"/workspace/
             action={updateEvent.bind(null, event.id)}
             submitLabel="Save changes"
             timezone={TIMEZONE}
+            currency={siteConfig.currency}
             values={{
               ...event,
               startsAt: toDateTimeLocalValue(event.startsAt),

@@ -61,6 +61,15 @@ export const projectStatus = campus.enum("project_status", [
 export const taskStatus = campus.enum("task_status", ["todo", "in_progress", "review", "done"]);
 export const taskPriority = campus.enum("task_priority", ["low", "medium", "high"]);
 export const conversationType = campus.enum("conversation_type", ["direct", "group", "channel"]);
+export const tokenReason = campus.enum("token_reason", [
+  "event_attendance",
+  "task_completed",
+  "award",
+  "purchase",
+  "refund",
+]);
+export const shopItemKind = campus.enum("shop_item_kind", ["merch", "partner_voucher", "ticket_voucher"]);
+export const orderStatus = campus.enum("order_status", ["active", "used", "cancelled"]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Users & sessions                             */
@@ -204,6 +213,10 @@ export const events = campus.table(
     coverUrl: text(),
     status: eventStatus().notNull().default("published"),
     registrationOpen: boolean().notNull().default(true),
+    /** Ticket price in whole units of NEXT_PUBLIC_CURRENCY, paid to the organizers; `null` means free. */
+    ticketPrice: integer(),
+    /** Tokens an attendee earns when checked in (only events of official organizations award them). */
+    tokenReward: integer().notNull().default(10),
     createdById: uuid().references(() => users.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -226,6 +239,8 @@ export const eventRegistrations = campus.table(
       .references(() => users.id, { onDelete: "cascade" }),
     status: registrationStatus().notNull().default("registered"),
     checkedInAt: timestamp({ withTimezone: true }),
+    /** A ticket voucher from the shop applied to this registration (discounted ticket). */
+    voucherOrderId: uuid().references((): AnyPgColumn => shopOrders.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     /** Also used as the waitlist position: the oldest `updatedAt` is promoted first. */
     updatedAt: updatedAt(),
@@ -392,6 +407,83 @@ export const notifications = campus.table(
 ).enableRLS();
 
 /* -------------------------------------------------------------------------- */
+/*                          Rewards: tokens and shop                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Token ledger. Every earn and spend is a row; a student's balance is the sum of `amount`.
+ * Automatic rewards carry the id of what they're for in `refId`, and (reason, refId) is unique,
+ * so the same attendance, task or order can never pay out twice.
+ */
+export const tokenTransactions = campus.table(
+  "token_transactions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Positive when earned, negative when spent. */
+    amount: integer().notNull(),
+    reason: tokenReason().notNull(),
+    description: text().notNull(),
+    /** Registration id, task id or order id the entry is about; `null` for manual awards. */
+    refId: uuid(),
+    createdById: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("token_transactions_user_idx").on(t.userId, t.createdAt),
+    uniqueIndex("token_transactions_reason_ref_uq").on(t.reason, t.refId),
+  ],
+).enableRLS();
+
+export const shopItems = campus.table("shop_items", {
+  id: uuid().primaryKey().defaultRandom(),
+  name: text().notNull(),
+  description: text().notNull().default(""),
+  imageUrl: text(),
+  kind: shopItemKind().notNull().default("merch"),
+  priceTokens: integer().notNull(),
+  /** Items left; `null` means unlimited. */
+  stock: integer(),
+  /** Vouchers only: percentage off, e.g. 25 or 50. */
+  discountPercent: integer(),
+  /** Partner vouchers only: the business or service organization that honors the discount. */
+  partnerName: text(),
+  /** Inactive items are hidden from the shop but kept for past orders. */
+  active: boolean().notNull().default(true),
+  createdById: uuid().references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}).enableRLS();
+
+export const shopOrders = campus.table(
+  "shop_orders",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    itemId: uuid()
+      .notNull()
+      .references(() => shopItems.id),
+    // Snapshot of the item at purchase time, so later edits don't change what was bought.
+    itemName: text().notNull(),
+    kind: shopItemKind().notNull(),
+    priceTokens: integer().notNull(),
+    discountPercent: integer(),
+    partnerName: text(),
+    /** Short code the student shows to staff or a partner to redeem the order. */
+    code: text().notNull().unique(),
+    status: orderStatus().notNull().default("active"),
+    usedAt: timestamp({ withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("shop_orders_user_idx").on(t.userId, t.createdAt)],
+).enableRLS();
+
+/* -------------------------------------------------------------------------- */
 /*                                  Relations                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -456,6 +548,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
 export const eventRegistrationsRelations = relations(eventRegistrations, ({ one }) => ({
   event: one(events, { fields: [eventRegistrations.eventId], references: [events.id] }),
   user: one(users, { fields: [eventRegistrations.userId], references: [users.id] }),
+  voucher: one(shopOrders, { fields: [eventRegistrations.voucherOrderId], references: [shopOrders.id] }),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -513,6 +606,19 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));
 
+export const tokenTransactionsRelations = relations(tokenTransactions, ({ one }) => ({
+  user: one(users, { fields: [tokenTransactions.userId], references: [users.id] }),
+}));
+
+export const shopItemsRelations = relations(shopItems, ({ many }) => ({
+  orders: many(shopOrders),
+}));
+
+export const shopOrdersRelations = relations(shopOrders, ({ one }) => ({
+  user: one(users, { fields: [shopOrders.userId], references: [users.id] }),
+  item: one(shopItems, { fields: [shopOrders.itemId], references: [shopItems.id] }),
+}));
+
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
 /* -------------------------------------------------------------------------- */
@@ -529,9 +635,14 @@ export type Post = typeof posts.$inferSelect;
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type TokenTransaction = typeof tokenTransactions.$inferSelect;
+export type ShopItem = typeof shopItems.$inferSelect;
+export type ShopOrder = typeof shopOrders.$inferSelect;
 
 export type MemberRole = (typeof memberRole.enumValues)[number];
 export type TaskStatus = (typeof taskStatus.enumValues)[number];
 export type TaskPriority = (typeof taskPriority.enumValues)[number];
 export type ProjectStatus = (typeof projectStatus.enumValues)[number];
 export type RegistrationStatus = (typeof registrationStatus.enumValues)[number];
+export type ShopItemKind = (typeof shopItemKind.enumValues)[number];
+export type OrderStatus = (typeof orderStatus.enumValues)[number];

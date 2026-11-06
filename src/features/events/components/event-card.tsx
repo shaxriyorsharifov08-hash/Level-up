@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { CalendarClock, MapPin } from "lucide-react";
+import { CalendarClock, Coins, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Cover } from "@/components/ui/misc";
 import { formatDateRange, getZonedParts } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { RegistrationStatus } from "@/db/schema";
 
@@ -57,7 +58,9 @@ type CardEvent = {
   status: string;
   registered: number;
   waitlisted: number;
-  organization: { name: string };
+  ticketPrice?: number | null;
+  tokenReward?: number;
+  organization: { name: string; verified?: boolean };
 };
 
 export function EventCard({ event, myStatus }: { event: CardEvent; myStatus?: RegistrationStatus }) {
@@ -88,6 +91,12 @@ export function EventCard({ event, myStatus }: { event: CardEvent; myStatus?: Re
             <Badge variant="danger">Cancelled</Badge>
           ) : (
             <SpotsBadge capacity={event.capacity} registered={event.registered} waitlisted={event.waitlisted} />
+          )}
+          {event.ticketPrice != null && <Badge variant="outline">{formatMoney(event.ticketPrice)}</Badge>}
+          {event.organization.verified && !!event.tokenReward && event.status !== "cancelled" && (
+            <Badge variant="warning">
+              <Coins className="size-3" /> +{event.tokenReward}
+            </Badge>
           )}
           <MyStatusBadge status={myStatus} />
         </div>

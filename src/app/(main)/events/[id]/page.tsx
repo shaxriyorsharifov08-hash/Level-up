@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BadgeCheck, CalendarClock, CalendarPlus, MapPin, Settings2, Users } from "lucide-react";
+import { BadgeCheck, CalendarClock, CalendarPlus, Coins, MapPin, Settings2, Ticket, Users } from "lucide-react";
 import { SocialLinks } from "@/components/icons";
 import { Avatar, AvatarStack } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +11,13 @@ import { Cover } from "@/components/ui/misc";
 import { cancelRegistration, registerForEvent } from "@/features/events/actions";
 import { SpotsBadge } from "@/features/events/components/event-card";
 import { RegistrationPanel } from "@/features/events/components/registration-panel";
-import { getAttendeePreview, getEvent, getRegistrationCounts, getUserRegistrationMap } from "@/features/events/queries";
+import { getAttendeePreview, getEvent, getMyRegistration, getRegistrationCounts } from "@/features/events/queries";
 import { registrationBlocker } from "@/features/events/registration";
 import { getOrgAccess } from "@/features/organizations/queries";
+import { getTicketVouchers } from "@/features/rewards/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDateRange, formatLongDate, TIMEZONE } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import { pluralize } from "@/lib/utils";
 
 export async function generateMetadata({ params }: PageProps<"/events/[id]">): Promise<Metadata> {
@@ -32,14 +34,17 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
   const access = await getOrgAccess(user, event.organization.id, event.organization.parentId);
   if (event.status === "draft" && !access.canManage) notFound();
 
-  const [counts, mine, attendees] = await Promise.all([
+  const [counts, mine, attendees, vouchers] = await Promise.all([
     getRegistrationCounts([event.id]),
-    getUserRegistrationMap(user?.id, [event.id]),
+    getMyRegistration(event.id, user?.id),
     user ? getAttendeePreview(event.id) : Promise.resolve([]),
+    user && event.ticketPrice !== null ? getTicketVouchers(user.id) : Promise.resolve([]),
   ]);
   const { registered, waitlisted } = counts.get(event.id)!;
-  const myStatus = mine.get(event.id);
   const full = event.capacity !== null && registered >= event.capacity;
+  const tokenReward = event.organization.verified ? event.tokenReward : 0;
+  // The organization's own owners/admins don't earn tokens at its events (see syncAttendanceReward).
+  const isOrganizer = access.role === "owner" || access.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -104,12 +109,27 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
                 )}
               </div>
               {attendees.length > 0 && <AvatarStack people={attendees} max={6} />}
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={event.ticketPrice === null ? "success" : "default"}>
+                  <Ticket className="size-3.5" />
+                  {event.ticketPrice === null ? "Free entry" : `Ticket ${formatMoney(event.ticketPrice)}`}
+                </Badge>
+                {tokenReward > 0 && (
+                  <Badge variant="warning">
+                    <Coins className="size-3.5" />
+                    {isOrganizer ? `Attendees earn ${tokenReward} tokens` : `Earn ${tokenReward} tokens for attending`}
+                  </Badge>
+                )}
+              </div>
 
               {user ? (
                 <RegistrationPanel
-                  status={myStatus}
+                  status={mine?.status}
                   blocker={registrationBlocker(event)}
                   full={full}
+                  ticketPrice={event.ticketPrice}
+                  appliedDiscount={mine?.discountPercent ?? null}
+                  vouchers={vouchers}
                   register={registerForEvent.bind(null, event.id)}
                   cancel={cancelRegistration.bind(null, event.id)}
                 />
