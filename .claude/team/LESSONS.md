@@ -40,3 +40,7 @@ Short, concrete rules learned from real work on this project. Every role reads t
 ## Working with the owner
 - Before a change, say what will change and why; after it, say what changed. Ask one clear question only when the answer changes what gets built.
 - The owner compares versions themselves. When asked for two files, make File A (checked, nothing existing touched) and File B (improved), and say what differs.
+
+## The team's own tools
+- Run `rules-check` on the team's own changes too: its first run found two false alarms of its own (a role file that mentions the storage key; a test fixture shaped like a real key). Rules about code apply to code files only, and test fixtures that look like keys are built from halves.
+- Chain a check and a commit with `&&`, never `;`, or the commit goes through even when the check fails.

@@ -39,8 +39,9 @@ export function check(changes, ctx) {
   for (const c of changes) {
     if (!c.file) continue;
     const isIndex = c.file === "index.html", isWorker = /^ai-proxy\/.*\.m?js$/.test(c.file);
+    const isCode = /\.(html|m?js)$/.test(c.file) && !/^tests\//.test(c.file);
     for (const r of c.removed) {
-      if (/leveluphunter_v1|leveluphunter_db/.test(r.text)) hit("ERROR", c.file, r.line, "storage key", "a line with the storage key leveluphunter_v1 / leveluphunter_db was removed or changed: renaming it makes every hero lose their progress (README 6)");
+      if (isCode && /leveluphunter_v1|leveluphunter_db/.test(r.text)) hit("ERROR", c.file, r.line, "storage key", "a line with the storage key leveluphunter_v1 / leveluphunter_db was removed or changed: renaming it makes every hero lose their progress (README 6)");
     }
     const joined = c.added.map((a) => a.text).join("\n");
     for (const a of c.added) {

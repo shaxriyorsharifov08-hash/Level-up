@@ -58,7 +58,7 @@ test.describe("the AI dev team's tools", () => {
     const changes = [
       { file: "index.html", removed: [{ line: 3088, text: 'var SKEY = "leveluphunter_v1";' }], added: [
         { line: js, text: "  var s = `hello ${name}`;" },
-        { line: js + 1, text: '  var k = "sk-ant-api03-abcdefghijklmnop";' },
+        { line: js + 1, text: '  var k = "' + "sk-" + "ant-api03-abcdefghijklmnop" + '";' }, /* built from halves: no key-shaped text in this file */
         { line: js + 2, text: '  hello:{en:"Hello", ru:"Привет", uz:"Qo\'shing"},' },
         { line: js + 3, text: "  state.brandNewField = 1;" },
         { line: js + 4, text: "  el.innerHTML = '<b>' + q.name + '</b>';" },
@@ -77,6 +77,8 @@ test.describe("the AI dev team's tools", () => {
     expect(rules("ERROR")).toEqual(["Uzbek letters", "Worker logs nothing", "ask before dependencies", "no secrets", "no template literals", "storage key", "three languages"].sort());
     expect(rules("WARN")).toEqual(["escape HTML", "new outside address", "regex and Cyrillic", "save format", "waiting for translation"].sort());
     expect(F.filter((f) => f.file === "tests/fake.spec.js")).toEqual([]); /* a test's fake token is fine */
+    /* docs that mention the storage key are not code: removing such a line is fine */
+    expect(RC.check([{ file: ".claude/agents/coder.md", removed: [{ line: 3, text: "Never rename leveluphunter_v1." }], added: [] }], { map, src })).toEqual([]);
     expect(F.filter((f) => f.rule === "Uzbek letters").length).toBe(2); /* the entry and the dictionary */
     /* a clean change: escaped, three languages, an existing field */
     const ok = RC.check([{ file: "index.html", removed: [], added: [
