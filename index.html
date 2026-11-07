@@ -1338,6 +1338,12 @@ main section{animation:pagein .28s ease}
 .m-src{font-size:.72rem;font-weight:900;letter-spacing:.04em;color:var(--dim);margin-bottom:6px}
 .m-text{white-space:pre-line;line-height:1.5}
 .m-note{margin-top:8px}
+.ag-card{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px;border:1.5px dashed var(--line);border-radius:12px}
+.ag-card .m-habit-t b{word-break:break-word}
+.ag-sel{margin-top:6px;width:100%;min-height:40px}
+.ag-card[data-ag="focus"] .m-habit-t{flex:1 1 100%}
+.ag-ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ag-ex button{border:1.5px solid var(--line);background:none;color:var(--text);border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;cursor:pointer;min-height:36px}
 .m-consent-p{margin:0 0 10px;line-height:1.5;font-size:.9rem}
 .today-tip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:14px;border:1px dashed var(--line);
   border-radius:12px;color:var(--dim);font-size:.9rem;font-weight:600}
@@ -5144,6 +5150,8 @@ var I18N_RU = {
   "🛍 PURCHASED":"🛍 КУПЛЕНО","ENJOY IT":"НАСЛАЖДАЙТЕСЬ",
   "🧭 SYSTEM MENTOR":"🧭 СИСТЕМНЫЙ НАСТАВНИК","ASK":"СПРОСИТЬ",
   "MENTOR AI UNLOCKED":"ИИ-НАСТАВНИК ОТКРЫТ",
+  "MENTOR AGENT UNLOCKED":"АГЕНТ НАСТАВНИКА ОТКРЫТ",
+  "The Mentor can now act for you (MORE → MENTOR).\n\nWrite a command such as \"focus 25 min\", \"add quest: read 20 pages every day\" or \"goal: pass IELTS\" and it prepares it as a card. Nothing changes until you tap the card and confirm in the usual window. Commands work offline, free and without limits.":"Теперь наставник может действовать за вас (ЕЩЁ → НАСТАВНИК).\n\nНапишите команду, например «фокус 25 минут», «добавь квест: читать 20 страниц каждый день» или «цель: сдать IELTS», и он подготовит её карточкой. Ничего не меняется, пока вы не нажмёте карточку и не подтвердите в обычном окне. Команды работают без интернета, бесплатно и без ограничений.",
   "Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"ИИ-наставник теперь открыт (ЕЩЁ → НАСТАВНИК).\n\nВойдя через Google, вы можете задавать ИИ-наставнику несколько вопросов в день. Он читает краткую сводку вашего прогресса, но никогда — ваше имя, Клятву или заметки, и спрашивает разрешения, прежде чем что-либо отправить. Без него наставник по-прежнему отвечает на устройстве.",
   /* feature-unlock guides */
   "BEGIN":"НАЧАТЬ",
@@ -5614,6 +5622,8 @@ var I18N_UZ = {
   "well spent — you saved for this and earned it. Enjoy it, Hero.":"toʻgʻri sarflandi — siz buning uchun jamgʻardingiz va unga loyiqsiz. Rohatlaning, Qahramon.",
   "🛍 PURCHASED":"🛍 SOTIB OLINDI","ENJOY IT":"ROHATLANING","🧭 SYSTEM MENTOR":"🧭 TIZIM MURABBIYI","ASK":"SOʻRASH",
   "MENTOR AI UNLOCKED":"SI-MURABBIY OCHILDI",
+  "MENTOR AGENT UNLOCKED":"MURABBIY AGENTI OCHILDI",
+  "The Mentor can now act for you (MORE → MENTOR).\n\nWrite a command such as \"focus 25 min\", \"add quest: read 20 pages every day\" or \"goal: pass IELTS\" and it prepares it as a card. Nothing changes until you tap the card and confirm in the usual window. Commands work offline, free and without limits.":"Endi murabbiy siz uchun ish bajara oladi (KOʻPROQ → MURABBIY).\n\n«fokus 25 daqiqa», «kvest qoʻsh: har kuni 20 bet kitob oʻqish» yoki «maqsad: IELTS topshirish» kabi buyruq yozing, u uni kartochka qilib tayyorlaydi. Kartochkani bosib, odatdagi oynada tasdiqlamaguningizcha hech narsa oʻzgarmaydi. Buyruqlar internetsiz, bepul va cheklovsiz ishlaydi.",
   "Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device.":"SI-murabbiy endi ochiq (KOʻPROQ → MURABBIY).\n\nGoogle orqali kirgan boʻlsangiz, SI-murabbiyga kuniga bir nechta savol bera olasiz. U taraqqiyotingizning qisqa xulosasini oʻqiydi, lekin hech qachon ismingiz, Qasamingiz yoki yozuvlaringizni emas, va biror narsa yuborishdan oldin ruxsat soʻraydi. Usiz ham murabbiy qurilmada javob beradi.",
   "BEGIN":"BOSHLASH","STATS UNLOCKED":"STATISTIKA OCHILDI",
   "The STATS section is now open.\n\nHere the System charts your discipline: XP earned per day, quests completed, your strongest weekday, streak history, and a heatmap of your active days. Watch the patterns — they reveal when you truly show up.\n\nOpen it any time from the PROGRESS tab.":"STATISTIKA boʻlimi endi ochiq.\n\nBu yerda Tizim intizomingizni grafikda koʻrsatadi: kuniga topilgan XP, bajarilgan kvestlar, eng kuchli hafta kuningiz, seriyalar tarixi va faol kunlaringiz xaritasi. Qonuniyatlarni kuzating — ular qachon haqiqatan harakat qilishingizni koʻrsatadi.\n\nUni istalgan payt TARAQQIYOT boʻlimidan oching.",
@@ -5951,6 +5961,7 @@ var FEATURES = [
   {key:"store",     type:"function", name:"Store (wishlist)",       def:0},
   {key:"mentor",    type:"section",  name:"System Mentor",          def:0},
   {key:"mentorAI",  type:"function", name:"Mentor AI chat",         def:0},
+  {key:"mentorAgent", type:"function", name:"Mentor Agent (commands)", def:0},
   {key:"premium",   type:"section",  name:"Premium preview",        def:0}
 ];
 var LOCKABLE_PAGES = ["learn","stats","rewards","inventory","honor","guild","budget","mentor","premium"];
@@ -5969,6 +5980,7 @@ var FEATURE_GUIDE = {
   store:     {ico:"🛍", title:"STORE UNLOCKED", body:"The STORE is now open (BUDGET page).\n\nAdd the things you actually want to buy with a price. When your balance — or a linked savings goal — can cover it, the BUY button lights up. Buying logs the expense and shelves the item as earned. It turns wanting into a target instead of an impulse."},
   mentor:    {ico:"🧭", title:"SYSTEM MENTOR UNLOCKED", body:"The SYSTEM MENTOR is now open (MORE → MENTOR).\n\nYour coach reads your real data and points out your weak spots — a lagging attribute, empty days, thin focus time. Ask it how to improve anything (focus, sleep, a language, jumping, saving) and it gives a concrete plan, always steering you back to: make it a daily quest."},
   mentorAI:  {ico:"🤖", title:"MENTOR AI UNLOCKED", body:"Mentor AI is now open (MORE → MENTOR).\n\nSigned in with Google, you can ask an AI mentor a few questions a day. It reads a short summary of your progress, never your name, Oath or notes, and it asks before anything is sent. Without it, the Mentor still answers on this device."},
+  mentorAgent:{ico:"🤖", title:"MENTOR AGENT UNLOCKED", body:"The Mentor can now act for you (MORE → MENTOR).\n\nWrite a command such as \"focus 25 min\", \"add quest: read 20 pages every day\" or \"goal: pass IELTS\" and it prepares it as a card. Nothing changes until you tap the card and confirm in the usual window. Commands work offline, free and without limits."},
   premium:   {ico:"⭐", title:"PREMIUM PREVIEW UNLOCKED", body:"See what LEVEL UP Premium will add (MORE → ⭐ PREMIUM).\n\nThe free app stays complete. Nothing is sold yet — there is no payment in the app."}
 };
 function announceFeatureUnlocks(lv){
@@ -12506,7 +12518,45 @@ var MENTOR_TXT = {
   rvPrev:{en:"The week before: {a} quests on {d} days.", ru:"Неделей ранее: {a} квестов за {d} дн.", uz:"Oldingi hafta: {d} kunda {a} ta kvest."},
   ownQ:{en:"You already have “{q}”: done on {d} of the last {s} due days. Strengthen it before adding more.", ru:"У вас уже есть «{q}»: выполнен в {d} из {s} нужных дней. Сначала укрепите его, потом добавляйте новое.", uz:"Sizda allaqachon «{q}» bor: kerakli {s} kundan {d} kunida bajarilgan. Yangisini qoʻshishdan oldin uni mustahkamlang."},
   planHead:{en:"Your plan for today:", ru:"Ваш план на сегодня:", uz:"Bugungi rejangiz:"},
-  todayRow:{en:"Mentor: {t}", ru:"Наставник: {t}", uz:"Murabbiy: {t}"}
+  todayRow:{en:"Mentor: {t}", ru:"Наставник: {t}", uz:"Murabbiy: {t}"},
+
+  /* the Mentor agent (README 4z) */
+  agTitle:{en:"🤖 AGENT: TELL ME WHAT TO DO", ru:"🤖 АГЕНТ: СКАЖИТЕ, ЧТО СДЕЛАТЬ", uz:"🤖 AGENT: NIMA QILISHNI AYTING"},
+  agIntro:{en:"Write a command and I prepare it for you. Nothing changes until you tap a button. Commands work offline and are unlimited. Tap an example:", ru:"Напишите команду, и я всё подготовлю. Ничего не меняется, пока вы не нажмёте кнопку. Команды работают без интернета и без ограничений. Нажмите на пример:", uz:"Buyruq yozing, men uni tayyorlab beraman. Siz tugmani bosmaguningizcha hech narsa oʻzgarmaydi. Buyruqlar internetsiz va cheklovsiz ishlaydi. Misolni bosing:"},
+  agEx1:{en:"focus 25 min", ru:"фокус 25 минут", uz:"fokus 25 daqiqa"},
+  agEx2:{en:"add quest: read 20 pages every day", ru:"добавь квест: читать 20 страниц каждый день", uz:"kvest qoʻsh: har kuni 20 bet kitob oʻqish"},
+  agEx3:{en:"todo tomorrow: buy a notebook", ru:"задача на завтра: купить тетрадь", uz:"vazifa ertaga: daftar sotib olish"},
+  agEx4:{en:"goal: pass IELTS", ru:"цель: сдать IELTS", uz:"maqsad: IELTS topshirish"},
+  agEx5:{en:"open stats", ru:"открой статистику", uz:"statistikani och"},
+  askPhAgent:{en:"Ask, or command: “focus 25 min”, “add quest: …”", ru:"Спросите или прикажите: «фокус 25 минут», «добавь квест: …»", uz:"Soʻrang yoki buyuring: «fokus 25 daqiqa», «kvest qoʻsh: …»"},
+  agHead:{en:"Here is what I can do. Nothing changes until you tap a button.", ru:"Вот что я могу сделать. Ничего не изменится, пока вы не нажмёте кнопку.", uz:"Mana nima qila olaman. Siz tugmani bosmaguningizcha hech narsa oʻzgarmaydi."},
+  srcAgent:{en:"🤖 On-device agent", ru:"🤖 Агент на устройстве", uz:"🤖 Qurilmadagi agent"},
+  agAddQuest:{en:"＋ ADD QUEST", ru:"＋ ДОБАВИТЬ КВЕСТ", uz:"＋ KVEST QOʻSHISH"},
+  agAddGoal:{en:"＋ ADD GOAL", ru:"＋ ДОБАВИТЬ ЦЕЛЬ", uz:"＋ MAQSAD QOʻSHISH"},
+  agAddTodo:{en:"＋ ADD TO-DO", ru:"＋ ДОБАВИТЬ ЗАДАЧУ", uz:"＋ VAZIFA QOʻSHISH"},
+  agStart:{en:"▶ START", ru:"▶ СТАРТ", uz:"▶ BOSHLASH"},
+  agOpen:{en:"OPEN", ru:"ОТКРЫТЬ", uz:"OCHISH"},
+  agDaily:{en:"Daily quest", ru:"Ежедневный квест", uz:"Kundalik kvest"},
+  agWeekly:{en:"Weekly quest", ru:"Еженедельный квест", uz:"Haftalik kvest"},
+  agGoalSub:{en:"Goal in {n} steps", ru:"Цель, шагов: {n}", uz:"{n} qadamli maqsad"},
+  agToday:{en:"To-do for today", ru:"Задача на сегодня", uz:"Bugungi vazifa"},
+  agTomorrow:{en:"To-do for tomorrow", ru:"Задача на завтра", uz:"Ertangi vazifa"},
+  agFocusT:{en:"Focus for {m} min", ru:"Фокус на {m} мин", uz:"{m} daqiqa fokus"},
+  agOn:{en:"What to time:", ru:"Что засекаем:", uz:"Nimani oʻlchaymiz:"},
+  agNothing:{en:"Nothing to time yet: add a quest or a to-do first.", ru:"Пока нечего засекать: сначала добавьте квест или задачу.", uz:"Hozircha vaqtini oʻlchaydigan narsa yoʻq: avval kvest yoki vazifa qoʻshing."},
+  agNoTimer:{en:"The Focus Timer is not open yet.", ru:"Фокус-таймер пока закрыт.", uz:"Fokus taymeri hali ochilmagan."},
+  agOpenT:{en:"Open {p}", ru:"Открыть: {p}", uz:"Ochish: {p}"},
+  agTodoNote:{en:"Check it, then press ADD.", ru:"Проверьте и нажмите ДОБАВИТЬ.", uz:"Tekshiring va QOʻSHISH tugmasini bosing."},
+  agQuestNote:{en:"Check it, then press SAVE.", ru:"Проверьте и нажмите СОХРАНИТЬ.", uz:"Tekshiring va SAQLASH tugmasini bosing."},
+  pg_home:{en:"TODAY", ru:"СЕГОДНЯ", uz:"BUGUN"},
+  pg_quests:{en:"QUESTS", ru:"КВЕСТЫ", uz:"KVESTLAR"},
+  pg_todo:{en:"TO DO LIST", ru:"СПИСОК ДЕЛ", uz:"VAZIFALAR ROʻYXATI"},
+  pg_calendar:{en:"CALENDAR", ru:"КАЛЕНДАРЬ", uz:"KALENDAR"},
+  pg_stats:{en:"STATS", ru:"СТАТИСТИКА", uz:"STATISTIKA"},
+  pg_story:{en:"STORY", ru:"ИСТОРИЯ", uz:"HIKOYA"},
+  pg_learn:{en:"LEARN & GROW", ru:"УЧИСЬ И РАСТИ", uz:"OʻRGAN VA OʻS"},
+  pg_budget:{en:"BUDGET", ru:"БЮДЖЕТ", uz:"BYUDJET"},
+  pg_profile:{en:"PROFILE", ru:"ПРОФИЛЬ", uz:"PROFIL"}
 };
 var MENTOR_WD = {
   en:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
@@ -12906,6 +12956,334 @@ function mentorAnswer(q){
   return {kind:"kb", text:text, quest: own ? null : (best.q || null)};
 }
 
+/* ---- THE MENTOR AGENT (README 4z) ----
+   The agent turns a request into proposed ACTIONS: add a quest, a goal or a
+   to-do, start a focus session, open a page. Two brains again:
+     - agentParse(): plain commands in English, Russian and Uzbek, on this
+       device, free and unlimited ("focus 25 min", "add quest: read 20 pages
+       every day", "todo tomorrow: buy a notebook", "goal: pass IELTS");
+     - Mentor AI, when it is on, may send up to 5 actions with its answer.
+   An action is only a proposal. agentClean() keeps only the allowed kinds
+   and clamps every field (the Worker does the same first), the hero sees it
+   as a card, and it does something only when tapped: quests and goals open
+   the normal NEW QUEST window (SAVE), a to-do fills the To-Do box (ADD).
+   Health and safety words never become actions. Nothing new is saved. */
+var AGENT_MAX = 5;
+var AGENT_PAGES = ["home","quests","todo","calendar","stats","story","learn","budget","profile"];
+var AGENT_STATS = ["INT","STR","CON","END"];
+var AGENT_STAT_WORDS = {
+  INT:["read","book","stud","learn","word","english","ielts","math","course","code","program","lesson","homework","exam","чита","книг","учи","учеб","изуч","англ","слов","курс","програм","урок","домашн","экзам","o'qi","kitob","o'rgan","so'z","ingliz","dars","imtihon","matem","dastur"],
+  STR:["gym","push","pull","squat","plank","lift","workout","exercise","sport","отжим","подтяг","присед","планк","зал","трениров","спорт","упражн","mashq","turnik","zal","otjim"],
+  END:["run","walk","step","water","sleep","bed","swim","bike","stretch","бег","ходьб","шаг","вод","сон","спать","плав","растяж","yugur","yur","qadam","suv","uyqu","uxla","suz"],
+  CON:["speak","talk","call","meet","journal","gratitude","meditat","friend","public","говор","звон","общ","дневник","благодар","медит","друз","gapir","qo'ng'iroq","do'st","minnatdor","suhbat"]
+};
+var AGENT_ICON = [
+  [["water","вод","suv"], "💧"], [["sleep","bed","сон","спать","uyqu","uxla"], "😴"], [["meditat","медит"], "🧘"],
+  [["code","program","програм","dastur"], "💻"], [["write","journal","писа","дневник","yoz"], "✍️"],
+  [["read","book","чита","книг","kitob","o'qi"], "📖"], [["run","бег","yugur"], "🏃"], [["gym","lift","зал","zal"], "🏋️"]
+];
+var AGENT_STAT_ICON = {INT:"📚", STR:"💪", END:"🏃", CON:"🎯"};
+var AGENT_PAGE_WORDS = [
+  ["todo", ["to-do","todo","to do","task","список дел","задач","дела","vazifa","ishlar"]],
+  ["calendar", ["calendar","календар","kalendar","taqvim"]],
+  ["stats", ["stat","статист","statist"]],
+  ["quests", ["quest","квест","kvest"]],
+  ["story", ["story","сюжет","истори","hikoya"]],
+  ["learn", ["learn","academy","обучен","академ","o'rgan","akadem"]],
+  ["budget", ["budget","money","бюджет","деньг","byudjet","pul"]],
+  ["profile", ["profile","hero","профил","герой","profil","qahramon"]],
+  ["home", ["today","home","сегодня","главн","bugun","bosh sahifa","asosiy"]]
+];
+function agentOn(){ return mFeatureOn("mentor") && mFeatureOn("mentorAgent"); }
+function agClip(s, n){ return String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n); }
+function agInt(v, lo, hi, d){ var n = parseInt(v, 10); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; }
+function agUnsafe(s){ var n = mNorm(s); return MENTOR_CRISIS.test(n) || MENTOR_EATING.test(n) || MENTOR_DIET.test(n); }
+function agAny(qn, words){ for(var i=0;i<words.length;i++) if(mKwHit(qn, words[i])) return true; return false; }
+function agGuessStat(name){
+  var qn = mNorm(name), best = "INT", bs = 0;
+  AGENT_STATS.forEach(function(s){
+    var n = 0;
+    AGENT_STAT_WORDS[s].forEach(function(w){ if(mKwHit(qn, w)) n++; });
+    if(n > bs){ bs = n; best = s; }
+  });
+  return best;
+}
+function agIcon(name, stat){
+  var qn = mNorm(name);
+  for(var i=0;i<AGENT_ICON.length;i++) if(agAny(qn, AGENT_ICON[i][0])) return AGENT_ICON[i][1];
+  return AGENT_STAT_ICON[stat] || "⚔️";
+}
+/* the allowed list: anything else is dropped and every field is clamped */
+function agentClean(list){
+  var out = [];
+  if(!Array.isArray(list)) return out;
+  for(var i=0;i<list.length && out.length < AGENT_MAX;i++){
+    var a = list[i], x = null;
+    if(!a || typeof a !== "object") continue;
+    var t = a.t || a.type;
+    if(t === "quest" || t === "goal"){
+      var nm = agClip(a.name, 60);
+      if(nm){
+        x = {t:t, name:nm, stat: AGENT_STATS.indexOf(a.stat) !== -1 ? a.stat : agGuessStat(nm)};
+        if(t === "quest") x.freq = a.freq === "weekly" ? "weekly" : "daily";
+        else x.target = agInt(a.target, 1, 99, 7);
+      }
+    } else if(t === "todo"){
+      var tx = agClip(a.text || a.name, 120);
+      if(tx) x = {t:"todo", text:tx, day: a.day === "tomorrow" ? "tomorrow" : "today"};
+    } else if(t === "focus"){
+      x = {t:"focus", min: agInt(a.min || a.minutes, 5, 120, 25), on: agClip(a.on, 60)};
+    } else if(t === "open"){
+      if(AGENT_PAGES.indexOf(a.page) !== -1) x = {t:"open", page:a.page};
+    }
+    if(!x || agUnsafe([x.name || "", x.text || "", x.on || ""].join(" "))) continue;
+    out.push(x);
+  }
+  return out;
+}
+
+/* ---- plain commands, one per line (or split by ";") ----
+   Each pattern is anchored to the start (or, for Uzbek word order, the end)
+   of the line, so a question that only mentions "focus" or "quest" still goes
+   to the Mentor. A line ending in "?" is always a question. */
+var AG_FOCUS = "(?:focus|timer|pomodoro|фокус\\S*|таймер\\S*|помодоро|помидор\\S*|fokus\\S*|taymer\\S*)";
+var AG_START = "(?:start|begin|run|set|запусти|начни|включи|поставь|старт|boshla(?:ng)?|yoq(?:ing)?|qo'y(?:ing)?)";
+var AG_MIN = "(\\d{1,3})\\s*-?\\s*(?:minutes?|mins?|m(?![a-z])|мин\\S*|daqiqa\\S*|daq(?![a-z]))";
+var AG_HOUR = "(\\d{1,2}(?:[.,]5)?)\\s*-?\\s*(?:hours?|hrs?|h(?![a-z])|час\\S*|soat\\S*)";
+var AG_DAY = /(?:^|\s)(?:for\s+|на\s+)?(today|tomorrow|сегодня|завтра|bugun(?:ga)?|ertaga)(?=[\s,.:;–-]|$)/;
+function agTidy(s){
+  s = String(s || "").replace(/^[\s,:;–—-]+|[\s,:;–—-]+$/g, "").replace(/\s{2,}/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function agCut(n, raw, re){
+  /* the text after a command word, taken from the original (its capitals kept);
+     head is the command part, where words like "tomorrow" or "weekly" may sit */
+  var m = re.exec(n), e = m ? m.index + m[0].length : 0;
+  return m ? {rest: raw.slice(e), head: n.slice(0, e)} : null;
+}
+function agCutEnd(n, raw, re){
+  /* Uzbek puts the verb last: "<name> kvest qoʻsh" */
+  var m = re.exec(n);
+  return m ? {rest: raw.slice(0, m[1].length), head: n.slice(m[1].length)} : null;
+}
+function agFirst(n, raw, starts, ends){
+  for(var i=0;i<starts.length;i++){ var c = agCut(n, raw, starts[i]); if(c) return c; }
+  for(var j=0;j<(ends || []).length;j++){ var e = agCutEnd(n, raw, ends[j]); if(e) return e; }
+  return null;
+}
+function agentParseFocus(n){
+  var minRe = new RegExp(AG_MIN), hourRe = new RegExp(AG_HOUR);
+  if(!new RegExp(AG_FOCUS).test(n)) return null;
+  var lead = new RegExp("^(?:" + AG_START + "\\s+)?(?:a\\s+|the\\s+|my\\s+)?" + AG_FOCUS + "(?=[\\s:,]|$)").test(n)
+    || new RegExp("^(?:" + AG_MIN + "|" + AG_HOUR + ")\\s+(?:of\\s+)?" + AG_FOCUS).test(n);
+  var tail = new RegExp(AG_FOCUS + "(?:ni)?(?:\\s+" + AG_START + ")?\\s*$").test(n);
+  if(!lead && !tail) return null;
+  var mm = minRe.exec(n), hh = hourRe.exec(n), min = 0;
+  if(mm) min = +mm[1];
+  else if(hh) min = Math.round(parseFloat(hh[1].replace(",", ".")) * 60);
+  /* "focus" alone, or "how do I focus", is a question for the Mentor */
+  var started = new RegExp("(?:^|\\s)" + AG_START + "(?=\\s|$)").test(n);
+  if(!min && !started){
+    /* "focus 25" */
+    var num = /(?:^|\s)(\d{1,3})(?=\s|$)/.exec(n);
+    if(num && lead) min = +num[1]; else return null;
+  }
+  var hint = n.replace(new RegExp(AG_MIN, "g"), " ").replace(new RegExp(AG_HOUR, "g"), " ")
+    .split(/\s+/).filter(function(w){
+      return w && !new RegExp("^(?:" + AG_FOCUS + "|" + AG_START + "|\\d+|on|for|at|a|an|the|my|session|of|на|над|для|по|сессия|сессию|uchun|seans\\S*|sessiya\\S*|fokusni|ni|ga)$").test(w);
+    }).join(" ");
+  hint = hint.replace(/(?:ga|ni)$/, "");
+  return {t:"focus", min: min || 25, on: hint};
+}
+function agentParseOne(line){
+  var raw = String(line || "").trim().replace(/[.!]+$/, "");
+  if(!raw || raw.length > 200 || /\?\s*$/.test(raw)) return null;
+  var n = mNorm(raw);
+  if(n.length !== raw.length) raw = n; /* keep the two aligned */
+  /* a question, even without "?": the Mentor answers it. Uzbek asks mid-sentence
+     ("kitob oʻqishni qanday odat qilaman"), so there it counts anywhere unless
+     the line is an explicit "command: text" */
+  if(/^(?:how|why|what|when|which|where|who|can|could|should|would|do|does|did|is|are|am|will|как|почему|зачем|что|когда|где|можно|стоит|nega|nimaga|qanday|nima|qachon|qaysi|qayerda)(?=[\s,]|$)/.test(n)) return null;
+  if(n.indexOf(":") === -1 && /(?:^|\s)(?:qanday|nega|nimaga|qachon|qaysi)(?=\s|$)/.test(n)) return null;
+  var f = agentParseFocus(n);
+  if(f) return f;
+  var c, name, day, m;
+
+  /* a to-do */
+  c = agFirst(n, raw, [
+    /^add\s+(?:a\s+)?(?:to-?do|task)\b[\s:–-]*/,
+    /^(?:to-?do|task)(?:\s+(?:for\s+)?(?:today|tomorrow))?\s*[:–-]\s*/,
+    /^(?:добавь|добавить|создай|запиши)\s+(?:задачу|дело|туду)(?=[\s:–-]|$)[\s:–-]*/,
+    /^(?:задача|дело|туду|to-?do)(?:\s+(?:на\s+)?(?:сегодня|завтра))?\s*[:–-]\s*/,
+    /^(?:yangi\s+)?vazifa\s+qo'sh\S*[\s:–-]*/,
+    /^(?:vazifa|yumush)(?:\s+(?:bugun(?:ga)?|ertaga))?\s*[:–-]\s*/
+  ], [/^(.+?)\s+(?:ni\s+)?vazifa(?:ga|larga)?\s+qo'sh(?:ing)?$/]);
+  if(c){
+    m = AG_DAY.exec(c.head) || AG_DAY.exec(mNorm(c.rest));
+    day = m && /tomorrow|завтра|ertaga/.test(m[1]) ? "tomorrow" : "today";
+    var rest = c.rest, rn = mNorm(rest), dm = AG_DAY.exec(rn);
+    if(dm) rest = rest.slice(0, dm.index) + rest.slice(dm.index + dm[0].length);
+    name = agTidy(rest);
+    return name ? {t:"todo", text:name, day:day} : null;
+  }
+
+  /* a one-time goal */
+  c = agFirst(n, raw, [
+    /^(?:(?:add|new|set|create)\s+(?:a\s+)?(?:new\s+)?)?goal\s*[:–-]\s*/,
+    /^(?:add|new|set|create)\s+(?:a\s+)?(?:new\s+)?goal\s+/,
+    /^my goal(?:\s+is)?\s*[:–-]?\s*/,
+    /^(?:(?:добавь|добавить|новая|поставь|создай)\s+)?цель\s*[:–-]\s*/,
+    /^(?:добавь|добавить|новая|поставь|создай)\s+цель\s+/,
+    /^моя цель\s*(?:[:–—-]|это)?\s*/,
+    /^(?:yangi\s+)?maqsad\s*(?:qo'sh\S*)?\s*[:–-]\s*/,
+    /^(?:yangi\s+)?maqsad\s+qo'sh\S*\s+/,
+    /^maqsadim\s*[:–-]?\s*/
+  ], [/^(.+?)\s+(?:ni\s+)?maqsad(?:ga)?\s+(?:qo'sh|qil)(?:ing)?$/]);
+  if(c){
+    var gn = c.rest, gm = /(?:\s+(?:in|за|в))?\s*(\d{1,2})\s*(?:steps?|шаг\S*|qadam\S*)/.exec(mNorm(gn)), target = 7;
+    if(gm){ target = +gm[1]; gn = gn.slice(0, gm.index) + gn.slice(gm.index + gm[0].length); }
+    name = agTidy(gn);
+    return name ? {t:"goal", name:name, target:target} : null;
+  }
+
+  /* a recurring quest */
+  c = agFirst(n, raw, [
+    /^(?:add|new|create|make)\s+(?:a\s+)?(?:new\s+)?(?:(daily|weekly)\s+)?(?:quest|habit)\b[\s:–-]*/,
+    /^(?:(daily|weekly)\s+)?(?:quest|habit)\s*[:–-]\s*/,
+    /^(?:добавь|добавить|создай|создать|новый|новая|новую)\s+(?:(ежедневн\S*|еженедельн\S*)\s+)?(?:квест\S*|привычк\S*)[\s:–-]*/,
+    /^(?:(ежедневн\S*|еженедельн\S*)\s+)?(?:квест|привычка)\s*[:–-]\s*/,
+    /^(?:yangi\s+)?(?:(kundalik|haftalik)\s+)?(?:kvest|odat)\s*(?:qo'sh\S*)?\s*[:–-]\s*/,
+    /^(?:yangi\s+)?(?:(kundalik|haftalik)\s+)?(?:kvest|odat)\s+qo'sh\S*[\s:–-]*/,
+    /^yangi\s+(?:(kundalik|haftalik)\s+)?(?:kvest|odat)\s+/
+  ], [/^(.+?)\s+(?:ni\s+)?(?:kvest|odat)(?:ga|ini|ni)?\s+(?:qo'sh|qil|aylantir)(?:ing)?$/]);
+  if(c){
+    var qn = c.rest, freq = /weekly|еженедельн|haftalik/.test(c.head) ? "weekly" : "daily";
+    var WK = /(?:^|\s)(?:every\s+week|each\s+week|weekly|once\s+a\s+week|каждую\s+неделю|еженедельно|раз\s+в\s+неделю|har\s+hafta(?:da)?|haftada\s+bir(?:\s+marta)?)(?=[\s,.]|$)/;
+    var DY = /(?:^|\s)(?:every\s*day|each\s+day|daily|каждый\s+день|ежедневно|har\s+kuni?)(?=[\s,.]|$)/;
+    var wk = WK.exec(mNorm(qn));
+    if(wk){ freq = "weekly"; qn = qn.slice(0, wk.index) + qn.slice(wk.index + wk[0].length); }
+    var dy = DY.exec(mNorm(qn));
+    if(dy) qn = qn.slice(0, dy.index) + qn.slice(dy.index + dy[0].length);
+    name = agTidy(qn);
+    return name ? {t:"quest", name:name, freq:freq} : null;
+  }
+
+  /* open a page */
+  c = agFirst(n, raw, [
+    /^(?:open|show(?:\s+me)?|go\s+to)\s+(?:my\s+|the\s+)?/,
+    /^(?:открой|открыть|покажи|перейди\s+(?:в|на|к))\s+(?:мой\s+|мою\s+|мои\s+)?/,
+    /^och\s+/
+  ], [/^(.+?)\s+(?:och|ochib\s+ber|ko'rsat)(?:ing)?$/]);
+  if(c){
+    var pn = mNorm(c.rest).trim();
+    if(!pn || pn.split(/\s+/).length > 3) return null;
+    for(var i=0;i<AGENT_PAGE_WORDS.length;i++) if(agAny(pn, AGENT_PAGE_WORDS[i][1])) return {t:"open", page:AGENT_PAGE_WORDS[i][0]};
+  }
+  return null;
+}
+function agentParse(text){
+  var lines = String(text || "").split(/[\n;]+/), out = [];
+  for(var i=0;i<lines.length && out.length < AGENT_MAX;i++){
+    var a = agentParseOne(lines[i]);
+    if(a) out.push(a);
+  }
+  return agentClean(out);
+}
+
+/* what a focus action can time: today's open quests and to-dos */
+function agentFocusItems(){
+  var t = todayStr(), out = [];
+  state.quests.forEach(function(q){ if(!q.done && !completedThisPeriod(q)) out.push({id:q.id, name:q.name, icon:q.icon || "⚔️"}); });
+  (state.todos || []).forEach(function(td){ if(!td.done && td.date === t) out.push({id:td.id, name:td.text, icon:"✅"}); });
+  return out.slice(0, 20);
+}
+function agentFind(hint, items){
+  var h = mNorm(hint).trim();
+  if(!h) return null;
+  var split = function(s){ return s.split(/[^a-z0-9а-я']+/).filter(function(w){ return w.length >= 4; }); };
+  var hw = split(h), best = null, bs = 0;
+  items.forEach(function(it){
+    var nm = mNorm(it.name), s = 0;
+    if(nm.indexOf(h) !== -1 || (nm.length >= 3 && h.indexOf(nm) !== -1)) s = 10;
+    else {
+      var nw = split(nm);
+      hw.forEach(function(w){ if(nw.some(function(x){ return x.slice(0, 4) === w.slice(0, 4); })) s++; });
+    }
+    if(s > bs){ bs = s; best = it; }
+  });
+  return best;
+}
+function agentCardHtml(a, i){
+  var ico = "", title = "", sub = "", btn = "", extra = "", ok = true;
+  if(a.t === "quest"){
+    ico = agIcon(a.name, a.stat); title = a.name; btn = MT("agAddQuest");
+    sub = MT(a.freq === "weekly" ? "agWeekly" : "agDaily") + " · " + mPick(MENTOR_STAT[a.stat]);
+  } else if(a.t === "goal"){
+    ico = "🎯"; title = a.name; btn = MT("agAddGoal");
+    sub = MT("agGoalSub", {n:a.target}) + " · " + mPick(MENTOR_STAT[a.stat]);
+  } else if(a.t === "todo"){
+    ico = "✅"; title = a.text; btn = MT("agAddTodo");
+    sub = MT(a.day === "tomorrow" ? "agTomorrow" : "agToday");
+  } else if(a.t === "focus"){
+    ico = "⏱"; title = MT("agFocusT", {m:a.min}); btn = MT("agStart");
+    var items = agentFocusItems();
+    if(!mFeatureOn("timer")){ sub = MT("agNoTimer"); ok = false; }
+    else if(!items.length){ sub = MT("agNothing"); ok = false; }
+    else {
+      var pick = agentFind(a.on, items);
+      sub = MT("agOn");
+      extra = '<select class="inp ag-sel" data-ag-sel="' + i + '" aria-label="' + esc(MT("agOn")) + '">'
+        + items.map(function(it){ return '<option value="' + esc(it.id) + '"' + (pick && pick.id === it.id ? " selected" : "") + '>' + esc(it.icon + " " + it.name) + '</option>'; }).join("")
+        + '</select>';
+    }
+  } else if(a.t === "open"){
+    ico = "↗"; title = MT("agOpenT", {p:MT("pg_" + a.page)}); btn = MT("agOpen");
+  }
+  return '<div class="ag-card" data-ag="' + a.t + '"><span class="m-ico">' + ico + '</span><span class="m-habit-t"><b>' + esc(title) + '</b>'
+    + (sub ? '<small>' + esc(sub) + '</small>' : '') + extra + '</span>'
+    + (ok ? '<button class="btn" data-mq="agent" data-i="' + i + '">' + esc(btn) + '</button>' : '') + '</div>';
+}
+/* a tap on a card: the same windows and buttons the hero would use by hand */
+function agentApply(a, i){
+  if(!a) return;
+  if(a.t === "quest" || a.t === "goal"){
+    var freq = a.t === "goal" ? "longterm" : a.freq;
+    if(a.t === "quest" && questCreationBlock(freq)) freq = "longterm";
+    var block = questCreationBlock(freq);
+    if(block){ toast(block, "err"); return; }
+    openQuestModal(null, {icon: a.t === "goal" ? "🎯" : agIcon(a.name, a.stat), name:a.name, desc:"", stat:a.stat, freq:freq, target: a.t === "goal" ? a.target : 7});
+    toast(a.t === "quest" && freq === "longterm" ? MT("goalNote") : MT("agQuestNote"));
+  } else if(a.t === "todo"){
+    switchPage("quests");
+    if(currentPage !== "quests") return;
+    qTab = "todo"; renderQuests();
+    var inp = document.getElementById("tdInput");
+    inp.value = a.text;
+    document.getElementById("tdDate").value = a.day === "tomorrow" ? addDays(todayStr(), 1) : "";
+    inp.focus();
+    toast(MT("agTodoNote"));
+  } else if(a.t === "focus"){
+    var sel = document.querySelector('[data-ag-sel="' + i + '"]');
+    var id = sel ? sel.value : "";
+    if(!id) return;
+    var before = state.activeTimer;
+    startTimer(id);
+    var tm = state.activeTimer;
+    if(tm && tm !== before && tm.id === id){
+      /* this one session counts to the asked minutes; the hero's default stays */
+      tm.mode = "stopwatch"; tm.goalMin = a.min; tm.chimed = false;
+      save(); renderTimerPill();
+      if(focusOpen()) renderFocus();
+    }
+  } else if(a.t === "open"){
+    if(a.page === "todo" || a.page === "calendar"){
+      switchPage("quests");
+      if(currentPage !== "quests") return;
+      if(a.page === "todo"){ qTab = "todo"; renderQuests(); } else qcOpen();
+    } else switchPage(a.page);
+  }
+}
+
 /* ---- Mentor AI (optional) ---- */
 function aiOffered(){ return !!AI_PROXY_URL && mFeatureOn("mentor") && mFeatureOn("mentorAI"); }
 function aiUtcDay(){ return new Date().toISOString().slice(0, 10); }
@@ -12956,7 +13334,7 @@ function aiSend(q, local){
     return fetch(AI_PROXY_URL, {
       method:"POST",
       headers:{"Content-Type":"application/json", "Authorization":"Bearer " + tok},
-      body: JSON.stringify({q:q.slice(0, 400), ctx:mentorSummary(), lang:mLang(), turns:mentorChat.slice(-4)}),
+      body: JSON.stringify({q:q.slice(0, 400), ctx:mentorSummary(), lang:mLang(), turns:mentorChat.slice(-4), mode: agentOn() ? "agent" : "chat"}),
       signal: ctl ? ctl.signal : undefined
     }).then(function(r){
       clearTimeout(timer);
@@ -12969,7 +13347,9 @@ function aiSend(q, local){
       var text = aiClean(j.answer);
       mentorChat.push({r:"u", t:q.slice(0, 400)}, {r:"a", t:text.slice(0, 600)});
       if(mentorChat.length > 4) mentorChat = mentorChat.slice(-4);
-      done({kind:"ai", text:text, q:q, src:"ai", note: aiLeftToday() === 0 ? MT("aiLast", {t:aiResetTime()}) : ""});
+      /* the Worker already checked the actions; they are checked again here */
+      var acts = agentOn() ? agentClean(j.actions) : [];
+      done({kind:"ai", text:text, q:q, src:"ai", actions:acts, note: aiLeftToday() === 0 ? MT("aiLast", {t:aiResetTime()}) : ""});
       return;
     }
     if(res.status === 429){ aiQuota = {day:aiUtcDay(), left:0, limit:+j.limit || aiQuota.limit || AI_DAILY}; fallback(MT("aiLimit", {t:aiResetTime()})); return; }
@@ -12985,6 +13365,11 @@ function mentorAsk(){
   local.q = q;
   sfx("open");
   var safetyOnly = local.kind === "crisis" || local.kind === "eating" || local.kind === "diet";
+  /* a plain command is handled here, free and offline, before any AI */
+  if(q && !safetyOnly && agentOn()){
+    var acts = agentParse(q);
+    if(acts.length){ mentorShow({kind:"agent", text:"", q:q, src:"agent", actions:acts}); return; }
+  }
   if(!q || !aiOffered() || state.aiConsent === "no"){ mentorShow(local); return; }
   if(safetyOnly){ if(local.kind === "diet" && state.aiConsent === "yes") local.note = MT("aiLocalOnly"); mentorShow(local); return; }
   if(state.aiConsent !== "yes"){ aiPendingQ = q; mentorShow(local); openAiConsent(); return; }
@@ -13023,8 +13408,9 @@ function mentorShow(a){
   if(!el) return;
   var h = '<div class="m-ans' + (a.kind === "crisis" || a.kind === "eating" ? " m-care" : "") + '">';
   if(a.q) h += '<div class="m-you">' + esc(MT("you")) + " " + esc(a.q) + '</div>';
-  h += '<div class="m-src">' + esc(a.src === "ai" ? MT("srcAI") : MT("srcLocal")) + (a.src === "ai" && a.kind !== "wait" ? " · " + esc(MT("aiDisclaimer")) : "") + '</div>';
-  h += '<div class="m-text">' + esc(a.text) + '</div>';
+  h += '<div class="m-src">' + esc(a.src === "ai" ? MT("srcAI") : a.src === "agent" ? MT("srcAgent") : MT("srcLocal")) + (a.src === "ai" && a.kind !== "wait" ? " · " + esc(MT("aiDisclaimer")) : "") + '</div>';
+  h += '<div class="m-text">' + esc(a.kind === "agent" ? MT("agHead") : a.text) + '</div>';
+  if(a.actions && a.actions.length && agentOn()) h += '<div class="ag-list">' + a.actions.map(agentCardHtml).join("") + '</div>';
   if(a.quest && mentorCanAdd()) h += '<button class="btn" data-mq="ans" style="margin-top:10px;width:100%">' + esc(MT("addQuest")) + ": " + esc(mPick(a.quest.n)) + '</button>';
   if(a.note) h += '<div class="empty-note m-note">' + esc(a.note) + '</div>';
   if(a.signIn && !cloudUser) h += '<button class="btn primary" data-mq="signin" style="margin-top:8px">' + esc(MT("signIn")) + '</button>';
@@ -13081,9 +13467,14 @@ function renderMentor(){
     });
     if(th) h += mSec("try", MT("tryTitle"), th);
   }
+  if(agentOn()){
+    var ex = "";
+    for(var e=1;e<=5;e++) ex += '<button type="button" data-mq="ex" data-x="' + esc(MT("agEx" + e)) + '">' + esc(MT("agEx" + e)) + '</button>';
+    h += mSec("agent", MT("agTitle"), '<div class="empty-note">' + esc(MT("agIntro")) + '</div><div class="ag-ex">' + ex + '</div>');
+  }
   ins.innerHTML = h;
   var qEl = document.getElementById("mentorQ");
-  qEl.setAttribute("placeholder", MT("askPh"));
+  qEl.setAttribute("placeholder", MT(agentOn() ? "askPhAgent" : "askPh"));
   qEl.setAttribute("aria-label", MT("askLbl"));
   document.getElementById("mentorAsk").textContent = MT("askBtn");
   renderMentorMode();
@@ -13107,6 +13498,8 @@ document.getElementById("mentorPanel").addEventListener("click", function(e){
   var act = b.getAttribute("data-mq");
   if(act === "habit"){ var hb = MENTOR_HABITS[+b.getAttribute("data-i")]; if(hb) mentorMakeQuest(hb); }
   else if(act === "ans"){ if(mentorLast && mentorLast.quest) mentorMakeQuest(mentorLast.quest); }
+  else if(act === "agent"){ var ai = +b.getAttribute("data-i"); if(mentorLast && mentorLast.actions && agentOn()) agentApply(mentorLast.actions[ai], ai); }
+  else if(act === "ex"){ document.getElementById("mentorQ").value = b.getAttribute("data-x"); mentorAsk(); }
   else if(act === "signin"){ cloudSignIn(); }
   else if(act === "ai-on"){ aiPendingQ = ""; openAiConsent(); }
   else if(act === "ai-off"){ state.aiConsent = "no"; save(); mentorChat = []; renderMentorMode(); toast(MT("cOffToast")); }

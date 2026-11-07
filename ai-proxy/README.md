@@ -62,6 +62,10 @@ To check it works: sign in with Google, open **PROGRESS → PROFILE → SYSTEM M
 - **Turn it off quickly:** in the app's admin console set **Mentor AI chat** to removed; or empty `AI_PROXY_URL` again; or press **Disable** on the Worker. The on-device Mentor keeps working in every case.
 - **Logs:** the Worker never writes questions to the log. If you switch on Workers Logs in the dashboard, Cloudflare records request details such as time and status, never the question text.
 
+## Agent mode (README 4z)
+
+When the Mentor agent is open in the app, requests carry `"mode":"agent"`. The Worker then adds agent rules to the prompt and asks for a JSON answer: `{"reply": "...", "actions": [...]}`. Before anything leaves the Worker, `cleanActions` keeps only the five allowed kinds (`quest`, `goal`, `todo`, `focus`, `open`), cuts names to 60 characters, clamps numbers (goal steps 1–99, focus 5–120 minutes), allows only the listed pages, drops any action with crisis or diet words, and keeps at most five. Broken or cut-off JSON is answered as "busy" and is not counted. The answer then carries `actions` next to `answer`; the app checks them again and shows them as cards the hero must confirm. Nothing about deployment changes: same bindings, same variables, same limits (an agent request counts as one question). Requests without `mode` work exactly as before.
+
 ## What it costs, and what can go wrong
 
 - **Free plan, free forever:** Workers AI includes 10,000 neurons a day, reset at 00:00 UTC. A Mentor question uses roughly 40 to 50 neurons with Gemma 3 12B, so the free allowance covers about 200 questions a day across all heroes, which with 3 each is roughly 65 to 70 active heroes a day. On the Free plan, Cloudflare stops answering when the allowance runs out; it does not bill you. The app then says Mentor AI is busy and answers on the device.

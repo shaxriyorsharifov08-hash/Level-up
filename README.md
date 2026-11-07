@@ -823,3 +823,37 @@ TODAY and PROFILE showed the same hero card twice (rank, name, level, XP). Now t
 - The tour, the unlock messages and the Oath's SKIP note now name the new places, in English, Russian and Uzbek. **The guide video still shows the old PROGRESS screen** (about 0:55 to 1:04: the PROGRESS and MORE screens); re-record it with the tools in 4v when convenient.
 
 Tests: `tests/hero-home.spec.js` (new), `tests/premium.spec.js` (now the page), `tests/redesign.spec.js`, `tests/tutorial.spec.js`, `tests/mentor.spec.js` (the Mentor's page), and the page lists in `tests/themes.spec.js` and `tests/names-and-uzbek.spec.js`.
+
+## 4z. THE MENTOR AGENT: THE MENTOR CAN ACT, AFTER YOU SAY YES (November 2026)
+
+The Mentor could only advise. Now it can also **do things for the hero**: add a quest, a goal or a to-do, start a focus session, open a page. It costs nothing and never acts by itself.
+
+### How it works
+- **Commands, on the device (free, offline, unlimited).** The Mentor's ASK box (MORE → 🧭 MENTOR) understands plain commands in English, Russian and Uzbek. Several can go in one line, separated by `;`.
+
+  | What | English | Русский | Oʻzbekcha |
+  |---|---|---|---|
+  | Focus session | `focus 25 min on reading`, `start focus`, `set a timer for 10 minutes` | `фокус 25 минут на чтение`, `запусти таймер на 1 час` | `fokus 25 daqiqa`, `kitob oʻqishga 25 daqiqa fokus`, `fokusni boshla` |
+  | Recurring quest | `add quest: read 20 pages every day`, `new weekly habit: call grandma` | `добавь квест: читать 20 страниц каждый день` | `kvest qoʻsh: har kuni 20 bet kitob oʻqish`, `suv ichish odatini qoʻsh` |
+  | One-time goal | `goal: pass IELTS in 10 steps`, `my goal is …` | `цель: сдать IELTS`, `моя цель …` | `maqsad: IELTS topshirish` |
+  | To-do | `todo tomorrow: buy a notebook`, `add task …` | `задача на завтра: купить тетрадь` | `vazifa ertaga: daftar sotib olish` |
+  | Open a page | `open stats`, `open calendar`, `go to my to-do` | `открой статистику` | `statistikani och` |
+
+  A question stays a question: anything ending in `?`, starting with a question word (how, как, qanday…), or using an Uzbek question word without a `command:` form goes to the Mentor as before. "focus" alone, or "how do I focus", gets advice, not a timer. The examples are in a folded **🤖 AGENT** section with tap-to-try chips.
+- **Mentor AI as the agent (optional, same free limits).** When Mentor AI is on, the app asks the Worker in `mode:"agent"`. The model answers with a short reply plus **up to 5 proposed actions** ("help me prepare for IELTS" → a daily words quest, a weekly practice test, a goal, a focus session). It is the **same quota** as Mentor AI: 3 a day for a signed-in hero, 20 for Premium, 200 for everyone together, so the free Cloudflare allowance still cannot turn into a bill. Plain commands never use the quota: they are handled on the device before any AI is asked.
+
+### Safety: the agent proposes, the hero decides
+1. **An allowed list.** Only five kinds exist: `quest` (daily or weekly), `goal` (1–99 steps), `todo` (today or tomorrow), `focus` (5–120 minutes), `open` (TODAY, QUESTS, TO-DO, CALENDAR, STATS, STORY, LEARN, BUDGET, PROFILE). Anything else ("delete", the admin page, a field the app does not know) is dropped, names are cut to 60 characters (to-dos 120), numbers are clamped. The Worker does this (`cleanActions`) and the app does it again (`agentClean`), because the app never trusts the network.
+2. **Cards, not changes.** Each action is shown as a card. Asking, reading the answer and even opening a window change nothing in the save (tests compare the whole save before and after).
+3. **The usual windows.** A quest or goal card opens the normal NEW QUEST window filled in: the hero can edit it, and only SAVE adds it, with the same slot rules as before (no recurring slot yet → it starts as a 7-step goal). A to-do card fills the To-Do box with the right day, and only ADD saves it. A focus card shows a picker of today's open quests and to-dos (the one named in the command is preselected) and starts only on ▶ START; the session counts toward the asked minutes without changing the hero's default goal. An open card goes through the normal navigation, so a sealed section stays sealed.
+4. **Health and safety words never become actions.** A command or a proposed action that mentions self-harm, disordered eating or diet/calories/weight is dropped; the hero gets the Mentor's fixed careful answer instead (section 4x).
+
+### Admin, languages, data
+- **Admin:** a new feature `mentorAgent` ("Mentor Agent (commands)", open by default). Sealing or removing it hides the 🤖 AGENT section and the cards, commands go back to being questions, and Mentor AI is asked in plain chat mode with any actions ignored. The on-device Mentor and Mentor AI are not affected. Sealing `mentor` hides everything, as before.
+- **Languages:** every card, button and hint is in `MENTOR_TXT` in English, Russian and Uzbek (the existing test checks all three, the placeholders and the Uzbek `ʻ`); the unlock message is in the RU/UZ dictionaries.
+- **Data:** **no new save field and no migration.** The agent reads the save and writes nothing; a focus session uses the existing timer fields. The request to the Worker gained one field, `mode` (`"agent"` or `"chat"`); what is sent about the hero is unchanged (4x).
+
+### Cost and risks
+Free: commands run on the phone, and AI proposals use the existing Worker and its free Workers AI allowance. An agent answer is a little longer (up to 650 tokens instead of 450), so the free allowance covers somewhat fewer AI requests a day (roughly 140 to 200 instead of about 200); `GLOBAL_DAILY_LIMIT` still caps it. The model may return broken JSON; the Worker then answers "busy" without counting the question, and the app falls back to the device. The model may also propose an unhelpful action, which is why it is only ever a card.
+
+Tests: `tests/agent.spec.js` (new: the commands in three languages, questions staying questions, each card through its usual window, focus minutes, sealed pages, safety words, the AI's proposals checked again, the admin lock, Russian and Uzbek, no new save field), `tests/ai-proxy.spec.js` (agent mode: the allowed list and clamping, code fences, plain text and broken JSON, every gate still in place), `tests/mentor.spec.js` (the request's fields now include `mode`).

@@ -279,7 +279,8 @@ test.describe("Mentor AI", () => {
     expect(seen.length).toBe(1);
     const s = seen[0];
     expect(s.headers.authorization).toBe("Bearer tok-123");
-    expect(Object.keys(s.body).sort()).toEqual(["ctx", "lang", "q", "turns"]);
+    expect(Object.keys(s.body).sort()).toEqual(["ctx", "lang", "mode", "q", "turns"]);
+    expect(s.body.mode).toBe("agent"); /* the Mentor agent is open by default (README 4z) */
     expect(s.body.q).toBe("How can I keep my reading going?");
     expect(s.body.lang).toBe("en");
     expect(s.body.ctx).toContain('"Read 10 pages" daily, INT, easy, 13/14');

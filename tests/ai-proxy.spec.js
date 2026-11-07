@@ -214,6 +214,81 @@ test.describe("the Mentor AI proxy", () => {
     expect(llama.AI.calls[0].input.messages[0].content).toContain("Reply in English");
   });
 
+  /* AGENT MODE (README 4z): the model may PROPOSE app actions. The Worker
+     keeps only the allowed kinds, clamps every field, drops unsafe ones and
+     never more than five; the app checks them again and the hero confirms. */
+  const agentBody = (q, lang) => ({ q: q || "Help me prepare for IELTS", ctx: "Level 3.", lang: lang || "en", turns: [], mode: "agent" });
+
+  test("agent mode: the model's actions are checked against the allowed list and clamped", async () => {
+    const proposal = {
+      reply: "**Start small.** Learn words daily and do one practice test a week.",
+      actions: [
+        { t: "quest", name: "Learn 20 IELTS words", freq: "daily", stat: "INT" },
+        { t: "quest", name: "x".repeat(200), freq: "hourly", stat: "MAGIC" },
+        { t: "goal", name: "Pass IELTS", target: 5000 },
+        { t: "delete", name: "every quest" },
+        { t: "open", page: "admin" },
+        { t: "todo", text: "Skip meals to save time", day: "yesterday" },
+        { t: "focus", min: 999, on: "Learn 20 IELTS words" },
+        { t: "todo", text: "Buy a notebook", day: "tomorrow" },
+        { t: "open", page: "stats" }
+      ]
+    };
+    const e = env({ AI: ai({ response: JSON.stringify(proposal) }) });
+    const r = await call(e, { body: agentBody() });
+    expect(r.status).toBe(200);
+    expect(r.j.answer).toBe("Start small. Learn words daily and do one practice test a week.");
+    expect(r.j.actions).toEqual([
+      { t: "quest", name: "Learn 20 IELTS words", stat: "INT", freq: "daily" },
+      { t: "quest", name: "x".repeat(60), stat: "INT", freq: "daily" },
+      { t: "goal", name: "Pass IELTS", stat: "INT", target: 99 },
+      { t: "focus", min: 120, on: "Learn 20 IELTS words" },
+      { t: "todo", text: "Buy a notebook", day: "tomorrow" }
+    ]); /* "delete", page "admin" and the meal-skipping to-do are gone; five at most */
+    expect(r.j.left).toBe(2);
+    const sys = e.AI.calls[0].input.messages[0].content;
+    expect(sys).toContain("AGENT MODE");
+    expect(sys).toContain("not a doctor"); /* the safety rules still come first */
+    expect(e.AI.calls[0].input.max_tokens).toBeLessThanOrEqual(700);
+  });
+
+  test("agent mode: a code fence, plain text or broken JSON are handled safely", async () => {
+    const fenced = env({ AI: ai({ response: "```json\n{\"reply\":\"Read before bed.\",\"actions\":[{\"t\":\"quest\",\"name\":\"Read 10 pages\",\"stat\":\"INT\"}]}\n```" }) });
+    const a = await call(fenced, { body: agentBody() });
+    expect(a.j.answer).toBe("Read before bed.");
+    expect(a.j.actions).toEqual([{ t: "quest", name: "Read 10 pages", stat: "INT", freq: "daily" }]);
+    const textOnly = env();
+    const b = await call(textOnly, { body: agentBody() });
+    expect(b.j.answer).toContain("Read 10 pages after dinner.");
+    expect(b.j.actions).toEqual([]);
+    const onlyActions = env({ AI: ai({ response: '{"actions":[{"t":"open","page":"calendar"}]}' }) });
+    const c = await call(onlyActions, { body: agentBody("open it", "ru") });
+    expect(c.j.answer).toBe("Вот что я предлагаю.");
+    expect(c.j.actions).toEqual([{ t: "open", page: "calendar" }]);
+    /* broken JSON is never shown to the hero and is not counted */
+    const broken = env({ AI: ai({ response: '{"actions":[{"t":"quest",' }) });
+    const d = await call(broken, { body: agentBody() });
+    expect(d.status).toBe(503);
+    expect(broken.LIMITS.puts.length).toBe(0);
+  });
+
+  test("agent mode keeps every gate: sign-in, the daily limit and the safety wall", async () => {
+    const e = env({ AI: ai({ response: '{"reply":"ok","actions":[]}' }) });
+    expect((await call(e, { token: null, body: agentBody() })).status).toBe(401);
+    for (let i = 0; i < 3; i++) expect((await call(e, { body: agentBody() })).status).toBe(200);
+    expect((await call(e, { body: agentBody() })).status).toBe(429);
+    const s = env();
+    const diet = await call(s, { body: agentBody("make me a diet plan to lose weight") });
+    expect(diet.j.safety).toBe(true);
+    expect(diet.j.actions).toBeUndefined();
+    expect(s.AI.calls.length).toBe(0);
+    /* chat mode is unchanged: no agent rules, no actions */
+    const chat = env();
+    const r = await call(chat);
+    expect(r.j.actions).toBeUndefined();
+    expect(chat.AI.calls[0].input.messages[0].content).not.toContain("AGENT MODE");
+  });
+
   test("the Worker holds no secret, logs nothing, and needs no package", () => {
     const src = fs.readFileSync(SRC, "utf8");
     expect(src).not.toMatch(/console\.(log|info|warn|error)/);
