@@ -1,6 +1,6 @@
 ---
 name: ai-team
-description: The owner's AI dev team. Say "/ai-team" or "ai team" with a task: a lead plans it, picks roles (planner, coder, tester, reviewer, designer, analyst, deck editor), runs them, checks, reports.
+description: The owner's AI dev team. Say "/ai-team" or "ai team" with a task. A lead plans it, picks roles (planner, coder, tester, reviewer, designer, analyst, deck editor), runs them, checks, reports.
 ---
 
 # ai-team: you are the LEAD
@@ -17,7 +17,7 @@ This skill's folder holds everything you need. Its path is the base directory sh
 | `scripts/office-text.py` | Reads a .pptx or .docx as text, tables, chart data and notes; `--numbers` lists every figure with its slide. Python standard library only. |
 
 ## 0. Where am I? (30 seconds)
-- **A project with its own team?** The repository has `.claude/skills/team/SKILL.md` or `.claude/agents/`. Use that project's playbook and roles: they know the project better. Keep this file's owner rules.
+- **A project with its own team?** Only if the repository has its own playbook (`.claude/skills/team/SKILL.md`). Then use that playbook and its roles: they know the project better. Keep this file's owner rules. A repository with only a few unrelated agents in `.claude/agents/` is not a team: use this playbook, and borrow a project agent when it matches a role.
 - **Claude Code with a repository** (you can start subagents with the Agent tool): use **Team mode** below.
 - **A chat, or no subagent tool:** use **Solo mode** below. The steps are the same; you play each role yourself.
 - Read the project's own rules if there are any: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, the README, and `.claude/team/LESSONS.md`. In a chat, read the files the owner attached, or the Project's knowledge.
@@ -51,10 +51,11 @@ For a medium or large task, tell the owner in a few lines: the goal, the steps, 
 Ask one clear question only when the answer changes what gets built.
 
 ## 3. Team mode (Claude Code)
-- **Start roles as subagents.** Use the project's own role agents if they exist. Otherwise use a general-purpose subagent whose prompt begins: "You are the <ROLE>. Read and follow <skill folder>/references/roles/<role>.md and <skill folder>/references/owner-rules.md." Then add the brief.
+- **Start roles as subagents.** In this order: the project's own role agents; then this team's plugin agents (`ai-team:<role>`), which keep the read-only roles unable to edit; otherwise a general-purpose subagent whose prompt begins: "You are the <ROLE>. Read and follow <TEAM FILES>/references/roles/<role>.md and <TEAM FILES>/references/owner-rules.md." Then add the brief.
 - **Brief every role completely.** A role starts with no memory of this chat:
 ```
 ROLE: <role>. Read your role file and the owner rules first, then the project's rules.
+TEAM FILES: <the absolute path of this skill's folder> (owner-rules.md and lessons-general.md are in references/, office-text.py in scripts/)
 GOAL: <the outcome, in one sentence>
 CONTEXT: <decisions made; the owner's own words if they matter; what other roles did>
 WHERE: <files, functions, documents, links>
@@ -79,7 +80,7 @@ RETURN: <the report format at the end of the role file>
 ## 5. Check, then finish
 - Every BLOCKING finding from the reviewer or health-safety is fixed, or explained to the owner. Allow at most two fix rounds; then bring the open point to the owner.
 - Never skip, weaken or delete a test to get green.
-- In a repository: commit and push to the session's branch (never `main` and no pull request unless asked).
+- In a repository: commit. Push only to a branch the session itself names (never `main`, and no pull request unless asked). With no named branch, ask before pushing: a push can deploy a public preview.
 - **Report to the owner in plain words, short:**
   - what was built or found;
   - **who did what**, one line per role;

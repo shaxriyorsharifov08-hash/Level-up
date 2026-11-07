@@ -47,3 +47,6 @@ Short, concrete rules learned from real work on this project. Every role reads t
 
 ## Drills
 - review-1 (reviewer, Nov 2026): 3/3 found, no false alarm, about 8 minutes. What worked: it ran the affected specs to prove each finding (the tests failed on the crash) and compared each removed condition with its replacement. It also found an extra real problem (a counter counting windows opened, not quests saved, and saving when the hero only looked) and a real test gap in the app (card titles escaped but no test proving it), now closed in `tests/agent.spec.js`.
+
+## Packaging the team (portable ai-team)
+- The reviewer caught a header that was not valid YAML (an unquoted ": " in the description) and a rule letting a project's files outrank the owner's stop-and-ask list. Both slipped past my own validator and tests, which only checked what I thought of; `build-portable.py` now parses headers strictly, and tests pin the owner's rules. Run the reviewer on packaging work too, not only on app code.

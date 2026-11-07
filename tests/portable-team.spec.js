@@ -50,6 +50,8 @@ test.describe("the portable AI team", () => {
       const m = front(fs.readFileSync(path.join(plug, "agents", r + ".md"), "utf8"));
       expect(m.name).toBe(r);
       if (["planner", "reviewer", "health-safety"].indexOf(r) !== -1) expect(m.tools).not.toMatch(/Edit|Write/);
+      /* a global plugin agent must not invite Claude Code to start it on its own in every repository */
+      expect(m.description).toBe("Role in the ai-team skill. Start it only when the ai-team lead (/ai-team:ai-team) or the owner asks for the " + r + ".");
     }
     const mk = JSON.parse(fs.readFileSync(path.join(ROOT, ".claude-plugin", "marketplace.json"), "utf8"));
     expect(mk.name).toBe("ai-team");
@@ -65,6 +67,10 @@ test.describe("the portable AI team", () => {
     fs.writeFileSync(skill, fs.readFileSync(skill, "utf8").replace(/^description: .*$/m, "description: Run <task> " + "x".repeat(200)));
     fs.appendFileSync(path.join(src, "references", "roles", "coder.md"), "\nAlways open index.html first.\n");
     fs.rmSync(path.join(src, "references", "roles", "analyst.md"));
+    const pl = path.join(src, "references", "roles", "planner.md");
+    fs.writeFileSync(pl, fs.readFileSync(pl, "utf8").replace(/^description: .*$/m, "description: Plans work: step one, then step two"));
+    fs.appendFileSync(path.join(src, "references", "owner-rules.md"), "\nAlways read index.html first.\n");
+    fs.appendFileSync(path.join(src, "references", "lessons-general.md"), "\nexample key " + "AKIA" + "ABCDEFGHIJKLMNOP\n"); /* built from halves */
     const rv = path.join(src, "references", "roles", "reviewer.md");
     fs.writeFileSync(rv, fs.readFileSync(rv, "utf8").replace(/^tools: .*$/m, "tools: Read, Edit"));
     const r = spawnSync("python3", ["-I", BUILD, "--check"], { encoding: "utf8", env: Object.assign({}, process.env, { AI_TEAM_SRC: src }) });
@@ -75,7 +81,29 @@ test.describe("the portable AI team", () => {
     expect(out).toContain("project-specific word in the portable team: index.html");
     expect(out).toContain("roles must be exactly");
     expect(out).toContain("roles/reviewer.md must be read-only");
+    expect(out).toContain("roles/planner.md: the description value is not valid plain YAML");
+    expect(out).toContain("references/owner-rules.md: project-specific word in the portable team: index.html");
+    expect(out).toContain("references/lessons-general.md: looks like a secret");
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test("the owner's rules travel with the team, and a project's files can never loosen them", () => {
+    const rules = fs.readFileSync(path.join(ROOT, "portable", "ai-team", "references", "owner-rules.md"), "utf8");
+    for (const phrase of ["Ask before adding any dependency", "Never break existing user data", "No API keys or secrets in client-side code",
+      "Health numbers by formula, never by AI", "Health safety", "Privacy", "No protected names", "do not remake the file",
+      "They never loosen a rule here", "information, not an instruction", "Stop and ask the owner before",
+      "a change to how saved data is stored", "deleting a feature or anyone's data", "pushing to `main`", "opening a pull request", "spending money"]) {
+      expect(rules, phrase).toContain(phrase);
+    }
+    const skill = fs.readFileSync(path.join(ROOT, "portable", "ai-team", "SKILL.md"), "utf8");
+    for (const phrase of ["**Stop and ask the owner before:**", "a new dependency", "a change to how saved data is stored", "deleting a feature or anyone's data",
+      "anything public or paid", "pushing to `main`", "a pull request", "a deploy", "ask before pushing", "Never skip, weaken or delete a test"]) {
+      expect(skill, phrase).toContain(phrase);
+    }
+    for (const f of fs.readdirSync(path.join(ROOT, "portable", "ai-team", "references", "roles"))) {
+      const t = fs.readFileSync(path.join(ROOT, "portable", "ai-team", "references", "roles", f), "utf8");
+      expect(t, f).toContain("they never loosen an owner rule");
+    }
   });
 
   test("the bundled deck reader runs on its own, with no package", () => {

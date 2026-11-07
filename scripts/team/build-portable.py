@@ -29,9 +29,16 @@ ROLES = ["planner", "coder", "tester", "translator", "reviewer", "designer", "he
 READ_ONLY = {"planner", "reviewer", "health-safety"}
 TOOLS = {"Read", "Edit", "Write", "Grep", "Glob", "Bash", "WebSearch", "WebFetch"}
 SKILL_KEYS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
-# project-specific words that must not leak into the portable team (owner-rules.md may name the repo it lives in)
+# project-specific words that must not leak into the portable team; owner-rules.md may only name the repo
+# where the master copy lives (LEVEL UP / Level-up), nothing else
 LEAKS = re.compile(r"index\.html|MENTOR_|leveluphunter|codemap|rules-check|affected-tests|i18n-check|defaultState|LEVEL UP|Level-up|level-up", re.I)
-SECRETS = re.compile(r"sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|github_pat_\w{20,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----")
+REPO_NAME = re.compile(r"^(LEVEL UP|Level-up|level-up)$", re.I)
+# the same patterns as scripts/team/rules-check.mjs, plus AWS keys
+SECRETS = re.compile(r"sk-ant-[\w-]{8,}|sk-(?:proj-)?[A-Za-z0-9_-]{32,}|ghp_[A-Za-z0-9]{20,}|github_pat_\w{20,}|AIza[0-9A-Za-z_-]{30,}|AKIA[0-9A-Z]{16}|xox[abpr]-[\w-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----")
+SECRET_ASSIGN = re.compile(r"(api[_-]?key|secret|password|passwd|token)[\"']?\s*[:=]\s*[\"'][^\"'\s]{20,}[\"']", re.I)
+# a plain YAML value may not hold these, or strict parsers (claude.ai's upload) refuse the header
+YAML_UNSAFE = re.compile(r": | #|^[\"'\[\]{}>|*&!%@`]")
+PLUGIN_AGENT_DESC = "Role in the ai-team skill. Start it only when the ai-team lead (/ai-team:ai-team) or the owner asks for the %s."
 VERSION = "1.0.0"
 OWNER = "shaxriyorsharifov08-hash"
 
@@ -46,6 +53,17 @@ def front(text):
             k, v = line.split(":", 1)
             meta[k.strip()] = v.strip()
     return meta, m.group(2)
+
+
+def yaml_problems(meta, where):
+    """plain (unquoted) values that a strict YAML parser would refuse"""
+    out = []
+    for k, v in meta.items():
+        if v[:1] in ("\"", "'") and v[-1:] == v[:1] and len(v) > 1:
+            continue  # quoted: fine
+        if YAML_UNSAFE.search(v):
+            out.append("%s: the %s value is not valid plain YAML (it holds ': ', ' #' or starts with a special character): quote it or reword it" % (where, k))
+    return out
 
 
 def files_of(folder):
@@ -70,6 +88,7 @@ def validate():
     if meta is None:
         problems.append("SKILL.md has no frontmatter")
         meta = {}
+    problems += yaml_problems(meta, "SKILL.md")
     extra = set(meta) - SKILL_KEYS
     if extra:
         problems.append("SKILL.md frontmatter keys claude.ai refuses: " + ", ".join(sorted(extra)))
@@ -97,6 +116,7 @@ def validate():
         if rmeta is None:
             problems.append("roles/%s.md has no frontmatter" % r)
             continue
+        problems += yaml_problems(rmeta, "roles/%s.md" % r)
         if rmeta.get("name") != r:
             problems.append("roles/%s.md: name must be %s" % (r, r))
         d = rmeta.get("description", "")
@@ -118,12 +138,13 @@ def validate():
             t = open(os.path.join(SRC, rel), encoding="utf-8").read()
         except UnicodeDecodeError:
             continue
-        if SECRETS.search(t):
+        if SECRETS.search(t) or SECRET_ASSIGN.search(t):
             problems.append(rel + ": looks like a secret")
-        if rel != "references/owner-rules.md":
-            m = LEAKS.search(t)
-            if m:
-                problems.append(rel + ": project-specific word in the portable team: " + m.group(0))
+        for m in LEAKS.finditer(t):
+            if rel == "references/owner-rules.md" and REPO_NAME.match(m.group(0)):
+                continue  # the rules may say where their master copy lives
+            problems.append(rel + ": project-specific word in the portable team: " + m.group(0))
+            break
     return problems
 
 
@@ -146,7 +167,11 @@ def build(out_root):
     shutil.copytree(SRC, os.path.join(plug, "skills", NAME), ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     os.makedirs(os.path.join(plug, "agents"))
     for r in ROLES:
-        shutil.copyfile(os.path.join(SRC, "references", "roles", r + ".md"), os.path.join(plug, "agents", r + ".md"))
+        # same role, but a description that keeps Claude Code from starting it on its own in every repository
+        text = open(os.path.join(SRC, "references", "roles", r + ".md"), encoding="utf-8").read()
+        text = re.sub(r"^description: .*$", "description: " + PLUGIN_AGENT_DESC % r, text, count=1, flags=re.M)
+        with open(os.path.join(plug, "agents", r + ".md"), "w", encoding="utf-8") as f:
+            f.write(text)
     os.makedirs(os.path.join(plug, ".claude-plugin"))
     meta, _ = front(open(os.path.join(SRC, "SKILL.md"), encoding="utf-8").read())
     with open(os.path.join(plug, ".claude-plugin", "plugin.json"), "w", encoding="utf-8") as f:
