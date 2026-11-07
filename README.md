@@ -71,6 +71,7 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `database.rules.json` | The Firebase Realtime Database security rules, kept in the repo so they are reviewed like code. **Firebase does not read this file** — paste it into the console (section 4, step 5) |
 | `package.json`, `playwright.config.js` | Only used to run the tests |
 | `.github/workflows/tests.yml` | Runs the tests on GitHub after every commit |
+| `CLAUDE.md`, `.claude/agents/`, `.claude/skills/team/` | The AI dev team for Claude Code: the rules every agent follows, the seven roles, and the lead's `/team` playbook — see **section 6b** |
 | `.github/workflows/nightly.yml`, `scripts/nightly-report.mjs` | The nightly system check: runs every test and checks the live site each night, and opens, updates or closes one `nightly-tests` issue by itself — see **section 4aa** |
 
 ---
@@ -557,6 +558,30 @@ A `type="number"` input **cannot hold a comma** — the browser rejects the valu
 - **Never rename** the storage key `leveluphunter_v1` or the IndexedDB name `leveluphunter_db` — users would "lose" their progress.
 - **`notify-sw.js` must never cache.** A caching service worker on the shared `github.io` origin once mixed this app with another project.
 - New state fields go into `defaultState()` — old saves pick them up automatically on load.
+
+## 6b. THE AI DEV TEAM: GIVE ONE TASK, A TEAM OF AGENTS DOES IT (November 2026)
+
+For work on this project with Claude Code (this repository in a Claude Code session: the web, the desktop app or the terminal), there is now a team of AI agents. You give one task; a lead agent splits it into roles, gives each role to its own agent, checks their work and reports back.
+
+**How to use it:** type `/team` and the task, for example `/team build the Life Timer from the Idea Box`, `/team the streak on custom quests resets wrongly, find and fix it`, or `/team check the finance slides of Level_up_presentation_77.pptx`. The lead first shows a short plan (who does what), then works. It stops and asks you before adding a dependency, changing the save format, removing a feature or data, or anything public or paid (pushing to `main`, a pull request, a deploy).
+
+**The roles** (`.claude/agents/`, one file each, plain text you can edit):
+
+| Role | Job | Can edit? |
+|---|---|---|
+| planner | Reads the code, finds every place the task touches and the risks, writes the step-by-step plan | no |
+| coder | Builds each step in `index.html`, the Worker or `scripts/`, with its tests | yes |
+| translator | Russian and Uzbek for every new text (Uzbek Latin with `ʻ`) | text only |
+| tester | Runs the suite, reproduces bugs with a failing test first, never weakens a test | tests only |
+| reviewer | An independent check of the change against your rules: saves, secrets, health safety, privacy, languages, admin locks | no |
+| docs-writer | This README, `tests/README.md`, the Worker README | docs only |
+| deck-editor | PowerPoint and Word work: checks report problems without remaking the file, hand-written words and finance wording untouched | `.work/` copies |
+
+**The rules every agent follows** are in `CLAUDE.md` at the top of the repository: your standing rules (never break saves, no keys in the page, health safety, privacy, three languages, admin locks, no protected names, ask before dependencies, the deck rules), the project rules from section 6, and the git rules. Change them there and every agent follows the new version. **The lead's playbook** is `.claude/skills/team/SKILL.md`: plan, show the plan, delegate with a full brief (each agent starts with no memory of the chat), one writer per file at a time, check everything itself, run the tests, commit, report who did what.
+
+**Cost and limits:** there is no extra bill; it runs on your Claude plan. A team uses several times more of your plan's usage than one agent, so the lead does small tasks alone and uses the team only when the work really has parts. The agents load when a session starts: a session that was already open before these files existed does not have them yet. Agents can be wrong too: the lead checks their work and runs the tests, and nothing goes to `main` without you.
+
+Tests: `tests/agent-team.spec.js` checks the role files stay valid (names, tools, the read-only roles cannot edit), the playbook names only real roles and keeps the stop-and-ask rules, and `CLAUDE.md` carries your rules and no secret.
 
 ## 4o. THE TO-DO LIST — and the HALL OF SHAME
 
