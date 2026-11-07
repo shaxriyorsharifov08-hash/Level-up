@@ -71,6 +71,7 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `database.rules.json` | The Firebase Realtime Database security rules, kept in the repo so they are reviewed like code. **Firebase does not read this file** — paste it into the console (section 4, step 5) |
 | `package.json`, `playwright.config.js` | Only used to run the tests |
 | `.github/workflows/tests.yml` | Runs the tests on GitHub after every commit |
+| `.github/workflows/nightly.yml`, `scripts/nightly-report.mjs` | The nightly system check: runs every test and checks the live site each night, and opens, updates or closes one `nightly-tests` issue by itself — see **section 4aa** |
 
 ---
 
@@ -857,3 +858,20 @@ The Mentor could only advise. Now it can also **do things for the hero**: add a 
 Free: commands run on the phone, and AI proposals use the existing Worker and its free Workers AI allowance. An agent answer is a little longer (up to 650 tokens instead of 450), so the free allowance covers somewhat fewer AI requests a day (roughly 140 to 200 instead of about 200); `GLOBAL_DAILY_LIMIT` still caps it. The model may return broken JSON; the Worker then answers "busy" without counting the question, and the app falls back to the device. The model may also propose an unhelpful action, which is why it is only ever a card.
 
 Tests: `tests/agent.spec.js` (new: the commands in three languages, questions staying questions, each card through its usual window, focus minutes, sealed pages, safety words, the AI's proposals checked again, the admin lock, Russian and Uzbek, no new save field), `tests/ai-proxy.spec.js` (agent mode: the allowed list and clamping, code fences, plain text and broken JSON, every gate still in place), `tests/mentor.spec.js` (the request's fields now include `mode`).
+
+## 4aa. THE SYSTEM AGENT: A NIGHTLY CHECK THAT REPORTS BUGS ITSELF (November 2026)
+
+The tests already run on every push (`.github/workflows/tests.yml`). But this app is full of dates (streaks, weeks, months, the UTC day of Mentor AI), and some bugs appear only on a certain day, after a browser update, or when the live site breaks without any push. So a second workflow checks every night, and **writes the bug report itself**.
+
+- **When:** every night at 01:23 UTC (06:23 in Tashkent), and any time from **Actions → Nightly system check → Run workflow**. GitHub runs scheduled workflows **from the default branch only**, so it starts once this branch is merged.
+- **What it checks:** the whole test suite (with one retry, so a test that passes only on the second try is listed as *flaky*), and that the live site answers with the app (`<title>LEVEL UP</title>`). The address is the repository variable `LIVE_URL`, default `https://shaxriyorsharifov08-hash.github.io/Level-up/`.
+- **What it does** (`scripts/nightly-report.mjs`, plain Node, no packages):
+  - something broken and no open report → it **opens one issue** labelled `nightly-tests` (the label is created if needed): the failing tests with where they are and the first line of each error, the full errors folded, the flaky tests, the live-site status, a link to the run, and how to reproduce;
+  - still broken on the next nights → it **updates the same issue** (no duplicates) and adds a short comment **only when the list of failures changed**;
+  - all well again → it comments "All N tests pass again" and **closes the issue** as completed.
+  The run itself is also marked failed, and the Playwright report is kept for 14 days as an artifact.
+- **AI summary (optional, free):** for a broken night it asks GitHub Models (free tier, `openai/gpt-4.1-mini`, with the workflow's own token) for a short guess at the likely cause, shown under "AI summary (GitHub Models; it can be wrong)". Only test names and error messages are sent (the code is public anyway), never anyone's data. Any error just leaves the summary out. To switch it off: repository **Settings → Secrets and variables → Actions → Variables → `NIGHTLY_AI` = `off`**.
+- **No secret:** it uses only `GITHUB_TOKEN`, with `contents: read`, `issues: write`, `models: read`. Nothing to set up.
+- **Cost:** free. Public repositories get GitHub Actions minutes for free (one run is about 6 to 8 minutes), and one model request a night is well inside the free GitHub Models limits.
+
+Tests: `tests/nightly-report.spec.js` runs the script in Node against a fake GitHub, a fake live site and a fake model: reading Playwright's results, one issue opened then updated then closed, a down site and a crashed run, the AI summary optional and limited to test names and errors, and no secret or package.
