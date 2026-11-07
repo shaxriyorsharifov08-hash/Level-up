@@ -72,6 +72,9 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `package.json`, `playwright.config.js` | Only used to run the tests |
 | `.github/workflows/tests.yml` | Runs the tests on GitHub after every commit |
 | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/team/`, `.claude/team/`, `scripts/team/` | The AI dev team for Claude Code: the rules every agent follows, the ten roles, the lead's `/team` playbook, the team's knowledge, lessons and drills, and its speed tools — see **section 6b** |
+| `portable/` | The portable AI team: `portable/ai-team/` is the source, `portable/dist/ai-team.zip` is the file to upload, `portable/README.md` is the install guide — see **section 6c** |
+| `plugins/ai-team/`, `.claude-plugin/marketplace.json` | The same team as a Claude Code plugin. Generated, do not edit by hand — see **section 6c** |
+| `scripts/team/build-portable.py` | Checks the portable source and builds the zip, the plugin and the marketplace file |
 | `.github/workflows/nightly.yml`, `scripts/nightly-report.mjs` | The nightly system check: runs every test and checks the live site each night, and opens, updates or closes one `nightly-tests` issue by itself — see **section 4aa** |
 
 ---
@@ -601,6 +604,29 @@ For work on this project with Claude Code (this repository in a Claude Code sess
 **Cost and limits:** there is no extra bill; it runs on your Claude plan. A team uses several times more of your plan's usage than one agent, so the lead does tiny tasks alone and picks the shortest team for the rest. The agents load when a session starts, so a session opened before these files existed does not have them. Agents can be wrong too: the lead checks with the tools and the tests, and nothing goes to `main` without you.
 
 Tests: `tests/agent-team.spec.js` (the role files stay valid, read-only roles cannot edit, every role starts from the knowledge and uses the tools, the playbook keeps the stop-and-ask rules and the learning step, `CLAUDE.md` carries your rules and no secret) and `tests/team-tools.spec.js` (each tool on the real `index.html`, each rule caught and a clean change passed, the deck reader on a generated deck and Word file, every drill still applies to today's code).
+
+## 6c. THE PORTABLE AI TEAM: ONE INSTALL, EVERY CHAT AND PROJECT (November 2026)
+
+The team in section 6b only works inside this repository. You also work in other chats and other projects, and you do not want to rebuild a team each time. So the same team is packed as one skill: you install it once and call it anywhere. The step-by-step guide is `portable/README.md`.
+
+**How it works:**
+- The source is `portable/ai-team/`: `SKILL.md` (the lead's playbook), `references/owner-rules.md` (your standing rules), one file per role in `references/roles/`, `references/lessons-general.md` and `scripts/office-text.py`.
+- `python3 scripts/team/build-portable.py` checks the source, then builds `portable/dist/ai-team.zip` (the upload) and the Claude Code plugin in `plugins/ai-team/` with `.claude-plugin/marketplace.json`.
+- **Chats, desktop app, Cowork, Claude Code on the web:** upload the zip once at claude.ai → Customize → Skills and switch it on. Code execution must be on in claude.ai settings. Account skills are copied into web sessions for any repository.
+- **Claude Code on a computer:** account skills do not reach it, so install the plugin: `claude plugin marketplace add shaxriyorsharifov08-hash/Level-up#claude/website-invention-cr4bd0`, then `claude plugin install ai-team@ai-team`. After the branch is merged into `main`, drop the `#claude/website-invention-cr4bd0` part.
+- **Calling it:** `/ai-team <task>` or `ai team, <task>` in a chat; `/ai-team:ai-team <task>` with the plugin. In a chat there are no separate agents, so the lead plays the roles one after another (Solo mode). In Claude Code it starts real agents (Team mode).
+- **In this repository** keep using `/team`: it knows the app. The portable skill itself says to prefer a project's own team.
+- **Not documented, so not promised:** the mobile app, and claude.ai Projects.
+
+**Safety:** your rules go with it (`references/owner-rules.md`): tests, no secrets in client code, health numbers by formula, privacy, and asking before a dependency, a deploy, money or anything public. The portable files hold nothing about how LEVEL UP works: only `owner-rules.md` names this repository, as the place where the master copy lives, and the build refuses project-specific words anywhere else.
+
+**Admin, languages, data:** no new save field, no change to the app, nothing in `index.html`, no admin lock. It is a tool for you, not a feature for players.
+
+**Updating:** edit `portable/ai-team/`, run the build, commit, then upload the new zip again (an upload does not update itself). The plugin updates with `claude plugin marketplace update ai-team`. In a repository the team writes to `.claude/team/LESSONS.md`; in a chat it ends with "Lessons from this task", and you add the good ones to `references/lessons-general.md`.
+
+**Cost and risks:** no extra bill; it uses your Claude plan. In a chat, Solo mode is one agent playing every role, so it is less independent than Team mode. A zip you uploaded stays old until you upload again.
+
+Tests: `tests/portable-team.spec.js` (the source is valid for claude.ai and the built zip, plugin and marketplace match it; the zip has the skill folder at its top; the plugin has ten agents and the read-only roles cannot edit; the build check refuses a project-specific leak, a long description, a tag, a missing role and a writing reviewer; the bundled deck reader runs alone).
 
 ## 4o. THE TO-DO LIST — and the HALL OF SHAME
 
