@@ -1,0 +1,146 @@
+[
+ {
+  "id": "review-1",
+  "role": "reviewer",
+  "also": [
+   "health-safety"
+  ],
+  "title": "A change with a safety hole, an XSS and a save crash hidden among tidy edits",
+  "brief": "Review the change in this worktree (run `git diff`) before it is committed. The coder says it: (1) lets the agent count how many quests it added, (2) simplifies the safety check in mentorAsk, (3) tidies the agent card markup, (4) rewords one note. Report every real problem with its failure path.",
+  "edits": [
+   {
+    "file": "index.html",
+    "find": "if(safetyOnly){ if(local.kind === \"diet\" && state.aiConsent === \"yes\") local.note = MT(\"aiLocalOnly\"); mentorShow(local); return; }",
+    "replace": "if(local.kind === \"crisis\" || local.kind === \"eating\"){ mentorShow(local); return; }"
+   },
+   {
+    "file": "index.html",
+    "find": "<span class=\"m-habit-t\"><b>' + esc(title) + '</b>'",
+    "replace": "<span class=\"m-habit-t\"><b>' + title + '</b>'"
+   },
+   {
+    "file": "index.html",
+    "find": "    openQuestModal(null, {icon: a.t === \"goal\" ? \"🎯\" : agIcon(a.name, a.stat), name:a.name, desc:\"\", stat:a.stat, freq:freq, target: a.t === \"goal\" ? a.target : 7});",
+    "replace": "    openQuestModal(null, {icon: a.t === \"goal\" ? \"🎯\" : agIcon(a.name, a.stat), name:a.name, desc:\"\", stat:a.stat, freq:freq, target: a.t === \"goal\" ? a.target : 7});\n    state.agentStats.added++;\n    save();"
+   },
+   {
+    "file": "index.html",
+    "find": "  agQuestNote:{en:\"Check it, then press SAVE.\",",
+    "replace": "  agQuestNote:{en:\"Check the quest, then press SAVE.\","
+   }
+  ],
+  "expect": [
+   {
+    "label": "Diet questions now reach Mentor AI (the safety wall in mentorAsk was removed for diet)",
+    "groups": [
+     [
+      "diet"
+     ],
+     [
+      "sent",
+      "send",
+      "reach",
+      "AI",
+      "Worker",
+      "leave",
+      "device",
+      "network"
+     ]
+    ]
+   },
+   {
+    "label": "The agent card prints the title without esc(): an AI-proposed name can inject HTML",
+    "groups": [
+     [
+      "esc(",
+      "escape",
+      "unescaped",
+      "xss",
+      "inject"
+     ],
+     [
+      "title"
+     ]
+    ]
+   },
+   {
+    "label": "state.agentStats is not in defaultState(): every save crashes on the first tap (TypeError), and the counter is a save-format change",
+    "groups": [
+     [
+      "agentStats"
+     ],
+     [
+      "defaultState",
+      "migration",
+      "old save",
+      "undefined",
+      "typeerror",
+      "crash",
+      "throw"
+     ]
+    ]
+   }
+  ],
+  "decoys": [
+   "The reworded English note is fine (Russian and Uzbek still say the same thing); flagging it as blocking is a false alarm."
+  ]
+ },
+ {
+  "id": "translate-1",
+  "role": "translator",
+  "title": "A new Mentor text with an empty Russian and an Uzbek apostrophe",
+  "brief": "A coder added a new Mentor text, MENTOR_TXT.agUndoNote, in index.html. Its Russian is empty and its Uzbek needs checking. Make the Russian and Uzbek correct, natural and in the app's own terms. Change nothing else.",
+  "edits": [
+   {
+    "file": "index.html",
+    "find": "  agQuestNote:{en:\"Check it, then press SAVE.\", ru:\"Проверьте и нажмите СОХРАНИТЬ.\", uz:\"Tekshiring va SAQLASH tugmasini bosing.\"},",
+    "replace": "  agQuestNote:{en:\"Check it, then press SAVE.\", ru:\"Проверьте и нажмите СОХРАНИТЬ.\", uz:\"Tekshiring va SAQLASH tugmasini bosing.\"},\n  agUndoNote:{en:\"Changed your mind? Delete the quest from the QUESTS list.\", ru:\"\", uz:\"Fikringiz o'zgardimi? Kvestni KVESTLAR ro'yxatidan o'chiring.\"},"
+   }
+  ],
+  "expect": [],
+  "verify": [
+   "node scripts/team/i18n-check.mjs --base HEAD",
+   "node scripts/team/rules-check.mjs --base HEAD",
+   "npx playwright test tests/mentor.spec.js -g \"every Mentor sentence\" --trace off --reporter=dot"
+  ]
+ },
+ {
+  "id": "bug-1",
+  "role": "tester",
+  "title": "A Russian to-do for tomorrow lands on today",
+  "brief": "A hero reports: in Russian, the command «задача на завтра: купить тетрадь» puts the to-do on TODAY, while the English «todo tomorrow: buy a notebook» works. Reproduce it with a test (or find the existing test that fails), find the cause in the code, and report it. Do not change index.html.",
+  "edits": [
+   {
+    "file": "index.html",
+    "find": "var AG_DAY = /(?:^|\\s)(?:for\\s+|на\\s+)?(today|tomorrow|сегодня|завтра|bugun(?:ga)?|ertaga)(?=[\\s,.:;–-]|$)/;",
+    "replace": "var AG_DAY = /(?:^|\\s)(?:for\\s+|на\\s+)?(today|tomorrow|сегодня|bugun(?:ga)?|ertaga)(?=[\\s,.:;–-]|$)/;"
+   }
+  ],
+  "expect": [
+   {
+    "label": "The day pattern AG_DAY no longer contains «завтра», so the Russian tomorrow is not recognised",
+    "groups": [
+     [
+      "AG_DAY",
+      "day regex",
+      "day pattern"
+     ],
+     [
+      "завтра"
+     ]
+    ]
+   },
+   {
+    "label": "Reproduced: a failing test (agent.spec.js, the plain-commands test, or a new one)",
+    "groups": [
+     [
+      "agent.spec",
+      "fail",
+      "failing",
+      "red"
+     ]
+    ]
+   }
+  ]
+ }
+]
