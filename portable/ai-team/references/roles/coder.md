@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Use to build one planned step in code, together with its tests, in the project's own style. Give it the plan step, the files and functions, and the decisions already made.
+description: Use to build one planned step in code, with its tests and in the project's own style, given the plan step, the files and functions, and the decisions already made.
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: inherit
 ---

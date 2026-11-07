@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Use first on any real feature, bug or document task. Read-only. It maps every place the task touches, names the risks to data, security, safety, languages and users, and returns a short step plan with a role, files and tests per step.
+description: Use first on any real feature, bug or document task; read-only, it maps every place the task touches, names the risks to data, security, safety and languages, and returns a short step plan with a role, files and tests per step.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---
