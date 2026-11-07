@@ -231,6 +231,23 @@ test.describe("the Mentor agent", () => {
     expect(seen.length).toBe(1);
   });
 
+  test("a proposed name is shown as text, never run as HTML", async ({ page }) => {
+    /* found by the reviewer's training drill (README 6b): nothing proved the cards escape their titles */
+    await bootAsGuest(page);
+    await page.evaluate(() => {
+      switchPage("mentor");
+      mentorShow({ kind: "ai", text: "Here is a plan.", q: "x", src: "ai", actions: agentClean([
+        { t: "quest", name: "<img src=x onerror=window.__agentXss=1>" },
+        { t: "todo", text: "fix the <div> bug" }
+      ]) });
+    });
+    await expect(cards(page)).toHaveCount(2);
+    await expect(cards(page).first()).toContainText("<img src=x onerror=window.__agentXss=1>");
+    await expect(cards(page).nth(1)).toContainText("fix the <div> bug");
+    expect(await page.locator("#mentorAnswer .ag-card img, #mentorAnswer .ag-card div div").count()).toBe(0);
+    expect(await page.evaluate(() => window.__agentXss)).toBeUndefined();
+  });
+
   test("the Administrator can seal or remove the agent on its own", async ({ page }) => {
     await bootAsGuest(page);
     expect(await page.evaluate(() => featureConf("mentorAgent") && featureConf("mentorAgent").def)).toBe(0);

@@ -44,3 +44,6 @@ Short, concrete rules learned from real work on this project. Every role reads t
 ## The team's own tools
 - Run `rules-check` on the team's own changes too: its first run found two false alarms of its own (a role file that mentions the storage key; a test fixture shaped like a real key). Rules about code apply to code files only, and test fixtures that look like keys are built from halves.
 - Chain a check and a commit with `&&`, never `;`, or the commit goes through even when the check fails.
+
+## Drills
+- review-1 (reviewer, Nov 2026): 3/3 found, no false alarm, about 8 minutes. What worked: it ran the affected specs to prove each finding (the tests failed on the crash) and compared each removed condition with its replacement. It also found an extra real problem (a counter counting windows opened, not quests saved, and saving when the hero only looked) and a real test gap in the app (card titles escaped but no test proving it), now closed in `tests/agent.spec.js`.
