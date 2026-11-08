@@ -11,6 +11,12 @@ Builds:
   plugins/ai-team/                       the same team as a Claude Code plugin (skill + ten agents) for the
   .claude-plugin/marketplace.json        Claude Code CLI on a computer:
                                          claude plugin marketplace add shaxriyorsharifov08-hash/Level-up
+Also builds the vendor-neutral company (company/, README 6d) from the same source:
+  company/roles/*.md, company/owner-rules.md, company/tools/office-text.py   copied from portable/ai-team/
+  company/prompts/chat-starter.md        generated from prompts/medium.md (paste at the start of any chat)
+and checks the paste-in prompts' size limits (short <= 1,500 characters for ChatGPT's custom-instruction box,
+medium <= 8,000 for a Custom GPT / Gem / Project, chat-starter <= 12,000) and that the company's own files
+name no Claude-only tool.
 Python standard library only.
 """
 import io
@@ -148,6 +154,60 @@ def validate():
     return problems
 
 
+COMPANY = os.path.join(ROOT, "company")
+COMPANY_NAME = "Agent Company"  # rename the company here and in company/*.md
+LIMITS = {"short.md": 1500, "medium.md": 8000, "chat-starter.md": 12000}
+# Claude-only tool names that would confuse another AI (README and the runner may name platforms)
+CLAUDE_ONLY = re.compile(r"ArtifactData|send_later|subagent_type|SendMessage|claude\.ai/artifact|\.claude/|/team mission|isolation: ?\"worktree\"")
+CHAT_HEAD = ("Paste everything below at the start of a new chat, in any AI (ChatGPT, Gemini, DeepSeek, Copilot, Claude, Le Chat, Qwen...).\n"
+             "Then give tasks that start with \"Company:\". Attach PROJECT.md, MISSION-LOG.md and LESSONS.md if you have them.\n\n---\n\n")
+CHAT_TAIL = ("\n\n---\n\nIf you understood, reply only: \"Agent Company is ready. What is the task?\" "
+             "and wait for my first task.\n")
+
+
+def company_files():
+    """the company files the build writes, as {relative path: bytes}"""
+    out = {}
+    src = [("roles/" + r + ".md", os.path.join(SRC, "references", "roles", r + ".md")) for r in ROLES]
+    src += [("owner-rules.md", os.path.join(SRC, "references", "owner-rules.md")), ("tools/office-text.py", os.path.join(SRC, "scripts", "office-text.py"))]
+    for rel, path in src:
+        if os.path.exists(path):  # a missing source is reported by validate(); never crash on it
+            out[rel] = open(path, "rb").read()
+    medium = open(os.path.join(COMPANY, "prompts", "medium.md"), encoding="utf-8").read()
+    out["prompts/chat-starter.md"] = (CHAT_HEAD + medium.strip() + CHAT_TAIL).encode("utf-8")
+    return out
+
+
+def validate_company():
+    problems = []
+    for need in ["COMPANY.md", "README.md", "prompts/short.md", "prompts/medium.md", "templates/PROJECT.md", "templates/MISSION-LOG.md", "templates/LESSONS.md"]:
+        if not os.path.exists(os.path.join(COMPANY, need)):
+            problems.append("company/" + need + " is missing")
+    if problems:
+        return problems
+    texts = {n: open(os.path.join(COMPANY, "prompts", n), encoding="utf-8").read() for n in ("short.md", "medium.md")}
+    texts["chat-starter.md"] = company_files()["prompts/chat-starter.md"].decode("utf-8")
+    for n, lim in LIMITS.items():
+        if len(texts[n]) > lim:
+            problems.append("company/prompts/%s is %d characters; the limit is %d" % (n, len(texts[n]), lim))
+    for rel in ["COMPANY.md", "prompts/short.md", "prompts/medium.md", "templates/PROJECT.md", "templates/MISSION-LOG.md", "templates/LESSONS.md"]:
+        t = open(os.path.join(COMPANY, rel), encoding="utf-8").read()
+        m = CLAUDE_ONLY.search(t)
+        if m:
+            problems.append("company/%s names a Claude-only tool: %s" % (rel, m.group(0)))
+        if SECRETS.search(t) or SECRET_ASSIGN.search(t):
+            problems.append("company/%s: looks like a secret" % rel)
+    return problems
+
+
+def build_company(out_root):
+    for rel, data in company_files().items():
+        p = os.path.join(out_root, "company", rel)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "wb") as f:
+            f.write(data)
+
+
 def build(out_root):
     """write the zip, the plugin and the marketplace under out_root"""
     # 1. the claude.ai upload: a zip whose top-level entry is the skill folder
@@ -200,7 +260,7 @@ def tree(folder):
 
 
 def main(argv):
-    problems = validate()
+    problems = validate() + validate_company()
     if problems:
         print("The portable team has problems:")
         for p in problems:
@@ -210,7 +270,9 @@ def main(argv):
         tmp = tempfile.mkdtemp()
         try:
             build(tmp)
-            same = (zip_contents(os.path.join(tmp, "portable", "dist", NAME + ".zip")) == (zip_contents(os.path.join(ROOT, "portable", "dist", NAME + ".zip")) if os.path.exists(os.path.join(ROOT, "portable", "dist", NAME + ".zip")) else None)
+            built = company_files()
+            same_company = all(os.path.exists(os.path.join(ROOT, "company", rel)) and open(os.path.join(ROOT, "company", rel), "rb").read() == data for rel, data in built.items())
+            same = same_company and (zip_contents(os.path.join(tmp, "portable", "dist", NAME + ".zip")) == (zip_contents(os.path.join(ROOT, "portable", "dist", NAME + ".zip")) if os.path.exists(os.path.join(ROOT, "portable", "dist", NAME + ".zip")) else None)
                     and tree(os.path.join(tmp, "plugins", NAME)) == tree(os.path.join(ROOT, "plugins", NAME))
                     and tree(os.path.join(tmp, ".claude-plugin")) == tree(os.path.join(ROOT, ".claude-plugin")))
         finally:
@@ -221,8 +283,10 @@ def main(argv):
         print("portable team: valid, and the zip, plugin and marketplace match the source.")
         return 0
     z = build(ROOT)
+    build_company(ROOT)
     n = len(zip_contents(z))
     print("Built %s (%d files), plugins/%s/ and .claude-plugin/marketplace.json." % (os.path.relpath(z, ROOT), n, NAME))
+    print("Built the company files in company/ (roles, owner rules, deck reader, chat-starter prompt).")
     print("Upload the zip once at claude.ai -> Customize -> Skills, then turn it on.")
     return 0
 

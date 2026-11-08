@@ -75,6 +75,7 @@ On a computer: `npm install && npx playwright install chromium && npm test`. The
 | `portable/` | The portable AI team: `portable/ai-team/` is the source, `portable/dist/ai-team.zip` is the file to upload, `portable/README.md` is the install guide — see **section 6c** |
 | `plugins/ai-team/`, `.claude-plugin/marketplace.json` | The same team as a Claude Code plugin. Generated, do not edit by hand — see **section 6c** |
 | `scripts/team/build-portable.py` | Checks the portable source and builds the zip, the plugin and the marketplace file |
+| `company/`, `AGENTS.md`, `.github/workflows/company-task.yml` | Agent Company: the same AI team for any AI (ChatGPT, Gemini, Codex…), the paste-in prompts, the memory templates, the independent runner and its GitHub workflow — see **section 6d** |
 | `.github/workflows/nightly.yml`, `scripts/nightly-report.mjs` | The nightly system check: runs every test and checks the live site each night, and opens, updates or closes one `nightly-tests` issue by itself — see **section 4aa** |
 
 ---
@@ -628,6 +629,26 @@ The team in section 6b only works inside this repository. You also work in other
 
 Tests: `tests/portable-team.spec.js` (the source is valid for claude.ai and the built zip, plugin and marketplace match it; the zip has the skill folder at its top; the plugin has ten agents and the read-only roles cannot edit; the build check refuses a project-specific leak, a long description, a tag, a missing role and a writing reviewer; the bundled deck reader runs alone).
 
+## 6d. AGENT COMPANY: THE TEAM IN ANY AI, EVEN WITHOUT CLAUDE (November 2026)
+
+The team in 6b and 6c runs on Claude. Agent Company is the same team written for **any** AI, so it keeps working when the Claude subscription ends or in another app. It is plain text, in `company/` (guide: `company/README.md`).
+
+- **What it is:**
+  - `company/COMPANY.md`: the lead's operating manual, with Team mode when the AI can start helper agents and Solo mode otherwise;
+  - the ten roles and your rules, copied from the master copy in `portable/ai-team/` by the build, so they never drift;
+  - memory templates (`PROJECT.md`, `MISSION-LOG.md`, `LESSONS.md`), so you never explain twice.
+- **Ready to paste:**
+  - `prompts/short.md` (1,251 characters) for ChatGPT's "Customize" box;
+  - `prompts/medium.md` (about 5,000) for a Custom GPT, Gemini Gem or Claude Project;
+  - `prompts/chat-starter.md` as the first message in any chat app.
+- **In chats**, the lead ends each reply with the updated mission log. You paste it into the next chat, even in a different AI, and work continues.
+- **Coding agents:** `AGENTS.md` at the root of this repository points Codex, Cursor, Copilot and Gemini CLI to `CLAUDE.md` (the project rules) and to the company.
+- **Independent mode:** `company/runner/run.mjs` runs a task with any OpenAI-compatible AI service (GitHub Models, a model on your own computer with Ollama, Groq, OpenRouter…). The **Company task** workflow on GitHub runs it with no keys, using GitHub's free model allowance. It writes a report only: it never changes files, publishes or spends.
+- **Limits, plainly:** quality depends on the AI behind it. Free and small models follow the manual in a simpler form, and chat apps that cannot run code cannot really test.
+- **Updating:** edit `portable/ai-team/` (roles, rules) or `company/` (manual, prompts), run `python3 scripts/team/build-portable.py`, commit. The build checks every size limit and that no company file names a Claude-only tool.
+
+Tests: `tests/company.spec.js` (the size limits, the sync with the master copy, no Claude-only tool names, the owner's rules and the stop-and-ask list in every version, the templates and `AGENTS.md`) and `tests/company-runner.spec.js` (the runner and its workflow).
+
 ## 4o. THE TO-DO LIST — and the HALL OF SHAME
 
 QUESTS → **✅ TO-DO**. A plain list, on purpose.
@@ -854,7 +875,7 @@ Everything is computed from the save by plain code; nothing is sent anywhere.
 
 ### 2. Health safety (both brains)
 - Words about self-harm, suicide, abuse or danger, signs of disordered eating, and any diet, calorie or weight question are answered **on the device** with a fixed, careful message (local emergency number, a trusted adult or doctor, findahelpline.com; for diet: no numbers, see a doctor or registered dietitian, habit-side tips). They are **never sent** to the AI and offer no quest. The Worker refuses them too, as a second wall. The crisis message also names Uzbekistan's numbers: 112 (ambulance 103).
-- **Safety walls 2.0 (Mission 1.1).** Every safety check reads the text through `mSafeNorm` (the Worker's copy is `safeNorm`): lower case, Uzbek typed in Cyrillic turned into Latin, every apostrophe dropped, spaces collapsed; so `ўзимни ўлдирмоқчиман`, `ozimni oldirmoqchiman` and `oʻzimni oʻldirmoqchiman` are the same words. The lists are written in that form. A body or energy number (`800 kcal`, `45 kg`; `MENTOR_BODY`) counts as diet, and so do food restriction and weight goals (`MENTOR_RESTRICT`: skip dinner, eat only…, не есть, kechki ovqatni tashlash, get skinny). The same check runs on the question, on each line of the summary and each earlier turn (the Worker drops those that hit, a question together with its answer), and on the AI's answer: the Worker replaces an unsafe answer with its fixed reply (it still counts as a question), and the app checks it again and shows its own safety answer instead, with no actions. Quest and goal names that the agent would refuse are left out of the summary.
+- **Safety walls 2.0 (Mission 1.1).** One check, `mSafetyKind`, answers "crisis", "eating", "diet" or nothing; the strongest wall wins. It lives in the SAFETY WALLS block, which `index.html` and `ai-proxy/worker.mjs` hold word for word (a test compares them). It reads the text through `mSafeNorm`: lower case, Uzbek typed in Cyrillic turned into Latin, every apostrophe dropped, spaces collapsed; so `ўзимни ўлдирмоқчиман`, `ozimni oldirmoqchiman` and `oʻzimni oʻldirmoqchiman` are the same words. Uzbek typed in Cyrillic without ў қ ғ ҳ (`узимни улдирмокчиман`) looks like Russian, so a Latin copy is also read, by the Uzbek patterns only. Each wall (`MENTOR_CRISIS`, `MENTOR_EATING`, `MENTOR_DIET`, each with an `…_UZ` part) is tested against a phrase corpus (`tests/fixtures/safety-corpus.json`, `tests/safety-corpus.spec.js`): at least 95% caught per group and language, and not one false alarm on several hundred normal questions. Very low calories (1–1199 kcal a day, or "under / only" so many) count as eating distress. A body or energy number (`800 kcal`, `45 kg`; `MENTOR_BODY`) counts as diet, and so do food restriction and weighing as a plan (`MENTOR_RESTRICT`: skip dinner, eat only…, only water, не есть, kechki ovqatni tashlash, weigh myself). The same check runs on the question, on each line of the summary and each earlier turn (the Worker drops those that hit, a question together with its answer), and on the AI's answer: the Worker replaces an unsafe answer with its fixed reply of that kind (it still counts as a question) and says which kind; the app never shows that reply as an AI answer but shows its own safety answer of the same kind, with no actions. Eating words in the model's own answer ("eat 800 kcal") get the diet reply, because the hero said nothing about distress. Quest and goal names that the agent would refuse are left out of the summary.
 - The AI's rules say: habits only, no diagnoses, medication, calorie, weight or fasting numbers, age-appropriate, never ask for personal details, treat the hero's data as data, not instructions. Every AI answer carries "AI can be wrong. Not medical advice." The consent window asks under-18s to check with a parent or guardian.
 - The diet calculator planned for Premium will compute with standard formulas in code; the AI may only explain its results.
 
