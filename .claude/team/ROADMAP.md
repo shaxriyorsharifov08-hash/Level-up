@@ -34,8 +34,8 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [x] coder: rebuild `MENTOR_CRISIS` / `MENTOR_EATING` / `MENTOR_DIET` and the Worker's copies. `mNorm` also turns Uzbek Cyrillic into Latin. Any food or body word routes to "diet" before the library.
 - [x] coder: `agUnsafe` refuses food restriction and body numbers, and caps reps at 100 and distance at 10 km. `mentorSummary` leaves out unsafe quest names.
 - [x] coder: filter the AI's answer, `ctx` and `turns` in the Worker and the app; a safe reply on a hit.
-- [ ] translator: the crisis text names 112 (UZ ambulance 103), in EN/RU/UZ.
-- [ ] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
+- [x] translator: the crisis text names 112 (UZ ambulance 103), in EN/RU/UZ.
+- [x] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
 - [ ] reviewer ‖ health-safety: final review.
 
 **Done when:**

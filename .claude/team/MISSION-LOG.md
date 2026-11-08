@@ -27,6 +27,7 @@ Status: ⬜ not started · 🔄 in progress · ✅ done · ⏸ parked (blocked; 
 Mission 1.1 final steps: the lead checks the RU/UZ text of the 112 sentence and the new c3 consent line; then tester (whole suite) ‖ health-safety (fresh, unseen phrases) ‖ reviewer. Owner action after the mission: paste the new ai-proxy/worker.mjs into Cloudflare.
 
 ## Log
+- 2026-11-08: whole suite after the list rebuild: 316 passed, 0 failed (6.4 min). Waiting for health-safety's fresh-phrase test and the reviewer.
 - 2026-11-08: 1.1 task done: word lists rebuilt (coder). One SAFETY WALLS block shared word for word by the app and the Worker; corpus 100% in every group and language (EN/RU/UZ/UZ-Cyrillic), 0 of 445 normal questions trigger, 32/32 unsafe agent commands refused, 26/26 safe ones work. Coder's own fresh rounds caught ~70–90% before widening, so health-safety tests unseen phrases next. Lead verified: 54 specs pass; the 9-phrase probe is now all correct. Consent text c3 made honest ("questions the Mentor recognises").
 - 2026-11-08 09:05 UTC: Agent HQ opened (owner's request): a 3D office showing each role's live status, https://claude.ai/artifact/NFeVzS2xSDRzVMYeqquYLu. Mission mode now updates it after every task.
 - 2026-11-08 08:53 UTC: the coder hit the plan's 5-hour usage limit during task 2 (reset 08:40 UTC) and the session's worker restarted; no edits were lost (none had been saved). The check-in fired as planned and the coder was resumed with the same brief.
