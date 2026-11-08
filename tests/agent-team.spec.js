@@ -73,6 +73,25 @@ test.describe("the AI dev team", () => {
     }
   });
 
+  test("the roadmap, the mission log and mission mode fit together", () => {
+    const road = fs.readFileSync(path.join(ROOT, ".claude", "team", "ROADMAP.md"), "utf8");
+    const log = fs.readFileSync(path.join(ROOT, ".claude", "team", "MISSION-LOG.md"), "utf8");
+    const skill = fs.readFileSync(path.join(ROOT, ".claude", "skills", "team", "SKILL.md"), "utf8");
+    for (let p = 1; p <= 6; p++) expect(road, "phase " + p).toMatch(new RegExp("## Phase " + p + ":"));
+    const missions = (road.match(/^### Mission (\d\.\d):/gm) || []).map((m) => m.replace(/^### Mission |:$/g, ""));
+    expect(missions.length).toBeGreaterThanOrEqual(12);
+    for (const m of missions) expect(log, "mission " + m + " is on the status board").toContain("| " + m);
+    for (const d of ["D1", "D2", "D3", "D4", "D5", "D6", "D7"]) expect(road).toContain("| " + d + " |");
+    /* the first two phases are planned well enough to run unattended */
+    const early = road.split("## Phase 3:")[0];
+    expect((early.match(/\*\*Done when:?\*\*/g) || []).length).toBe(missions.filter((m) => +m[0] <= 2).length);
+    expect(log).toContain("## NEXT");
+    expect(skill).toContain("## 9. Mission mode");
+    expect(skill).toContain("trust the log, not the chat");
+    expect(skill).toContain("Never hold more than one task of work uncommitted");
+    expect(skill).toContain("Never weaken a test to get past it");
+  });
+
   test("CLAUDE.md carries the owner's rules for every agent, and no secret", () => {
     const c = fs.readFileSync(path.join(ROOT, "CLAUDE.md"), "utf8");
     for (const rule of ["Never break existing user data", "No API keys or secrets in client-side code", "Diet calculator", "Health safety", "Privacy", "three languages", "No protected anime or game names", "Ask before adding any dependency", "Decks and documents", "Never push to `main`"]) {

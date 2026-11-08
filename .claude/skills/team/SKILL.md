@@ -85,3 +85,38 @@ Drills are practice tasks with planted problems and answer keys (`.claude/team/d
 7. `node scripts/team/drill.mjs clean`.
 
 To add a drill, plant a realistic problem the team should catch (exact text that occurs once, an answer key, or checks). `tests/team-tools.spec.js` keeps every drill working as the code changes.
+
+## 9. Mission mode: `/team mission next` (work that runs for days)
+The roadmap (`.claude/team/ROADMAP.md`) splits the build into phases and missions. `MISSION-LOG.md` is the team's memory between sessions: **trust the log, not the chat**, because sessions restart, pause and get compacted.
+1. **Start:** read `ROADMAP.md`, then `MISSION-LOG.md` (its NEXT line), then the review items the mission names. `/team mission next` takes NEXT; `/team mission 2.1` takes that one.
+2. **Gate check:** if the mission's phase waits on a 🚦 decision the owner has not answered, do not start it. List the open decisions for the owner in a few lines and stop.
+3. **Begin:** mark the mission 🔄 on the status board and post its plan in a few lines. Starting a mission approves the save-format changes and migrations the roadmap names for it. Every other stop-and-ask item still needs the owner.
+4. **Work task by task** with the roles, as in sections 3–5. After **each** task:
+   1. run the checks (rules-check, i18n-check, the affected specs);
+   2. commit and push to the session's branch;
+   3. tick its box in `ROADMAP.md`;
+   4. update `MISSION-LOG.md` (what is done, the new NEXT).
+
+   Never hold more than one task of work uncommitted.
+5. **A mission is done** when its "Done when" holds. Then:
+   - run the whole suite;
+   - run the reviewer (and health-safety where the mission touches health);
+   - mark it ✅;
+   - add the lessons;
+   - write three lines in the log.
+
+   Then go straight on to the next mission of the same phase.
+6. **Keep going while the owner is away.** Before ending a turn with work left, schedule one check-in to yourself (the `send_later` tool, about 2 hours, message: "Mission mode: continue from MISSION-LOG NEXT"). Keep only one pending at a time. A check-in survives restarts. If the plan's usage limit pauses work, the next check-in resumes it.
+7. **Stuck?** If a task fails twice, park it: mark it ⏸ with the reason in the log, and move on to the next independent task. Never weaken a test to get past it.
+8. **Stop and report** when one of these happens:
+   - a 🚦 gate;
+   - a stop-and-ask item;
+   - the phase is done;
+   - nothing independent is left.
+
+   Report in plain words, in the log and to the owner:
+   - what was built;
+   - who did what;
+   - test results with real numbers;
+   - what is parked;
+   - the decisions needed for the next phase.
