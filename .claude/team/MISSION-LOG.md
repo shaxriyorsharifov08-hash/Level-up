@@ -24,9 +24,10 @@ The team's memory between sessions. The lead updates it after **every** task: wh
 Status: ⬜ not started · 🔄 in progress · ✅ done · ⏸ parked (blocked; reason in the log) · 🚦 waiting for the owner
 
 ## NEXT
-Mission 1.1, task 2 in progress: the coder rebuilds the lists against the corpus (the corpus and health-safety notes are in the session scratchpad; the coder copies the corpus to tests/fixtures/safety-corpus.json). Then: translator (112 sentence, eating reply) → tester (full suite) → reviewer ‖ health-safety with FRESH unseen phrases.
+Mission 1.1 final steps: the lead checks the RU/UZ text of the 112 sentence and the new c3 consent line; then tester (whole suite) ‖ health-safety (fresh, unseen phrases) ‖ reviewer. Owner action after the mission: paste the new ai-proxy/worker.mjs into Cloudflare.
 
 ## Log
+- 2026-11-08: 1.1 task done: word lists rebuilt (coder). One SAFETY WALLS block shared word for word by the app and the Worker; corpus 100% in every group and language (EN/RU/UZ/UZ-Cyrillic), 0 of 445 normal questions trigger, 32/32 unsafe agent commands refused, 26/26 safe ones work. Coder's own fresh rounds caught ~70–90% before widening, so health-safety tests unseen phrases next. Lead verified: 54 specs pass; the 9-phrase probe is now all correct. Consent text c3 made honest ("questions the Mentor recognises").
 - 2026-11-08 09:05 UTC: Agent HQ opened (owner's request): a 3D office showing each role's live status, https://claude.ai/artifact/NFeVzS2xSDRzVMYeqquYLu. Mission mode now updates it after every task.
 - 2026-11-08 08:53 UTC: the coder hit the plan's 5-hour usage limit during task 2 (reset 08:40 UTC) and the session's worker restarted; no edits were lost (none had been saved). The check-in fired as planned and the coder was resumed with the same brief.
 - 2026-11-08: 1.1 task done: phrase corpus (health-safety): 121–124 dangerous phrasings per language, 39 Cyrillic Uzbek, 113 normal, 32 unsafe and 26 safe agent commands. Today's walls catch 12–25% of crisis and 8–14% of eating phrasings.

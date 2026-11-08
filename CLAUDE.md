@@ -24,5 +24,5 @@
 - Locks: `FEATURES`, `FEATURE_GUIDE`, `featureRemoved(k)`, `featureSealedLv(k)`, `mFeatureOn(k)`.
 - Text: Mentor text lives in `MENTOR_TXT` (each entry `{en, ru, uz}`, read with `MT(key, vars)`); other UI text is translated by `tr()` from the RU and UZ dictionaries.
 - Quests: `openQuestModal(id, preset)`, `questCreationBlock(freq)`, `makeQuest(...)`; focus: `startTimer(id)`; to-dos: `makeTodo`, `addTodo`.
-- Health and safety word lists: `MENTOR_CRISIS`, `MENTOR_EATING`, `MENTOR_DIET` (the Worker has its own copies).
+- Health and safety: one SAFETY WALLS block (`mSafeNorm`, `mSafetyKind`, `MENTOR_CRISIS`, `MENTOR_EATING`, `MENTOR_DIET`, `MENTOR_RESTRICT`, `MENTOR_BODY`), word for word the same in `index.html` and `ai-proxy/worker.mjs` (a test checks); `tests/fixtures/safety-corpus.json` is the phrase corpus every change must still pass.
 - Tests: `npx playwright test --trace off` runs everything (about 6 minutes); one file: `npx playwright test tests/<name>.spec.js --trace off`. New specs boot the app with `bootAsGuest(page)` from `tests/helpers.js`; tests never touch the network.

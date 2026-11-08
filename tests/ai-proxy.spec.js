@@ -9,6 +9,17 @@ const { pathToFileURL } = require("url");
 const { test, expect } = require("@playwright/test");
 
 const SRC = path.resolve(__dirname, "..", "ai-proxy", "worker.mjs");
+const APP = path.resolve(__dirname, "..", "index.html");
+const CORPUS = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "safety-corpus.json"), "utf8"));
+const WALLS = ["MENTOR_CRISIS", "MENTOR_CRISIS_UZ", "MENTOR_EATING", "MENTOR_EATING_UZ", "MENTOR_DIET", "MENTOR_DIET_UZ", "MENTOR_OVERTAKE", "MENTOR_BODY", "MENTOR_RESTRICT", "MENTOR_RESTRICT_UZ"];
+/* the SAFETY WALLS block of a file, as text, and run on its own (it needs nothing else) */
+function wallsBlock(file) {
+  const src = fs.readFileSync(file, "utf8");
+  const a = src.indexOf("/* ==== SAFETY WALLS: begin"), b = src.indexOf("/* ==== SAFETY WALLS: end ==== */");
+  if (a === -1 || b < a) throw new Error("no SAFETY WALLS block in " + file);
+  return src.slice(a, b);
+}
+function wallsRun(block) { return new Function(block + "\nreturn {" + WALLS.map((w) => w + ":" + w).join(",") + ", mSafetyKind:mSafetyKind};")(); }
 const ORIGIN = "https://shaxriyorsharifov08-hash.github.io";
 const PROJECT = "level-up-hunter-03";
 const JWKS = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -153,6 +164,7 @@ test.describe("the Mentor AI proxy", () => {
     const c = await call(e, { body: { q: "I want to kill myself", ctx: "", lang: "en" } });
     expect(c.status).toBe(200);
     expect(c.j.safety).toBe(true);
+    expect(c.j.kind).toBe("crisis"); /* the app shows its own answer of this kind */
     expect(c.j.answer).toContain("emergency");
     const ru = await call(e, { body: { q: "сколько калорий мне есть", ctx: "", lang: "ru" } });
     expect(ru.j.answer).toContain("не медицинский совет");
@@ -254,6 +266,7 @@ test.describe("the Mentor AI proxy", () => {
     const d = await call(diet);
     expect(d.status).toBe(200);
     expect(d.j.safety).toBe(true);
+    expect(d.j.kind).toBe("diet"); /* low calories in the model's own words get the diet reply */
     expect(d.j.answer).toContain("I don't give numbers or diets");
     expect(d.j.answer).not.toContain("800");
     expect(d.j.left).toBe(2); /* the model answered, so the question counts */
@@ -345,6 +358,79 @@ test.describe("the Mentor AI proxy", () => {
     const r = await call(chat);
     expect(r.j.actions).toBeUndefined();
     expect(chat.AI.calls[0].input.messages[0].content).not.toContain("AGENT MODE");
+  });
+
+  /* SAFETY WALLS 2.0 (Mission 1.1): the app and the Worker read text the same way */
+  test("the Worker's word lists are the app's, word for word", () => {
+    const appBlock = wallsBlock(APP), workerBlock = wallsBlock(SRC);
+    expect(workerBlock).toBe(appBlock);
+    const app = wallsRun(appBlock), worker = wallsRun(workerBlock);
+    for (const w of WALLS) {
+      expect(app[w] instanceof RegExp, w).toBe(true);
+      expect(worker[w].source, w).toBe(app[w].source);
+      expect(worker[w].flags, w).toBe(app[w].flags);
+    }
+    /* the Worker has no list of its own besides the shared block, and its check is the app's */
+    const src = fs.readFileSync(SRC, "utf8");
+    expect(src).not.toMatch(/const (?:CRISIS|DIET|BODY|EATING)\s*=/);
+    expect(src).toMatch(/function unsafeKind\(s\) \{ return mSafetyKind\(s\); \}/);
+    /* no lookbehind and no named groups in the block: the app must load on old devices */
+    expect(appBlock).not.toMatch(/\(\?<[=!a-z]/i);
+  });
+
+  test("the Worker classifies the whole phrase corpus exactly as the app does", async () => {
+    const app = wallsRun(wallsBlock(APP));
+    const allowed = { crisis: ["crisis"], eating: ["crisis", "eating"], diet: ["crisis", "eating", "diet"] };
+    const token = await sign(claims());
+    /* a premium account with a large allowance, so normal questions never hit the limit */
+    const e = env({ LIMITS: kv({ "premium:hero-uid-1": "100000" }), GLOBAL_DAILY_LIMIT: "100000" });
+    const rates = [], differ = [];
+    for (const g of ["crisis", "eating", "diet"]) {
+      for (const l of ["en", "ru", "uz", "uzCyr"]) {
+        let ok = 0;
+        for (const q of CORPUS[g][l]) {
+          const r = await call(e, { token, body: { q, ctx: "", lang: l === "uzCyr" ? "uz" : l, turns: [] } });
+          const kind = r.j && r.j.safety === true ? r.j.kind : "";
+          if (kind !== app.mSafetyKind(q)) differ.push(q + ": worker " + kind + ", app " + app.mSafetyKind(q));
+          if (allowed[g].includes(kind)) ok++;
+        }
+        rates.push(g + "." + l + " " + ok + "/" + CORPUS[g][l].length);
+        expect(ok / CORPUS[g][l].length, g + "." + l).toBeGreaterThanOrEqual(0.95);
+      }
+    }
+    expect(e.AI.calls.length).toBe(0); /* not one of them reached the model */
+    /* normal questions reach the model and come back as its answer, never a safety reply */
+    const alarms = [];
+    for (const l of Object.keys(CORPUS.normal)) {
+      for (const q of CORPUS.normal[l]) {
+        const r = await call(e, { token, body: { q, ctx: "", lang: l, turns: [] } });
+        if (r.status !== 200 || r.j.safety) alarms.push(l + ": " + q + " -> " + r.status + " " + (r.j && r.j.kind));
+        if (app.mSafetyKind(q)) differ.push(q + ": app " + app.mSafetyKind(q));
+      }
+    }
+    test.info().annotations.push({ type: "Worker catch rates", description: rates.join(", ") + "; false alarms " + alarms.length });
+    expect(alarms).toEqual([]);
+    expect(differ).toEqual([]);
+  });
+
+  test("eating distress gets its own careful reply, the app's words in three languages", async () => {
+    const src = fs.readFileSync(APP, "utf8");
+    const m = /\n  eating:\{en:"((?:[^"\\]|\\.)*)", ru:"((?:[^"\\]|\\.)*)", uz:"((?:[^"\\]|\\.)*)"\}/.exec(src);
+    expect(m).not.toBeNull();
+    const app = { en: m[1], ru: m[2], uz: m[3] };
+    const e = env();
+    for (const [lang, q] of [["en", "i make myself throw up after eating"], ["ru", "вызываю рвоту после еды"], ["uz", "ovqat yemayapman"]]) {
+      const r = await call(e, { body: { q, ctx: "", lang, turns: [] } });
+      expect(r.status).toBe(200);
+      expect(r.j.safety).toBe(true);
+      expect(r.j.kind).toBe("eating");
+      expect(r.j.answer).toBe(app[lang]);
+    }
+    /* Uzbek in Cyrillic without ў қ ғ ҳ, and a very low calorie number, too */
+    expect((await call(e, { body: { q: "овкат емаяпман", ctx: "", lang: "uz", turns: [] } })).j.kind).toBe("eating");
+    expect((await call(e, { body: { q: "eating 500 cals a day is that ok", ctx: "", lang: "en", turns: [] } })).j.kind).toBe("eating");
+    expect(e.AI.calls.length).toBe(0);
+    expect(e.LIMITS.puts.length).toBe(0);
   });
 
   test("the Worker holds no secret, logs nothing, and needs no package", () => {

@@ -394,6 +394,36 @@ test.describe("Mentor AI", () => {
     expect(seen.length).toBe(3);
   });
 
+  test("a Worker safety reply is shown as the app's own answer of its kind, never as an AI answer", async ({ page }) => {
+    await bootAsGuest(page);
+    let reply = { body: { answer: "Worker words", safety: true, kind: "eating" } };
+    const seen = await fakeWorker(page, () => reply);
+    await aiReady(page, "yes");
+    await ask(page, "How do I keep going?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+    await expect(page.locator("#mentorAnswer")).toContainText("It sounds like eating might be hard right now.");
+    await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
+    await expect(page.locator("#mentorAnswer")).not.toContainText("Worker words");
+    reply = { body: { answer: "Worker words", safety: true, kind: "crisis" } };
+    await ask(page, "How do I stay calm?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+    await expect(page.locator("#mentorAnswer")).toContainText("In Uzbekistan, call 112 (ambulance: 103).");
+    reply = { body: { answer: "Worker words", safety: true, kind: "diet" } };
+    await ask(page, "How do I get more energy?");
+    await expect(page.locator("#mentorAnswer")).toContainText("I don't give numbers or diets");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toHaveCount(0);
+    /* an older Worker sends no kind: its diet reply reads as diet, anything else as crisis */
+    reply = { body: { answer: "Food and body weight are health questions, so I don't give numbers or diets.", safety: true } };
+    await ask(page, "What should I do today?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toHaveCount(0);
+    await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
+    reply = { body: { answer: "I'm really glad you told me.", safety: true } };
+    await ask(page, "How do I relax?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+    expect(seen.length).toBe(5);
+    expect(await page.evaluate(() => mentorChat.length)).toBe(0); /* never carried into the next question */
+  });
+
   test("the summary sent to Mentor AI leaves out unsafe quest and goal names", async ({ page }) => {
     await bootAsGuest(page);
     const s = await page.evaluate(() => {
