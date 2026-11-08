@@ -32,8 +32,8 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 **Goal:** a crisis, eating-distress or diet message is recognised however it is written, in all three languages, and nothing unsafe reaches an AI or becomes an action.
 - [ ] health-safety: build a phrase corpus test fixture, at least 100 per language: EN, RU and UZ (Latin and Cyrillic), slang, typos, no apostrophes, indirect wording; plus 60 normal questions that must NOT trigger.
 - [ ] coder: rebuild `MENTOR_CRISIS` / `MENTOR_EATING` / `MENTOR_DIET` and the Worker's copies. `mNorm` also turns Uzbek Cyrillic into Latin. Any food or body word routes to "diet" before the library.
-- [ ] coder: `agUnsafe` refuses food restriction and body numbers, and caps reps at 100 and distance at 10 km. `mentorSummary` leaves out unsafe quest names.
-- [ ] coder: filter the AI's answer, `ctx` and `turns` in the Worker and the app; a safe reply on a hit.
+- [x] coder: `agUnsafe` refuses food restriction and body numbers, and caps reps at 100 and distance at 10 km. `mentorSummary` leaves out unsafe quest names.
+- [x] coder: filter the AI's answer, `ctx` and `turns` in the Worker and the app; a safe reply on a hit.
 - [ ] translator: the crisis text names 112 (UZ ambulance 103), in EN/RU/UZ.
 - [ ] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
 - [ ] reviewer ‖ health-safety: final review.

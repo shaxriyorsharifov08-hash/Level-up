@@ -9,7 +9,9 @@
         for an account marked premium in KV), and stops everyone after
         GLOBAL_DAILY_LIMIT so the free allowance can never turn into a bill,
      4. answers crisis and diet questions with a fixed, careful reply without
-        calling the model (the app already keeps them on the device),
+        calling the model (the app already keeps them on the device), drops
+        hero data and earlier turns that touch them, and replaces a model
+        answer that does (safeNorm reads Uzbek Cyrillic and missing apostrophes),
      5. asks the model with fixed safety rules, and returns plain text,
      6. in AGENT mode (README 4z) also returns up to 5 proposed app actions,
         each checked against a fixed allowed list (cleanActions). The app
@@ -36,14 +38,17 @@ const STATS = ["INT", "STR", "CON", "END"];
 const PAGES = ["home", "quests", "todo", "calendar", "stats", "story", "learn", "budget", "profile"];
 const TWO_DAYS = 172800;
 
-const CRISIS = /suicid|kill myself|end my life|want to die|self[- ]?harm|hurt myself|cut myself|no reason to live|being abused|someone hurts me|суицид|покончить с собой|убить себя|не хочу жить|хочу умереть|самоповрежд|навредить себе|порезать себя|меня бьют|насили|o'zimni o'ldir|joniga qasd|o'lmoqchiman|yashashni xohlamayman|yashagim kelmayapti|o'zimga zarar|zo'ravonlik|meni urishadi|starving myself|starve myself|not eating anything|not eating at all|stopped eating|skip meals|skipping meals|make myself (sick|throw up|vomit)|throw up after|purging|binge eat|anorex|bulim|голодаю|ничего не ем|перестал[аи]? есть|не ем весь день|вызыва\S* рвот|анорекс|булими|переедани|ovqat yemayapman|och qolyapman|qayt qilaman|anoreks|bulimi/;
+/* the lists are matched on safeNorm() text (no apostrophes, Uzbek in Latin), like the app's */
+const CRISIS = /suicid|kill myself|end my life|want to die|self[- ]?harm|hurt myself|cut myself|no reason to live|being abused|someone hurts me|суицид|покончить с собой|убить себя|не хочу жить|хочу умереть|самоповрежд|навредить себе|порезать себя|меня бьют|насили|ozimni oldir|joniga qasd|(?:^|[.!?,;:]\s*|(?:^|\s)(?:men|endi|shunchaki|rostdan|rosti)\s+)olmoqchiman|yashashni xohlamayman|yashagim kelmayapti|ozimga zarar|zoravonlik|meni urishadi|starving myself|starve myself|not eating anything|not eating at all|stopped eating|skip meals|skipping meals|make myself (sick|throw up|vomit)|throw up after|purging|binge eat|anorex|bulim|голодаю|ничего не ем|перестал[аи]? есть|не ем весь день|вызыва\S* рвот|анорекс|булими|переедани|ovqat yemayapman|och qolyapman|qayt qilaman|anoreks|bulimi/;
 const DIET = /calori|\bdiet|lose weight|losing weight|weight loss|gain weight|fat loss|\bbmi\b|protein|macros|fasting|meal plan|калори|диет|похуде|сбросить вес|набрать вес|белк|белок|голодани|kaloriya|parhez|\bozish|\bozmoq|vazn|oqsil|dieta/;
+/* a body or energy number ("800 kcal", "45 kg") counts as diet (the app's MENTOR_BODY) */
+const BODY = /\d+\s*(?:(?:k?cal|kkal|kgs?|lbs?|ккал|кг)(?![a-zа-я])|kilo(?!m)|кило(?!м))/;
 
 const SAFE_REPLY = {
   crisis: {
-    en: "I'm really glad you told me. You deserve support right now, and this is bigger than a habit app. If you might be in danger, call your local emergency number now. Please talk today to someone you trust: a parent, a teacher, a doctor. findahelpline.com lists free helplines for your country.",
-    ru: "Я очень рад, что вы сказали мне. Вы заслуживаете поддержки прямо сейчас, и это больше, чем приложение для привычек. Если вам может угрожать опасность, позвоните сейчас по местному номеру экстренной помощи. Пожалуйста, поговорите сегодня с тем, кому доверяете: с родителем, учителем, врачом. На findahelpline.com есть бесплатные линии помощи для вашей страны.",
-    uz: "Menga aytganingizdan juda xursandman. Siz hozir yordamga loyiqsiz va bu odatlar ilovasidan kattaroq masala. Agar sizga xavf tugʻilishi mumkin boʻlsa, hozir mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. Iltimos, bugun ishongan odamingiz bilan gaplashing: ota-onangiz, oʻqituvchingiz yoki shifokor. findahelpline.com saytida mamlakatingiz uchun bepul yordam liniyalari bor."
+    en: "I'm really glad you told me. You deserve support right now, and this is bigger than a habit app. If you might be in danger, call your local emergency number now. In Uzbekistan, call 112 (ambulance: 103). Please talk today to someone you trust: a parent, a teacher, a doctor. findahelpline.com lists free helplines for your country.",
+    ru: "Я очень рад, что вы сказали мне. Вы заслуживаете поддержки прямо сейчас, и это больше, чем приложение для привычек. Если вам может угрожать опасность, позвоните сейчас по местному номеру экстренной помощи. В Узбекистане звоните 112 (скорая помощь: 103). Пожалуйста, поговорите сегодня с тем, кому доверяете: с родителем, учителем, врачом. На findahelpline.com есть бесплатные линии помощи для вашей страны.",
+    uz: "Menga aytganingizdan juda xursandman. Siz hozir yordamga loyiqsiz va bu odatlar ilovasidan kattaroq masala. Agar sizga xavf tugʻilishi mumkin boʻlsa, hozir mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. Oʻzbekistonda 112 ga qoʻngʻiroq qiling (tez yordam: 103). Iltimos, bugun ishongan odamingiz bilan gaplashing: ota-onangiz, oʻqituvchingiz yoki shifokor. findahelpline.com saytida mamlakatingiz uchun bepul yordam liniyalari bor."
   },
   diet: {
     en: "Food and body weight are health questions, so I don't give numbers or diets. A doctor or a registered dietitian can. I can help with the habit side: regular meal times, water within reach, vegetables on the plate, and enough sleep. Not medical advice.",
@@ -108,7 +113,25 @@ function allowedOrigins(env) {
     .split(",").map((s) => s.trim().replace(/\/+$/, "")).filter(Boolean);
 }
 function num(v, d) { const n = parseInt(v, 10); return Number.isFinite(n) && n >= 0 ? n : d; }
-function norm(s) { return String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[ʻʼ‘’`´]/g, "'"); }
+/* the same as the app's mSafeNorm: Uzbek typed in Cyrillic becomes Latin, and
+   every apostrophe is dropped (oʻ, o' and o are one letter) */
+const UZ_CYR = {"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo","ж":"j","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"x","ц":"ts","ч":"ch","ш":"sh","щ":"sh","ъ":"","ы":"i","ь":"","э":"e","ю":"yu","я":"ya","ў":"o","қ":"q","ғ":"g","ҳ":"h"};
+function safeNorm(s) {
+  var t = String(s || "").toLowerCase();
+  /* only Uzbek has ў қ ғ ҳ; Russian stays Cyrillic for the Russian words */
+  if (/[ўқғҳ]/.test(t)) t = t.replace(/[а-яёўқғҳ]/g, function (c, i, all) {
+    /* е is "ye" at the start of a word or after a vowel (емаяпман → yemayapman) */
+    if (c === "е") { var p = all.charAt(i - 1); return (!/[а-яёўқғҳ]/.test(p) || /[аеёиоуэюяўъь]/.test(p)) ? "ye" : "e"; }
+    return UZ_CYR[c];
+  });
+  return t.replace(/ё/g, "е").replace(/['ʻʼ‘’`´]/g, "").replace(/\s+/g, " ").trim();
+}
+/* the one safety check: the question, each line of the hero data, each earlier
+   turn, the model's answer and every proposed action */
+function unsafeKind(s) {
+  const n = safeNorm(s);
+  return CRISIS.test(n) ? "crisis" : (DIET.test(n) || BODY.test(n)) ? "diet" : "";
+}
 function b64urlBytes(s) {
   s = String(s).replace(/-/g, "+").replace(/_/g, "/");
   while (s.length % 4) s += "=";
@@ -168,7 +191,13 @@ function cleanTurns(turns) {
     out.push({ role: role, content: t.t.slice(0, MAX_TURN) });
   }
   if (out.length && out[out.length - 1].role === "user") out.pop();
-  return out;
+  /* a question and its answer go together: if either touches crisis or diet,
+     the pair never reaches the model */
+  const safe = [];
+  for (let i = 0; i + 1 < out.length; i += 2) {
+    if (!unsafeKind(out[i].content) && !unsafeKind(out[i + 1].content)) safe.push(out[i], out[i + 1]);
+  }
+  return safe;
 }
 function buildMessages(model, lang, ctx, turns, q, agent) {
   const sys = systemPrompt(lang) + (agent ? "\n\n" + agentPrompt(lang) : "");
@@ -209,8 +238,7 @@ function cleanActions(list) {
       if (PAGES.includes(a.page)) x = { t: "open", page: a.page };
     }
     if (!x) continue;
-    const words = norm([x.name, x.text, x.on].filter(Boolean).join(" "));
-    if (words && (CRISIS.test(words) || DIET.test(words))) continue;
+    if (unsafeKind([x.name, x.text, x.on].filter(Boolean).join(" "))) continue;
     out.push(x);
   }
   return out;
@@ -261,9 +289,10 @@ export default {
     if (!q || q.length > MAX_Q || ctx.length > MAX_CTX) return json({ error: "bad" }, 400, origin);
 
     /* safety answers come first, cost nothing, ignore the limit and never reach the model */
-    const qn = norm(q);
-    if (CRISIS.test(qn)) return json({ answer: SAFE_REPLY.crisis[lang], safety: true }, 200, origin);
-    if (DIET.test(qn)) return json({ answer: SAFE_REPLY.diet[lang], safety: true }, 200, origin);
+    const qk = unsafeKind(q);
+    if (qk) return json({ answer: SAFE_REPLY[qk][lang], safety: true }, 200, origin);
+    /* a line of hero data that touches crisis or diet (a quest named "No food until 45 kg") is dropped */
+    const safeCtx = ctx.split("\n").filter(function (l) { return !unsafeKind(l); }).join("\n");
 
     const day = new Date().toISOString().slice(0, 10);
     const userKey = "n:" + day + ":" + uid, allKey = "g:" + day;
@@ -278,7 +307,7 @@ export default {
     const model = env.MODEL || DEFAULT_MODEL;
     let out;
     try {
-      out = await env.AI.run(model, { messages: buildMessages(model, lang, ctx, body.turns, q, agent), max_tokens: agent ? 650 : 450, temperature: agent ? 0.4 : 0.6 });
+      out = await env.AI.run(model, { messages: buildMessages(model, lang, safeCtx, body.turns, q, agent), max_tokens: agent ? 650 : 450, temperature: agent ? 0.4 : 0.6 });
     } catch (e) {
       /* the free daily allowance is used up, or the model is unavailable */
       return json({ error: "busy", left: limit - used, limit: limit }, 503, origin);
@@ -292,6 +321,10 @@ export default {
     /* only an answer that arrived is counted */
     await env.LIMITS.put(userKey, String(used + 1), { expirationTtl: TWO_DAYS });
     try { await env.LIMITS.put(allKey, String(allUsed + 1), { expirationTtl: TWO_DAYS }); } catch (e) { /* the total is a guard, not a gate */ }
+    /* the model's answer is checked too: an unsafe one is replaced by the fixed
+       reply, with no actions (it was delivered, so it still counts) */
+    const ak = unsafeKind(text);
+    if (ak) return json({ answer: SAFE_REPLY[ak][lang], safety: true, left: Math.max(0, limit - used - 1), limit: limit }, 200, origin);
     const res = { answer: text, left: Math.max(0, limit - used - 1), limit: limit };
     if (ag) res.actions = ag.actions;
     return json(res, 200, origin);

@@ -12510,7 +12510,7 @@ var MENTOR_TXT = {
   cOnToast:{en:"Mentor AI is on. Ask your question again.", ru:"ИИ-наставник включён. Задайте вопрос ещё раз.", uz:"SI-murabbiy yoqildi. Savolingizni qayta bering."},
   cOffToast:{en:"Mentor AI is off. Answers stay on this device.", ru:"ИИ-наставник выключен. Ответы остаются на устройстве.", uz:"SI-murabbiy oʻchirildi. Javoblar qurilmada qoladi."},
 
-  crisis:{en:"I'm really glad you told me. You deserve support right now, and this is bigger than a habit app. If you might be in danger, call your local emergency number now. Please talk today to someone you trust: a parent, a teacher, a doctor. You can find a free helpline for your country at findahelpline.com.", ru:"Я очень рад, что вы сказали мне. Вы заслуживаете поддержки прямо сейчас, и это больше, чем приложение для привычек. Если вам может угрожать опасность, позвоните сейчас по местному номеру экстренной помощи. Пожалуйста, поговорите сегодня с тем, кому доверяете: с родителем, учителем, врачом. Бесплатную линию помощи для вашей страны можно найти на findahelpline.com.", uz:"Menga aytganingizdan juda xursandman. Siz hozir yordamga loyiqsiz va bu odatlar ilovasidan kattaroq masala. Agar sizga xavf tugʻilishi mumkin boʻlsa, hozir mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. Iltimos, bugun ishongan odamingiz bilan gaplashing: ota-onangiz, oʻqituvchingiz yoki shifokor. Mamlakatingiz uchun bepul yordam liniyasini findahelpline.com saytidan topishingiz mumkin."},
+  crisis:{en:"I'm really glad you told me. You deserve support right now, and this is bigger than a habit app. If you might be in danger, call your local emergency number now. In Uzbekistan, call 112 (ambulance: 103). Please talk today to someone you trust: a parent, a teacher, a doctor. You can find a free helpline for your country at findahelpline.com.", ru:"Я очень рад, что вы сказали мне. Вы заслуживаете поддержки прямо сейчас, и это больше, чем приложение для привычек. Если вам может угрожать опасность, позвоните сейчас по местному номеру экстренной помощи. В Узбекистане звоните 112 (скорая помощь: 103). Пожалуйста, поговорите сегодня с тем, кому доверяете: с родителем, учителем, врачом. Бесплатную линию помощи для вашей страны можно найти на findahelpline.com.", uz:"Menga aytganingizdan juda xursandman. Siz hozir yordamga loyiqsiz va bu odatlar ilovasidan kattaroq masala. Agar sizga xavf tugʻilishi mumkin boʻlsa, hozir mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. Oʻzbekistonda 112 ga qoʻngʻiroq qiling (tez yordam: 103). Iltimos, bugun ishongan odamingiz bilan gaplashing: ota-onangiz, oʻqituvchingiz yoki shifokor. Mamlakatingiz uchun bepul yordam liniyasini findahelpline.com saytidan topishingiz mumkin."},
   eating:{en:"It sounds like eating might be hard right now. That matters, and you don't have to handle it alone. Please talk to a doctor or someone you trust soon. If you ever feel in danger, call your local emergency number. findahelpline.com lists free helplines for your country.", ru:"Похоже, с едой сейчас может быть непросто. Это важно, и справляться с этим в одиночку не нужно. Пожалуйста, скоро поговорите с врачом или с тем, кому доверяете. Если почувствуете опасность, звоните по местному номеру экстренной помощи. На findahelpline.com есть бесплатные линии помощи для вашей страны.", uz:"Hozir ovqatlanish qiyin boʻlayotganga oʻxshaydi. Bu muhim va siz u bilan yolgʻiz kurashishingiz shart emas. Iltimos, tez orada shifokor yoki ishongan odamingiz bilan gaplashing. Agar xavf his qilsangiz, mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. findahelpline.com saytida mamlakatingiz uchun bepul yordam liniyalari bor."},
   diet:{en:"Food and body weight are health questions, so I don't give numbers or diets. A doctor or a registered dietitian can. What I can help with is the habit side: regular meal times, water within reach, vegetables on the plate, and enough sleep. Not medical advice.", ru:"Еда и вес тела — вопросы здоровья, поэтому я не даю цифр и диет. Это может врач или дипломированный диетолог. Я могу помочь с привычками: регулярное время еды, вода под рукой, овощи на тарелке и достаточно сна. Это не медицинский совет.", uz:"Ovqat va tana vazni — sogʻliq masalasi, shuning uchun men raqamlar va parhez bermayman. Buni shifokor yoki diplomli dietolog qila oladi. Men odat tomonida yordam bera olaman: muntazam ovqat vaqti, qoʻl ostida suv, likopchada sabzavot va yetarli uyqu. Bu tibbiy maslahat emas."},
 
@@ -12718,10 +12718,19 @@ var MENTOR_KB = [
   {id:"review", k:["how am i","how i am doing","my progress","progress","analy","review","my week","statistic","weak point","прогресс","как у меня","как мои","как я","анализ","итог","статистик","слабые","ishlarim","qanday ketyap","tahlil","natija","statistika","holatim","zaif"]},
   {id:"plan", k:["today","plan","what should i","what to do","what do i do","next step","сегодня","план","что делать","что мне делать","bugun","reja","nima qil"]}
 ];
-/* safety first: these are never sent to any AI and never answered with tips */
-var MENTOR_CRISIS = /suicid|kill myself|end my life|want to die|self[- ]?harm|hurt myself|cut myself|no reason to live|being abused|someone hurts me|суицид|покончить с собой|убить себя|не хочу жить|хочу умереть|самоповрежд|навредить себе|порезать себя|меня бьют|насили|o'zimni o'ldir|joniga qasd|o'lmoqchiman|yashashni xohlamayman|yashagim kelmayapti|o'zimga zarar|zo'ravonlik|meni urishadi/;
+/* safety first: these are never sent to any AI and never answered with tips.
+   They are matched on mSafeNorm() text, so they are written without apostrophes
+   and with Uzbek in Latin. A bare "olmoqchiman" is also "I want to get/buy"
+   (olmoq), so without its apostrophe it counts only where it stands alone. */
+var MENTOR_CRISIS = /suicid|kill myself|end my life|want to die|self[- ]?harm|hurt myself|cut myself|no reason to live|being abused|someone hurts me|суицид|покончить с собой|убить себя|не хочу жить|хочу умереть|самоповрежд|навредить себе|порезать себя|меня бьют|насили|ozimni oldir|joniga qasd|(?:^|[.!?,;:]\s*|(?:^|\s)(?:men|endi|shunchaki|rostdan|rosti)\s+)olmoqchiman|yashashni xohlamayman|yashagim kelmayapti|ozimga zarar|zoravonlik|meni urishadi/;
 var MENTOR_EATING = /starving myself|starve myself|not eating anything|not eating at all|stopped eating|skip meals|skipping meals|make myself (sick|throw up|vomit)|throw up after|purging|binge eat|anorex|bulim|голодаю|ничего не ем|перестал[аи]? есть|не ем весь день|вызыва\S* рвот|анорекс|булими|переедани|ovqat yemayapman|och qolyapman|qayt qilaman|anoreks|bulimi/;
 var MENTOR_DIET = /calori|\bdiet|lose weight|losing weight|weight loss|gain weight|fat loss|\bbmi\b|protein|macros|fasting|meal plan|калори|диет|похуде|сбросить вес|набрать вес|белк|белок|голодани|kaloriya|parhez|\bozish|\bozmoq|vazn|oqsil|dieta/;
+/* a body or energy number ("800 kcal", "45 kg") is health data: it is never sent to
+   the AI, and an AI answer that contains one is replaced (the Worker has the same) */
+var MENTOR_BODY = /\d+\s*(?:(?:k?cal|kkal|kgs?|lbs?|ккал|кг)(?![a-zа-я])|kilo(?!m)|кило(?!м))/;
+/* on the device only: food restriction and weight goals are answered as diet and never
+   become a card ("skip dinner", "eat only…", "не есть", "kechki ovqatni tashlash", "get skinny") */
+var MENTOR_RESTRICT = /(?:^|\s)(?:skip|skipping|skipped|no|without)\s+(?:the\s+|my\s+)?(?:dinner|breakfast|lunch|supper|meals?|food|eating)(?![a-z])|(?:^|\s)eat(?:ing)?\s+(?:only|nothing)|(?:^|\s)only\s+eat|(?:^|\s)(?:dont|do not|stop|never|not|cannot)\s+eat(?:ing)?(?![a-z])|(?:^|[^а-я])не\s+(?:есть|кушать|ужинать|завтракать|обедать|питаться)(?![а-я])|пропус\S*\s+(?:ужин|завтрак|обед|ед[уы]|прием\S*\s+пищи)|(?:^|[^а-я])без\s+(?:ужина|завтрака|обеда|еды)|(?:^|[^а-я])(?:есть|ем|ешь|кушать)\s+только|только\s+(?:есть|ем|кушать)(?![а-я])|голодать|отказ\S*\s+от\s+(?:еды|ужина|завтрака|обеда)|(?:ovqat|nonushta|tushlik)\S*\s+(?:yema|tashla|qoldir|qilma)|ovqatlanma|ovqatsiz|nonushtasiz|faqat\s+(?:\S+\s+){0,2}(?:yey|yeng(?![a-z]))|(?:^|\s)och\s+qol|(?:^|\s)weigh(?:\s|$|ing)|skinn|(?:^|\s)(?:thin|slim)(?:ner|mer)?(?![a-z])|худе|стройн|ozgin(?!a)|(?:^|[^a-z])oriq/;
 
 var MENTOR_STAT = {
   INT:{en:"Intelligence", ru:"Интеллект", uz:"Intellekt"},
@@ -12736,6 +12745,34 @@ function MT(key, v){ var e = MENTOR_TXT[key]; return e ? mFill(mPick(e), v) : ke
 /* questions are matched loosely: any case, ё as е, and every kind of
    apostrophe as ' so oʻ, o' and o` are the same letter */
 function mNorm(s){ return String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[ʻʼ‘’`´]/g, "'"); }
+/* the safety walls read text more loosely still: Uzbek typed in Cyrillic becomes
+   Latin, and every apostrophe is dropped, because teens often skip it (oʻ, o', o
+   are one letter). mNorm stays as it is for the keyword library. The Worker has
+   the same function (safeNorm), so both walls see the same text. */
+var M_UZ_CYR = {"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo","ж":"j","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"x","ц":"ts","ч":"ch","ш":"sh","щ":"sh","ъ":"","ы":"i","ь":"","э":"e","ю":"yu","я":"ya","ў":"o","қ":"q","ғ":"g","ҳ":"h"};
+function mSafeNorm(s){
+  var t = String(s || "").toLowerCase();
+  /* only Uzbek has ў қ ғ ҳ; Russian stays Cyrillic for the Russian words */
+  if(/[ўқғҳ]/.test(t)) t = t.replace(/[а-яёўқғҳ]/g, function(c, i, all){
+    /* е is "ye" at the start of a word or after a vowel (емаяпман → yemayapman) */
+    if(c === "е"){ var p = all.charAt(i - 1); return (!/[а-яёўқғҳ]/.test(p) || /[аеёиоуэюяўъь]/.test(p)) ? "ye" : "e"; }
+    return M_UZ_CYR[c];
+  });
+  return t.replace(/ё/g, "е").replace(/['ʻʼ‘’`´]/g, "").replace(/\s+/g, " ").trim();
+}
+/* the one safety check used everywhere (question, AI answer, cards, summary):
+   "crisis", "eating", "diet" or "" when the text is safe */
+function mSafetyKind(s){
+  var n = mSafeNorm(s);
+  if(MENTOR_CRISIS.test(n)) return "crisis";
+  if(MENTOR_EATING.test(n)) return "eating";
+  if(MENTOR_DIET.test(n) || MENTOR_BODY.test(n)) return "diet";
+  return "";
+}
+function mSafetyAnswer(kind){
+  if(kind === "diet") return {kind:"diet", text:MT("diet"), quest:{stat:"END", icon:"💧", n:{en:"A glass of water after waking", ru:"Стакан воды после подъёма", uz:"Uygʻongach bir stakan suv"}}};
+  return {kind:kind, text:MT(kind)};
+}
 function mKwHit(qn, kw){
   var whole = kw.charAt(kw.length - 1) === "$";
   var w = mNorm(whole ? kw.slice(0, -1) : kw), from = 0, i;
@@ -12922,9 +12959,9 @@ function mentorMakeQuest(p){
 function mentorAnswer(q){
   var raw = String(q || "").trim(), qn = mNorm(raw);
   if(!raw) return {kind:"empty", text:MT("askEmpty")};
-  if(MENTOR_CRISIS.test(qn)) return {kind:"crisis", text:MT("crisis")};
-  if(MENTOR_EATING.test(qn)) return {kind:"eating", text:MT("eating")};
-  if(MENTOR_DIET.test(qn)) return {kind:"diet", text:MT("diet"), quest:{stat:"END", icon:"💧", n:{en:"A glass of water after waking", ru:"Стакан воды после подъёма", uz:"Uygʻongach bir stakan suv"}}};
+  /* food restriction and weight goals are diet questions too, so they stay here */
+  var safe = mSafetyKind(raw) || (MENTOR_RESTRICT.test(mSafeNorm(raw)) ? "diet" : "");
+  if(safe) return mSafetyAnswer(safe);
   var best = null, bestScore = 0;
   for(var i=0;i<MENTOR_KB.length;i++){
     var score = 0;
@@ -12997,7 +13034,26 @@ var AGENT_PAGE_WORDS = [
 function agentOn(){ return mFeatureOn("mentor") && mFeatureOn("mentorAgent"); }
 function agClip(s, n){ return String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n); }
 function agInt(v, lo, hi, d){ var n = parseInt(v, 10); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; }
-function agUnsafe(s){ var n = mNorm(s); return MENTOR_CRISIS.test(n) || MENTOR_EATING.test(n) || MENTOR_DIET.test(n); }
+/* a card is refused for any safety word, food restriction or a body number, and for
+   exercise past a safe cap: more than 100 reps, or more than 10 km (6 miles) */
+var AG_EX = "(?:push|squat|sit[- ]?ups?|situp|crunch|burpee|pull[- ]?ups?|pullup|lunge|jumping jack|reps?(?![a-z])|отжим|отжа|присед|подтяг|подтян|скручиван|берпи|выпад|otjim|prised|podtyag|tortilish|burpi)";
+var AG_REPS = [new RegExp("(\\d+)\\s*(?:x\\s*|ta\\s+|раз\\s+|marta\\s+)?(?:\\S+\\s+)?" + AG_EX, "g"), new RegExp(AG_EX + "[^\\s\\d]*\\s*(?:\\d+\\s*x\\s*)?[x:–-]?\\s*(\\d+)", "g")];
+var AG_KM = /(\d+(?:[.,]\d+)?)\s*(?:km|км|kilomet|километр)/g, AG_MI = /(\d+(?:[.,]\d+)?)\s*(?:miles?|mi(?![a-z]))/g;
+function agOver(n, re, max){
+  /* every number is tried, also one inside an earlier match ("3 x 150 squats") */
+  var m; re.lastIndex = 0;
+  while((m = re.exec(n))){
+    if(parseFloat(m[1].replace(",", ".")) > max) return true;
+    re.lastIndex = m.index + 1;
+  }
+  return false;
+}
+function agUnsafe(s){
+  var n = mSafeNorm(s);
+  if(mSafetyKind(n) || MENTOR_RESTRICT.test(n)) return true;
+  n = n.replace(/(\d)[,\s](?=\d{3}(?!\d))/g, "$1"); /* 1,000 and 1 000 are one number */
+  return agOver(n, AG_REPS[0], 100) || agOver(n, AG_REPS[1], 100) || agOver(n, AG_KM, 10) || agOver(n, AG_MI, 6);
+}
 function agAny(qn, words){ for(var i=0;i<words.length;i++) if(mKwHit(qn, words[i])) return true; return false; }
 function agGuessStat(name){
   var qn = mNorm(name), best = "INT", bs = 0;
@@ -13304,14 +13360,15 @@ function mentorSummary(){
   else lines.push("New hero: " + mDaysKnown() + " full days of history.");
   lines.push("Active-day streak: " + rkActiveStreak() + ".");
   if(wd) lines.push("Strongest weekday: " + MENTOR_WD.en[wd.best] + ". Weakest: " + MENTOR_WD.en[wd.worst] + ".");
-  var qs = mQuests().slice(0, 8);
+  /* a name with health or unsafe wording ("No food until 45 kg") is left out */
+  var qs = mQuests().filter(function(x){ return !agUnsafe(x.q.name); }).slice(0, 8);
   if(qs.length){
     lines.push("Recurring quests (done on due days, last 14 days):");
     qs.forEach(function(x){
       lines.push('- "' + clip(x.q.name, 40) + '" ' + x.q.freq + ", " + (x.q.stat || "") + ", " + x.q.tier + ", " + x.done + "/" + x.due + ", streak " + (x.q.streak || 0) + (completedThisPeriod(x.q) ? ", done today" : ""));
     });
   } else lines.push("No recurring quests yet.");
-  var goals = state.quests.filter(function(q){ return q.freq === "longterm" && !q.done && !q.system; }).slice(0, 3);
+  var goals = state.quests.filter(function(q){ return q.freq === "longterm" && !q.done && !q.system && !agUnsafe(q.name); }).slice(0, 3);
   if(goals.length) lines.push("Open goals: " + goals.map(function(q){ return '"' + clip(q.name, 40) + '" (' + (q.progress || 0) + "/" + (q.target || 1) + ")"; }).join(", ") + ".");
   var pk = state.dailyPackage, pd = 0;
   if(pk && pk.items && pk.items.length){ pk.items.forEach(function(it){ if(it.done) pd++; }); lines.push("Daily package today: " + pd + "/" + pk.items.length + "."); }
@@ -13345,6 +13402,11 @@ function aiSend(q, local){
     if(typeof j.left === "number"){ aiQuota = {day:aiUtcDay(), left:Math.max(0, j.left), limit:+j.limit || AI_DAILY}; }
     if(res.status === 200 && typeof j.answer === "string" && j.answer.trim()){
       var text = aiClean(j.answer);
+      /* the second wall: the Worker checked the answer, and so does the app. An unsafe
+         answer is replaced by the on-device safety answer, with no actions, and is
+         not kept in the chat */
+      var unsafe = mSafetyKind(text);
+      if(unsafe){ var sa = mSafetyAnswer(unsafe); sa.q = q; done(sa); return; }
       mentorChat.push({r:"u", t:q.slice(0, 400)}, {r:"a", t:text.slice(0, 600)});
       if(mentorChat.length > 4) mentorChat = mentorChat.slice(-4);
       /* the Worker already checked the actions; they are checked again here */

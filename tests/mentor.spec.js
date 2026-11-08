@@ -156,11 +156,37 @@ test.describe("the on-device Mentor", () => {
     expect(txt.crisis).toContain("findahelpline.com");
     expect(txt.diet).toContain("I don't give numbers or diets");
     expect(txt.diet).not.toMatch(/\d+\s*(kcal|calories|kg)/i);
+    /* the crisis answer names the emergency number in Uzbekistan, in every language */
+    const t112 = await page.evaluate(() => ["en", "ru", "uz"].map((l) => { state.lang = l; return MT("crisis"); }));
+    await page.evaluate(() => { state.lang = "en"; });
+    expect(t112[0]).toContain("In Uzbekistan, call 112 (ambulance: 103).");
+    expect(t112[1]).toContain("В Узбекистане звоните 112 (скорая помощь: 103).");
+    expect(t112[2]).toContain("Oʻzbekistonda 112 ga qoʻngʻiroq qiling (tez yordam: 103).");
+    t112.forEach((x) => expect(x).toContain("findahelpline.com"));
     /* the on-screen crisis answer is marked, and offers no quest */
     await page.evaluate(() => switchPage("mentor"));
     await ask(page, "I want to hurt myself");
     await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
     await expect(page.locator("#mentorAnswer [data-mq='ans']")).toHaveCount(0);
+  });
+
+  test("the safety walls read Uzbek in Cyrillic, missing apostrophes, food restriction and body numbers", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate(() => {
+      const kinds = (list) => list.map((q) => mentorAnswer(q).kind);
+      return {
+        unsafe: kinds([
+          "Ўзимни ўлдирмоқчиман", "ozimni oldirmoqchiman", "o`zimni o`ldiraman", "Men olmoqchiman", "ozimga zarar yetkazdim", "uyda zoravonlik bor",
+          "Овқат емаяпман, оч қоляпман", "ПАРҲЕЗ керак", "vaznni qanday tashlash", "I weigh 45 kg, is that ok?", "is it ok to skip dinner", "сколько ккал: 1200 ккал"
+        ]),
+        safe: kinds(["IELTSdan 7 ball olmoqchiman", "dam olmoqchiman", "maslahat olmoqchiman", "мне есть чем заняться вечером", "how do I run 5 km?", "kitob oʻqishni qanday odat qilaman", "how do I sleep better"]),
+        norm: [mSafeNorm("  Ўзимни   ЎЛДИРМОҚЧИМАН "), mSafeNorm("Ёлка, o‘zim ‘o’ʼ`´"), mSafeNorm("Привет, ёж")]
+      };
+    });
+    expect(r.unsafe).toEqual(["crisis", "crisis", "crisis", "crisis", "crisis", "crisis", "eating", "diet", "diet", "diet", "diet", "diet"]);
+    r.safe.forEach((k) => expect(["crisis", "eating", "diet"]).not.toContain(k));
+    /* Uzbek Cyrillic becomes Latin, apostrophes go, Russian stays Russian */
+    expect(r.norm).toEqual(["ozimni oldirmoqchiman", "елка, ozim o", "привет, еж"]);
   });
 
   test("a suggested habit becomes a quest only through NEW QUEST, within the slot rules", async ({ page }) => {
@@ -344,6 +370,45 @@ test.describe("Mentor AI", () => {
     }
     await expect(page.locator("#mentorAnswer .m-note")).toContainText("never sent");
     expect(seen.length).toBe(0);
+  });
+
+  test("an unsafe Mentor AI answer is replaced by the on-device safety answer, with no actions", async ({ page }) => {
+    await bootAsGuest(page);
+    let reply = { body: { answer: "Easy: eat 800 kcal a day and you will feel light.", left: 2, limit: 3, actions: [{ t: "quest", name: "Drink water" }] } };
+    const seen = await fakeWorker(page, () => reply);
+    await aiReady(page, "yes");
+    await ask(page, "How do I get more energy?");
+    await expect(page.locator("#mentorAnswer")).toContainText("I don't give numbers or diets");
+    await expect(page.locator("#mentorAnswer")).not.toContainText("800");
+    await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
+    await expect(page.locator("#mentorAnswer .ag-card")).toHaveCount(0);
+    expect(await page.evaluate(() => mentorChat.length)).toBe(0); /* never carried into the next question */
+    reply = { body: { answer: "Ба'зан ўзимни ўлдирмоқчиман деган фикр келади.", left: 1, limit: 3 } };
+    await ask(page, "How do I stay calm before exams?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+    await expect(page.locator("#mentorAnswer")).toContainText("112");
+    /* a safe answer is still shown as it came */
+    reply = { body: { answer: "Walk 2 km after school and read before bed.", left: 0, limit: 3 } };
+    await ask(page, "How do I relax?");
+    await expect(page.locator("#mentorAnswer")).toContainText("Walk 2 km after school");
+    expect(seen.length).toBe(3);
+  });
+
+  test("the summary sent to Mentor AI leaves out unsafe quest and goal names", async ({ page }) => {
+    await bootAsGuest(page);
+    const s = await page.evaluate(() => {
+      state.quests.push(
+        makeQuest("🎯", "No food until 45 kg", "", "longterm", [], "easy", "END", "", false, 7),
+        makeQuest("🎯", "Pass IELTS", "", "longterm", [], "easy", "INT", "", false, 7),
+        makeQuest("💪", "300 push-ups", "", "daily", [], "easy", "STR", "", false, 30),
+        makeQuest("🍽️", "Skip dinner", "", "daily", [], "easy", "END", "", false, 30),
+        makeQuest("📖", "Read 10 pages", "", "daily", [], "easy", "INT", "", false, 30)
+      );
+      return mentorSummary();
+    });
+    expect(s).toContain('"Pass IELTS"');
+    expect(s).toContain('"Read 10 pages"');
+    for (const bad of ["45 kg", "No food", "push-ups", "Skip dinner"]) expect(s).not.toContain(bad);
   });
 
   test("TURN OFF stops sending at once", async ({ page }) => {

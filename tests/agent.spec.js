@@ -202,6 +202,34 @@ test.describe("the Mentor agent", () => {
     expect(cleaned).toEqual([{ t: "quest", name: "Drink water", stat: "END", freq: "daily" }]);
   });
 
+  test("food restriction, body numbers and exercise past a safe cap never become cards", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate(() => {
+      const bad = ["Skip dinner", "Eat only 800 kcal", "Reach 40 kg", "300 push-ups", "Run 20 km", "No breakfast", "Пропуск ужина", "Не есть после шести",
+        "Kechki ovqatni tashlash", "ovqat yemaslik", "Отжимания: 150 раз", "300 ta otjimaniya", "Push-ups x 1,000", "3 x 150 squats", "Бег 15 км", "Run 10.5 km", "Get skinny", "45 кг к лету"];
+      const good = ["30 push-ups", "Run 5 km", "100 squats", "Walk 10 km", "Read 200 pages", "Learn 20 IELTS words", "Eat vegetables at lunch", "Ozgina dam olish"];
+      return {
+        bad: bad.filter((n) => !agUnsafe(n)), good: good.filter((n) => agUnsafe(n)),
+        cleaned: agentClean(bad.map((n) => ({ t: "quest", name: n })).concat([{ t: "quest", name: "30 push-ups" }, { t: "goal", name: "Run 5 km" }, { t: "todo", text: "Skip lunch" }, { t: "focus", on: "300 push-ups" }]))
+      };
+    });
+    expect(r.bad).toEqual([]); /* every one refused */
+    expect(r.good).toEqual([]); /* none of these refused */
+    expect(r.cleaned).toEqual([{ t: "quest", name: "30 push-ups", stat: "STR", freq: "daily" }, { t: "goal", name: "Run 5 km", stat: "END", target: 7 }]);
+    /* typed as commands: no card; a food command gets the careful diet answer */
+    await page.evaluate(() => switchPage("mentor"));
+    await ask(page, "add quest: skip dinner every day");
+    await expect(page.locator("#mentorAnswer")).toContainText("I don't give numbers or diets");
+    await expect(cards(page)).toHaveCount(0);
+    for (const q of ["goal: 40 kg by summer", "add quest: 300 push-ups every day", "add quest: run 20 km"]) {
+      await ask(page, q);
+      await expect(page.locator("#mentorAnswer .m-you")).toContainText(q);
+      await expect(cards(page)).toHaveCount(0);
+    }
+    await ask(page, "add quest: 30 push-ups every day");
+    await expect(cards(page)).toHaveCount(1);
+  });
+
   test("Mentor AI's proposals are checked again, shown as cards, and never applied by themselves", async ({ page }) => {
     await bootAsGuest(page);
     const seen = await fakeWorker(page, { answer: "Start with words, then one practice test a week.", left: 2, limit: 3, actions: [

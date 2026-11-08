@@ -158,6 +158,21 @@ test.describe("the Mentor AI proxy", () => {
     expect(ru.j.answer).toContain("не медицинский совет");
     const uz = await call(e, { body: { q: "oʻzimni oʻldirmoqchiman", ctx: "", lang: "uz" } });
     expect(uz.j.safety).toBe(true);
+    /* Uzbek in Cyrillic, without apostrophes, and a body number are read the same way */
+    for (const q of ["Ўзимни ўлдирмоқчиман", "ozimni oldirmoqchiman", "парҳез керак", "I weigh 45 kg"]) {
+      expect((await call(e, { body: { q, ctx: "", lang: "uz" } })).j.safety).toBe(true);
+    }
+    /* the crisis reply names the emergency number in Uzbekistan, in every language */
+    const say = {
+      en: "In Uzbekistan, call 112 (ambulance: 103).",
+      ru: "В Узбекистане звоните 112 (скорая помощь: 103).",
+      uz: "Oʻzbekistonda 112 ga qoʻngʻiroq qiling (tez yordam: 103)."
+    };
+    for (const lang of ["en", "ru", "uz"]) {
+      const a = (await call(e, { body: { q: "I want to kill myself", ctx: "", lang } })).j.answer;
+      expect(a).toContain(say[lang]);
+      expect(a).toContain("findahelpline.com");
+    }
     expect(e.AI.calls.length).toBe(0);
     expect(e.LIMITS.puts.length).toBe(0);
   });
@@ -212,6 +227,49 @@ test.describe("the Mentor AI proxy", () => {
     expect(llama.AI.calls[0].model).toBe("@cf/meta/llama-3.1-8b-instruct");
     expect(llama.AI.calls[0].input.messages.map((m) => m.role)).toEqual(["system", "user"]);
     expect(llama.AI.calls[0].input.messages[0].content).toContain("Reply in English");
+  });
+
+  test("hero data lines and earlier turns that touch crisis or diet never reach the model", async () => {
+    const e = env();
+    const r = await call(e, { body: {
+      q: "How do I keep going?", lang: "en",
+      ctx: 'Level 4.\n- "Read 10 pages" daily, 9/14\nOpen goals: "No food until 45 kg" (0/7), "Parhez: 1200 kkal" (0/7).',
+      turns: [{ r: "u", t: "Ўзимни ўлдирмоқчиман" }, { r: "a", t: "Please talk to someone you trust." }, { r: "u", t: "how to read more" }, { r: "a", t: "Keep a book by your bed." }]
+    } });
+    expect(r.status).toBe(200);
+    const input = e.AI.calls[0].input, all = JSON.stringify(input);
+    expect(all).toContain("Read 10 pages");
+    for (const bad of ["45 kg", "kkal", "Ўзимни", "Please talk to someone you trust"]) expect(all).not.toContain(bad); /* a dropped question takes its answer with it */
+    expect(input.messages.map((m) => m.role)).toEqual(["user", "assistant", "user"]);
+    expect(input.messages[1].content).toBe("Keep a book by your bed.");
+    /* a turn whose answer touches diet is dropped with its question */
+    const d = env();
+    await call(d, { body: { q: "And tomorrow?", ctx: "Level 4.", lang: "en", turns: [{ r: "u", t: "how to wake up early" }, { r: "a", t: "Eat 800 kcal and sleep." }] } });
+    expect(d.AI.calls[0].input.messages.map((m) => m.role)).toEqual(["user"]);
+    expect(JSON.stringify(d.AI.calls[0].input)).not.toContain("wake up early");
+  });
+
+  test("an unsafe model answer is replaced by the fixed reply, with no actions, and still counts", async () => {
+    const diet = env({ AI: ai({ response: "Easy: eat 800 kcal a day and you will feel light." }) });
+    const d = await call(diet);
+    expect(d.status).toBe(200);
+    expect(d.j.safety).toBe(true);
+    expect(d.j.answer).toContain("I don't give numbers or diets");
+    expect(d.j.answer).not.toContain("800");
+    expect(d.j.left).toBe(2); /* the model answered, so the question counts */
+    expect(diet.LIMITS.puts.length).toBe(2);
+    const crisis = env({ AI: ai({ response: JSON.stringify({ reply: "Ба'зан ўзимни ўлдирмоқчиман деб ўйлаш нормал.", actions: [{ t: "quest", name: "Read 10 pages" }] }) }) });
+    const c = await call(crisis, { body: agentBody("Help me with exams", "uz") });
+    expect(c.j.safety).toBe(true);
+    expect(c.j.answer).toContain("112");
+    expect(c.j.actions).toBeUndefined();
+    const cyr = env({ AI: ai({ response: "Парҳез қилинг: кунига 1200 ккал." }) });
+    expect((await call(cyr, { body: { q: "How do I get more energy?", ctx: "", lang: "ru" } })).j.answer).toContain("не медицинский совет");
+    /* walking distance is not a body number */
+    const ok = env({ AI: ai({ response: "Walk 2 kilometres after school." }) });
+    const k = await call(ok);
+    expect(k.j.safety).toBeUndefined();
+    expect(k.j.answer).toBe("Walk 2 kilometres after school.");
   });
 
   /* AGENT MODE (README 4z): the model may PROPOSE app actions. The Worker
