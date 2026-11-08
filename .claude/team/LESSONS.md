@@ -57,3 +57,4 @@ Short, concrete rules learned from real work on this project. Every role reads t
 - A save count is not a clock: opening the app adds saves, so "higher count wins" lets a stale device overwrite newer work. Compare real change times and keep a snapshot before any overwrite.
 - Undo must restore exactly what the action gave (recorded at the time), or it becomes a farm and punishes honest players.
 - Seven read-only roles in parallel took about 9 minutes; the lead re-checked every headline claim (screenshots, probes, rerunning a role's script) before reporting. Every claim held.
+- When another role is editing the same file at the same time, stage only your own changes (`git add -p`, or check `git diff <file>` first). Committing the whole README once carried the mission coder's unfinished notes along with the lead's section.
