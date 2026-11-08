@@ -38,7 +38,7 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [x] translator: the crisis text names 112 (UZ ambulance 103), in EN/RU/UZ.
 - [x] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
 - [x] health-safety: a blind fresh-phrase round (75% caught: fix round needed).
-- [ ] coder: fix round from that round (patterns, false alarms, a soft-distress net before the agent and the AI).
+- [x] coder: fix round from that round (patterns, false alarms, a soft-distress net before the agent and the AI).
 - [ ] health-safety (a fresh, unseen agent): a blind round on held-out benign phrases (diet, tricky normals, safe commands) ‖ reviewer: final review.
 - [ ] 🚦 owner: held-out distress phrases written by people (the owner or native-speaker reviewers), never shown to the code authors; at least 90% per language before `AI_PROXY_URL` is set (gate for Mission 4.1).
 
