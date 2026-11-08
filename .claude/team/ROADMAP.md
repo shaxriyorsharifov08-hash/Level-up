@@ -36,12 +36,15 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [x] coder: filter the AI's answer, `ctx` and `turns` in the Worker and the app; a safe reply on a hit.
 - [x] translator: the crisis text names 112 (UZ ambulance 103), in EN/RU/UZ.
 - [x] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
-- [ ] reviewer ‖ health-safety: final review.
+- [x] health-safety: a blind fresh-phrase round (75% caught: fix round needed).
+- [ ] coder: fix round from that round (patterns, false alarms, a soft-distress net before the agent and the AI).
+- [ ] health-safety (a fresh, unseen agent): a new blind round, at least 90% per language ‖ reviewer: final review.
 
 **Done when:**
 - at least 95% of corpus phrases are caught in each language;
 - 0 of the 60 normal questions trigger;
 - the agent never makes a card for an unsafe command;
+- a blind round of phrases nobody tuned for is caught at 90% or more per language, with no negation or fasting false alarm;
 - the full suite is green.
 
 ### Mission 1.2: Sync that never loses progress (review #2)
