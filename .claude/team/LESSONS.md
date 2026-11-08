@@ -50,3 +50,10 @@ Short, concrete rules learned from real work on this project. Every role reads t
 
 ## Packaging the team (portable ai-team)
 - The reviewer caught a header that was not valid YAML (an unquoted ": " in the description) and a rule letting a project's files outrank the owner's stop-and-ask list. Both slipped past my own validator and tests, which only checked what I thought of; `build-portable.py` now parses headers strictly, and tests pin the owner's rules. Run the reviewer on packaging work too, not only on app code.
+
+## Whole-app review (8 Nov 2026)
+- Keyword safety lists catch only exact phrases: ~15% of realistic crisis/eating wording was caught. Safety lists need a phrase corpus test in every language (slang, misspellings, Cyrillic Uzbek, no apostrophes), and food/body words must route to "diet" before any library tip.
+- A new default in `defaultState()` hides a flag-based migration: the defaults merge runs before `migrateState()`, so `if(!state.flag)` never fires for old saves (roadSpV3). Test migrations through `load()` with an old-save fixture, never by calling `migrateState()` directly.
+- A save count is not a clock: opening the app adds saves, so "higher count wins" lets a stale device overwrite newer work. Compare real change times and keep a snapshot before any overwrite.
+- Undo must restore exactly what the action gave (recorded at the time), or it becomes a farm and punishes honest players.
+- Seven read-only roles in parallel took about 9 minutes; the lead re-checked every headline claim (screenshots, probes, rerunning a role's script) before reporting. Every claim held.
