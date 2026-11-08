@@ -18,6 +18,8 @@ Read this once per task, after `CLAUDE.md`. It explains how the project fits tog
 
 Use the tools before reading big parts of `index.html`; read only the functions they point to.
 
+**Agent HQ**, the team's office: https://claude.ai/artifact/NFeVzS2xSDRzVMYeqquYLu. A 3D blocky office where each role sits at its desk and acts out its live status. The page reads its data store: `agents/<role>` and `office/state`; only the owner (and Claude acting for the owner) can write it. The source is `.claude/team/office/agent-hq.html`; republish to the same URL with the Artifact tool's `url`. Mission mode updates it after every task (playbook section 9).
+
 ## 2. The shape of the app
 - `index.html` has three regions: CSS (top, ~1,600 lines), HTML (pages as `<section id="page-…">`, modals and overlays), and one big `<script>` (~11,800 lines). The script is split by banner comments such as `/* ---------------- focus timer (per-task time tracking) ---------------- */`; `codemap` lists them all.
 - Navigation: five fixed tabs (TODAY, QUESTS, PROGRESS, REWARDS, MORE; `TABS`), pages in `PAGES`, the order in `NAV_ORDER`; `switchPage(p)` checks locks first; `renderAll()` dispatches to `renderHome`, `renderQuests`, `renderMentor`, …

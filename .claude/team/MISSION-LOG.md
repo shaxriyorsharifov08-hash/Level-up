@@ -27,6 +27,7 @@ Status: ⬜ not started · 🔄 in progress · ✅ done · ⏸ parked (blocked; 
 Mission 1.1, task 2 in progress: the coder rebuilds the lists against the corpus (the corpus and health-safety notes are in the session scratchpad; the coder copies the corpus to tests/fixtures/safety-corpus.json). Then: translator (112 sentence, eating reply) → tester (full suite) → reviewer ‖ health-safety with FRESH unseen phrases.
 
 ## Log
+- 2026-11-08 09:05 UTC: Agent HQ opened (owner's request): a 3D office showing each role's live status, https://claude.ai/artifact/NFeVzS2xSDRzVMYeqquYLu. Mission mode now updates it after every task.
 - 2026-11-08 08:53 UTC: the coder hit the plan's 5-hour usage limit during task 2 (reset 08:40 UTC) and the session's worker restarted; no edits were lost (none had been saved). The check-in fired as planned and the coder was resumed with the same brief.
 - 2026-11-08: 1.1 task done: phrase corpus (health-safety): 121–124 dangerous phrasings per language, 39 Cyrillic Uzbek, 113 normal, 32 unsafe and 26 safe agent commands. Today's walls catch 12–25% of crisis and 8–14% of eating phrasings.
 - 2026-11-08: 1.1 task done: safety plumbing (coder). `mSafeNorm` (Uzbek Cyrillic, no apostrophes), one shared safety check, AI answer/ctx/turns filtered in the Worker and the app, agent refuses food restriction, body numbers, >100 reps and >10 km, summary drops unsafe names, 112/103 in the crisis text. Lead verified: 54 tests pass, unsafe agent cards gone; the lists themselves still miss most phrasings (next task).

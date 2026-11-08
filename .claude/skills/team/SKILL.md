@@ -98,6 +98,7 @@ The roadmap (`.claude/team/ROADMAP.md`) splits the build into phases and mission
    4. update `MISSION-LOG.md` (what is done, the new NEXT).
 
    Never hold more than one task of work uncommitted.
+   5. update **Agent HQ**, the team's 3D office (https://claude.ai/artifact/NFeVzS2xSDRzVMYeqquYLu), with the `ArtifactData` tool: set each role's doc in `agents` (`status`: working / waiting / paused / idle / done / blocked, `task` in one plain sentence, `mission`, `updatedAt` in ms), and update `office/state` (`phase`, `mission`, `tasks` [{t, done}], and `feed`: add one line, keep the newest 25). Mark a role `paused` when the usage limit stops it, and `blocked` when it waits for the owner.
 5. **A mission is done** when its "Done when" holds. Then:
    - run the whole suite;
    - run the reviewer (and health-safety where the mission touches health);
