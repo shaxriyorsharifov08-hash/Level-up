@@ -50,6 +50,8 @@ test.describe("the AI dev team's tools", () => {
     expect(css.specs).toContain("themes.spec.js");
     expect(at([{ file: "ai-proxy/worker.mjs", added: [{ line: 1, text: "" }], removed: [] }]).specs).toContain("ai-proxy.spec.js");
     expect(at([{ file: "tests/helpers.js", added: [{ line: 1, text: "" }], removed: [] }]).all).toBe(true);
+    expect(at([{ file: "company/runner/run.mjs", added: [{ line: 1, text: "" }], removed: [] }]).specs).toContain("company-runner.spec.js");
+    expect(at([{ file: "company/prompts/short.md", added: [{ line: 1, text: "" }], removed: [] }]).specs).toContain("company.spec.js");
     expect(at([{ file: "README.md", added: [{ line: 1, text: "" }], removed: [] }]).specs).toEqual(["smoke.spec.js"]);
   });
 

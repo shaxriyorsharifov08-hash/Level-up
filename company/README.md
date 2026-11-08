@@ -66,7 +66,11 @@ Choose the AI with three settings:
 - **Or label an issue `company-task`:** the company answers in a comment.
 - It uses the repository's own GitHub token and GitHub's free model allowance.
 
-Free tiers have daily limits. The runner stops at `AI_MAX_CALLS` (8 by default), so one task never uses more than that.
+Free tiers have daily limits:
+- The runner stops at `AI_MAX_CALLS` (8 by default; at most 20), so one task never uses more than that.
+- It cuts each request to `AI_MAX_INPUT_CHARS` (18,000 characters by default), which fits free tiers' input limits.
+- If a service asks it to wait more than 30 seconds, it stops and tells you instead of wasting a call.
+- On GitHub, the repository variable `COMPANY_PROJECT_FILE` names a project file for tasks that come from issues.
 
 ## Keep keys safe
 Never put an API key in a file in the repository or in a web page. Use environment variables on your computer, or repository secrets on GitHub. The runner never prints the key.

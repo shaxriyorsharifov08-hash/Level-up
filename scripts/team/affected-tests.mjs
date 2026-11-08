@@ -9,6 +9,8 @@ import { readSpecs } from "./codemap.mjs";
 const FIXED = [
   [/^ai-proxy\//, ["ai-proxy.spec.js", "mentor.spec.js", "agent.spec.js"]],
   [/^scripts\/nightly-report\.mjs$|^\.github\/workflows\/nightly\.yml$/, ["nightly-report.spec.js"]],
+  [/^company\/runner\/|^\.github\/workflows\/company-task\.yml$/, ["company-runner.spec.js"]],
+  [/^company\/|^AGENTS\.md$|^portable\//, ["company.spec.js", "portable-team.spec.js"]],
   [/^scripts\/team\/|^\.claude\/team\/drills\//, ["team-tools.spec.js"]],
   [/^CLAUDE\.md$|^\.claude\//, ["agent-team.spec.js"]],
   [/^sw\.js$|^notify-sw\.js$|^manifest\.webmanifest$/, ["smoke.spec.js", "alarm.spec.js"]],
