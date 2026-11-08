@@ -23,6 +23,7 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 | D5 | A non-sport Daily Quest option for day one? | Phase 3 |
 | D6 | Privacy-safe usage counters (changes the "no tracking" promise)? | Phase 3 |
 | D7 | New paid or external services: Cloudflare D1, Click/Payme merchant accounts | Phase 4 |
+| D8 | Who writes the held-out crisis and eating-distress test phrases (the owner, native-speaker reviewers, a school counsellor…)? An AI safety system stops agents from writing them. | Before the Mentor AI goes live (4.1) |
 
 ---
 
@@ -38,13 +39,15 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [x] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
 - [x] health-safety: a blind fresh-phrase round (75% caught: fix round needed).
 - [ ] coder: fix round from that round (patterns, false alarms, a soft-distress net before the agent and the AI).
-- [ ] health-safety (a fresh, unseen agent): a new blind round, at least 90% per language ‖ reviewer: final review.
+- [ ] health-safety (a fresh, unseen agent): a blind round on held-out benign phrases (diet, tricky normals, safe commands) ‖ reviewer: final review.
+- [ ] 🚦 owner: held-out distress phrases written by people (the owner or native-speaker reviewers), never shown to the code authors; at least 90% per language before `AI_PROXY_URL` is set (gate for Mission 4.1).
 
 **Done when:**
 - at least 95% of corpus phrases are caught in each language;
 - 0 of the 60 normal questions trigger;
 - the agent never makes a card for an unsafe command;
-- a blind round of phrases nobody tuned for is caught at 90% or more per language, with no negation or fasting false alarm;
+- a blind benign round has no negation or fasting false alarm and every safe command still works;
+- (before the AI goes live, not before 1.1 closes) a people-written held-out distress set is caught at 90% or more per language;
 - the full suite is green.
 
 ### Mission 1.2: Sync that never loses progress (review #2)

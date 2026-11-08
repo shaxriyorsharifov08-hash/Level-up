@@ -51,6 +51,10 @@ Short, concrete rules learned from real work on this project. Every role reads t
 ## Packaging the team (portable ai-team)
 - The reviewer caught a header that was not valid YAML (an unquoted ": " in the description) and a rule letting a project's files outrank the owner's stop-and-ask list. Both slipped past my own validator and tests, which only checked what I thought of; `build-portable.py` now parses headers strictly, and tests pin the owner's rules. Run the reviewer on packaging work too, not only on app code.
 
+## Safety testing
+- Held-out crisis and eating-distress test phrases must come from people (the owner, native speakers, a counsellor), not from an agent: an AI safety system stopped a health-safety agent writing them. Agents can write the benign half (diet, tricky normals, safe commands). Never route around such a stop. (Blind round 2, Mission 1.1.)
+- A corpus the patterns were tuned on measures nothing new: the first blind round scored 75% while the corpus scored 100%. Keep a held-out set the code authors never see, hashed before any fix.
+
 ## Whole-app review (8 Nov 2026)
 - Keyword safety lists catch only exact phrases: ~15% of realistic crisis/eating wording was caught. Safety lists need a phrase corpus test in every language (slang, misspellings, Cyrillic Uzbek, no apostrophes), and food/body words must route to "diet" before any library tip.
 - A new default in `defaultState()` hides a flag-based migration: the defaults merge runs before `migrateState()`, so `if(!state.flag)` never fires for old saves (roadSpV3). Test migrations through `load()` with an old-save fixture, never by calling `migrateState()` directly.
