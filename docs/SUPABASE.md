@@ -64,7 +64,7 @@ npm run db:migrate     # creates all tables in Supabase
 npm run db:seed        # optional: demo data (only into an empty database)
 ```
 
-Open **Table Editor** in the Supabase dashboard and switch the **schema** dropdown (top left) from `public` to **`campus`**: you should see `users`, `organizations`, `events`, `tasks` and the rest, each marked **RLS enabled**. (`public` stays empty: see "Kept separate from other apps" below.)
+Open **Table Editor** in the Supabase dashboard and switch the **schema** dropdown (top left) from `public` to **`campus`**: you should see 18 tables (`users`, `organizations`, `events`, `tasks`, `shop_items` and the rest), each marked **RLS enabled**. (`public` stays empty: see "Kept separate from other apps" below.)
 
 <details>
 <summary>No Node.js on your computer? Run migrations from GitHub instead</summary>
@@ -99,7 +99,7 @@ With demo data, sign in as `student@demo.edu`, `organizer@demo.edu` or `admin@de
 
 ## Kept separate from other apps
 
-Everything this app creates lives in its **own schema, `campus`**: all 15 tables, all enum types and its migration history (`campus.__drizzle_migrations`). Nothing goes into the shared `public` schema. So:
+Everything this app creates lives in its **own schema, `campus`**: all 18 tables, all enum types and its migration history (`campus.__drizzle_migrations`). Nothing goes into the shared `public` schema. So:
 
 - you can use the same Supabase project (or any Postgres database) for other apps, even ones with their own `users` or `events` tables, without any clash;
 - the migration tool only ever looks at and changes `campus` (`schemaFilter` in `drizzle.config.ts`);
