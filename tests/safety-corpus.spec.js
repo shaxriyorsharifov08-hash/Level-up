@@ -5,8 +5,14 @@
    The rules, for each group and language:
    - at least 95% are caught by the group's wall or a stronger one (crisis must be
      crisis; eating may be crisis or eating; diet may be any of the three);
-   - not one normal question triggers anything, as a wall or as a Mentor answer;
-   - an unsafe agent command never becomes a card, and a safe one becomes exactly one.
+   - not one normal question triggers anything, as a wall, as soft distress or as a
+     Mentor answer;
+   - health talk that is not distress (notDistress: Ramadan fasting by day, "not afraid
+     to gain weight", calories in a banana) may be diet, never crisis or eating;
+   - an unsafe agent command never becomes a card, and a safe one becomes exactly one;
+   - every term of the lists before Mission 1.1 (fixtures/safety-old-terms.json) still
+     gets at least its old kind;
+   - typical AI answers pass the answer check (mSafetyKindAnswer), unsafe ones do not.
    The Worker reads the same corpus the same way (ai-proxy.spec.js). */
 const fs = require("fs");
 const path = require("path");
@@ -14,6 +20,7 @@ const { test, expect } = require("@playwright/test");
 const { bootAsGuest } = require("./helpers");
 
 const CORPUS = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "safety-corpus.json"), "utf8"));
+const OLD_TERMS = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "safety-old-terms.json"), "utf8"));
 const GROUPS = ["crisis", "eating", "diet"];
 const LANGS = ["en", "ru", "uz", "uzCyr"];
 /* a phrase may be caught by a stronger wall, never by a weaker one */
@@ -52,9 +59,10 @@ test.describe("the safety walls and the phrase corpus", () => {
     const hits = await page.evaluate((normal) => {
       const out = [];
       Object.keys(normal).forEach((l) => normal[l].forEach((p) => {
-        /* the wall itself, and what the hero would really see (food restriction included) */
+        /* the wall itself, the soft net, and what the hero would really see (food
+           restriction included) */
         const k = mSafetyKind(p), a = mentorAnswer(p).kind;
-        if (k || a === "crisis" || a === "eating" || a === "diet") out.push(l + ": " + p + " -> " + (k || a));
+        if (k || mSoftDistress(p) || a === "crisis" || a === "eating" || a === "diet" || a === "soft") out.push(l + ": " + p + " -> " + (k || a));
       }));
       return out;
     }, CORPUS.normal);
@@ -64,12 +72,79 @@ test.describe("the safety walls and the phrase corpus", () => {
     expect(hits).toEqual([]);
   });
 
+  test("health talk that is not distress may be a diet question, never crisis or eating", async ({ page }) => {
+    await bootAsGuest(page);
+    const hits = await page.evaluate((list) => {
+      const out = [];
+      Object.keys(list).forEach((l) => list[l].forEach((p) => {
+        const k = mSafetyKind(p), a = mentorAnswer(p).kind;
+        if (k === "crisis" || k === "eating" || a === "crisis" || a === "eating") out.push(l + ": " + p + " -> " + (k || a));
+      }));
+      return out;
+    }, CORPUS.notDistress);
+    expect(Object.keys(CORPUS.notDistress).sort()).toEqual(["en", "ru", "uz", "uzCyr"]);
+    expect(hits).toEqual([]);
+  });
+
+  test("every term of the lists before Mission 1.1 still gets at least its old kind", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate((o) => {
+      const rank = { "": 0, diet: 1, eating: 2, crisis: 3 }, low = [], moved = [];
+      Object.keys(o.terms).forEach((old) => o.terms[old].forEach((t) => {
+        const k = mSafetyKind(t);
+        if (rank[k] < rank[old]) low.push(old + ": " + t + " -> " + (k || "nothing"));
+      }));
+      /* the exceptions were proven false alarms; each keeps the kind written down */
+      o.exceptions.forEach((e) => { if (mSafetyKind(e.term) !== e.now) moved.push(e.term + " -> " + mSafetyKind(e.term)); });
+      return { low: low, moved: moved, n: Object.keys(o.terms).reduce((n, k) => n + o.terms[k].length, 0) };
+    }, OLD_TERMS);
+    expect(r.n).toBeGreaterThan(150);
+    expect(r.low).toEqual([]);
+    expect(r.moved).toEqual([]);
+    OLD_TERMS.exceptions.forEach((e) => expect(e.reason.length, e.term).toBeGreaterThan(20));
+  });
+
+  test("the answer check lets ordinary AI advice through and still stops unsafe answers", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate((c) => ({
+      safe: c.answerSafe.filter((t) => mSafetyKindAnswer(t)).map((t) => mSafetyKindAnswer(t) + ": " + t),
+      unsafe: c.answerUnsafe.filter((x) => mSafetyKindAnswer(x[0]) !== x[1]).map((x) => x[0] + " -> " + mSafetyKindAnswer(x[0]))
+    }), CORPUS);
+    expect(CORPUS.answerSafe.length).toBeGreaterThanOrEqual(20);
+    expect(r.safe).toEqual([]);
+    expect(r.unsafe).toEqual([]);
+  });
+
+  test("Ramadan by day, the oʻ marker, contractions and the soft net follow their rules", async ({ page }) => {
+    await bootAsGuest(page);
+    const r = await page.evaluate(() => {
+      const k = (list) => list.map((p) => mSafetyKind(p));
+      return {
+        /* fasting by day is diet; with "at night too", "even after iftar" or a weight word it stays eating */
+        ramadan: k(["roʻza tutyapman, kunduzi ovqat yemayman", "i'm fasting for ramadan so i dont eat all day", "рўза тутяпман, кундузи овқат емайман",
+          "Ramazonda kunduzi ham, kechasi ham hech narsa yemayman", "During Ramadan I don't eat anything, even after iftar, to get thin", "ramazonda kunduzi hech narsa yemayman, ozish uchun"]),
+        /* a real oʻ: oʻlsam (if I die) is crisis anywhere; boʻlsam, the saying "oʻlsam ham", and no apostrophe at all are not */
+        mark: k(["men oʻzimni yomon koʻraman, oʻlsam yaxshi", "men o'zimni yomon ko'raman, o`lsam yaxshi", "ўлгим келяпти", "Men yaxshi boʻlsam, onam xursand", "Oʻlsam ham bu imtihonni topshiraman", "velosiped olsam yaxshi boʻlardi"]),
+        noMark: [mSafeMark("olsam yaxshi"), mSafeMark("oʻlsam")],
+        /* mSafeNorm drops apostrophes: they'd is theyd */
+        they: k(["everything is my fault, they'd be happier if i was gone", "they'd be happier if I cleaned my room", "everyone'll be happier if I bring snacks to practice"]),
+        soft: ["i hate myself", "nobody cares about me", "я больше не выдержу этого", "ненавижу себя", "endi chiday olmayman", "hech kim meni tushunmaydi",
+          "I don't want to procrastinate anymore", "Хочу жить по режиму", "nobody likes mondays", "Ukamning shovqiniga boshqa chiday olmayman"].map((p) => !mSafetyKind(p) && mSoftDistress(p))
+      };
+    });
+    expect(r.ramadan).toEqual(["diet", "diet", "diet", "eating", "eating", "eating"]);
+    expect(r.mark).toEqual(["crisis", "crisis", "crisis", "", "", ""]);
+    expect(r.noMark).toEqual(["", "ölsam"]);
+    expect(r.they).toEqual(["crisis", "", ""]);
+    expect(r.soft).toEqual([true, true, true, true, true, true, false, false, false, false]);
+  });
+
   test("an unsafe agent command never becomes a card, and a safe one becomes exactly one", async ({ page }) => {
     await bootAsGuest(page);
     const r = await page.evaluate((c) => ({
       /* refused by a wall (answered with care or as diet), or by the agent's caps */
       unsafe: c.agentUnsafe.filter((p) => !(mSafetyKind(p) || agentParse(p).length === 0)),
-      safe: c.agentSafe.filter((p) => !(!mSafetyKind(p) && agentParse(p).length === 1))
+      safe: c.agentSafe.filter((p) => !(!mSafetyKind(p) && !mSoftDistress(p) && agentParse(p).length === 1))
     }), CORPUS);
     expect(r.unsafe).toEqual([]);
     expect(r.safe).toEqual([]);

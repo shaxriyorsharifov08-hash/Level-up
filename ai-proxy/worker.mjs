@@ -8,10 +8,10 @@
      3. allows each account DAILY_LIMIT questions per UTC day (PREMIUM_LIMIT
         for an account marked premium in KV), and stops everyone after
         GLOBAL_DAILY_LIMIT so the free allowance can never turn into a bill,
-     4. answers crisis, eating-distress and diet questions with a fixed,
-        careful reply without calling the model (the app already keeps them on
-        the device), drops hero data and earlier turns that touch them, and
-        replaces a model answer that does. The word lists are the app's own,
+     4. answers crisis, eating-distress and diet questions, and soft distress
+        ("I hate myself"), with a fixed, careful reply without calling the model
+        (the app already keeps them on the device), drops hero data and earlier
+        turns that touch the walls, and replaces a model answer that does. The word lists are the app's own,
         word for word (the SAFETY WALLS block; Uzbek in Cyrillic and missing
         apostrophes are read too),
      5. asks the model with fixed safety rules, and returns plain text,
@@ -69,88 +69,157 @@ function mSafeNorm(s){
   return t.replace(/ё/g, "е").replace(/['ʻʼ‘’`´]/g, "").replace(/\s+/g, " ").trim();
 }
 function mSafeCopy(s, n){ return /[а-я]/.test(n) ? mSafeNorm(mUzLatin(String(s || "").toLowerCase())) : ""; }
+/* once apostrophes go, Uzbek oʻl- (die) and ol- (take, buy) are the same letters, so
+   those patterns need a guard. A third copy keeps a real oʻ (o with any apostrophe, or
+   Cyrillic ў) as "ö", and MENTOR_DIE_UZ reads it with no guard. Text typed with no
+   apostrophe gets no copy, so it reads exactly as before */
+function mSafeMark(s){
+  var t = String(s || "").toLowerCase();
+  return /o['ʻʼ‘’`´]|ў/.test(t) ? mSafeNorm(mUzLatin(t.replace(/o['ʻʼ‘’`´]|ў/g, "ö"))) : "";
+}
 
 /* CRISIS: suicide, self-harm, wanting to disappear, abuse, danger at home */
 var MENTOR_CRISIS_UZ = new RegExp([
   /\b[ou]z(?:im|i)ni (?:[ou]ldi?r|y[ou][qk] [qk]il|[ou]sa|[ou]sib|yarala|jarohatla|kes(?:aman|yapman|dim|ib turaman|mo[qk]chiman))|jon\S*ga [qk]asd|suit?sid|self ?[hx]arm/.source,
   /* oʻl- (die) without its apostrophe is ol- (take, buy): only where it stands alone */
-  /(?:^|[,.!?;:] |\b(?:men|endi|juda|rostdan|shunchaki|bazan|chunki|xullas) )[ou]lgim kel|\bulgim kel|^(?:men )?olmo[qk]chiman\W*$|\bulmo[qk]chiman|^(?:men )?olishni (?:[hx]o[hx]?layman|istayman)\W*$|\bulishni (?:[hx]o[hx]?la|ista|[ou]yla)|^(?:men )?olishni [ou]yla|^(?:men )?olsam (?:edi|yaxshi)|\bulsam (?:edi|yaxshi)|(?:^|[,.!?] )(?:men )?olib [qk]olsam(?: edi| yaxshi)|\bulib [qk]olsam/.source,
+  /(?:^|[,.!?;:] |\b(?:men|endi|rostdan|shunchaki|bazan|chunki|xullas) )[ou]lgim kel|\bulgim kel|^(?:men |endi |shunchaki |rostdan |rosti )?olmo[qk]chiman\W*$|\bulmo[qk]chiman|^(?:men )?olishni (?:[hx]o[hx]?layman|istayman)\W*$|\bulishni (?:[hx]o[hx]?la|ista|[ou]yla)|^(?:men )?olishni [ou]yla|^(?:men )?olsam (?:edi|yaxshi)|\bulsam (?:edi|yaxshi)|(?:^|[,.!?] )(?:men )?olib [qk]olsam(?: edi| yaxshi)|\bulib [qk]olsam/.source,
   /(?:^|men )[ou]lim [hx]a[qk]ida (?:\S+ )?[ou]yla|\bulim [hx]a[qk]ida|meni [ou]ldir(?:ish|mo[qk]chi|aman|ib [qk]o)|[ou]ldiraman deb|dunyodan ket(?:gim|mo[qk]chi)/.source,
   /yashag?i?m kelma|yashagisi kelma|yashashni (?:[hx]o[hx]?lamay|istamay)|(?:yashash|[hx]ayot)\S*dan (?:charcha|t[ou]yd|bezd|zerikd)|yashash\S* (?:mano|mani|sabab|ma[qk]sad|foyda)\S* y[ou][qk]|yashashga sabab y[ou][qk]|yashash (?:istagi|[hx]o[hx]ishi)\S* y[ou][qk]|(?:yashash|[hx]ayot)\S* ma?nosiz/.source,
-  /mensiz (?:[hx]amma|ular|dunyo|oila)|[hx]amma\S* mensiz|y[ou][qk]olib ket(?:gim|mo[qk]chi)|y[ou][qk] b[ou]lib ket(?:gim|mo[qk]chi)|men y[ou][qk] b[ou]lsam/.source,
+  /mensiz (?:[hx]amma|ular|dunyo|oila)|[hx]amma\S* mensiz|y[ou][qk]olib ket(?:gim|mo[qk]chi)|y[ou][qk] b[ou]lib ket(?:gim|mo[qk]chi)|men y[ou][qk] b[ou]lsam (?:\S+ )?(?:yaxshi|edi|[hx]amma|[hx]ech kim)/.source,
   /\b[ou]zimga (?:zarar|[ou]g?ri[qk]|jarohat)|ataylab kes|(?:[qk]aytib|boshqa|[hx]ech [qk]achon) uyg[ou]nma|[hx]ayot\S* (?:tugat|nu[qk]ta)|[hx]ammasi tugasin|tug?ilmaganim|tug?ilmagan b[ou]lsam/.source,
   /yuk b[ou]lib [qk]oldim|[hx]ammaga yuk(?:man| b[ou]l)|[hx]ech kimga (?:keragim y[ou][qk]|kerak emasman)/.source,
+  /* "I wish I would not wake up after sleeping", not "if I oversleep and don't wake up on
+     time"; "oʻlgim kevotti" (kelyapti, spoken); "I can't bear it, I want to end it all",
+     not "I can't stand my brother's noise" (that one is only soft) */
+  /uxla\S* (?:\S+ ){0,2}uyg[ou]nma(?:sam|y [qk]olsam) (?:\S+ )?(?:deyman|edi|yaxshi(?! emas)|derdim)|(?:^|[,.!?;:] |\b(?:men|endi|rostdan|shunchaki|bazan|chunki|xullas) )[ou]lgim kev|\bulgim kev|(?:endi|boshqa) chida(?:y ?olmayman|lmayman|yolmayman|olmayman)\W+(?:\S+ ){0,3}(?:tugat|yasha|[hx]ayot|[ou]l(?:gim|sam|ib|mo[qk]|im))/.source,
+  /(?:kechasi|lekin|endi|bazan|bazida|shunchaki|rostdan) [ou]lib [qk]olsam (?:deyman|edi|yaxshi(?! emas)|derdim)|(?:^|[,.!?] )(?:men )?[ou]lib [qk]olsam (?:deyman|derdim)/.source,
+  /* "my life is useless", a goodbye letter (not "Maktab bilan xayrlashuv xati", a farewell
+     to school), thinking of death (not "boʻlimni", a section, or "olimni", a scientist),
+     no strength left to live; "Toshkentda yashagim yoʻq" (not in Tashkent) stays clean */
+  /(?:^|[,.!?] |\b(?:umuman|endi|boshqa|hech) )yashag?im y[ou][qk]|[hx]ayotim (?:befoyda|keraksiz)|(?:^|(?:^| )(?!bilan )\S+ )(?:xayrlashuv|vidolashuv)\S* xat|\b[ou]limni (?:[ou]yla|[hx]o[hx]?la|ista)|yashash\S* (?:\S+ )?(?:kuchim|holim|toqatim|sabrim|xohishim|istagim) [qk]olmadi/.source,
+  /* "I don't feel like doing anything, or living": only after a "don't want" */
+  /kelma\S*,? (?:\S+ )?yashagim ham\W*$/.source,
   /* abuse and danger at home */
-  /(?:meni|bizni) (?:\S+ ){0,2}(?:ur(?:adi|adilar|ishadi|ish|yapti|ayapti|di|ib tur)|kaltak|savala|d[ou]pp?[ou]sla)|z[ou]r[ao]von|uyga (?:borish|[qk]aytish|ketish)\S* [qk][ou]r[qk]|uyda (?:[ou]zimni )?xavfsiz (?:emas|his [qk]ilmay)|[hx]ech kimga aytma dedi|(?:katta odam|amaki|t[ou]g[ao]|ustoz|murabbiy|[qk][ou]shni|kimdir|bir odam)\S* (?:meni|menga) teg/.source
+  /(?:meni|bizni) (?:\S+ ){0,2}(?:ur(?:adi|adilar|ishadi|ish|yapti|ayapti|di|ib tur)|kaltak|savala|d[ou]pp?[ou]sla)|z[ou]r[ao]von|uyga (?:borish|[qk]aytish|ketish)\S* [qk][ou]r[qk]|uyda (?:[ou]zimni )?xavfsiz (?:emas|his [qk]ilmay)|[hx]ech kimga aytma dedi|(?:katta odam|amaki|t[ou]g[ao]|ustoz|murabbiy|[qk][ou]shni|kimdir|bir odam)\S* (?:meni|menga) teg(?:di|adi|ib|yapti|ishadi)/.source
 ].join("|"));
 var MENTOR_CRISIS = new RegExp([
   /* English. kms / kys = kill myself / yourself, not "run 5 kms" or "more kms" */
-  /suicid|sucid|suicd|suisid|suiside|suecid|sewer ?slide|unaliv|(?:^|[^a-z\d ]) ?k[my]s\b|(?:^|[^a-z])(?!(?:one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|fifty|hundred|few|couple|more|many|extra|some|several|the|of|those|these|fewer|less|total|my|your|our)\s)[a-z]+ k[my]s\b/.source,
+  /suicid|sucid|suicd|suisid|suiside|suecid|sewer ?slide|unaliv|(?:^|[^a-z\d ]) ?k[my]s\b|(?:^|[^a-z])(?!(?:one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|fifty|hundred|few|couple|more|many|extra|some|several|the|of|those|these|fewer|less|total|my|your|our|weekly|daily|monthly|running)\s)[a-z]+ k[my]s\b/.source,
   /\bkil+(?:ing|in|ed)? ?(?:my ?self|myslef|mysefl|my ?slf|mself|meself|your ?self|ur ?self)|\b(?:hang|shoot|drown|poison|stab) my ?self|jump off (?:a |the )?(?:bridge|building|roof)|slit my wrists?|tak(?:e|ing) my (?:own )?life|end my own life|stop (?:living|existing|being alive)(?! (?:in|like|with|for|at|on|my|off)\b)|why (?:should|do|would) i (?:even )?(?:live|be alive|exist|keep living)\b(?! in\b)|(?:dont|do not) deserve to (?:live|be alive|exist)|i shouldnt (?:be alive|exist)|(?:think|thinking|thought) (?:about|of) (?:dying|being dead|killing my ?self|ending it|suicide)/.source,
   /* "want to die", not "my phone is going to die" or "end it with my boyfriend" */
   /\b(?:want|wnat|wamt|wnt|wanna|wana|ready|plan\w*|tryna|trying|wish i could|should just|i should|deserve|hope i|let me|need) (?:to )?(?:just )?(?:die(?! (?:of|from) (?:laughter|laughing|embarrassment|boredom|cringe|shame)\b)|be dead)\b|(?:want|wanna) (?:it all|everything|my life) to (?:end|stop|be over)|done with (?:life|living|being alive|it all)\b|\b(?:want|wanna|ready|plan\w*|tryna|trying|going|gonna|i will|ill) (?:to )?(?:just )?end (?:it(?! with\b)|my life|everything|things(?! (?:with|on)\b))\b|feel(?:ing)? like dying(?! (?:my|your|her|his|the|it)\b)|(?:want|wanna|urges?) to cut(?:\W*$| again\b| so bad)|(?:want|wanna) (?:to )?not (?:exist|be alive|be here|live)\b|die (?:painlessly|peacefully)|painless (?:way to die|death|suicide)/.source,
   /end my life|end it all|ending it (?:all|tonight)|(?:feel like|thinking about|thinking of|thought about|thought of|think about|considering) ending (?:it|my life|everything)|stop wanting to (?:die|be dead)/.source,
-  /wish(?:ed)? i (?:was|were|had|wasnt|was not) (?:never born|dead|not born|never been born|not alive|gone)|wish i (?:wasnt|werent|was not) (?:alive|here|born)|never been born|wish i didnt exist|better off (?:dead|gone|without me|if i (?:was|were|wasnt|werent) (?:gone|dead|here|around))|(?:everyone|everybody|they|world|family|parents) (?:would|will|d) be (?:better|happier) (?:off )?(?:without me|if i)/.source,
+  /* mSafeNorm drops apostrophes, so "they'd" is "theyd" and "they'll" is "theyll" */
+  /wish(?:ed)? i (?:was|were|had|wasnt|was not) (?:never born|dead|not born|never been born|not alive|gone)|wish i (?:wasnt|werent|was not) (?:alive|here|born)|never been born|wish i didnt exist|better off (?:dead|gone|without me|if i (?:was|were|wasnt|werent) (?:gone|dead|here|around))|(?:everyone|everybody|they|world|family|parents)(?: would| will|d|ll) be (?:better|happier) (?:off )?(?:without me|if i (?:(?:was|were) (?:gone|dead)|wasnt|werent|died|disappeared|left|never)\b)/.source,
   /no (?:point|reason|purpose) (?:in |to |of )?(?:living|live|being alive|life|stay alive|staying alive|existing)\b|point (?:in|of) (?:living|being alive|life|existing)\b|life (?:isnt|is not|aint) worth|not worth living|reasons? to (?:keep )?(?:live|living|stay alive)\b|(?:my )?life (?:is|feels) (?:pointless|meaningless|worthless)|stop existing|cease to exist/.source,
   /(?:dont|do not|no longer) (?:really |even )?(?:want to|wanna) (?:live|be alive|exist|keep living|go on living|be here anymore)(?![a-z])(?! (?:in|with|without|at|near|next to|close to|far|on|abroad|there|here|alone|together|like that)\b)|tired of (?:being alive|living|life|existing)(?![a-z])(?! (?:being|in|at|as|without|with|on)\b)|(?:cant|cannot) go on (?:anymore|any more|living|like this)/.source,
-  /(?:want|wnat|wanna|wish i could) (?:to )?(?:just )?(?:dis+ap+e+a?r|vanish)(?! (?:from|off|for (?:a|the|one|two|\d+) (?:weekend|week|day|month|year|summer|trip|camping|few))\b)|dis+ap+e+a?r (?:forever|for good)|(?:want|wanna|wish i could|wish i would) (?:to )?(?:just )?(?:go to )?sleep (?:forever(?! (?:after|on|this|until|during|when)\b)|and never wake)|(?:and|just|to|could|would|hope i|go to sleep and|fall asleep and) never wake up(?! (?:late|tired|early|groggy|on time|at|before|after|in)\b)|never wake up again|(?:dont|do not) (?:want|wanna) (?:to )?wake up (?:tomorrow|again|ever|anymore)/.source,
+  /(?:want|wnat|wanna|wish i could) (?:to )?(?:just )?(?:dis+ap+e+a?r|vanish)(?! (?:from|off|for (?:a|the|one|two|\d+) (?:weekend|week|day|month|year|summer|trip|camping|few))\b)|dis+ap+e+a?r (?:forever|for good)|(?:want|wanna|wish i could|wish i would|wish id) (?:to )?(?:just )?(?:go to )?sleep (?:forever(?! (?:after|on|this|until|during|when)\b)|and never wake)|(?:and|just|to|could|would|\bid|hope i|go to sleep and|fall asleep and) never wake up(?! (?:late|tired|early|groggy|on time|at|before|after|in)\b)|never wake up again|(?:dont|do not) (?:want|wanna) (?:to )?wake up (?:tomorrow|again|ever|anymore)/.source,
   /* self-harm, not "hurt myself playing football" or "cut myself off from social media" */
   /self ?-?harm|self ?injur|\bsh (?:urges?|again|relapse|scars?)|relapsed? on sh|harm(?:ing)? (?:my ?self|myslef)|hurt(?:ing)? (?:my ?self|myslef)(?! (?:playing|during|while|lifting|running|doing|falling|skating|at (?:the )?(?:gym|practice|training|football|basketball)|in (?:the )?(?:gym|game|match|practice|training|pe)\b))/.source,
   /\bcut(?:ting|s)? (?:my ?self|myslef|my (?:wrists?|thighs?|skin))(?! (?:some slack|a break|off|loose|free|out|short|in|shaving|by accident|accidentally|while|cooking)\b)|(?:started|been|keep|kept|am) cutting again|relapsed? (?:on |into |to )?cutting|burn(?:ing)? my ?self (?:on purpose|when|again|to)|goodbye (?:letter|note)|suicide note/.source,
-  /(?:nobody|no one|noone) (?:would |will |even )?(?:notice|care|miss me|cry)(?: if i (?:was|were|died|disappeared|wasnt|werent|left|killed|ended)\b|\W*$)|(?:notice|care|miss me|cry) if i (?:died|was dead|were dead|was gone|were gone|disappeared)|\bim (?:just |such )?a burden(?! (?:on|to|for) (?:my |the |our )?(?:team|class|group|squad|club)\b)|burden (?:to|on|for) (?:everyone|everybody|my (?:family|parents|mom|mum|dad|friends)|all of|them)\b|give up on (?:life|living)/.source,
+  /(?:nobody|no one|noone)(?: would| will|d|ll| even)? (?:notice|care|miss me|cry)(?: if i (?:was|were|died|disappeared|wasnt|werent|left|killed|ended)\b|\W*$)|(?:notice|care|miss me|cry) if i (?:died|was dead|were dead|was gone|were gone|disappeared)|\b(?:im|i am) (?:just |such )?a burden(?! (?:on|to|for) (?:my |the |our )?(?:team|class|group|squad|club)\b)|burden (?:to|on|for) (?:everyone|everybody|my (?:family|parents|mom|mum|dad|friends)|all of|them)\b|give up on (?:life|living)/.source,
   /* abuse and danger at home, not "my brother beats me at chess" */
-  /\b(?:dad|father|mom|mum|mother|stepdad|stepfather|stepmom|stepmother|brother|sister|uncle|aunt|parents?|boyfriend|girlfriend|bf|gf|teacher|coach|grandpa|grandma|cousin|he|she|they)s? (?:\w+ )?(?:(?:hits|hurts|chokes|slaps|punches|abuses|hit|slapped|punched|choked|hurt|abused) (?:me|us)\b(?! with (?:extra |more |some |a lot of |lots of )?(?:drills|homework|work|questions|tests|facts|advice|tips|news|quiz|laps|sprints|reps)\b)|(?:kicks|kicked) me(?! off\b)|(?:beats|beat) (?:me|us)(?! (?:at|in|on|by|to)\b)|(?:hits|beats) my (?:mom|mum|mother|sister|brother))/.source,
-  /being (?:abused|beaten|molested)|(?:get|getting|got) (?:beaten|hit|abused|hurt) (?:at home|by my (?:dad|mom|mum|father|mother|parents?|stepdad|brother|uncle))|abus(?:es|ed|ing) me|abusive (?:dad|mom|parent|home|family|boyfriend|father|mother|stepdad|relationship)|molest|sexually abus|domestic (?:violence|abuse)|\brap(?:e|ed)\b/.source,
+  /\b(?:dad|father|mom|mum|mother|stepdad|stepfather|stepmom|stepmother|brother|sister|uncle|aunt|parents?|boyfriend|girlfriend|bf|gf|teacher|coach|grandpa|grandma|cousin|he|she|they)s? (?:\w+ )?(?:(?:hits|hurts|chokes|slaps|punches|abuses|hit|slapped|punched|choked|hurt|abused) (?:me|us)\b(?! with (?:extra |more |some |a lot of |lots of )?(?:drills|homework|work|questions|tests|facts|advice|tips|news|quiz|laps|sprints|reps)\b)|(?:kicks|kicked) me(?! (?:off|out)\b)|(?:beats|beat) (?:me|us)(?! (?:at|in|on|by|to)\b)|(?:hits|beats) my (?:mom|mum|mother|sister|brother))/.source,
+  /being (?:abused|beaten|molested)|(?:get|getting|got) (?:beaten|hit|abused|hurt) (?:at home|by my (?:dad|mom|mum|father|mother|parents?|stepdad|brother|uncle))|abus(?:es|ed|ing) me|(?:someone|somebody) (?:\w+ )?(?:(?:hurts|hits|is hurting|abuses) me\b(?! with (?:a |the |his |her |their )?(?:ball|snowball|pillow)\b)|beats me\b(?! (?:at|in|on|by|to)\b))|abusive (?:dad|mom|parent|home|family|boyfriend|father|mother|stepdad|relationship)|molest|sexually abus|domestic (?:violence|abuse)|\brap(?:e|ed)\b/.source,
   /(?:scared|afraid|terrified|frightened) to go home|(?:not safe|unsafe|dont feel safe) at home|threaten\w* to (?:kill|hurt|beat|hit) me|(?:said|says|told me) (?:that )?(?:theyd|they would|theyll|they will|hed|he would|hell|he will|shed|she would|shell|she will) kill me(?! if\b)|(?:want|wanna|going|gonna|try|tried|trying|plan\w*|thinking about|thought about) (?:to )?overdos|\bod on (?:pills|meds|my)|(?:swallow|took|take) (?:a (?:lot|bunch|handful) of|all (?:of )?(?:my|the)) pills|(?:adult|man|guy|uncle|teacher|coach|stepdad|stepfather|neighbou?r|someone|cousin|he|she) (?:\w+ )?(?:touches|touched|keeps touching|tries to touch|tried to touch) me|touch(?:es|ed|ing) me (?:inappropriately|there|without)|(?:adult|grown ?up|man|uncle|teacher|coach|stepdad|stepfather|neighbou?r) (?:\w+ )?(?:told|tells|made|makes) me (?:to )?(?:keep it (?:a )?secret|not tell|never tell)/.source,
+  /* Mission 1.1 fresh round. "thinking about not waking up" or "hope I don't wake up" only
+     at the end or with again / ever / anymore, not "…wake up tired" or "…so early";
+     "no reason to keep going" only about life, or as a whole statement, not "I broke my
+     streak, is there any reason to keep going?"; "nobody cares if I live or die";
+     "I can't take it / do this anymore" as the whole message */
+  /(?:think|thinking|thought) (?:about|of) (?:not|never) waking up(?:\W*$| again\b| ever\b| anymore\b)|hope i (?:dont|never|wont) wake up(?:\W*$| again\b| ever\b| anymore\b)/.source,
+  /(?:reason|point|purpose) (?:in |to |of )?(?:keep going|keeping going|go on|going on|carry on) (?:living|with (?:my |this )?life|in life|being alive|existing)\b|(?:dont|do not|cant|cannot|can not|no longer) see (?:a |any |the )?(?:reason|point|purpose) (?:in |to |of )?(?:keep going|keeping going|go on|going on|carry on|living)\W*$/.source,
+  /(?:care|cares|cared) (?:\S+ )?(?:if|whether) i (?:live|lived|am alive) or (?:die|died|not)\b|(?:cant|cannot|can not) (?:take|do|handle|stand) (?:it|this|any of this) (?:anymore|any more)\W*$/.source,
   /* Russian */
-  /су[иеыйі]{1,2}ц[иы]д|самоубийств|себя (?:убить|убью)|налож\S* на себя руки|(?:уйти|уйду|уходить) из жизни|поконч\S* (?:с собой|с жизнью|со всем)|сво\S* сч[её]ты с жизнью|(?:убить|убью|убиваю|убила|убил) себя|убиться|убьюсь|выпил(?:иться|юсь|ился|илась|иваюсь)|(?:сделаю|сделать) (?:что-нибудь|что-то) с собой/.source,
-  /хоч\S*(?: \S+){0,2} (?:ум[иеэ]р[еаи]+ть|сдохнуть|исчезнуть(?! (?:\S+ ){0,3}из(?:[^а-я]|$)| на (?:выходные|неделю|день|пару|месяц|лето|каникул))|убиться|уснуть и не|не просыпаться|перестать существовать)|лучше (?:бы )?(?:умереть|я умер|мне умереть|сдохнуть|не жить|меня не было)|бы (?:я )?сдох|сдохнуть|сдохну(?![а-я])/.source,
-  /не ?(?:хоч\S*|могу) (?:больше |так )?жить(?! (?:в|во|с|со|у|на|за|без|рядом|около|там|отдельно|одн\S*|вместе)(?:[^а-я]|$))|жить не хоч|(?:нет|не вижу) смысла (?:в )?жи(?:ть|зни)|зачем (?:мне )?жить|не для чего жить|нет причин жить|жизнь (?:не имеет смысла|бессмысленна)|перестать существовать|не хочу существовать|не хоч\S* (?:больше |никогда )?просыпаться|мысли о смерти|думаю о смерти/.source,
+  /су[иеыйі]{1,2}ц[иы]д|самоубийств|себя (?:убить|убью)|налож\S* на себя руки|(?:уйти|уйду|уходить) из жизни|поконч\S* (?:с собой|с жизнью|со всем(?![а-я]))|сво\S* сч[её]ты с жизнью|(?:убить|убью|убиваю|убила|убил) себя|убиться|убьюсь|выпил(?:иться|юсь|ился|илась|иваюсь)|(?:сделаю|сделать) (?:что-нибудь|что-то) с собой/.source,
+  /хоч\S*(?: \S+){0,2} (?:ум[иеэ]р[еаи]+ть|сдохнуть|исчезнуть(?! (?:\S+ ){0,3}из(?:[^а-я]|$)| на (?:выходные|неделю|день|пару|месяц|лето|каникул))|убиться|уснуть и не|перестать существовать)|хоч\S* (?:(?!ночью|по ночам|утром|рано)\S+ )?не просыпаться(?! (?:рано|ночью|по ночам|утром|в \d))|лучше (?:бы )?(?:умереть|я умер|мне умереть|сдохнуть|не жить|меня не было)|бы (?:я )?сдох|сдохнуть|сдохну(?![а-я])/.source,
+  /не ?(?:хоч\S*|могу) (?:больше |так )?жить(?! (?:в|во|с|со|у|на|за|без|по|рядом|около|там|отдельно|одн\S*|вместе)(?:[^а-я]|$))|жить не хоч|(?:нет|не вижу) смысла (?:в )?жи(?:ть|зни)|зачем (?:\S+ ){0,2}жить(?! (?:в|во|с|со|у|на|за|без|по|так|рядом|около|там|отдельно|одн\S*|вместе)(?:[^а-я]|$))|не для чего жить|нет причин жить|жизнь (?:не имеет смысла|бессмысленна)|перестать существовать|не хочу существовать|не хоч\S* (?:больше |никогда )?просыпаться(?! (?:рано|ночью|по ночам|утром|в \d))|мысли о смерти|думаю о смерти/.source,
   /самоповрежд|с[еэ]лф ?-?х[ао]рм|(?:режу|резала|резал|резать) себя|себя (?:режу|резала|резал|резать)|режу (?:себе )?руки|порезал\S* (?:себя|себе руки|руки|вены)|себя порезал|резать себя|режусь(?! в(?:[^а-я]|$))|резаться(?! в(?:[^а-я]|$))|(?:реж|рез|порез|вскры)\S* (?:себе )?вены|причин\S* себе боль|(?:сделать|делаю) себе больно|навред\S* себе/.source,
-  /(?:уснуть|заснуть|лечь спать) и (?:больше |никогда )?не (?:проснуться|просыпаться)|(?:больше|никогда) не просыпаться|лучше без меня|без меня (?:всем|им|все|станет|будет)|(?:всем|миру|семье|им) (?:будет |станет |было бы )?(?:лучше|легче) без меня|меня не станет|бы меня не было/.source,
+  /(?:уснуть|заснуть|лечь спать) и (?:больше |никогда )?не (?:проснуться|просыпаться)|(?:больше|никогда) не просыпаться(?! (?:рано|ночью|по ночам|утром|в \d))|лучше без меня|без меня (?:всем|им|все|станет|будет)|(?:всем|миру|семье|им) (?:будет |станет |было бы )?(?:лучше|легче) без меня|меня не станет|бы меня не было/.source,
   /устал\S* (?:жить|от жизни)|(?:я|для всех|я всем) обуза|обуза для|не рождал|зачем я (?:вообще )?родил|чтобы (?:все|это) (?:это )?закончилось(?! (?:быстрее|побыстрее|скорее|поскорее|хорошо|удачно|успешно|без))|прощальн\S* (?:письм|записк)|предсмертн/.source,
   /* abuse and danger at home, not "меня бьёт дрожь" (I am shaking) */
-  /(?:меня|нас) (?:\S+ ){0,2}(?:бьют|бьет|избива[а-я]*|колотит|лупит|бил|била|били|избил[а-я]*)(?![а-я])(?! (?:дрожь|током|озноб|мандраж|тряск))|(?:^|[^а-я])(?:бьет|бьют|избива[а-я]*|избил[а-я]*|колотит|лупит|ударил[аи]?) (?:меня|нас)(?![а-я])|(?:отец|папа|отчим|мама|мать|брат|парень|муж)\S* (?:\S+ )?(?:бьет|бьют|избива[а-я]*|колотит|лупит)(?![а-я])(?! (?:рекорд|по мяч|мяч))|изнасил|насилу|насиловал|насили\S* (?:дома|в семье|надо мной)|дома насили|домашн\S* насили|сексуальн\S* насили/.source,
-  /(?:^|[^а-я])(?:взрослый|дядя|отчим|тренер|учитель|мужчина|сосед|брат|он|она|они)\S* (?:\S+ )?(?:меня )?трога\S*(?: меня)?|трога\S* меня (?:за|там|когда|без)|меня (?:\S+ )?трога\S* (?:отчим|дядя|взрослый|тренер|учитель|сосед|брат|мужчина)|домога|пристает ко мне|приставал\S* ко мне|(?:страшно|боюсь) (?:идти|возвращаться|приходить) домой|(?:дома|мне дома) небезопасно|(?:страшно|опасно) (?:находиться )?дома|дома (?:страшно|опасно)|небезопасно дома|угрожа\S* (?:меня )?(?:убить|избить|побить|прибить|зарезать)/.source,
+  /(?:меня|нас) (?:\S+ ){0,2}(?:бьют|бьет|избива[а-я]*|колотит|лупит|бил|била|били|избил[а-я]*)(?![а-я])(?! (?:дрожь|током|озноб|мандраж|тряск))|(?:^|[^а-я])(?:бьет|бьют|избива[а-я]*|избил[а-я]*|колотит|лупит|ударил[аи]?) (?:меня|нас)(?![а-я])|(?:отец|папа|отчим|мама|мать|брат|парень|муж)\S* (?:\S+ )?(?:бьет|бьют|избива[а-я]*|колотит|лупит)(?![а-я])(?! (?:рекорд|по мяч|мяч))|изнасил|насилу|насилов|насили/.source,
+  /(?:^|[^а-я])(?:взрослый|дядя|отчим|тренер|учитель|мужчина|сосед|брат|он|она|они)\S* (?:\S+ )?(?:меня )?трога\S*(?: меня)?|трога\S* меня (?:за|там|когда|без)|меня (?:\S+ )?трога\S* (?:отчим|дядя|взрослый|тренер|учитель|сосед|брат|мужчина)|домога|пристает ко мне|приставал\S* ко мне|(?:страшно|боюсь) (?:идти|возвращаться|приходить) домой|(?:дома|мне дома) небезопасно|(?:страшно|опасно) (?:находиться )?дома|дома (?:страшно|опасно)(?! (?:скучно|весело|интересно))|небезопасно дома|угрожа\S* (?:меня )?(?:убить|избить|побить|прибить|зарезать)/.source,
+  /* Mission 1.1 fresh round: "роскомнадзорнуться" (slang, as a verb only: not
+     "роскомнадзорные блокировки"), "лучше бы я не родилась", "я больше не выдержу" as the
+     whole message, "мне всё равно, жить или умереть" */
+  /(?:^|[^а-я])(?:роскомнадзорн|ркн)(?:уться|усь|улся|улась)(?![а-я])|бы (?:я )?(?:вообще |никогда )?не родил(?:ся|ась|ись)|жаль,? что (?:я )?(?:вообще )?родил(?:ся|ась)|(?:больше|уже) не (?:выдержу|вынесу|могу терпеть)[^а-я]*$|жить или (?:умереть|не жить|сдохнуть)/.source,
+  /* Russian typed in Latin letters ("hochu umeret"; inside Uzbek, "jit ne xochu") */
+  /\b(?:x|h|kh)ochu (?:\S+ )?(?:umeret|umirat|sdo[hx]nut)\b(?! ot )|\bne (?:x|h|kh)ochu (?:bol[sw]h?e )?(?:zh|j|z)it\b(?! (?:v|s|u|na|bez|tam|odin|odna|vmeste)\b)|\b(?:zh|j)it ne (?:x|h|kh)ochu\b/.source,
   /* Uzbek (also read on the Latin copy) */
   MENTOR_CRISIS_UZ.source
 ].join("|"));
 
+/* read on the oʻ-marker copy (mSafeMark: a real oʻ is "ö"): oʻlsam, oʻlib qolsam, oʻlgim,
+   oʻlmoqchi(man) and thinking of oʻlim (death) at a word start, so "boʻlsam" never counts.
+   "oʻlsam ham …" (even if I die, I will…) is a saying, but "oʻlsam ham mayli" is not */
+var MENTOR_DIE_UZ = /(?:^|[^a-zö])öl(?:sam|ib [qk]olsam)(?! ham(?! mayli))|(?:^|[^a-zö])öl(?:gim|mo[qk]chi)|(?:^|[^a-zö])ölim\S* (?:\S+ )?(?:öyla|[hx]o[hx]?la|ista)/;
+
 /* EATING DISTRESS: starving, purging, bingeing, fear or guilt about food, very low
    calories (1-1199 kcal a day, or "under / only" so many) */
 var MENTOR_EATING_UZ = new RegExp([
-  /ov[qk]at\S* (?:y?emay|y?emad|y?emasl|y?emasdan(?! oldin)|y?egim kelmay|yeyishga [hx]a[qk]+|yeyish(?:dan|ga) [qk][ou]r[qk]|y?esam semir|yeyishni (?:\S+ )?(?:t[ou]xtat|bas)|y?emo[qk]chi emas)|ov[qk]atlanma(?:y|slik|sdan(?! oldin)|dim)|ov[qk]atlanishni (?:\S+ )?t[ou]xtat|ov[qk]at\S* tashla(?:b ket|yman|yapman|dim)/.source,
+  /ov[qk]at\S* (?!y?emad\S* hali)(?:y?emay|y?emad|y?emasl|y?emasdan(?! oldin)|y?egim kelmay|yeyishga [hx]a[qk]+|yeyish(?:dan|ga) [qk][ou]r[qk]|y?esam semir|yeyishni (?:\S+ )?(?:t[ou]xtat|bas)|y?emo[qk]chi emas)|ov[qk]atlanma(?:y|slik|sdan(?! oldin)|dim)|ov[qk]atlanishni (?:\S+ )?t[ou]xtat|ov[qk]at\S* tashla(?:b ket|yman|yapman|dim)/.source,
   /(?:nonushta|tushlik|kechki ov[qk]at)\S*(?: va \S+)? (?:ataylab |[hx]ar kuni |doim |k[ou]p )?tashlab ket(?:aman|yapman|dim|ib)|[hx]ech narsa y?e(?:mad|may|yolmay)|och [qk]ol(?:yap|aman|dim|dir|ish|ay)|ataylab och|och(?:man)? ataylab|och [qk]olib oz|ochlikka chida|[ou]zimni och/.source,
   /ochlik(?:ni| [hx]issini) (?:\S+ )?(?:bos|yeng|y[ou][qk]ot|sez|unut|alda)|ishta[hx]a\S* (?:\S+ )?(?:y[ou][qk]ot|bos|kamaytir)|[qk]us(?:aman|yapman|dim|ib yubor|ib tashla|ishga|ish uchun)|[qk]ustir|[qk]ayt [qk]il(?:aman|yapman|dim|ish)/.source,
-  /ov[qk]atlansam [ou]zimni aybdor|aybdor his.{0,12}(?:ov[qk]at|y?esam)|(?:ov[qk]at|y?egan)\S* (?:\S+ ){0,3}aybdor|ov[qk]atga loyi[qk] emas|ov[qk]at(?:dan|ga) [qk][ou]r[qk]|semir\S* (?:\S+ )?(?:juda )?[qk][ou]r[qk]|t[ou]xta(?:may|movsiz) y?e|t[ou]xtovsiz y?e|y?eb yubordim.{0,20}nafrat/.source,
+  /ov[qk]atlansam [ou]zimni aybdor|aybdor his.{0,12}(?:ov[qk]at|y?esam)|(?:ov[qk]at|y?egan)\S* (?:\S+ ){0,3}aybdor|ov[qk]atga loyi[qk] emas|ov[qk]at(?:dan|ga) [qk][ou]r[qk](?!may|mas|ma )|semir\S* (?:\S+ )?(?:juda )?[qk][ou]r[qk](?!may|mas|ma )|t[ou]xta(?:may|movsiz) y?e|t[ou]xtovsiz y?e|y?eb yubordim.{0,20}nafrat/.source,
   /(?:kuniga|kunlik|bir kunda|kunda) (?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?kal|kal+or)|(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?kal|kal+or)\S* ?(?:dan kam|gacha|dan oshmasin)/.source,
+  /* Mission 1.1 fresh round, tightened by the reviewer: a low-calorie plan (not "10
+     kalendar kun"); feeling fat or guilty after food; not feeling hunger; chew and spit;
+     afraid to eat (y is required: "edim" is "I was"); a big loss in a week, with a loss
+     verb (not "haftasiga 5 kilometr", "3 kg gantel"); hating myself after eating; ribs
+     showing; only one apple (not "faqat bir marta yeb koʻrganman", tried it once) */
+  /(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:kkal\S*|kal(?![a-z])|kal+or\S*) (?:\S+ )?(?:par[hx]ez|reja|menyu|dieta|ratsion)|ov[qk]at\S* (?:keyin|so?ng) (?:\S+ ){0,3}(?:semiz|jirkanch|aybdor|nafrat|xunuk)|ochlik\S* (?:\S+ )?(?:[hx]is [qk]ilmaslik|sezmaslik)|ov[qk]at\S* (?:\S+ )?chayna\S* (?:\S+ )?tupur|\bye(?:gani|ganga|yishga|shga) [qk][ou]r[qk](?!may)/.source,
+  /(?:bir |1 )?hafta\S* (?:ichida )?(?:[3-9]|[1-9]\d) ?(?:kg|kilo(?!m))\S* (?:\S+ )?(?:oz|tashla|tushir|kamay|y[ou][qk]ot)|(?:[3-9]|[1-9]\d) ?(?:kg|kilo(?!m))\S* (?:\S+ )?(?:bir |1 )?hafta\S* (?:\S+ )?(?:oz|tashla|tushir|kamay|y[ou][qk]ot)|\b(?:yedim|yeb [qk]o?ydim|yeb yubordim|yeganimdan)\b.{0,30}(?:nafrat|jirkan|aybdor)/.source,
+  /[qk]ovurg?a\S* (?:\S+ )?(?:k[ou]rin|sanash|chi[qk]ib tur)|faqat (?:bitta|bir|yarim) (?:\S+ )?(?:yey|yeb(?! k[ou]r)|yedim|yeyapman)|bitta \S+ (?:\S+ )?(?:yey|yeb)\S* (?:\S+ )?ozish uchun|\byesam (?:\S+ )?(?:[ou]zimni )?jazola/.source,
   /semizman.{0,10}(?:y?emay|ov[qk]at)|tanamni y[ou]mon k[ou]r|tanamdan nafrat|anoreks|bulimi|\bsurgi(?!c)|ich (?:\S+ )?sur(?:adigan|uvchi)|y?egan \S+ .{0,25}y[ou][qk]ib yubor|faqat suv (?:ich|bilan)/.source
 ].join("|"));
 var MENTOR_EATING = new RegExp([
   /* English */
   /starv(?:e|ing|in|ed)? (?:my ?self|myslef|mself|your ?self|ur ?self)|starv(?:e|ing|in|ed) (?:to (?:lose|get|be)|until|so i)|stop(?:ped|ping)? eating(?! (?:junk|sugar|sweets|fast|so fast|too fast|late|so much|too much|at night|after \d|chips|candy|snacks|meat|out|processed|while|in front|before bed|in class)\b)|stop my ?self from eating|(?:want|wanna|going|gonna|need|try|trying|plan\w*) (?:to )?starve\b|(?:not eat\w*|skip\w*|starv\w*|throw\w* up|puk\w*|vomit\w*)(?: \S+){0,3} on purpose/.source,
-  /go(?:ing)? (?:\S+ ){0,3}without (?:eating|food|meals?)|without eating (?:for|all|anything)|(?:havent|have not|didnt|did not|hasnt) eat(?:en)? (?:in|for|anything|all day|since|today|at all)|not eat(?:en|ing)? (?:anything|at all|all day|for)|(?:dont|do not|no longer) (?:even )?eat(?:ing)? (?:anymore|any more|at all|anything|all day|for days)|\bi (?:wont|will not|refuse to) eat(?! (?:vegetables|veggies|broccoli|meat|fish|spicy|that|it)\b)|(?:barely|hardly) (?:eat|ate|eating)\b/.source,
+  /go(?:ing)? (?:\S+ ){0,3}without (?:eating|food|meals?)|without eating (?:for|all|anything)|(?:havent|have not|didnt|did not|hasnt) eat(?:en)? (?:anything )?(?:in (?:\d|a |two|three|four|five|days|ages|forever)|for (?:\d|a |two|three|four|five|days|ages|so long)|all day|at all|since (?:yesterday|last|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d))(?! (?:hours?|minutes?)\b)|not eat(?:en|ing)? (?:anything|at all|all day|for)|(?:dont|do not|no longer) (?:even )?eat(?:ing)? (?:anymore|any more|at all|anything|all day|for days)|\bi (?:wont|will not|refuse to) eat(?:\W*$| (?:anything|again|anymore|any more|until|for|today|tonight|at all|ever)\b)|(?:barely|hardly) (?:eat|ate|eating)\b/.source,
   /* skipping meals as something done, not "is it ok to skip dinner" (that is a diet question) */
-  /(?:^|\b(?:i|im|ive|been|keep|kept|always|often|usually|sometimes|started|starting|still|literally|am|was) )skip(?:ping|ped|s)? (?:all |every |each |most |both )?(?:of )?(?:my |the )?(?:meals?|breakfast|lunch|dinner|supper)|skip(?:ping|ped)? (?:my |all |the )?(?:meals?|breakfast|lunch|dinner)(?: and \S+)? (?:on purpose|so i|to (?:lose|stay|get|be))/.source,
-  /(?:make|made|making|makes) (?:my ?self|me|your ?self|ur ?self) (?:sick|throw up|puke|vomit|purge)|throw(?:ing)? up (?:after (?:i |eating|meals?|dinner|lunch|breakfast|food|every)|(?:my|the|all|all my) (?:food|meals?)|on purpose|(?:what|everything|anything) i eat)|(?:puke|vomit)(?:ing)? (?:after (?:i |eating|meals?)|my food|on purpose)|how (?:to|do i|can i) (?:make my ?self )?(?:throw up|puke|vomit)|\bi purge|\bpurg(?:e|ing)\b|chew and spit/.source,
+  /(?:^|\b(?:i|im|ive|been|keep|kept|always|often|usually|sometimes|started|starting|still|literally|am|was) )skip(?:ping|ped|s)? (?:all |every |each |most |both )?(?:of )?(?:my |the )?(?:meals?|breakfast|lunch|dinner|supper)(?! (?:today |this morning |yesterday )?(?:because|cause|cuz|coz|bc|since|as) (?:i|we) (?:overslept|woke up late|wake up late|was late|was running late|ran late|was sick|had (?:a |an )?(?:exam|test|practice|class|training|game|match)|was busy|forgot)\b)|skip(?:ping|ped)? (?:my |all |the )?(?:meals?|breakfast|lunch|dinner)(?: and \S+)? (?:on purpose|so i|to (?:lose|stay|get|be))/.source,
+  /(?:make|made|making|makes) (?:my ?self|me|your ?self|ur ?self) (?:sick|throw up|puke|vomit|purge)|throw(?:ing)? up (?:after (?:i |eating|meals?|dinner|lunch|breakfast|food|every)|(?:my|the|all|all my) (?:food|meals?)|on purpose|(?:what|everything|anything) i eat)|(?:puke|vomit)(?:ing)? (?:after (?:i |eating|meals?)|my food|on purpose)|how (?:to|do i|can i) (?:make my ?self )?(?:throw up|puke|vomit)|\bi purge|\bpurg(?:e|ing)\b|chew and spit|throw(?:ing)? up after\W*$/.source,
   /guilt\w* (?:\S+ ){0,3}(?:eat|eating|food|ate|meal)|(?:disgusting|disgusted|gross|ashamed) (?:after|when|about) (?:i eat|eating|i ate|food)|hate my ?self (?:after|when|for) (?:i )?(?:eat|eating|ate)|(?:dont|do not) deserve (?:to eat|food|meals?|dinner|lunch|breakfast)|earn (?:my|the right to) (?:food|meals?)/.source,
-  /(?:scared|afraid|terrified|frightened) (?:of|to) (?:food|eat|gain|gaining|getting fat|get fat|put on)|fear of (?:food|eating|gaining)|food scares|binge? ?-?eat|bing(?:ed|eing|ing|e)(?![a-z])(?! ?-?(?:watch|read|play|listen|on (?:netflix|youtube|tv|tiktok|anime|show|series|game)|(?:the |a |an )?(?:whole |entire |new )?(?:series|show|season|netflix|youtube|tiktok|anime|episode|video|game)))|lost control and (?:ate|eat)/.source,
-  /(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?cal\w*|calor\w*|kalor\w*|kkal) ?(?:a|per|each|every|in a|\/)? ?day|(?:(?:under|below|less than|only|max|maximum|no more than|lower than) |(?:eat|eating|eats|ate|having|had) (?:only |like |about |around |just )?)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?cal|calor|kalor|kkal)/.source,
+  /(?:^|(?:^| )(?!not |never |no |isnt |arent )\S+ )(?:scared|afraid|terrified|frightened) (?:of|to) (?:food|eat|gain|gaining|getting fat|get fat|put on)|fear of (?:food|eating|gaining)|food scares|binge? ?-?eat|bing(?:ed|eing|ing|e)(?![a-z])(?! ?-?(?:watch|read|play|listen|scroll|gam|study|on (?:netflix|youtube|tv|tiktok|anime|show|series|game)|(?:the |a |an )?(?:whole |entire |new )?(?:series|show|season|netflix|youtube|tiktok|anime|episode|video|game)))|lost control and (?:ate|eat)/.source,
+  /(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?cals?\b|calor\w*|kalor\w*|kkal) ?(?:a|per|each|every|in a|\/)? ?day|(?:(?:under|below|less than|only|max|maximum|no more than|lower than) |(?:eat|eating|eats|ate|having|had) (?:only |like |about |around |just )?)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?cals?\b|calor|kalor|kkal)/.source,
   /(?:make|keep) my ?self (?:from (?:being|feeling) )?(?:not )?hungry|(?:stop|not|never|without) (?:feel(?:ing)?|be(?:ing)?|getting) hungry|ignore (?:my |the )?hunger|suppress (?:my |the )?(?:appetite|hunger)|(?:lose|kill|curb|reduce|lower) (?:my )?appetite|appetite suppress|trick my (?:body|stomach|brain) (?:into|to)/.source,
-  /thinspo|meanspo|bonespo|pro ?-?ana\b|pro ?-?mia\b|\bana (?:buddy|coach|tips)|\bedtwt|bone ?thin|bones? (?:show|stick out|to show|visible|poke)|(?:ribs|hip ?bones?|collar ?bones?|spine) (?:show|stick|visible|poke)|feel (?:so |too |really )?fat\b|hate (?:my|how my) (?:body|weight|stomach|thighs|belly)/.source,
-  /burn (?:it )?off (?:everything|what|all|my|the food|every)|until i burn|(?:exercise|work|run) (?:it )?off (?:what|everything|every|the food|my food|all)|eating disorder|anorex|anorx|bulimi|bulemi|laxativ|laxitiv|diuretic|diet pills|punish (?:my ?self|me) (?:by not eating|with food|for eating|by fasting|by starving)|fast(?:ing|ed)? (?:\S+ ){0,3}to punish/.source,
+  /thinspo|meanspo|bonespo|pro ?-?ana\b|pro ?-?mia\b|\bana (?:buddy|coach|tips)|\bedtwt|bone ?thin|bones? (?:show|stick out|to show|visible|poke)|(?:ribs|hip ?bones?|collar ?bones?|spine) (?:show|stick|visible|poke)|feel (?:so |too |really )?fat\b|hate (?:my|how my) (?:body(?! language)|weight|stomach|thighs|belly)/.source,
+  /burn (?:it )?off (?:everything|what|all|my|the food|every)|until i burn|(?:exercise|work|run) (?:it )?off (?:what|everything|every|the food|my food|all)|eating disorder|anorex|anorx|bulimi|bulemi|\bbulim\b|laxativ|laxitiv|diuretic|diet pills|punish (?:my ?self|me) (?:by not eating|with food|for eating|by fasting|by starving)|fast(?:ing|ed)? (?:\S+ ){0,3}to punish/.source,
   /(?:only|just) (?:drink|drinking|drank) (?:water|tea|black coffee)(?: all day| for| today| until)|nothing but water|(?:only|just) (?:eat|ate|eating|had) (?:one|1|a single) meal|(?:eat|ate|eating|having) (?:only|just) (?:one|1|a single) meal|one meal a day|only (?:eat|ate|eating|had) (?:one|an?|1|half an?|a single|a few) (?:\S+ )?(?:apple|banana|cracker|rice cake|yogurt|grapes|bites?)/.source,
+  /* Mission 1.1 fresh round, tightened by the reviewer: a low-calorie plan (not "100
+     calls"); chew and spit; 3+ kg in a week; wanting to be underweight (not "I don't want
+     to be underweight"); hating myself after eating; hiding not eating; "still want to
+     lose" weight (not "lose some bad habits"); seeing my ribs */
+  /(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:k?cals?\b|calor\w*|kkal) (?:diet|meal plan|day plan|menu|challenge|plan)|chew\w* (?!gum|tobacco|on |your )(?:\S+ ){0,3}(?:and |then |and then )spit/.source,
+  /(?:lose|loose|drop|shed|lost|losing) (?:[3-9]|[1-9]\d)(?:[.,]\d)? ?(?:kg|kgs|kilos?)\b (?:\S+ )?(?:in|within) (?:a |one |1 )?(?:week|weekend|[1-9] days?|few days)|(?:^|(?:^| )(?!not |never |no |dont |didnt |doesnt )\S+ )(?:want|wanna|trying|try|goal is|need) (?:to )?(?:be|get|become|stay) (?:\S+ )?underweight/.source,
+  /\b(?:ate|eaten|eat) .{0,40}\b(?:hate|hating) my ?self|hid(?:e|ing) (?:\S+ ){0,2}(?:not eating|(?:that|how little|what) i (?:dont |didnt |do not |did not |havent )?eat|skipping meals|my weight loss|throwing up|that i skip)/.source,
+  /(?:still|even) (?:want|wanna|need|have) to (?:lose (?:\S+ ){0,2}(?:weight|kgs?|kilos?|pounds|lbs|fat)\b|lose more\W*$|be (?:thinner|skinnier|smaller)|get (?:thinner|skinnier|smaller))|(?:see|count) (?:all )?(?:of )?my (?:ribs|hip ?bones?|collar ?bones?|spine)/.source,
   /* Russian */
   /голода(?:ю|ла|л|ем)(?![а-я])|голадаю|голодовк|себя голодом|голодом себя|заморить себя|ничего не (?:ем|ела|ел|кушаю|кушала|съела|съел)|(?:^|я )не (?:ем|кушаю)(?: вообще| совсем| ничего| уже|[^а-я]*$)|не (?:ем|ела|ел|кушаю|кушала|питаюсь) (?:уже|весь|целый|\d|несколько|два|три|неделю|сутки|с утра|со вчера|днями)/.source,
-  /перестат\S* (?:хотеть )?(?:есть|кушать)(?! (?:сладк|фастфуд|чипс|мучн|на ночь|вредн|много|столько|поздно|перед сном|быстро|шоколад|конфет|сахар|ночью|мясо|хлеб))|перестал\S* (?:есть|ужинать|завтракать|обедать|кушать)|как не есть(?! (?:сладк|фастфуд|чипс|мучн|на ночь|вредн|много|столько|поздно|перед сном|шоколад|конфет|сахар|ночью|мясо|хлеб))|можно не есть|бросить есть(?! (?:сладк|фастфуд|чипс|вредн|мясо))/.source,
-  /не есть (?:неделю|несколько|вообще|совсем|\d|дн|сутки|целый|весь|после (?:\d|шести|семи|восьми))|(?:неделю|несколько дней|\d+ (?:дн|дня|дней)|сутки|три дня|два дня|целый день|весь день) не (?:есть|ем|ела|ел|кушать)|не ужинать|ем (?:только )?(?:один )?раз в (?:день|два дня)|отказыва\S* от еды/.source,
+  /перестат\S* (?:хотеть )?(?:есть|кушать)(?! (?:сладк|фастфуд|чипс|мучн|на ночь|вредн|много|столько|поздно|перед сном|быстро|шоколад|конфет|сахар|ночью|мясо|хлеб))|перестал\S* (?:есть|ужинать|завтракать|обедать|кушать)|как не есть(?! (?:сладк|фастфуд|чипс|мучн|на ночь|вредн|много|столько|поздно|перед сном|шоколад|конфет|сахар|ночью|мясо|хлеб|после))|можно не есть(?! (?:после|на ночь|перед сном|сладк|мучн|хлеб|мясо))|бросить есть(?! (?:сладк|фастфуд|чипс|вредн|мясо))/.source,
+  /не есть (?:неделю|несколько|вообще|совсем|\d|дн|сутки|целый|весь)|(?:неделю|несколько дней|\d+ (?:дн|дня|дней)|сутки|три дня|два дня|целый день|весь день) не (?:есть|ем|ела|ел|кушать)|не ужинать|ем (?:только )?(?:один )?раз в (?:день|два дня)|отказыва\S* от еды/.source,
   /не хотелось есть|не чувствовать голод|не чувствовал\S* голод|(?:заглушить|подавить|убрать|перебить|обмануть) (?:чувство )?(?:голод|аппетит)|отбить аппетит|снизить аппетит|вызыва\S* рвот|вызвать рвот|блюю|блевать|выблева|два пальца в рот|рвет после еды/.source,
-  /вин\S* (?:после|за) (?:еды|еду|ужина)|(?:ненавиж|противн|стыдн|виню себя|тошнит от себя)\S* (?:\S+ ){0,3}после еды|стыдно (?:есть|за еду)|стыдно,? (?:что )?(?:я )?(?:по|съ)?ел[аи]?(?![а-я])|не (?:хочу|могу|буду) есть (?:вообще|совсем|ничего|целый|весь|неделю|\d)|не заслужива\S* (?:есть|еду|еды|ужин)|бо(?:юсь|ится|юся) (?:есть|еды|поправиться|потолстеть|набрать вес)/.source,
-  /зажор|зажрал|зажира|обжира|переедани|срыв\S* .{0,12}съел|компульсивн/.source,
+  /вин\S* (?:после|за) (?:еды|еду|ужина)|(?:ненавиж|противн|стыдн|виню себя|тошнит от себя)\S* (?:\S+ ){0,3}после еды|стыдно (?:есть|за еду)|стыдно,? (?:что )?(?:я )?(?:по|съ)?ел[аи]?(?![а-я])|не (?:хочу|могу|буду) есть (?:вообще|совсем|ничего|целый|весь|неделю|\d)|не заслужива\S* (?:есть|еду|еды|ужин)|(?:^|(?:^|\s)(?!не\s)\S+\s)бо(?:юсь|ится|юся) (?:есть(?! (?:шанс|вероятност|риск|опасност|вариант))|еды|поправиться|потолстеть|набрать вес)/.source,
+  /зажор|зажрал|зажира|обжира|переедани|срыв\S* .{0,12}съел|компульсивн\S* (?:\S+ )?(?:переед|ед[аыуе]|есть|кушать|обжор)/.source,
   /(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:ккал|калори\S*|кал(?![а-я]))\s?(?:в |за )?(?:день|сутки)|(?:меньше|менее|не больше|не более|ниже|держусь на|сижу на|только|всего|максимум) (?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:ккал|калори)/.source,
   /тинспо|тинспирац|про-?ана|про ана(?![а-я])|ана-?(?:подруг|коуч)|(?:^|[^а-я])рпп(?:[^а-я]|$)|анорекс|булими|пищев\S* расстройств|расстройств\S* пищев|орторекс/.source,
-  /жирн\S*.{0,20}не (?:хочу|буду) есть|ненавижу (?:сво|мо)\S* (?:тело|живот|ляжки|бедра|вес|отражение)|слабительн|мочегонн|сжечь (?:все|всё) что|сжига\S* (?:все|каждую)|отработать (?:всю еду|еду|съеденное|ужин)|отрабатыва\S* (?:еду|съеденное|каждую)/.source,
-  /пропуска\S* (?:\S+ )?(?:завтрак|обед|ужин|еду|приемы пищи|прием пищи)|не ела? .{0,15}горж|горжусь что не ела?|костляв|кожа да кости|(?:худ\S*|быть) как скелет|торчал\S* (?:кости|ребра|ключиц)|(?:кости|ребра|ключицы) торчал|(?:пью|пила|пил|пить) только вод|на одной воде/.source,
+  /жирн\S*.{0,20}не (?:хочу|буду) есть|ненавижу (?:сво|мо)\S* (?:тело|живот|ляжки|бедра|вес|отражение)|слабительн|мочегонн|сжечь (?:все|всё) что|сжига\S* (?:все|каждую)|отработать (?:всю еду|еду|съеденное|ужин)|отрабатыва\S* (?:еду|съеденное)/.source,
+  /(?:^|(?:^|\s)(?!не\s)\S+\s)пропуска\S* (?:\S+ )?(?:завтрак|обед|ужин|еду|приемы пищи|прием пищи)|не ела? .{0,15}горж|горжусь что не ела?|костляв|кожа да кости|(?:худ\S*|быть) как скелет|торчал\S* (?:кости|ребра|ключиц)|(?:кости|ребра|ключицы) торчал|(?:пью|пила|пил|пить) только вод|на одной воде/.source,
+  /* Mission 1.1 fresh round, tightened by the reviewer: not eating on purpose; a
+     low-calorie plan; feeling fat or disgusting after food; not feeling hunger so as not
+     to eat; purging ("чищусь", not "чищусь от соцсетей"); chew and spit; 3+ kg in a week;
+     hating myself after eating (not "the food was disgusting"); punishing myself; guilt
+     when eating ("вину", not "извините"); ribs showing; only one apple a day (a food
+     word, not "только один час в день") */
+  /(?:специально|нарочно|намеренно) не (?:ем|ела|ел|кушаю|ужинаю|завтракаю|обедаю)(?! (?:сладк|фастфуд|чипс|мучн|мясо|хлеб|после|на ночь|перед сном|вредн|шоколад|конфет|сахар))/.source,
+  /(?:план|диет|меню|рацион)\S* (?:\S+ ){0,2}(?:на |в )?(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:ккал|калори)|(?:^|[^\d,.\s]|[^\d,.]\s)(?:[1-9]\d{0,2}|1[01]\d\d)(?![\d,.]?\d) ?(?:ккал|калори)\S* (?:диет|план|меню|рацион)/.source,
+  /(?:я|себя|чувствую себя) (?:\S+ )?(?:жирн|мерзк|отвратительн|противн)\S* (?:\S+ ){0,4}после (?:\S+ )?(?:еды|приема пищи|ужина|обеда|завтрака)|перестать чувствовать (?:чувство )?голод|чтобы (?:вообще |совсем |больше )?не (?:есть|кушать)[^а-я]*$/.source,
+  /(?:^|[^а-я])чищусь(?![а-я])(?! от)|(?:^|[^а-я])чиститься (?:\S+ )?после (?:еды|ужина|обеда|завтрака|каждого)|переед\S* (?:\S+ )?(?:а |и )?(?:потом|затем) (?:\S+ )?(?:чищусь|блюю|вызываю)|выплевыва\S* (?:\S+ )?(?:еду|пищу)|жу(?:ю|ет|ешь|ем)(?! жвачк)(?: \S+){0,2} (?:и|а) (?:потом )?выплевыва/.source,
+  /(?:похуде\S*|скинуть|сбросить|скину|сброшу) (?:на )?(?:[3-9]|[1-9]\d) ?(?:кг|кило)\S* (?:за|в течение) (?:\S+ )?(?:неделю|недели|выходные|\d дн|дня|дней|пару дней|несколько дней)/.source,
+  /(?:съел|поел|наел|объел|сожрал)\S* .{0,40}(?:ненавижу себя|(?:противн|мерзк|отвратительн)\S* (?:\S+ )?(?:себе|себя)|(?:себе|себя) (?:\S+ )?(?:противн|мерзк|отвратительн)|мне (?:так |очень )?(?:мерзко|противно|отвратительно))/.source,
+  /наказ\S* себя .{0,30}(?:не (?:ем|ела|ел|ужина|завтрака|обеда|кушаю|есть)|голод|без (?:еды|ужина|обеда|завтрака)|едой)|(?:(?:^|[^а-я])вин[аеуыо]\S*|стыдно|стыд) .{0,30}когда (?:я )?(?:ем|кушаю|поем|ела|ел|наедаюсь)(?![а-я])/.source,
+  /(?:хочу|чтобы) (?:\S+ ){0,2}(?:видеть|видно|видны|были видны|торчали) (?:\S+ )?(?:ребра|ключиц|кости|тазов)|видеть (?:свои|мои) (?:ребра|ключиц|тазов)|(?:только|лишь|всего) (?:\S+ )?(?:одно|одну|один|1|пол) (?:яблок|банан|йогурт|огур|печень|сухар|хлебц|тарелк|порци|ложк|кусо?ч|кусок|конфет|бутерброд|салат|ед[аыу](?![а-я])|прием\S* (?:пищи|еды)|перекус)\S* (?:в день|за день)|(?:одно|одну|один|1) (?:\S+ )?в день,? чтобы (?:по)?худ/.source,
   /* Uzbek (also read on the Latin copy) */
   MENTOR_EATING_UZ.source
 ].join("|"));
@@ -161,15 +230,15 @@ var MENTOR_DIET_UZ = new RegExp([
   /kal+or|kkal|vazn|semir|semiz|par[hx]ez|dieta|\bketo\b|o[qk]sil|sushka|massa (?:yig|ol|osh)|intervalli ochlik|\btmi(?:m|mni|ni|ingiz|si)\b|tana massa/.source,
   /* oz- (lose weight), not ozgina (a little); "Xdan oʻzib ketmoq" (overtake) is cut first */
   /\boz(?:ish|aman|ayap|mo[qk]|gim|sam|sa|dim|dir|sh|ib (?:\S+ )?(?:kilo|kg|vazn))/.source,
-  /\d+ ?(?:kilo|kg)\S* ?(?:tush|tashla|oz|kamay|yig|b[ou]l)|\d+ ?kiloga|nech\S* kilo|kilo\S* (?:tashla|tush|y[ou][qk]ot)|ov[qk]atlanish (?:rejas|tartib|odat|[hx]a[qk]ida)|ratsion|t[ou]g?ri ov[qk]atlan/.source,
-  /[qk][ou]r(?:i)?n\S* (?:\S+ )?(?:y[ou][qk]ot|kichraytir|ozdir|tushir)|[qk][ou]rnim (?:chi[qk]ib|katta)|\byog(?:ni|ini|lar\S*)? (?:\S+ )?(?:y[ou][qk]|ketkaz|kuydir|erit)|nima y?e(?:yish|sam|yay|yishim)|\bozgin(?!a)|(?:^|[^a-z])[ou]ri[qk](?:man| b[ou]l)/.source
+  /\d+ ?(?:kilo|kg)\S* ?(?:tush|tashla|oz|kamay|yig|b[ou]l)|\d+ ?kiloga|nech\S* kilo|kilo\S* (?:tashla|tush|y[ou][qk]ot)|ov[qk]atlanish (?:rejas|tartib|odat|[hx]a[qk]ida)|ratsion(?!al)|t[ou]g?ri ov[qk]atlan/.source,
+  /[qk][ou]r(?:i)?n\S* (?:\S+ )?(?:y[ou][qk]ot|kichraytir|ozdir|tushir)|[qk][ou]rnim (?:chi[qk]ib|katta)|\byog(?:ni|ini|lar\S*)? (?:\S+ )?(?:y[ou][qk]|ketkaz|kuydir|erit)|nima y?e(?:yish|sam|yay|yishim)|\bozgin(?!a)|(?:^|[^a-z])[ou]ri[qk](?:man| b[ou]l)|(?:^|[^a-z])oriq(?![a-z])/.source
 ].join("|"));
 var MENTOR_DIET = new RegExp([
   /* English */
   /calor|kcal|\bk?cals?\b|\bdiet|nutrition|nutrient|\bcarbs?\b|sugar (?:intake|a day|per day)|how much sugar|(?:lose|loose|loss|lost|losing|drop|dropping|shed|gain|gaining|put on|burn) (?:\d+ ?)?(?:some |a few |a little |more |the )?(?:weight|wieght|wight|weigth|waight|kgs?|kilos?|pounds|lbs|belly|fat)\b|weight ?(?:lose|loss|gain|goal|watch)/.source,
   /\bweigh (?:\d|my ?self|less|more|too|only|around|about|like)|\bi weigh (?:\d|about|around|like|too|over|under|almost|nearly|only)|(?:should|do|would) i weigh\b(?! (?:my|the|both|it|them|pros|up|in)\b)|how much (?:should|do|does|can) (?:i|a \S+) weigh/.source,
   /my (?:body )?weight(?![a-z]| ?(?:training|lifting|room|bench|class|set|plates?|vest|belt))|(?:healthy|ideal|normal|good|average|right) weight|weight for my|overweight|over weight|underweight|obes/.source,
-  /\bbmi\b|body ?(?:mass|fat|weight|shape)|belly fat|(?:lose|burn|losing|burning|reduce|cut) (?:the |my |some )?(?:belly |body |face |arm |thigh |stomach |cheek )?fat\b|fat (?:loss|burn)|reduce (?:my )?(?:belly|stomach|waist|thighs)|double chin/.source,
+  /\bbmi\b|body ?(?:mass|fat|weight(?!\s?(?:exercis|squat|workout|training|routine|circuit|push|pull|lunge|plank))|shape)|belly fat|(?:lose|burn|losing|burning|reduce|cut) (?:the |my |some )?(?:belly |body |face |arm |thigh |stomach |cheek )?fat\b|fat (?:loss|burn)|reduce (?:my )?(?:belly|stomach|waist|thighs)|double chin/.source,
   /protein|macros|\bketo(?:genic|sis)?\b|intermittent|fasting|water fast|\bfast(?:ing)? for (?:\d|one|two|three|a (?:day|week|whole))|\bfast (?:\d|one|two|three) days|meal plan|meal prep|plan (?:my |our )?meals|diet plan|deficit (?:of|for)|in a deficit|surplus/.source,
   /\bbulking\b|(?:how to|how do i|should i|want to|wanna|time to|tips to|going to|gonna) bulk\b(?! up (?:my|your|the|on) (?:vocab|vocabulary|words|skills|knowledge|notes)\b)|bulk (?:and|or) cut|\bbulk (?:tips|season|phase|diet|meals?)\b|\bcut(?:ting)? (?:for (?:summer|season|a (?:show|meet|competition))|season|phase|without losing|diet)|on a cut\b|(?:clean|dirty|lean) bulk|\bon a bulk\b|\brecomp\b/.source,
   /skinn(?:y|ier)(?! (?:jeans|dip))|thinner|slimmer|slim(?:ming)? down|(?:get|be|become|look|stay|getting|being) (?:so |really |very )?(?:thin|slim)\b|flat (?:stomach|belly|tummy)|thigh gap|chubby/.source,
@@ -177,40 +246,85 @@ var MENTOR_DIET = new RegExp([
   /* Russian */
   /калори|ккал|диет|похуд|пахуд|худе(?:ть|ю|ла|л|ем|ешь|ют)(?![а-я])|худ(?:ой|ая|ые|ым|ую)(?![а-я])|потолст|(?:сбросить|скинуть|скину|сброшу) (?:вес|\d+ ?(?:кг|кило)|пару|кило|лишн)/.source,
   /набрать (?:мышечную )?(?:массу|вес(?! (?:в|на) (?:жиме|штанге|приседе|тренаж))|\d+ ?(?:кг|кило))|набор (?:массы|веса)|(?:^|[^а-я])имт(?:[^а-я]|$)|индекс массы|массы тела/.source,
-  /белок|белка (?:в день|на кг|в сутки|нужно|надо|для)|сколько белка|белков|протеин|бжу|голодани|(?:^|[^а-я])кето(?:[^а-я]|$|-?диет)/.source,
-  /сушк[а-я]*(?![а-я]| (?:волос|белья|одежд|обуви))|на сушке|рацион|план питания|меню на неделю|(?:^|[^а-я])пп(?:[^а-я]|$)|правильн\S* питани|(?:ем|кушать|кушаю|еды|питани)\S* (?:\S+ )?(?:сладк|фастфуд|вредн)|(?:не|перестать|бросить|меньше|как не) есть (?:\S+ )?(?:сладк|фастфуд|вредн|мучн|чипс)|фастфуд|вредн\S* (?:еда|еду|еды|пищ)/.source,
-  /сжечь жир|жир (?:на|с) |убрать (?:живот|бока|щеки|жир)|уменьшить (?:талию|живот|бедра|вес)|стройн/.source,
-  /вешу|весить|мой вес(?! (?:в|на) (?:жиме|штанге|приседе))|норма веса|лишний вес|(?:нормальн|идеальн|здоров)\S* вес|вес (?:нормальн|в \d+ лет|для (?:моего|роста))|что (?:съесть|поесть|есть|кушать) (?:перед|после|чтобы|на (?:ужин|завтрак|обед))|сколько (?:мне )?(?:нужно|надо) (?:есть|кушать)/.source,
+  /белок|белки (?:в день|на кг|или|и углевод)|белка (?:в день|на кг|в сутки|нужно|надо|для)|сколько белка|белков|протеин|бжу|голодани|(?:^|[^а-я])кето(?:[^а-я]|$|-?диет)/.source,
+  /сушк[а-я]*(?![а-я]| (?:волос|белья|одежд|обуви))|на сушке|рацион(?!альн)|план питания|меню на неделю|(?:^|[^а-я])пп(?:[^а-я]|$)|правильн\S* питани|(?:^|[^а-я])(?:(?:ем|ешь)(?![а-я])|кушать|кушаю|еды|питани\S*) (?:\S+ )?(?:сладк|фастфуд|вредн)|(?:не|перестать|бросить|меньше|как не) есть (?:\S+ )?(?:сладк|фастфуд|вредн|мучн|чипс)|фастфуд|вредн\S* (?:еда|еду|еды|пищ)/.source,
+  /сжечь жир|жир (?:на|с) |убрать (?:живот|бока|щеки|жир)|уменьшить (?:талию|живот|бедра|вес)|стройн(?!\S* (?:распоряд|график|систем|план|ряд|теори))/.source,
+  /(?:^|[^а-я])(?:вешу|весить)(?![а-я])|мой вес(?![а-я])(?! (?:в|на) (?:жиме|штанге|приседе))|норма веса|лишний вес|(?:нормальн|идеальн|здоров)\S* вес(?![а-я])|вес (?:нормальн|в \d+ лет|для (?:моего|роста))|что (?:съесть|поесть|есть|кушать) (?:перед|после|чтобы|на (?:ужин|завтрак|обед))|сколько (?:мне )?(?:нужно|надо) (?:есть|кушать)/.source,
   /* Uzbek (also read on the Latin copy) */
   MENTOR_DIET_UZ.source
 ].join("|"));
-/* "Xdan oʻzib ketmoq" (overtake X) without its apostrophe looks like ozmoq (lose weight) */
-var MENTOR_OVERTAKE = /\S+dan oz\S*/g;
+/* "Xdan oʻzib ketmoq" (overtake X) without its apostrophe looks like ozmoq (lose weight);
+   a time word ("bugundan ozishni boshlayman", from today) is not overtaking. Anchored at
+   word starts, so long text costs linear time */
+var MENTOR_OVERTAKE = /(^|\s)(?!(?:bugun|erta|hozir|dushanba|seshanba|chorshanba|payshanba|juma|shanba|yakshanba|yil|oy|hafta|kun|yoz|qish|bahor|kuz|bayram)\S*dan )\S+dan oz\S*/g;
 /* a body or energy number ("800 kcal", "45 kg") is health data: it is never sent to
    the AI, and an AI answer that contains one is replaced */
 var MENTOR_BODY = /\d+\s*(?:(?:k?cal|kkal|kgs?|lbs?|ккал|кг)(?![a-zа-я])|kilo(?!m)|кило(?!м))/;
+/* weight lifted is not a body number ("how do I bench 60 kg", "start with 5 kg dumbbells",
+   "3 kg gantel bilan"); it is cut before MENTOR_BODY reads the text */
+var MENTOR_LIFT = /(?:^|\s)(?:bench|squat|deadlift|press|lift|curl|row|dumbbells?|barbell|kettlebell|gantel|shtanga|штанг|гантел|гир|жим)\S*(?: \S+)? \d+\s*(?:kgs?|lbs?|кг|kilo(?!m)|кило(?!м))\S*|\d+\s*(?:kgs?|lbs?|кг|kilo(?!m)|кило(?!м))\S* (?:\S+ )?(?:dumbbell|barbell|kettlebell|plate|gantel|shtanga|штанг|гантел|гир)/g;
 /* food restriction and weighing as a plan ("skip dinner", "eat only…", "не есть",
    "kechki ovqatni tashlash", "only water") count as diet and never become a card */
 var MENTOR_RESTRICT_UZ = /(?:ov[qk]at|nonushta|tushlik)\S* (?:y?ema|tashla|[qk]oldir|[qk]ilma)|ov[qk]atlanma|ov[qk]atsiz|nonushtasiz|faqat (?:\S+ ){0,2}(?:yey|yeng(?![a-z]))|(?:^|\s)och [qk]ol|faqat suv(?![a-z])|faqat suvni/;
 var MENTOR_RESTRICT = new RegExp([
   /* English */
-  /(?:^|\s)(?:skip|skipping|skipped|no|without)\s+(?:the\s+|my\s+)?(?:dinner|breakfast|lunch|supper|meals?|food|eating)(?![a-z])|(?:^|\s)eat(?:ing)?\s+(?:only|nothing)|(?:^|\s)only\s+eat|(?:^|\s)(?:dont|do not|stop|never|not|cannot)\s+eat(?:ing)?(?![a-z])|eat(?:ing)? less(?! (?:sugar|junk|sweets|fast food)\b)|only water|weigh(?:ing)? my ?self/.source,
+  /(?:^|\s)(?:skip|skipping|skipped|no|without)\s+(?:the\s+|my\s+)?(?:dinner|breakfast|lunch|supper|meals?|food|eating)(?![a-z])|(?:^|\s)eat(?:ing)?\s+(?:only|nothing)|(?:^|\s)only\s+eat|(?:^|\s)(?:dont|do not|stop|never|not|cannot)\s+eat(?:ing)?(?![a-z])|(?:^|\s)eat(?:ing)? less(?! (?:sugar|junk|sweets|fast food)\b)|only water|weigh(?:ing)? my ?self/.source,
   /* Russian */
   /(?:^|[^а-я])не\s+(?:есть|кушать|ужинать|завтракать|обедать|питаться)(?![а-я])|пропус\S*\s+(?:ужин|завтрак|обед|ед[уы]|прием\S*\s+пищи)|(?:^|[^а-я])без\s+(?:ужина|завтрака|обеда|еды)(?![а-я])|(?:^|[^а-я])(?:ем|ешь|кушать|кушаю)\s+только|(?:буду|можно|надо|нужно|чтобы|хочу) есть только|только\s+(?:ем|кушать|кушаю)(?![а-я])|голодать|отказ\S*\s+от\s+(?:еды|ужина|завтрака|обеда)|только вод[аыуе](?![а-я])/.source,
   /* Uzbek (also read on the Latin copy) */
   MENTOR_RESTRICT_UZ.source
 ].join("|"));
-/* the one safety check used everywhere (in the app: the question, the AI answer, cards
-   and the summary; in the Worker: the question, hero data, earlier turns, the answer and
-   actions): "crisis", "eating", "diet" or "" when the text is safe. The strongest wins. */
-function mSafetyKind(s){
-  var n = mSafeNorm(s), c = mSafeCopy(s, n);
-  if(MENTOR_CRISIS.test(n) || (c && MENTOR_CRISIS_UZ.test(c))) return "crisis";
-  if(MENTOR_EATING.test(n) || (c && MENTOR_EATING_UZ.test(c))) return "eating";
-  var d = n.replace(MENTOR_OVERTAKE, " "), dc = c.replace(MENTOR_OVERTAKE, " ");
-  if(MENTOR_DIET.test(d) || (dc && MENTOR_DIET_UZ.test(dc)) || MENTOR_BODY.test(n)) return "diet";
-  if(MENTOR_RESTRICT.test(n) || (c && MENTOR_RESTRICT_UZ.test(c))) return "diet";
+/* RAMADAN: not eating by day while fasting is faith, not eating distress. It counts as
+   diet (answered on the device, never sent) only with a daytime or iftar marker, and never
+   with a body, purging or self-blame word or "at night too" ("Ramazonda kunduzi ham,
+   kechasi ham hech narsa yemayman" stays eating distress) */
+var MENTOR_FAITH = /ramadan|ramazan|ramazon|\br[ou]za\b|r[ou]za tut|uraza|ураз|рамадан|рамазан|iftar|iftor|saharlik|suhoor|sahur|ифтар|сахур/;
+var MENTOR_DAYTIME = /kunduz|kun boyi|kechgacha|iftar|iftor|saharlik|suhoor|sahur|all day|during the day|daytime|until (?:sunset|evening|dark)|днем|весь день|целый день|до заката|до вечера|ифтар|сахур/;
+var MENTOR_NIGHT_TOO = /kechasi ham|kechqurun ham|tunda ham|kechayu kunduz|kun-?u tun|(?:iftar|iftor)dan keyin ham|after (?:iftar|sunset) (?:too|as well)|even after (?:iftar|sunset|dark)|(?:and|or) at night|at night too|night too|day and night|night and day|ночью тоже|и ночью|днем и ночью|ночью и днем|день и ночь|(?:и|даже) после ифтара|вечером тоже/;
+var MENTOR_FAITH_BODY = /\blos|\bthin|skinn|\bfat\b|weigh|\bkg|\d ?kg|kilo(?!m)|kcal|calor|kal+or|throw|puk|vomit|purg|hate|guilt|disgust|ashamed|punish|\boz(?:ish|moq|gim|aman|ayap|ib|sam)|semir|semiz|vazn|\bqus|[qk]ayt [qk]il|nafrat|aybdor|jirkan|jazola|похуд|худе|толст|жир|рвот|ккал|калори|\d ?кг|кило(?!м)|ненавиж|(?:^|[^а-я])вин[аеуыо]|стыд|наказ/;
+function mFasting(t){ return MENTOR_FAITH.test(t) && MENTOR_DAYTIME.test(t) && !MENTOR_NIGHT_TOO.test(t) && !MENTOR_FAITH_BODY.test(t); }
+/* the walls in order; "answer" reads an AI answer (mSafetyKindAnswer) */
+function mSafeKinds(s, answer){
+  var n = mSafeNorm(s), c = mSafeCopy(s, n), m = mSafeMark(s);
+  if(MENTOR_CRISIS.test(n) || (c && MENTOR_CRISIS_UZ.test(c)) || (m && MENTOR_DIE_UZ.test(m))) return "crisis";
+  if(MENTOR_EATING.test(n) || (c && MENTOR_EATING_UZ.test(c))) return (answer || mFasting(n + " " + c)) ? "diet" : "eating";
+  var d = n.replace(MENTOR_OVERTAKE, "$1 "), dc = c.replace(MENTOR_OVERTAKE, "$1 ");
+  if(MENTOR_DIET.test(d) || (dc && MENTOR_DIET_UZ.test(dc)) || MENTOR_BODY.test(n.replace(MENTOR_LIFT, " "))) return "diet";
+  if(!answer && (MENTOR_RESTRICT.test(n) || (c && MENTOR_RESTRICT_UZ.test(c)))) return "diet";
   return "";
+}
+/* the one safety check used everywhere (in the app: the question, cards and the summary;
+   in the Worker: the question, hero data, earlier turns and actions): "crisis", "eating",
+   "diet" or "" when the text is safe. The strongest wins. */
+function mSafetyKind(s){ return mSafeKinds(s, false); }
+/* the check on an AI answer, in the app and in the Worker: the same walls, but eating
+   words count as diet (the hero said nothing about distress) and food restriction
+   (MENTOR_RESTRICT) is left out, because ordinary advice says "don't skip breakfast" or
+   "don't eat a heavy meal before sleep" */
+function mSafetyKindAnswer(s){ return mSafeKinds(s, true); }
+
+/* SOFT DISTRESS: wording that sounds distressed but that the walls above cannot place
+   ("I hate myself", "nobody cares about me", "я больше не выдержу", "endi chiday
+   olmayman"). The Mentor answers it with a short, kind text that names a trusted person
+   and 112, with no tips and no card, and it is never sent to the AI. Narrow on purpose:
+   "I don't want to procrastinate anymore", "Хочу жить по режиму" and "nobody likes
+   Mondays" are everyday questions. Read only when mSafetyKind found nothing */
+var MENTOR_SOFT_UZ = /uyg[ou]nmasam (?:\S+ )?(?:deyman|edi|yaxshi(?! emas))|(?:^|[,.!?] )(?:men )?endi chida\S* ?olmayman|[hx]ayotim (?:befoyda|keraksiz|ma?nosiz)|(?:yashash\S*|[hx]ayot\S*|[hx]ech narsa\S*|[hx]ammasiga) (?:\S+ )?kuchim [qk]olmadi|\b[ou]zimdan nafratlan|\b[ou]zimni (?:\S+ )?y[ou]mon k[ou]raman|[hx]ech kim meni (?:sevmaydi|tushunmaydi|yo[qk]tirmaydi)|meni [hx]ech kim (?:sevmaydi|tushunmaydi|yo[qk]tirmaydi)/;
+var MENTOR_SOFT = new RegExp([
+  /* English */
+  /hate (?:my ?self|my life|being alive|being me)\b|(?:nobody|no one|noone) (?:\S+ )?(?:cares about me|cares if i|cares whether i|loves me|likes me|wants me|needs me|understands me)\b|(?:everyone|everybody) hates me\b|everything is my fault|(?:cant|cannot|can not) (?:take|handle|bear) (?:it|this|any of this|everything|my life)(?: \S+)? (?:anymore|any more)\b|give up on (?:everything|my ?self)\b/.source,
+  /(?:dont|do not|cant|cannot|no longer) see (?:a |any |the )?(?:reason|point)(?:\W*$| (?:to |in |of )?(?:keep going|keeping going|go on|going on|carry on|anything|living)\b)|(?:think\w*|thought|hope|wish)\b.{0,20}\b(?:not|never|dont|wont) wak(?:e|ing) up(?:\W*$| again\b| ever\b| anymore\b)|\b(?:i feel|im|i am) (?:so |really |completely |totally |very |just )?(?:worthless|hopeless|empty inside|numb inside|unloved|so alone|all alone)(?:\W*$| (?:and|all the time|every day|anymore|inside)\b)/.source,
+  /* Russian */
+  /ненавижу (?:себя|свою жизнь)|никому (?:я )?не нуж(?:ен|на|ны)(?![а-я])|никто меня не (?:любит|понимает)|меня никто не (?:любит|понимает|замечает)|(?:больше|уже) не (?:выдержу|выдерживаю|вынесу)(?:[^а-я]*$| (?:так|этого|всего|это|ничего|жить))|бы (?:я )?(?:вообще |никогда )?не родил|наказываю себя|чувств\S* (?:\S+ )?вин[уыа] (?:каждый раз|всегда|постоянно)|(?:^|[^а-я])я (?:\S+ (?:и )?)?(?:мерзк|отвратительн|противн|никчемн|ничтожн)(?:ая|ый|ое|ен|на)(?![а-я])/.source,
+  /(?:зачем|незачем|не хочу|не могу|нет сил|устал\S*|надоело) (?:\S+ ){0,2}жить(?![а-я])(?! (?:в|во|с|со|у|на|за|без|по|так|рядом|около|там|отдельно|одн\S*|вместе)(?:[^а-я]|$))|(?:хочу|мечтаю о|жду|думаю о|мысли о) (?:\S+ )?смерт|(?:все|всё) равно,? (?:жить|умру|умереть)/.source,
+  /* Russian typed in Latin letters */
+  /\b(?:umeret|umirat|sdohnut)\b|(?:ne (?:x|h|kh)ochu|zachem) (?:\S+ )?(?:zh|j)it\b|\b(?:zh|j)it ne (?:x|h|kh)ochu\b/.source,
+  /* Uzbek (also read on the Latin copy) */
+  MENTOR_SOFT_UZ.source
+].join("|"));
+function mSoftDistress(s){
+  var n = mSafeNorm(s), c = mSafeCopy(s, n), m = mSafeMark(s);
+  return MENTOR_SOFT.test(n) || !!(c && MENTOR_SOFT_UZ.test(c)) || !!(m && MENTOR_DIE_UZ.test(m));
 }
 /* ==== SAFETY WALLS: end ==== */
 
@@ -225,6 +339,12 @@ const SAFE_REPLY = {
     en: "It sounds like eating might be hard right now. That matters, and you don't have to handle it alone. Please talk to a doctor or someone you trust soon. If you ever feel in danger, call your local emergency number. findahelpline.com lists free helplines for your country.",
     ru: "Похоже, с едой сейчас может быть непросто. Это важно, и справляться с этим в одиночку не нужно. Пожалуйста, скоро поговорите с врачом или с тем, кому доверяете. Если почувствуете опасность, звоните по местному номеру экстренной помощи. На findahelpline.com есть бесплатные линии помощи для вашей страны.",
     uz: "Hozir ovqatlanish qiyin boʻlayotganga oʻxshaydi. Bu muhim va siz u bilan yolgʻiz kurashishingiz shart emas. Iltimos, tez orada shifokor yoki ishongan odamingiz bilan gaplashing. Agar xavf his qilsangiz, mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling. findahelpline.com saytida mamlakatingiz uchun bepul yordam liniyalari bor."
+  },
+  /* the app's MENTOR_TXT.soft, word for word */
+  soft: {
+    en: "If you are going through something hard, you don't have to handle it alone: talk to someone you trust today. If you might be in danger, call 112 (Uzbekistan) or your local emergency number.",
+    ru: "Если вам сейчас тяжело, не нужно справляться с этим в одиночку: поговорите сегодня с тем, кому доверяете. Если вам может угрожать опасность, звоните 112 (Узбекистан) или по местному номеру экстренной помощи.",
+    uz: "Agar hozir qiyin boʻlsa, bu bilan yolgʻiz kurashishingiz shart emas: bugun ishongan odamingiz bilan gaplashing. Agar sizga xavf tugʻilishi mumkin boʻlsa, 112 ga (Oʻzbekiston) yoki mahalliy favqulodda yordam raqamiga qoʻngʻiroq qiling."
   },
   diet: {
     en: "Food and body weight are health questions, so I don't give numbers or diets. A doctor or a registered dietitian can. I can help with the habit side: regular meal times, water within reach, vegetables on the plate, and enough sleep. Not medical advice.",
@@ -448,11 +568,10 @@ export default {
     const agent = body.mode === "agent";
     if (!q || q.length > MAX_Q || ctx.length > MAX_CTX) return json({ error: "bad" }, 400, origin);
 
-    /* safety answers come first, cost nothing, ignore the limit and never reach the model */
-    const qk = unsafeKind(q);
+    /* safety answers come first, cost nothing, ignore the limit and never reach the model;
+       soft distress (mSoftDistress, "I hate myself") gets its own kind reply the same way */
+    const qk = unsafeKind(q) || (mSoftDistress(q) ? "soft" : "");
     if (qk) return json({ answer: SAFE_REPLY[qk][lang], safety: true, kind: qk }, 200, origin);
-    /* a line of hero data that touches crisis, eating or diet (a quest named "No food until 45 kg") is dropped */
-    const safeCtx = ctx.split("\n").filter(function (l) { return !unsafeKind(l); }).join("\n");
 
     const day = new Date().toISOString().slice(0, 10);
     const userKey = "n:" + day + ":" + uid, allKey = "g:" + day;
@@ -464,6 +583,10 @@ export default {
     const allUsed = num(await env.LIMITS.get(allKey), 0);
     if (allUsed >= num(env.GLOBAL_DAILY_LIMIT, 200)) return json({ error: "busy", left: limit - used, limit: limit }, 503, origin);
 
+    /* a line of hero data that touches crisis, eating or diet (a quest named "No food until
+       45 kg") is dropped; it is read only after the limits, so a request past them costs
+       no CPU on it (earlier turns are checked in buildMessages, below) */
+    const safeCtx = ctx.split("\n").filter(function (l) { return !unsafeKind(l); }).join("\n");
     const model = env.MODEL || DEFAULT_MODEL;
     let out;
     try {
@@ -482,11 +605,11 @@ export default {
     await env.LIMITS.put(userKey, String(used + 1), { expirationTtl: TWO_DAYS });
     try { await env.LIMITS.put(allKey, String(allUsed + 1), { expirationTtl: TWO_DAYS }); } catch (e) { /* the total is a guard, not a gate */ }
     /* the model's answer is checked too: an unsafe one is replaced by the fixed
-       reply, with no actions (it was delivered, so it still counts). Eating words in
-       the model's own answer ("eat 800 kcal") get the diet reply, as in the app: the
-       hero said nothing about distress */
-    let ak = unsafeKind(text);
-    if (ak === "eating") ak = "diet";
+       reply, with no actions (it was delivered, so it still counts). mSafetyKindAnswer,
+       as in the app, reads eating words in the model's own answer ("eat 800 kcal") as
+       diet (the hero said nothing about distress) and lets ordinary advice such as
+       "don't skip breakfast" through */
+    const ak = mSafetyKindAnswer(text);
     if (ak) return json({ answer: SAFE_REPLY[ak][lang], safety: true, kind: ak, left: Math.max(0, limit - used - 1), limit: limit }, 200, origin);
     const res = { answer: text, left: Math.max(0, limit - used - 1), limit: limit };
     if (ag) res.actions = ag.actions;

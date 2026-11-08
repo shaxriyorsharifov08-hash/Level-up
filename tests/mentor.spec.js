@@ -372,6 +372,54 @@ test.describe("Mentor AI", () => {
     expect(seen.length).toBe(0);
   });
 
+  test("soft distress gets a kind answer with a trusted person and 112: no tips, no card, never sent", async ({ page }) => {
+    await bootAsGuest(page);
+    /* a fake Worker address, so any request the app made would be counted here */
+    const seen = await fakeWorker(page, { body: { answer: "Read 10 pages after dinner.", left: 2, limit: 3 } });
+    await aiReady(page, "yes");
+    expect(await page.evaluate(() => agentOn() && aiOffered())).toBe(true);
+    for (const q of ["i hate myself", "nobody cares about me", "ненавижу себя", "я больше не выдержу этого", "endi chiday olmayman", "hech kim meni tushunmaydi", "add quest: i hate myself"]) {
+      await ask(page, q);
+      await expect(page.locator("#mentorAnswer .m-you")).toContainText(q);
+      await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+      await expect(page.locator("#mentorAnswer .m-text")).toHaveText(/^If you are going through something hard, you don't have to handle it alone: talk to someone you trust today\. If you might be in danger, call 112/);
+      await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
+      await expect(page.locator("#mentorAnswer .ag-card")).toHaveCount(0);
+      await expect(page.locator("#mentorAnswer [data-mq='ans']")).toHaveCount(0);
+    }
+    expect(seen.length).toBe(0);
+    /* the same answer in Russian and Uzbek, with 112 */
+    const t = await page.evaluate(() => { const out = ["ru", "uz"].map((l) => { state.lang = l; const a = mentorAnswer("ненавижу себя"); return a.kind + " " + a.text; }); state.lang = "en"; return out; });
+    expect(t[0]).toBe("soft Если вам сейчас тяжело, не нужно справляться с этим в одиночку: поговорите сегодня с тем, кому доверяете. Если вам может угрожать опасность, звоните 112 (Узбекистан) или по местному номеру экстренной помощи.");
+    expect(t[1]).toContain("soft Agar hozir qiyin boʻlsa");
+    expect(t[1]).toContain("112 ga (Oʻzbekiston)");
+    /* an everyday question that only sounds like it still reaches Mentor AI */
+    await ask(page, "I don't want to procrastinate anymore");
+    await expect(page.locator("#mentorAnswer")).toContainText("Read 10 pages after dinner.");
+    expect(seen.length).toBe(1);
+  });
+
+  test("ordinary AI advice passes the answer check, and a Worker soft reply is the app's own", async ({ page }) => {
+    await bootAsGuest(page);
+    let reply = { body: { answer: "1. Set a fixed bedtime. 2. Don't eat a heavy meal right before sleep. Next step: a quest \"Phone away at 22:00\".", left: 2, limit: 3 } };
+    const seen = await fakeWorker(page, () => reply);
+    await aiReady(page, "yes");
+    await ask(page, "How do I sleep better?");
+    await expect(page.locator("#mentorAnswer")).toContainText("Don't eat a heavy meal right before sleep");
+    await expect(page.locator("#mentorAnswer .m-src")).toContainText("Mentor AI");
+    reply = { body: { answer: "Не пропускайте завтрак и держите воду рядом.", left: 1, limit: 3 } };
+    await ask(page, "Как начать утро?");
+    await expect(page.locator("#mentorAnswer")).toContainText("Не пропускайте завтрак");
+    expect(await page.evaluate(() => aiLeftToday())).toBe(1);
+    reply = { body: { answer: "Worker words", safety: true, kind: "soft" } };
+    await ask(page, "How do I stay calm?");
+    await expect(page.locator("#mentorAnswer .m-ans.m-care")).toBeVisible();
+    await expect(page.locator("#mentorAnswer")).toContainText("talk to someone you trust today");
+    await expect(page.locator("#mentorAnswer .m-src")).toContainText("On-device");
+    await expect(page.locator("#mentorAnswer")).not.toContainText("Worker words");
+    expect(seen.length).toBe(3);
+  });
+
   test("an unsafe Mentor AI answer is replaced by the on-device safety answer, with no actions", async ({ page }) => {
     await bootAsGuest(page);
     let reply = { body: { answer: "Easy: eat 800 kcal a day and you will feel light.", left: 2, limit: 3, actions: [{ t: "quest", name: "Drink water" }] } };

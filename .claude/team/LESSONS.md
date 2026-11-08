@@ -5,6 +5,7 @@ Short, concrete rules learned from real work on this project. Every role reads t
 ## Code (index.html)
 - `\b` does not work next to Cyrillic in JavaScript regexes: it only knows A–Z, 0–9 and _. Use `(?=\s|$)` or a lookbehind instead. (The Mentor's Russian keywords needed this; rules-check now warns.)
 - Uzbek puts the verb last ("kitob oʻqishni qanday odat **qilaman**") and asks mid-sentence. A command parser must accept only the imperative ("qoʻsh", "qoʻshing", "och") and treat question words (qanday, nega, qachon) as questions. (A question became an "add quest" command until a test caught it.)
+- `\W` counts Cyrillic letters as non-word in JavaScript, so `\W*$` after a Russian word matches any Russian text that follows ("Я больше не выдержу эту жару" became crisis). End a Russian pattern with `[^а-я]*$`. (Found in the Mission 1.1 fix round.)
 - `mNorm()` lowers case and turns every apostrophe kind into `'`. Match on the normalised text, but cut names from the original so capitals survive (both have the same length).
 - The ASK box is a single-line `<input>`: newlines never reach the code. Several commands in one line are separated with `;`.
 - Escape every user or AI text with `esc()` before it goes into HTML, including text that "only comes from our own Worker".

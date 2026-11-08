@@ -11,7 +11,8 @@ const { test, expect } = require("@playwright/test");
 const SRC = path.resolve(__dirname, "..", "ai-proxy", "worker.mjs");
 const APP = path.resolve(__dirname, "..", "index.html");
 const CORPUS = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "safety-corpus.json"), "utf8"));
-const WALLS = ["MENTOR_CRISIS", "MENTOR_CRISIS_UZ", "MENTOR_EATING", "MENTOR_EATING_UZ", "MENTOR_DIET", "MENTOR_DIET_UZ", "MENTOR_OVERTAKE", "MENTOR_BODY", "MENTOR_RESTRICT", "MENTOR_RESTRICT_UZ"];
+const WALLS = ["MENTOR_CRISIS", "MENTOR_CRISIS_UZ", "MENTOR_DIE_UZ", "MENTOR_EATING", "MENTOR_EATING_UZ", "MENTOR_DIET", "MENTOR_DIET_UZ", "MENTOR_OVERTAKE", "MENTOR_BODY", "MENTOR_LIFT",
+  "MENTOR_RESTRICT", "MENTOR_RESTRICT_UZ", "MENTOR_FAITH", "MENTOR_DAYTIME", "MENTOR_NIGHT_TOO", "MENTOR_FAITH_BODY", "MENTOR_SOFT", "MENTOR_SOFT_UZ"];
 /* the SAFETY WALLS block of a file, as text, and run on its own (it needs nothing else) */
 function wallsBlock(file) {
   const src = fs.readFileSync(file, "utf8");
@@ -19,7 +20,7 @@ function wallsBlock(file) {
   if (a === -1 || b < a) throw new Error("no SAFETY WALLS block in " + file);
   return src.slice(a, b);
 }
-function wallsRun(block) { return new Function(block + "\nreturn {" + WALLS.map((w) => w + ":" + w).join(",") + ", mSafetyKind:mSafetyKind};")(); }
+function wallsRun(block) { return new Function(block + "\nreturn {" + WALLS.map((w) => w + ":" + w).join(",") + ", mSafetyKind:mSafetyKind, mSafetyKindAnswer:mSafetyKindAnswer, mSoftDistress:mSoftDistress};")(); }
 const ORIGIN = "https://shaxriyorsharifov08-hash.github.io";
 const PROJECT = "level-up-hunter-03";
 const JWKS = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -431,6 +432,51 @@ test.describe("the Mentor AI proxy", () => {
     expect((await call(e, { body: { q: "eating 500 cals a day is that ok", ctx: "", lang: "en", turns: [] } })).j.kind).toBe("eating");
     expect(e.AI.calls.length).toBe(0);
     expect(e.LIMITS.puts.length).toBe(0);
+  });
+
+  test("soft distress gets the fixed soft reply, the app's words, and never reaches the model", async () => {
+    const src = fs.readFileSync(APP, "utf8");
+    const m = /\n  soft:\{en:"((?:[^"\\]|\\.)*)", ru:"((?:[^"\\]|\\.)*)", uz:"((?:[^"\\]|\\.)*)"\}/.exec(src);
+    expect(m).not.toBeNull();
+    const app = { en: m[1], ru: m[2], uz: m[3] };
+    const e = env();
+    for (const [lang, q] of [["en", "i hate myself"], ["en", "nobody cares about me"], ["ru", "ненавижу себя"], ["uz", "endi chiday olmayman"], ["uz", "ўзимдан нафратланаман"]]) {
+      const r = await call(e, { body: { q, ctx: "", lang, turns: [] } });
+      expect(r.status).toBe(200);
+      expect(r.j.safety).toBe(true);
+      expect(r.j.kind).toBe("soft");
+      expect(r.j.answer).toBe(app[lang]);
+      expect(r.j.left).toBeUndefined(); /* it costs no question */
+    }
+    expect(e.AI.calls.length).toBe(0);
+    expect(e.LIMITS.puts.length).toBe(0);
+    /* an everyday question that only sounds like it still reaches the model */
+    const ok = await call(e, { body: { q: "I don't want to procrastinate anymore", ctx: "", lang: "en", turns: [] } });
+    expect(ok.j.safety).toBeUndefined();
+    expect(e.AI.calls.length).toBe(1);
+  });
+
+  test("typical model answers pass the answer check; a crisis or eating answer is still replaced", async () => {
+    const token = await sign(claims());
+    let reply = "";
+    const e = env({ LIMITS: kv({ "premium:hero-uid-1": "1000" }), AI: { calls: [], async run(model, input) { this.calls.push(input); return { response: reply }; } } });
+    const replaced = [];
+    for (const a of CORPUS.answerSafe) {
+      reply = a;
+      const r = await call(e, { token, body: { q: "How do I build a good routine?", ctx: "", lang: "en", turns: [] } });
+      if (r.status !== 200 || r.j.safety) replaced.push(a + " -> " + (r.j && r.j.kind));
+    }
+    expect(replaced).toEqual([]);
+    for (const [a, kind] of CORPUS.answerUnsafe) {
+      reply = a;
+      const r = await call(e, { token, body: { q: "How do I build a good routine?", ctx: "", lang: "en", turns: [] } });
+      expect(r.j.safety, a).toBe(true);
+      expect(r.j.kind, a).toBe(kind);
+      expect(r.j.actions).toBeUndefined();
+    }
+    /* the Worker's check is the app's */
+    const src = fs.readFileSync(SRC, "utf8");
+    expect(src).toMatch(/const ak = mSafetyKindAnswer\(text\);/);
   });
 
   test("the Worker holds no secret, logs nothing, and needs no package", () => {
