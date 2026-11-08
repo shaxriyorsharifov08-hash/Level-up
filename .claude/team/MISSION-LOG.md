@@ -5,7 +5,7 @@ The team's memory between sessions. The lead updates it after **every** task: wh
 ## Status board
 | Mission | Status | Last update |
 |---|---|---|
-| 1.1 Safety walls 2.0 | ⬜ not started | — |
+| 1.1 Safety walls 2.0 | 🔄 in progress | 2026-11-08 |
 | 1.2 Sync that never loses progress | ⬜ not started | — |
 | 1.3 Exact undo + migrations | ⬜ not started | — |
 | 1.4 Hardening + clock suite | ⬜ not started | — |
@@ -24,7 +24,8 @@ The team's memory between sessions. The lead updates it after **every** task: wh
 Status: ⬜ not started · 🔄 in progress · ✅ done · ⏸ parked (blocked; reason in the log) · 🚦 waiting for the owner
 
 ## NEXT
-Mission 1.1, first task (health-safety builds the phrase corpus).
+Mission 1.1: health-safety builds the phrase corpus while the coder builds the safety plumbing (normalizer, AI output filter, agent caps, summary filter, 112 in the crisis text).
 
 ## Log
+- 2026-11-08: Mission 1.1 started (owner: "Start"). Plan: corpus ‖ plumbing → rebuild the lists against the corpus → translator → tester → reviewer ‖ health-safety.
 - 2026-11-08: roadmap drafted from the team review; nothing started.
