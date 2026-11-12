@@ -55,11 +55,11 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 
 ### Mission 1.2: Sync that never loses progress (review #2)
 **Goal:** opening the app on an old device can never erase newer work, and a shared phone never mixes two accounts.
-- [ ] planner: map every path that adopts or pushes a save (`setupAuthListener`, `cloudPush`, `cloudAdopt`, import, restore, delete).
 - [ ] coder: a pure `pickWinner(local, remote)` by real change time (`updatedAt`), not save count; a snapshot to IndexedDB before any adopt or overwrite; a "which copy do you keep?" window when both changed.
 - [ ] coder: store the owner uid in the save (versioned migration); a different account signing in is asked before any sync or clan publish.
 - [ ] coder: import and restore raise the count; deletion leaves a cloud marker that every device obeys.
-- [ ] tester: Firebase stubbed with `page.route`; tests for two devices, offline then online, a shared phone, restore, delete.
+- [x] tester: a fake Firebase (`tests/fake-firebase.js`); failing tests for two devices, offline then online, a shared phone, restore, delete (`tests/sync.spec.js`, `test.fail` until fixed).
+- [x] planner: map every path that adopts or pushes a save.
 - [ ] reviewer: final review against owner rule 1.
 
 **Done when:** every scenario in the tests keeps the newest work or asks, and an old save loads unchanged.
