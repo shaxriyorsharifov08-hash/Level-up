@@ -56,6 +56,10 @@ Short, concrete rules learned from real work on this project. Every role reads t
 - Held-out crisis and eating-distress test phrases must come from people (the owner, native speakers, a counsellor), not from an agent: an AI safety system stopped a health-safety agent writing them. Agents can write the benign half (diet, tricky normals, safe commands). Never route around such a stop. (Blind round 2, Mission 1.1.)
 - A corpus the patterns were tuned on measures nothing new: the first blind round scored 75% while the corpus scored 100%. Keep a held-out set the code authors never see, hashed before any fix.
 
+- Every phrase a reviewer or tester reports goes into the corpus in the same change, in the group it should be in. A pattern tightened for one phrase made new false alarms elsewhere three times in Mission 1.1; only the corpus caught them.
+- For "X again / ever / anymore" in a crisis pattern, anchor at the end of the message (`again\W*$`), not with `\b`: "I hope I don't wake up again at night" is a sleep question.
+- Two long agents at once hit the 5-hour usage limit together, and the mission stalled for hours. Stagger heavy agents, and when a reviewer gives exact small fixes, the lead applies them instead of starting another coder round.
+
 ## Whole-app review (8 Nov 2026)
 - Keyword safety lists catch only exact phrases: ~15% of realistic crisis/eating wording was caught. Safety lists need a phrase corpus test in every language (slang, misspellings, Cyrillic Uzbek, no apostrophes), and food/body words must route to "diet" before any library tip.
 - A new default in `defaultState()` hides a flag-based migration: the defaults merge runs before `migrateState()`, so `if(!state.flag)` never fires for old saves (roadSpV3). Test migrations through `load()` with an old-save fixture, never by calling `migrateState()` directly.

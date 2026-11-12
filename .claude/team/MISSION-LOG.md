@@ -5,8 +5,8 @@ The team's memory between sessions. The lead updates it after **every** task: wh
 ## Status board
 | Mission | Status | Last update |
 |---|---|---|
-| 1.1 Safety walls 2.0 | 🔄 in progress | 2026-11-08 |
-| 1.2 Sync that never loses progress | ⬜ not started | — |
+| 1.1 Safety walls 2.0 | ✅ done | 2026-11-12 |
+| 1.2 Sync that never loses progress | 🔄 in progress | 2026-11-12 |
 | 1.3 Exact undo + migrations | ⬜ not started | — |
 | 1.4 Hardening + clock suite | ⬜ not started | — |
 | 2.1 Russian and Uzbek complete | ⬜ not started | — |
@@ -24,10 +24,12 @@ The team's memory between sessions. The lead updates it after **every** task: wh
 Status: ⬜ not started · 🔄 in progress · ✅ done · ⏸ parked (blocked; reason in the log) · 🚦 waiting for the owner
 
 ## NEXT
-Mission 1.1, closing: (a) the coder's small round 2 (5 held-out benign false alarms: "haven't eaten yet" and "I'm hungry" in EN/UZ/UZ-Cyrillic; ordinary nutrition questions route to diet) ‖ (b) the reviewer re-reviews the committed fix round 80f28da. Then the whole suite, the benign held-out probe again (`scratchpad/lead/benign-probe.js`), mark 1.1 ✅ if clean, and start Mission 1.2.
-🚦 Owner (D8): people write the held-out distress phrases; that gate stays before `AI_PROXY_URL` is set (Mission 4.1). Keep `AI_PROXY_URL` empty.
+Mission 1.2 (sync that never loses progress): planner maps every path that adopts or pushes a save (read-only) → coder: `pickWinner` by `updatedAt`, a snapshot before any overwrite, the owner uid in the save (versioned migration) → tester: Firebase stubbed with `page.route` → reviewer against owner rule 1.
+🚦 Owner (D8): people write the held-out crisis and eating-distress phrases; that test (≥90% per language) gates setting `AI_PROXY_URL` (Mission 4.1). Keep `AI_PROXY_URL` empty and do not deploy the Worker until then.
+Carried from 1.1 (optional, for health-safety in Mission 3.2): a soft answer could also show the library tips (now it shows only the kind text); "No one would notice" / "disappear for a while" still read as crisis; "Type fast for 10 minutes" reads as diet; "maqsad: 40 kg gantel bilan" is allowed as a lifting goal.
 
 ## Log
+- 2026-11-12 17:15 UTC: **Mission 1.1 done.** Round 2 verified (held-out benign set: 0 of 169 everyday phrases fire, down from 9 before the mission's fix rounds; 53/60 nutrition questions get the careful diet answer). The reviewer's re-review of 80f28da found 2 blocking problems ("I hope I don't wake up again at night" and "hayotim befoyda emas" read as crisis; the soft net fired on a few everyday questions); the lead applied its exact fixes, plus the idioms and the lift/body-goal fix. Final: corpus 100% in every group and language, 0 of 741 normals, every unsafe agent command refused, 164 old terms kept, the whole suite 338/338. The session was idle 9–12 Nov (worker restarts); no work was lost.
 - 2026-11-09 04:40 UTC: the coder (round 2) and the reviewer (re-review) both stopped on the 5-hour usage limit at about 15:00 UTC on 8 Nov (reset 18:50 UTC); the session then sat idle overnight. Round 2's edits were in the working tree, both blocks still identical. Both agents resumed with SendMessage.
 - 2026-11-08 14:55 UTC: fix round done (coder) and committed as 80f28da after lead checks: corpus 100% in every group (fresh 191/191 positives), 0 of 699 normals, 55/55 unsafe commands refused, 32/32 safe ones work, 164 old terms keep their kind, 20/20 typical AI answers pass the answer check; 62/62 in the four specs, whole suite 338/338 (coder's run). Translator: the soft text is OK in RU/UZ. Lead's held-out benign probe (196 phrases the coder never saw): 0 fasting or negation false alarms; 5/169 everyday phrases still fire eating (HEAD: 9), all "haven't eaten yet" or "I'm hungry"; 23/60 nutrition questions get no kind. Both sent to the coder.
 - 2026-11-08 14:20 UTC: reviewer's final review of HEAD 7c4c48e: 5 blocking findings, all reproduced. (1) Abuse disclosures the old lists caught ("someone hurts me", "насилие") now get no kind. (2) The Uzbek "-dan oz…" strip hides "Bugundan ozishni boshlayman", and those phrases became cards. (3) About 25 everyday false alarms ("repeat lessons", "bodyweight workouts", "вредные привычки", "tegishli"). (4) The AI-answer check uses RESTRICT, so "don't eat a heavy meal before sleep" would be replaced (a new `mSafetyKindAnswer`). (5) Health-safety's proposals add 31 new false alarms unless tightened. Every fix was sent to the coder's running round, with an old-terms regression test. 54/54 specs, speed and display checks clean.

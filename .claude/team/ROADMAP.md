@@ -29,7 +29,7 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 
 ## Phase 1: Safe & Solid (about 3 days, no decisions needed)
 
-### Mission 1.1: Safety walls 2.0 (review #1)
+### Mission 1.1: Safety walls 2.0 (review #1) ✅ done 12 Nov 2026
 **Goal:** a crisis, eating-distress or diet message is recognised however it is written, in all three languages, and nothing unsafe reaches an AI or becomes an action.
 - [x] health-safety: build a phrase corpus test fixture, at least 100 per language: EN, RU and UZ (Latin and Cyrillic), slang, typos, no apostrophes, indirect wording; plus 60 normal questions that must NOT trigger.
 - [x] coder: rebuild `MENTOR_CRISIS` / `MENTOR_EATING` / `MENTOR_DIET` and the Worker's copies. `mNorm` also turns Uzbek Cyrillic into Latin. Any food or body word routes to "diet" before the library.
@@ -39,7 +39,7 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [x] tester: a test that the app's and Worker's lists are identical; the corpus test runs in `mentor.spec.js` and `ai-proxy.spec.js`.
 - [x] health-safety: a blind fresh-phrase round (75% caught: fix round needed).
 - [x] coder: fix round from that round (patterns, false alarms, a soft-distress net before the agent and the AI).
-- [ ] health-safety (a fresh, unseen agent): a blind round on held-out benign phrases (diet, tricky normals, safe commands) ‖ reviewer: final review.
+- [x] health-safety (a fresh, unseen agent): a blind round on held-out benign phrases (diet, tricky normals, safe commands) ‖ reviewer: final review.
 - [ ] 🚦 owner: held-out distress phrases written by people (the owner or native-speaker reviewers), never shown to the code authors; at least 90% per language before `AI_PROXY_URL` is set (gate for Mission 4.1).
 
 **Done when:**
