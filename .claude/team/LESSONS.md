@@ -60,6 +60,9 @@ Short, concrete rules learned from real work on this project. Every role reads t
 - For "X again / ever / anymore" in a crisis pattern, anchor at the end of the message (`again\W*$`), not with `\b`: "I hope I don't wake up again at night" is a sleep question.
 - Two long agents at once hit the 5-hour usage limit together, and the mission stalled for hours. Stagger heavy agents, and when a reviewer gives exact small fixes, the lead applies them instead of starting another coder round.
 
+- A sync change must be tested against devices still running the OLD app: their writes lack the new fields. Mission 1.2 round B read such a write as "same" and overwrote it (found by the reviewer with a probe that writes a legacy record straight to the fake cloud).
+- "Did the hero change something?" cannot be a one-shot flag cleared by the next save: a reward saved 3 s after the tap was lost, and a stray scroll counted hours later. Use the time of the last trusted gesture.
+
 ## Whole-app review (8 Nov 2026)
 - Keyword safety lists catch only exact phrases: ~15% of realistic crisis/eating wording was caught. Safety lists need a phrase corpus test in every language (slang, misspellings, Cyrillic Uzbek, no apostrophes), and food/body words must route to "diet" before any library tip.
 - A new default in `defaultState()` hides a flag-based migration: the defaults merge runs before `migrateState()`, so `if(!state.flag)` never fires for old saves (roadSpV3). Test migrations through `load()` with an old-save fixture, never by calling `migrateState()` directly.
