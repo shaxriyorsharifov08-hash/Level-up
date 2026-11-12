@@ -24,6 +24,9 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 | D6 | Privacy-safe usage counters (changes the "no tracking" promise)? | Phase 3 |
 | D7 | New paid or external services: Cloudflare D1, Click/Payme merchant accounts | Phase 4 |
 | D8 | Who writes the held-out crisis and eating-distress test phrases (the owner, native-speaker reviewers, a school counsellor…)? An AI safety system stops agents from writing them. | Before the Mentor AI goes live (4.1) |
+| D9 | Shared phone: when account B signs in on a phone holding account A's hero, offer "move this hero to B" (only if B's cloud is empty), or never? | Mission 1.2 step 5 |
+| D10 | Sign-out: keep the hero on the device (today) or clear it once it is safe in the cloud? | Mission 1.2 step 5 |
+| D11 | DELETE MY DATA: keep a deletion marker (account id + date only) so offline devices obey it; does a device that sees it wipe its copy or keep it as a guest? | Mission 1.2 step 6 |
 
 ---
 
