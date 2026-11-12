@@ -56,7 +56,8 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 ### Mission 1.2: Sync that never loses progress (review #2)
 **Goal:** opening the app on an old device can never erase newer work, and a shared phone never mixes two accounts.
 - [x] coder: a real change time (`changedAt`), the numbered migration runner (step 1), a pure `pickWinner(local, remote, uid)`, a snapshot to IndexedDB before an adopt or overwrite (round A).
-- [ ] coder: one `cloudSync` that never pushes blind (round B); a "which copy do you keep?" window when both changed (step 5, after D9–D11).
+- [x] coder: one `cloudSync` that never pushes blind (round B).
+- [ ] coder → designer, translator: a "which copy do you keep?" window when both changed, and linking an untagged hero on first sign-in (step 5, after D9–D11).
 - [ ] coder: store the owner uid in the save (versioned migration); a different account signing in is asked before any sync or clan publish.
 - [ ] coder: import and restore raise the count; deletion leaves a cloud marker that every device obeys.
 - [x] tester: a fake Firebase (`tests/fake-firebase.js`); failing tests for two devices, offline then online, a shared phone, restore, delete (`tests/sync.spec.js`, `test.fail` until fixed).
@@ -76,6 +77,7 @@ Six phases. Phases 1–4 are planned as **missions**: one mission is about one l
 - [ ] coder: the unregister loop keeps `notify-sw.js` (reminders fire again).
 - [ ] coder: Firebase rules get `.validate` size and shape limits; the Worker adds to its counter **before** calling the model and gives it back on failure.
 - [ ] coder: guests read broadcast, season and locks once, not with live listeners.
+- [ ] coder: the focus trap hands back reliably after its settings panel closes (`focus-trap.spec.js` "…hands back" fails about 2 runs in 10: Tab escapes to the page).
 - [ ] tester: a clock suite (00:00, the 01:00 daily package, Sunday→Monday, month end, DST, a 60-day absence) asserting streaks, penalties, the package and reports.
 
 **Done when:** the clock suite passes; the rules file has limits for every written path.
