@@ -2320,6 +2320,7 @@ body.tok .btn-complete.done.half{color:var(--purple); border-color:var(--purple)
             <button class="btn gold" id="cloudUploadBtn">&#11014; UPLOAD THIS DEVICE</button>
           </div>
           <div class="empty-note" id="cloudRemoteInfo" style="margin-top:8px"></div>
+          <div class="empty-note" id="cloudSyncPause" role="status" style="display:none;margin-top:8px"></div>
           <button class="btn" id="cloudSignOutBtn" style="margin-top:10px">SIGN OUT</button>
         </div>
         <button class="btn" id="openAdminLogin" style="margin-top:12px;width:100%;opacity:.8;display:none">🛡 ADMIN LOGIN</button>
@@ -3243,6 +3244,16 @@ function adoptState(obj){
   for(var k in d){ if(state[k] === undefined) state[k] = d[k]; }
   migrateState();
 }
+/* Import and snapshot restore: the hero comes from the file, but the sync
+   bookkeeping stays this device's, so the restore reaches the cloud as the newest
+   change. A copy with no owner becomes this device's account's; another
+   account's hero keeps its owner, so sync pauses instead of moving it. */
+function adoptOnDevice(obj){
+  var owner = state.ownerUid, base = state.syncBase;
+  adoptState(obj);
+  state.syncBase = base;
+  if(!state.ownerUid) state.ownerUid = owner;
+}
 
 /* ---------------- cloud sync (Firebase Auth + Realtime Database) ---------------- */
 var firebaseConfig = {
@@ -3266,6 +3277,14 @@ function initCloud(){
     try{ fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
     fbDb = firebase.database();
     cloudAvailable = true;
+    /* back online: compare again before anything is written */
+    try{
+      fbDb.ref(".info/connected").on("value", function(s){
+        var was = cloudOnline;
+        cloudOnline = s.val() === true;
+        if(cloudOnline && !was) cloudSync("reconnect");
+      });
+    }catch(e){}
     setupAuthListener();
     /* surface redirect-flow errors that used to fail silently */
     try{
@@ -3280,26 +3299,170 @@ function initCloud(){
     return true;
   }catch(e){ return false; }
 }
+/* After a save: let cloudSync decide, a moment later. Never a blind set(): the
+   SDK would queue it while offline and replay it over newer work. */
 function cloudPush(){
   if(dataWiping) return;
   if(!cloudAvailable || !cloudUser || !cloudRef) return;
   if(cloudPushTimer) clearTimeout(cloudPushTimer);
   cloudPushTimer = setTimeout(function(){
-    if(dataWiping || !cloudRef) return;
-    cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
-    publishGuildProfile();
+    cloudPushTimer = null;
+    if(dataWiping || !cloudRef || syncPause) return; /* paused: only a live change or a button resumes */
+    /* nothing new since the copy both sides agreed on: only the clan card is refreshed */
+    if(cloudLinked() && state.changedAt === state.syncBase){ syncLinkGuild(false); return; }
+    cloudSync("push");
   }, 1200);
 }
-function cloudAdopt(remoteJson){
+/* Replace this device's hero with a cloud copy of account uid. Callers keep a
+   snapshot first when this device holds anything the cloud never saw. */
+function cloudAdopt(remoteJson, uid){
   var remoteState;
-  try{ remoteState = JSON.parse(remoteJson); }catch(e){ return; }
-  if(!remoteState) return;
+  try{ remoteState = JSON.parse(remoteJson); }catch(e){ return false; }
+  if(!remoteState || typeof remoteState !== "object") return false;
   adoptState(remoteState);
-  try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
-  idbPut("kv", "state", JSON.stringify(state));
-  if(cloudUser && state.guildId){ publishGuildProfile(); attachGuild(); } /* guild may have changed on another device */
+  if(uid) state.ownerUid = uid;
+  state.syncBase = state.changedAt; /* this copy is now the one both sides agree on */
+  syncPersist();
   applyTheme(state.theme || "shadow");
   renderAll();
+  return true;
+}
+
+/* ---- ONE SYNC FOR EVERY PATH (README 4, "Sync safety") ----
+   The first check after sign-in, the live listener, reconnect and the save hook
+   all come through cloudSync(), and pickWinner() decides. Nothing is pushed,
+   adopted or published to the clan before that decision, and only for a hero
+   whose ownerUid is the signed-in account. */
+var cloudOnline = false;   /* .info/connected: nothing is written while it is false */
+var syncDecided = false;   /* the first decision for this sign-in has been made */
+var syncPause = "";        /* "" | "ask" | "otherOwner" | "vanished": sync stopped and wrote nothing (the step-5 dialog reads it) */
+var syncBusy = false, syncAgain = false, syncPending = false, syncMoved = 0, syncAuthSeq = 0;
+var SYNC_PAUSE_TXT = {
+  "ask": "Both copies of your hero changed, on this device and in the cloud. Sync is paused until you choose: DOWNLOAD keeps the cloud copy, UPLOAD keeps this device.",
+  "otherOwner": "This device holds another account's hero. Sync is paused, and nothing is written to this account.",
+  "vanished": "Your cloud copy was removed. Sync is paused, and this device keeps its copy."
+};
+/* boot vault recovery must finish before the first sync, or it could re-adopt an old copy over the cloud's */
+var vaultRecoveryDone = false, vaultRecoveryWait = [];
+function whenRecovered(cb){ if(vaultRecoveryDone) cb(); else vaultRecoveryWait.push(cb); }
+function vaultRecovered(){
+  vaultRecoveryDone = true;
+  var q = vaultRecoveryWait; vaultRecoveryWait = [];
+  for(var i=0;i<q.length;i++){ try{ q[i](); }catch(e){} }
+}
+function cloudLinked(){
+  return !!(cloudUser && syncDecided && !syncPause && state && state.ownerUid === cloudUser.uid);
+}
+/* the change time of a cloud record: its outer field, or the save inside it
+   (older writers); -1 = no save there */
+function recChangedAt(rec){
+  if(!rec || rec.deleted || typeof rec.json !== "string") return -1;
+  if(typeof rec.changedAt === "number") return rec.changedAt;
+  try{ return syncFields(JSON.parse(rec.json)).changedAt; }catch(e){ return -1; }
+}
+/* keep sync bookkeeping on this device without counting it as a save or pushing it */
+function syncPersist(){
+  if(dataWiping) return;
+  var json = JSON.stringify(state);
+  try{ localStorage.setItem(SKEY, json); }catch(e){}
+  idbPut("kv", "state", json);
+}
+function syncPaused(why){
+  var was = syncPause;
+  syncPause = why;
+  if(was !== why){ toast(tr(SYNC_PAUSE_TXT[why]), "sys", tr("SYNC PAUSED")); renderCloudStatus(); }
+}
+/* the clan card (and, after a new decision or an adopt, the clan listeners) */
+function syncLinkGuild(attach){
+  if(!cloudLinked()) return;
+  if(!state.guildId){ detachGuild(); return; }
+  publishGuildProfile();
+  if(attach) attachGuild();
+}
+function cloudSync(reason, given){
+  if(dataWiping || adminMode || !cloudAvailable || !cloudUser || !cloudRef) return;
+  if(!cloudOnline){ syncPending = true; return; }
+  if(syncBusy){ syncAgain = true; return; }
+  syncBusy = true; syncPending = false;
+  var uid = cloudUser.uid, ref = cloudRef;
+  function done(){
+    syncBusy = false;
+    if(syncAgain){ syncAgain = false; cloudSync("again"); }
+  }
+  function decide(remote){
+    /* signed out or switched account while the cloud answered: not ours to act on */
+    if(dataWiping || ref !== cloudRef || !cloudUser || cloudUser.uid !== uid){ done(); return; }
+    syncDecide(reason, remote, uid, ref, done);
+  }
+  if(given !== undefined){ decide(given); return; }
+  ref.once("value", function(snap){ decide(snap.val()); }, function(){ syncBusy = false; });
+}
+function syncDecide(reason, remote, uid, ref, done){
+  var win = pickWinner(state, remote, uid);
+  var hasSave = recChangedAt(remote) >= 0;
+  if(win === "otherOwner"){ syncPaused("otherOwner"); done(); return; }
+  /* a record deleted or removed elsewhere is never written back from here */
+  if((remote && remote.deleted) || (!hasSave && state.ownerUid === uid && state.syncBase > 0)){ syncPaused("vanished"); done(); return; }
+  if(win !== "local" && win !== "remote" && win !== "same"){ syncPaused("ask"); done(); return; }
+  var wasLinked = cloudLinked(), resumed = !!syncPause;
+  syncPause = ""; syncDecided = true;
+  if(!state.ownerUid) state.ownerUid = uid; /* a guest hero's first sign-in claims it for this account */
+  if(resumed) renderCloudStatus();
+  if(win === "remote"){
+    syncMoved = 0;
+    /* keep what this device had that the cloud never saw */
+    if(!state.syncBase || state.changedAt !== state.syncBase) vaultSnapshot(JSON.stringify(state), "cloud");
+    if(cloudAdopt(remote.json, uid)){
+      sysToast(reason === "signin" ? "Progress synced from the cloud." : "Synced update from another device.");
+    }
+    syncLinkGuild(true);
+    done();
+  } else if(win === "local"){
+    var expect = recChangedAt(remote);
+    /* a cloud copy we never agreed on is kept here before it is written over */
+    if(hasSave && expect !== state.syncBase) vaultSnapshot(remote.json, "cloud");
+    syncPush(ref, uid, expect, function(ok, moved){
+      if(ok){
+        syncMoved = 0;
+        syncLinkGuild(!wasLinked);
+        if(state.changedAt !== state.syncBase) cloudPush(); /* changed again while this was in flight */
+      } else if(moved && ++syncMoved <= 3){
+        syncAgain = true; /* the cloud moved under us: read it again and decide, never overwrite */
+      }
+      done();
+    });
+  } else {
+    syncMoved = 0;
+    /* the same copy on both sides: no write */
+    if(state.syncBase !== state.changedAt){ state.syncBase = state.changedAt; syncPersist(); }
+    else if(!wasLinked) syncPersist(); /* a claim */
+    syncLinkGuild(!wasLinked);
+    done();
+  }
+}
+/* Write this device's copy to hunters/<uid> only while the cloud still holds the
+   copy it was compared with (change time "expect", -1 = no save there). If the
+   cloud moved in between, nothing is written: cb(false, true) and the caller
+   decides again. A deletion marker is never written over. */
+function syncPush(ref, uid, expect, cb){
+  var sentAt = 0;
+  ref.transaction(function(cur){
+    if((cur && cur.deleted) || recChangedAt(cur) !== expect) return; /* abort */
+    var rc = 0;
+    try{ rc = +JSON.parse(cur.json).saveCount || 0; }catch(e){}
+    /* app versions from before changedAt still trust the bigger count */
+    state.saveCount = Math.max(+state.saveCount || 0, rc) + 1;
+    sentAt = state.changedAt;
+    return {json: JSON.stringify(state), updatedAt: Date.now(), changedAt: sentAt, ownerUid: uid};
+  }, function(err, committed){
+    if(err || !committed || dataWiping){ cb(false, !err && !dataWiping); return; }
+    if(cloudUser && cloudUser.uid === uid){
+      state.syncBase = sentAt;
+      state.ownerUid = uid;
+      syncPersist();
+    }
+    cb(true, false);
+  }, false);
 }
 function cloudSignIn(){
   if(!cloudAvailable && !initCloud()){
@@ -3337,29 +3500,53 @@ function cloudSignOut(){
   if(fbAuth) fbAuth.signOut();
 }
 function cloudDownload(){
-  if(!cloudAvailable || !cloudRef){ toast("Sign in first.", "err"); return; }
-  cloudRef.once("value", function(snap){
+  if(!cloudAvailable || !cloudRef || !cloudUser){ toast("Sign in first.", "err"); return; }
+  var uid = cloudUser.uid, ref = cloudRef;
+  ref.once("value", function(snap){
+    if(ref !== cloudRef) return;
     var remote = snap.val();
     if(!remote || !remote.json){ toast("Nothing saved in the cloud yet. Use UPLOAD from the device that has your data.", "err"); return; }
     var rs;
     try{ rs = JSON.parse(remote.json); }catch(e){ toast("Cloud data is unreadable.", "err"); return; }
     var info = "Level " + (rs.level||1) + ", " + (rs.totalCompleted||0) + " quests done, " + (rs.quests?rs.quests.length:0) + " active quests";
     if(!confirm("Download your cloud save and REPLACE this device's data?\n\nCloud save: " + info + ".\n\nThis device's current data will be overwritten.")) return;
-    /* bump so this becomes the newest everywhere and the phone stops pushing its old copy over it */
-    rs.saveCount = Math.max(rs.saveCount || 0, state.saveCount || 0) + 1;
-    cloudAdopt(JSON.stringify(rs));
-    save();
+    /* the hero's own choice may replace this device, but its copy is kept first */
+    vaultSnapshot(JSON.stringify(state), "cloud");
+    if(!cloudAdopt(remote.json, uid)) return;
+    syncPause = ""; syncDecided = true;
+    syncLinkGuild(true);
     toast("Cloud save downloaded to this device.", "gold", "SYNCED");
+    renderCloudStatus();
   });
 }
 function cloudUpload(){
-  if(!cloudAvailable || !cloudRef){ toast("Sign in first.", "err"); return; }
+  if(!cloudAvailable || !cloudRef || !cloudUser){ toast("Sign in first.", "err"); return; }
+  var uid = cloudUser.uid, ref = cloudRef;
+  /* moving a hero into another account waits for the owner's decision */
+  if(state.ownerUid && state.ownerUid !== uid){ toast(tr(SYNC_PAUSE_TXT.otherOwner), "err"); return; }
+  if(!cloudOnline){ toast(tr("You are offline, so nothing was uploaded. Connect to the internet and try again."), "err"); return; }
   if(!confirm("Upload THIS device's data to the cloud, replacing whatever is there?\n\nUse this on the device that has your real progress.")) return;
-  state.saveCount = (state.saveCount || 0) + 1000; /* make this device decisively newest */
-  cloudRef.set({ json: JSON.stringify(state), updatedAt: Date.now() });
-  try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
-  toast("This device's data uploaded to the cloud.", "gold", "SYNCED");
-  renderCloudStatus();
+  /* the newest change now, so every other device sees that the cloud moved */
+  state.changedAt = Math.max(Date.now(), (+state.changedAt || 0) + 1);
+  (function attempt(n){
+    ref.once("value", function(snap){
+      var cur = snap.val();
+      if(cur && cur.deleted){ syncPaused("vanished"); return; }
+      /* the hero's own choice may replace the cloud copy, but it is kept here first */
+      if(recChangedAt(cur) >= 0) vaultSnapshot(cur.json, "cloud");
+      syncPush(ref, uid, recChangedAt(cur), function(ok, moved){
+        if(!ok){
+          if(moved && n < 3) attempt(n + 1); /* written in between: keep that one too, then try again */
+          else toast(tr("Upload failed. Try again."), "err");
+          return;
+        }
+        syncPause = ""; syncDecided = true;
+        syncLinkGuild(true);
+        toast("This device's data uploaded to the cloud.", "gold", "SYNCED");
+        renderCloudStatus();
+      });
+    });
+  })(1);
 }
 /* Which copy should this device keep? Pure: it reads its arguments and changes
    nothing. local: this device's save. remote: the record at hunters/<uid>
@@ -3452,6 +3639,8 @@ function guildProfile(){
 }
 function publishGuildProfile(){
   if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  /* only this account's own hero, after sync decided, and never queued offline */
+  if(!cloudLinked() || !cloudOnline) return;
   fbDb.ref("guilds/" + state.guildId + "/members/" + cloudUser.uid).set(guildProfile());
 }
 function guildCode(){
@@ -3462,6 +3651,7 @@ function guildCode(){
 }
 function createGuild(){
   if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
+  if(!cloudLinked()){ toast(tr(SYNC_PAUSE_TXT[syncPause] || "Cloud sync is still checking. Try again in a moment."), "err"); return; }
   var name = document.getElementById("guildNewName").value.trim();
   if(!name){ toast("Name your clan first.", "err"); return; }
   var gid = fbDb.ref("guilds").push().key;
@@ -3480,6 +3670,7 @@ function createGuild(){
 }
 function joinGuild(){
   if(!cloudAvailable || !cloudUser){ toast("Sign in with Google first.", "err"); return; }
+  if(!cloudLinked()){ toast(tr(SYNC_PAUSE_TXT[syncPause] || "Cloud sync is still checking. Try again in a moment."), "err"); return; }
   var code = document.getElementById("guildJoinCode").value.trim().toUpperCase();
   if(code.length !== 6){ toast("The invite code is 6 characters.", "err"); return; }
   fbDb.ref("codes/" + code).once("value", function(snap){
@@ -3510,6 +3701,7 @@ function detachGuild(){
 }
 function attachGuild(){
   if(!cloudAvailable || !cloudUser || !state.guildId) return;
+  if(!cloudLinked()) return; /* another account's clan is not this one's to open */
   detachGuild();
   var base = "guilds/" + state.guildId;
   gRefs.info = fbDb.ref(base + "/info");
@@ -4122,6 +4314,11 @@ function renderCloudStatus(){
   na.style.display = cloudAvailable ? "none" : "";
   if(cloudAvailable && cloudUser){
     so.style.display = "none"; si.style.display = "";
+    /* a paused sync says so, and why (README 4, "Sync safety") */
+    document.getElementById("cloudSyncTag").textContent = syncPause ? tr("⏸ SYNC PAUSED") : tr("✓ AUTO-SYNCING");
+    var pz = document.getElementById("cloudSyncPause");
+    pz.style.display = syncPause ? "" : "none";
+    pz.textContent = syncPause ? tr(SYNC_PAUSE_TXT[syncPause]) : "";
     document.getElementById("cloudAvatar").src = cloudUser.photoURL || "";
     document.getElementById("cloudName").textContent = cloudUser.displayName || cloudUser.email || "Hero";
     /* show what's currently in the cloud so the user can choose the right direction */
@@ -4147,6 +4344,9 @@ function setupAuthListener(){
     if(cloudRef){ cloudRef.off(); cloudRef = null; }
     detachGuild();
     cloudUser = user;
+    /* a new account starts undecided: nothing is written for it until cloudSync decides */
+    syncAuthSeq++; syncDecided = false; syncPause = ""; syncPending = false; syncMoved = 0;
+    var seq = syncAuthSeq;
     renderCloudStatus();
     if(state) renderMentorMode();
     if(currentPage === "guild") renderGuild();
@@ -4171,35 +4371,21 @@ function setupAuthListener(){
       /* ordinary Google hero — record the entrance choice and open the gate */
       if(!state.entryChoice){ state.entryChoice = "google"; save(); }
       hideEntrance();
-      /* publish first: the tightened rules let only members read the clan, and the
-         write is queued ahead of the reads on the same connection */
-      if(state.guildId){ publishGuildProfile(); attachGuild(); }
-      cloudRef = fbDb.ref("hunters/" + user.uid);
-      cloudRef.once("value", function(snap){
-        var remote = snap.val();
-        if(remote && remote.json){
-          var remoteState;
-          try{ remoteState = JSON.parse(remote.json); }catch(e){ remoteState = null; }
-          if(remoteState && (remoteState.saveCount || 0) > (state.saveCount || 0)){
-            cloudAdopt(remote.json);
-            sysToast("Progress synced from the cloud.");
-          } else {
-            cloudPush();
-          }
-        } else {
-          cloudPush();
-        }
-        /* live updates from other signed-in devices */
-        cloudRef.on("value", function(snap2){
-          var remote2 = snap2.val();
-          if(!remote2 || !remote2.json) return;
-          var remoteState2;
-          try{ remoteState2 = JSON.parse(remote2.json); }catch(e){ return; }
-          if((remoteState2.saveCount || 0) > (state.saveCount || 0)){
-            cloudAdopt(remote2.json);
-            sysToast("Synced update from another device.");
-          }
+      /* Nothing is pushed, adopted or published to the clan until this account's
+         copy has been compared with this device's (a shared phone used to put A's
+         hero in B's clan slot). The vault's own boot recovery goes first, or it
+         could re-adopt an old copy over the cloud's. The live listener's first
+         value is the sign-in check; later ones are other devices' changes.
+         cloudSync() publishes to the clan only after its decision, and publishes
+         before it attaches (the rules let only members read the clan). */
+      whenRecovered(function(){
+        if(seq !== syncAuthSeq || !cloudUser || cloudUser.uid !== user.uid) return;
+        var ref = fbDb.ref("hunters/" + user.uid);
+        cloudRef = ref;
+        ref.on("value", function(snap){
+          if(ref === cloudRef) cloudSync(syncDecided ? "live" : "signin", snap.val());
         });
+        renderCloudStatus();
       });
     });
   });
@@ -5490,7 +5676,15 @@ var I18N_RU = {
   "Daily snapshot":"Ежедневный снимок","Safety snapshot":"Страховочный снимок",
   "Before cloud sync":"Перед синхронизацией с облаком","Before import":"Перед импортом",
   "Before restore":"Перед восстановлением","Before vault recovery":"Перед восстановлением из хранилища",
-  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"В этом снимке герой другого аккаунта. Всё равно восстановить его на этом устройстве? Текущий прогресс будет заменён."
+  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"В этом снимке герой другого аккаунта. Всё равно восстановить его на этом устройстве? Текущий прогресс будет заменён.",
+  /* cloud sync paused (README 4, "Sync safety") */
+  "Both copies of your hero changed, on this device and in the cloud. Sync is paused until you choose: DOWNLOAD keeps the cloud copy, UPLOAD keeps this device.":"Обе копии вашего героя изменились — на этом устройстве и в облаке. Синхронизация на паузе, пока вы не выберете: СКАЧАТЬ оставит облачную копию, ЗАГРУЗИТЬ оставит копию этого устройства.",
+  "This device holds another account's hero. Sync is paused, and nothing is written to this account.":"На этом устройстве герой другого аккаунта. Синхронизация на паузе, и в этот аккаунт ничего не записывается.",
+  "Your cloud copy was removed. Sync is paused, and this device keeps its copy.":"Ваша облачная копия удалена. Синхронизация на паузе, а это устройство сохраняет свою копию.",
+  "SYNC PAUSED":"СИНХРОНИЗАЦИЯ НА ПАУЗЕ","⏸ SYNC PAUSED":"⏸ СИНХРОНИЗАЦИЯ НА ПАУЗЕ",
+  "Cloud sync is still checking. Try again in a moment.":"Облачная синхронизация ещё проверяет данные. Попробуйте чуть позже.",
+  "You are offline, so nothing was uploaded. Connect to the internet and try again.":"Вы не в сети, поэтому ничего не загружено. Подключитесь к интернету и попробуйте снова.",
+  "Upload failed. Try again.":"Загрузить не удалось. Попробуйте снова."
 };
 
 /* Uzbek (Latin script, oʻ/gʻ written with ʻ U+02BB). Same keys as I18N_RU;
@@ -5931,7 +6125,14 @@ var I18N_UZ = {
   "Daily snapshot":"Kunlik nusxa","Safety snapshot":"Xavfsizlik nusxasi",
   "Before cloud sync":"Bulut bilan sinxronlashdan oldin","Before import":"Importdan oldin",
   "Before restore":"Tiklashdan oldin","Before vault recovery":"Ombordan tiklashdan oldin",
-  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"Bu nusxada boshqa hisobning qahramoni bor. Baribir uni shu qurilmada tiklaysizmi? Joriy taraqqiyot almashtiriladi."
+  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"Bu nusxada boshqa hisobning qahramoni bor. Baribir uni shu qurilmada tiklaysizmi? Joriy taraqqiyot almashtiriladi.",
+  "Both copies of your hero changed, on this device and in the cloud. Sync is paused until you choose: DOWNLOAD keeps the cloud copy, UPLOAD keeps this device.":"Qahramoningizning ikkala nusxasi ham oʻzgardi — shu qurilmada ham, bulutda ham. Siz tanlamaguningizcha sinxronlash toʻxtatildi: YUKLAB OLISH bulutdagi nusxani, YUKLASH esa shu qurilmanikini qoldiradi.",
+  "This device holds another account's hero. Sync is paused, and nothing is written to this account.":"Bu qurilmada boshqa hisobning qahramoni bor. Sinxronlash toʻxtatildi va bu hisobga hech narsa yozilmaydi.",
+  "Your cloud copy was removed. Sync is paused, and this device keeps its copy.":"Bulutdagi nusxangiz oʻchirildi. Sinxronlash toʻxtatildi, bu qurilma esa oʻz nusxasini saqlab qoladi.",
+  "SYNC PAUSED":"SINXRONLASH TOʻXTATILDI","⏸ SYNC PAUSED":"⏸ SINXRONLASH TOʻXTATILDI",
+  "Cloud sync is still checking. Try again in a moment.":"Bulutli sinxronlash hali tekshirmoqda. Birozdan soʻng qayta urinib koʻring.",
+  "You are offline, so nothing was uploaded. Connect to the internet and try again.":"Siz oflaynsiz, shuning uchun hech narsa yuklanmadi. Internetga ulaning va qayta urinib koʻring.",
+  "Upload failed. Try again.":"Yuklab boʻlmadi. Qaytadan urinib koʻring."
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
 function i18nDict(){
@@ -11687,7 +11888,7 @@ document.getElementById("admImportFile").addEventListener("change", function(){
     }
     if(!confirm("Restore backup for hero \"" + (data.hunterName || "Hero") + "\" (LV." + data.level + ", " + (data.totalCompleted || 0) + " quests done)? Current progress will be replaced.")) return;
     vaultSnapshot(JSON.stringify(state), "import"); /* the replaced progress stays one tap away */
-    adoptState(data);
+    adoptOnDevice(data);
     markChanged(); /* a restored backup is the newest change, wherever it came from */
     save(); renderAll();
     announce("SYSTEM RESTORED", "Backup imported successfully.\n\nWelcome back, " + state.hunterName + ".\nAll records have been re-synchronized.", "💾", "CONTINUE");
@@ -11714,7 +11915,7 @@ document.getElementById("admSnapshots").addEventListener("click", function(e){
       : confirm("Restore snapshot from " + name + "? Current progress will be replaced.");
     if(!ok) return;
     vaultSnapshot(JSON.stringify(state), "restore");
-    adoptState(data);
+    adoptOnDevice(data);
     markChanged();
     save(); renderAll();
     announce("SYSTEM RESTORED", "Snapshot from " + name + " has been restored.\n\nWelcome back, " + state.hunterName + ".", "💾", "CONTINUE");
@@ -15303,29 +15504,33 @@ initCloud();
 /* redundant vault: recover from IndexedDB if localStorage was lost or is older */
 idbOpen(function(){
   idbGet("kv", "state", function(raw){
-    var adopted = false;
-    if(raw){
-      try{
-        var other = JSON.parse(raw);
-        if(other && (other.saveCount || 0) > (state.saveCount || 0)){
-          vaultSnapshot(JSON.stringify(state), "vault");
-          adoptState(other);
-          adopted = true;
-        }
-      }catch(e){}
-    }
-    if(adopted){
-      try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
-      sysToast("Progress recovered from the System vault. Records restored.");
-      renderAll();
-    } else {
-      idbPut("kv", "state", JSON.stringify(state));
-    }
-    /* catch-up: ensure today's snapshot exists now that the vault is open */
-    if(state.lastSnapshotDay !== todayStr()) save();
-    if(currentPage === "admin") renderAdmin();
+    try{ bootVaultRecovery(raw); }
+    finally{ vaultRecovered(); } /* only now may cloud sync start: it must not race this */
   });
 });
+function bootVaultRecovery(raw){
+  var adopted = false;
+  if(raw){
+    try{
+      var other = JSON.parse(raw);
+      if(other && (other.saveCount || 0) > (state.saveCount || 0)){
+        vaultSnapshot(JSON.stringify(state), "vault");
+        adoptState(other);
+        adopted = true;
+      }
+    }catch(e){}
+  }
+  if(adopted){
+    try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
+    sysToast("Progress recovered from the System vault. Records restored.");
+    renderAll();
+  } else {
+    idbPut("kv", "state", JSON.stringify(state));
+  }
+  /* catch-up: ensure today's snapshot exists now that the vault is open */
+  if(state.lastSnapshotDay !== todayStr()) save();
+  if(currentPage === "admin") renderAdmin();
+}
 /* ask the browser to never evict this site's storage */
 if(navigator.storage && navigator.storage.persist){
   navigator.storage.persist().then(function(granted){
