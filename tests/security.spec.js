@@ -54,3 +54,17 @@ test.describe("security: untrusted clan and cloud data", () => {
     expect(await page.locator("#acUsers").innerText()).toContain("LV.1 · 0 done");
   });
 });
+
+test("the README's copy of the database rules is exactly database.rules.json", () => {
+  /* the owner pastes the README copy into the Firebase console; a drifted copy
+     ("heroes" instead of "hunters") would refuse every cloud save */
+  const fs = require("fs"), path = require("path");
+  const root = path.join(__dirname, "..");
+  const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+  const at = readme.indexOf("replace with the contents of `database.rules.json` (copied below)");
+  expect(at).toBeGreaterThan(-1);
+  const start = readme.indexOf("```json\n", at) + "```json\n".length;
+  const block = readme.slice(start, readme.indexOf("```", start));
+  const real = fs.readFileSync(path.join(root, "database.rules.json"), "utf8");
+  expect(JSON.parse(block)).toEqual(JSON.parse(real));
+});

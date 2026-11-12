@@ -109,7 +109,7 @@ The entrance screen has a small **ADMIN** button (email + password). To make it 
 ```json
 {
   "rules": {
-    "heroes": {
+    "hunters": {
       ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
