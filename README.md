@@ -90,6 +90,13 @@ Manual backup any time: **ADMIN → 💾 EXPORT JSON BACKUP** (restore with IMPO
 
 Editing `index.html` **never touches user data** — data lives in the browser and in Firebase, not in the file.
 
+### Sync safety: change time, save version, snapshots (Mission 1.2, November 2026)
+The groundwork for sync that never loses progress. The cloud does not use it yet; that comes next.
+- **`changedAt`: when the hero last really changed something.** `savedAt` and `saveCount` move on every save, and the app saves on its own when it opens (daily reset, penalties, reminders). So an old phone opened after weeks used to look like the newest copy. `changedAt` moves only when a save follows a real tap or key press, or an explicit change: import, snapshot restore, an admin edit, a GRIND session that ends by itself. Opening the app without touching it never moves it. `saveCount` still goes up as before, for tabs running older code.
+- **`schemaVersion`: numbered save upgrades.** `SAVE_MIGRATIONS` is a list of numbered steps; `upgradeSave()` runs every step above the save's number, in order, at the end of `migrateState()` (so on every load and every adopted copy) and on a raw cloud copy. Step 1 gives an old save `changedAt` from its `savedAt`, an empty `ownerUid` (the account it belongs to, set at sign-in later) and `syncBase` 0 (the copy last agreed with the cloud). Rules: add steps at the end, never renumber, every step safe to run twice, and **never put `schemaVersion` in `defaultState()`** (the defaults would mark old saves as already upgraded).
+- **`pickWinner(local, remote, uid)`** decides which copy to keep, by change time, never by save count: "local", "remote", "same", "ask" (both changed: the hero chooses), "otherOwner" (this phone holds another account's hero) or "deleted". It changes nothing; `tests/sync-core.spec.js` holds its rule table.
+- **A snapshot before every overwrite.** Import, snapshot restore and vault recovery first keep the current save as a safety snapshot ("Before import", "Before restore", "Before vault recovery"; "Before cloud sync" is ready for the cloud). The newest 5 are kept, apart from the 14 daily ones, and ADMIN → DATA VAULT lists both. Restoring a snapshot of another account's hero asks first. DELETE MY DATA removes them all with the rest of the vault.
+
 ### Firebase (accounts, clans, cloud saves)
 Console: `console.firebase.google.com` → project `level-up-hunter-03` (sign in with the Google account that created it).
 - **Authentication** → list of signed-in users.

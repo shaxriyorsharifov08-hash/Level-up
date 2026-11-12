@@ -1,0 +1,1088 @@
+{
+  "hunterName": "Bekzod",
+  "level": 9,
+  "xp": 140,
+  "totalXp": 3260,
+  "statPoints": 2,
+  "stats": {
+    "INT": 11,
+    "STR": 8,
+    "CON": 7,
+    "END": 10
+  },
+  "statProg": {
+    "INT": 0,
+    "STR": 0,
+    "CON": 0,
+    "END": 0
+  },
+  "lastRankKey": "E",
+  "rank": "E",
+  "rankNoticed": "",
+  "roadSpV3": true,
+  "breakMins": 30,
+  "premiumInterest": "",
+  "quests": [
+    {
+      "id": "id359",
+      "icon": "⚔️",
+      "name": "First Step Ritual",
+      "desc": "Complete any one task you have been putting off. The System is watching.",
+      "freq": "daily",
+      "days": [],
+      "tier": "easy",
+      "stat": "END",
+      "link": "",
+      "system": true,
+      "target": 7,
+      "progress": 0,
+      "startDate": "",
+      "endDate": "",
+      "repeatDays": 0,
+      "blocking": false,
+      "needTimer": false,
+      "lastTimedOn": "",
+      "streak": 0,
+      "bestStreak": 0,
+      "lastCompleted": "",
+      "lastWeek": "",
+      "completions": [],
+      "done": false,
+      "created": "2026-10-15",
+      "timeSpent": 0,
+      "halfOn": "",
+      "armed": null
+    },
+    {
+      "id": "id360",
+      "icon": "📚",
+      "name": "Read 20 pages",
+      "desc": "",
+      "freq": "daily",
+      "days": [],
+      "tier": "easy",
+      "stat": "INT",
+      "link": "",
+      "system": false,
+      "target": 7,
+      "progress": 0,
+      "startDate": "",
+      "endDate": "",
+      "repeatDays": 0,
+      "blocking": false,
+      "needTimer": false,
+      "lastTimedOn": "",
+      "streak": 12,
+      "bestStreak": 20,
+      "lastCompleted": "2026-10-15",
+      "lastWeek": "",
+      "completions": [
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15"
+      ],
+      "done": false,
+      "created": "2026-03-02",
+      "timeSpent": 0,
+      "halfOn": "",
+      "armed": null
+    },
+    {
+      "id": "id361",
+      "icon": "🏃",
+      "name": "Run 3 km",
+      "desc": "",
+      "freq": "daily",
+      "days": [],
+      "tier": "medium",
+      "stat": "END",
+      "link": "",
+      "system": false,
+      "target": 7,
+      "progress": 0,
+      "startDate": "",
+      "endDate": "",
+      "repeatDays": 0,
+      "blocking": false,
+      "needTimer": false,
+      "lastTimedOn": "",
+      "streak": 4,
+      "bestStreak": 9,
+      "lastCompleted": "2026-10-14",
+      "lastWeek": "",
+      "completions": [
+        "2026-10-12",
+        "2026-10-14"
+      ],
+      "done": false,
+      "created": "2026-03-02",
+      "timeSpent": 0,
+      "halfOn": "",
+      "armed": null
+    },
+    {
+      "id": "id362",
+      "icon": "🧠",
+      "name": "IELTS mock test",
+      "desc": "Full listening + reading",
+      "freq": "weekly",
+      "days": [],
+      "tier": "epic",
+      "stat": "INT",
+      "link": "",
+      "system": false,
+      "target": 7,
+      "progress": 0,
+      "startDate": "",
+      "endDate": "",
+      "repeatDays": 0,
+      "blocking": false,
+      "needTimer": false,
+      "lastTimedOn": "",
+      "streak": 0,
+      "bestStreak": 0,
+      "lastCompleted": "",
+      "lastWeek": "",
+      "completions": [],
+      "done": false,
+      "created": "2026-03-02",
+      "timeSpent": 0,
+      "halfOn": "",
+      "armed": null
+    }
+  ],
+  "collections": [
+    {
+      "id": "id2",
+      "name": "Starter Crate",
+      "emoji": "🎁",
+      "tier": "easy",
+      "items": [
+        {
+          "emoji": "🍫",
+          "name": "Sweet Treat",
+          "owned": false,
+          "itype": "prize"
+        },
+        {
+          "emoji": "🎬",
+          "name": "One Episode of Your Show",
+          "owned": false,
+          "itype": "prize"
+        },
+        {
+          "emoji": "☕",
+          "name": "Fancy Coffee",
+          "owned": false,
+          "itype": "prize"
+        },
+        {
+          "emoji": "🎮",
+          "name": "30 Minutes of Gaming",
+          "owned": false,
+          "itype": "prize"
+        }
+      ],
+      "reward": "",
+      "title": "",
+      "complete": false,
+      "created": "2026-10-15"
+    }
+  ],
+  "rolls": {
+    "easy": 0,
+    "medium": 0,
+    "epic": 0,
+    "mythic": 0,
+    "legendary": 0
+  },
+  "storage": [],
+  "levelRewards": [
+    {
+      "id": "id260",
+      "level": 2,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id261",
+      "level": 3,
+      "kind": "roll-easy",
+      "value": ""
+    },
+    {
+      "id": "id262",
+      "level": 4,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id263",
+      "level": 5,
+      "kind": "slot-quest",
+      "value": "2"
+    },
+    {
+      "id": "id264",
+      "level": 6,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id265",
+      "level": 7,
+      "kind": "roll-easy",
+      "value": ""
+    },
+    {
+      "id": "id266",
+      "level": 8,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id267",
+      "level": 9,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id268",
+      "level": 10,
+      "kind": "slot-quest",
+      "value": "2"
+    },
+    {
+      "id": "id269",
+      "level": 11,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id270",
+      "level": 12,
+      "kind": "slot-goal",
+      "value": "5"
+    },
+    {
+      "id": "id271",
+      "level": 13,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id272",
+      "level": 14,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id273",
+      "level": 15,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id274",
+      "level": 16,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id275",
+      "level": 17,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id276",
+      "level": 18,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id277",
+      "level": 19,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id278",
+      "level": 20,
+      "kind": "slot-goal",
+      "value": "5"
+    },
+    {
+      "id": "id279",
+      "level": 21,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id280",
+      "level": 22,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id281",
+      "level": 23,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id282",
+      "level": 24,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id283",
+      "level": 25,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id284",
+      "level": 26,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id285",
+      "level": 27,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id286",
+      "level": 28,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id287",
+      "level": 29,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id288",
+      "level": 30,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id289",
+      "level": 31,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id290",
+      "level": 32,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id291",
+      "level": 33,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id292",
+      "level": 34,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id293",
+      "level": 35,
+      "kind": "slot-goal",
+      "value": "5"
+    },
+    {
+      "id": "id294",
+      "level": 36,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id295",
+      "level": 37,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id296",
+      "level": 38,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id297",
+      "level": 39,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id298",
+      "level": 40,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id299",
+      "level": 41,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id300",
+      "level": 42,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id301",
+      "level": 43,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id302",
+      "level": 44,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id303",
+      "level": 45,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id304",
+      "level": 46,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id305",
+      "level": 47,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id306",
+      "level": 48,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id307",
+      "level": 49,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id308",
+      "level": 50,
+      "kind": "roll-legendary",
+      "value": ""
+    },
+    {
+      "id": "id309",
+      "level": 51,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id310",
+      "level": 52,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id311",
+      "level": 53,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id312",
+      "level": 54,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id313",
+      "level": 55,
+      "kind": "slot-goal",
+      "value": "5"
+    },
+    {
+      "id": "id314",
+      "level": 56,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id315",
+      "level": 57,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id316",
+      "level": 58,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id317",
+      "level": 59,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id318",
+      "level": 60,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id319",
+      "level": 61,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id320",
+      "level": 62,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id321",
+      "level": 63,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id322",
+      "level": 64,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id323",
+      "level": 65,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id324",
+      "level": 66,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id325",
+      "level": 67,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id326",
+      "level": 68,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id327",
+      "level": 69,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id328",
+      "level": 70,
+      "kind": "roll-mythic",
+      "value": ""
+    },
+    {
+      "id": "id329",
+      "level": 71,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id330",
+      "level": 72,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id331",
+      "level": 73,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id332",
+      "level": 74,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id333",
+      "level": 75,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id334",
+      "level": 76,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id335",
+      "level": 77,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id336",
+      "level": 78,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id337",
+      "level": 79,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id338",
+      "level": 80,
+      "kind": "slot-quest",
+      "value": "1"
+    },
+    {
+      "id": "id339",
+      "level": 81,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id340",
+      "level": 82,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id341",
+      "level": 83,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id342",
+      "level": 84,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id343",
+      "level": 85,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id344",
+      "level": 86,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id345",
+      "level": 87,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id346",
+      "level": 88,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id347",
+      "level": 89,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id348",
+      "level": 90,
+      "kind": "roll-mythic",
+      "value": ""
+    },
+    {
+      "id": "id349",
+      "level": 91,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id350",
+      "level": 92,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id351",
+      "level": 93,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id352",
+      "level": 94,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id353",
+      "level": 95,
+      "kind": "roll-medium",
+      "value": ""
+    },
+    {
+      "id": "id354",
+      "level": 96,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id355",
+      "level": 97,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id356",
+      "level": 98,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id357",
+      "level": 99,
+      "kind": "sp",
+      "value": "1"
+    },
+    {
+      "id": "id358",
+      "level": 100,
+      "kind": "roll-legendary",
+      "value": ""
+    }
+  ],
+  "claimedLevels": [],
+  "roadSeeded": true,
+  "heroImages": {},
+  "monthlyReports": [],
+  "reports": {},
+  "reportDebt": {},
+  "reportsSince": "2026-10-15",
+  "archive": {
+    "upTo": "",
+    "cleared": 0,
+    "xp": 0,
+    "activeDays": 0,
+    "focusSec": 0
+  },
+  "lastMonthlyReport": "2026-10",
+  "timeHistory": {
+    "2026-10-14": 2700
+  },
+  "timeBy": {},
+  "focusGoalMin": 25,
+  "focus": {
+    "theme": "void",
+    "goalMin": 25,
+    "mode": "stopwatch",
+    "work": 25,
+    "rest": 5,
+    "laps": 4,
+    "alarm": "chime",
+    "alarmVol": 0.8,
+    "alarmRepeat": 2,
+    "sounds": [],
+    "wpOn": false,
+    "rotateMin": 25,
+    "wallpapers": []
+  },
+  "activeTimer": null,
+  "xpDebt": 0,
+  "penaltyTask": null,
+  "lastPenaltyDay": "2026-10-15",
+  "lastDebtCheck": "2026-10-15",
+  "firstStepsDismissed": false,
+  "dossier": {
+    "height": "",
+    "weight": "",
+    "age": "",
+    "status": ""
+  },
+  "realAchievements": [],
+  "honors": [],
+  "honorsSeeded": true,
+  "customQuotes": [],
+  "guildId": "",
+  "dreams": [
+    {
+      "id": "id365",
+      "tier": "year",
+      "title": "IELTS 7.0",
+      "note": "",
+      "target": "2027-06-01",
+      "done": false
+    }
+  ],
+  "storyView": "path",
+  "theme": "shadow",
+  "sound": true,
+  "effects": false,
+  "oathSkipped": "",
+  "aiConsent": "",
+  "lang": "en",
+  "autoLocks": null,
+  "entryChoice": "guest",
+  "lastBroadcastId": 0,
+  "lastSeasonId": 0,
+  "roadTemplateId": 0,
+  "questSlots": 0,
+  "goalCapWeekly": 10,
+  "rewardsInv": [],
+  "rewardsArchive": [],
+  "journal": {
+    "2026-10-14": {
+      "learn": "Shadowing works",
+      "changed": "Phone in another room",
+      "tomorrow": "Run before school"
+    }
+  },
+  "notify": {
+    "on": false,
+    "time": "20:00",
+    "lastFired": ""
+  },
+  "navConfig": [
+    {
+      "page": "home",
+      "label": "HOME",
+      "hidden": false
+    },
+    {
+      "page": "quests",
+      "label": "QUESTS",
+      "hidden": false
+    },
+    {
+      "page": "mentor",
+      "label": "MENTOR",
+      "hidden": false
+    },
+    {
+      "page": "learn",
+      "label": "LEARN",
+      "hidden": false
+    },
+    {
+      "page": "profile",
+      "label": "PROFILE",
+      "hidden": false
+    },
+    {
+      "page": "stats",
+      "label": "STATS",
+      "hidden": false
+    },
+    {
+      "page": "story",
+      "label": "STORY",
+      "hidden": false
+    },
+    {
+      "page": "rewards",
+      "label": "REWARDS",
+      "hidden": false
+    },
+    {
+      "page": "inventory",
+      "label": "INVENTORY",
+      "hidden": false
+    },
+    {
+      "page": "honor",
+      "label": "HONOR",
+      "hidden": false
+    },
+    {
+      "page": "guild",
+      "label": "CLAN",
+      "hidden": false
+    },
+    {
+      "page": "budget",
+      "label": "BUDGET",
+      "hidden": false
+    },
+    {
+      "page": "premium",
+      "label": "PREMIUM",
+      "hidden": false
+    },
+    {
+      "page": "guide",
+      "label": "GUIDE",
+      "hidden": false
+    },
+    {
+      "page": "admin",
+      "label": "SETTINGS",
+      "hidden": false
+    }
+  ],
+  "navIntentV2": true,
+  "todos": [
+    {
+      "id": "id363",
+      "text": "Return the library book",
+      "date": "2026-10-16",
+      "done": false,
+      "doneOn": "",
+      "paid": false,
+      "sec": 0,
+      "created": "2026-10-15"
+    }
+  ],
+  "oath": {
+    "running": "Scrolling until 2 am",
+    "failed": "Skipped every run in September",
+    "become": "Someone who finishes what he starts",
+    "words": "I will not quit on the boring days",
+    "signed": "Bekzod",
+    "sworn": "2026-03-03",
+    "prev": []
+  },
+  "learn": {
+    "done": {},
+    "links": {},
+    "cat": "discipline"
+  },
+  "budget": {
+    "currency": "$",
+    "transactions": [
+      {
+        "id": "id364",
+        "type": "out",
+        "amount": 12,
+        "cat": "study",
+        "note": "IELTS book",
+        "date": "2026-10-10"
+      }
+    ],
+    "goals": [],
+    "wishlist": []
+  },
+  "skills": [],
+  "equipment": [],
+  "foods": [],
+  "titles": [],
+  "badges": [],
+  "totalCompleted": 143,
+  "history": {
+    "2026-10-13": {
+      "xp": 30,
+      "count": 2
+    },
+    "2026-10-14": {
+      "xp": 55,
+      "count": 3
+    },
+    "2026-10-15": {
+      "xp": 20,
+      "count": 1
+    }
+  },
+  "streakHistory": {},
+  "unlockedChapters": [
+    0
+  ],
+  "lastSystemCheckLevel": 1,
+  "assignedRankQuests": [],
+  "nextId": 365,
+  "created": "2026-03-02",
+  "seeded": true,
+  "dailyPackage": {
+    "day": "2026-10-15",
+    "streak": 0,
+    "bestStreak": 0,
+    "lastFullDay": "",
+    "completedDates": [],
+    "items": [
+      {
+        "id": "pk1",
+        "icon": "💪",
+        "name": "30 Push-ups",
+        "stat": "STR",
+        "done": false
+      },
+      {
+        "id": "pk2",
+        "icon": "🏋️",
+        "name": "30 Sit-ups",
+        "stat": "END",
+        "done": false
+      },
+      {
+        "id": "pk3",
+        "icon": "🦵",
+        "name": "30 Squats",
+        "stat": "CON",
+        "done": false
+      },
+      {
+        "id": "pk4",
+        "icon": "🏃",
+        "name": "3 km Run",
+        "stat": "END",
+        "done": false
+      }
+    ]
+  },
+  "themeV2": true,
+  "tutorialDone": true,
+  "themeV3": true,
+  "themeV4": true,
+  "namesV2": true,
+  "starterCrateSeeded": true,
+  "lockdownGone": true,
+  "limitsInit": true,
+  "roadSeeded2": true,
+  "limitsInit3": true,
+  "rankModelV2": true,
+  "rollRebalance": true,
+  "roadNotesCleaned": true,
+  "rewardsInvSeeded": true,
+  "savedAt": "2026-10-15T15:42:10.000Z",
+  "saveCount": 9000,
+  "lastSnapshotDay": "2026-10-15"
+}

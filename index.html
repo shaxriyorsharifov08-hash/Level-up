@@ -3152,6 +3152,11 @@ function defaultState(){
     lang:"en",           /* interface language: en | ru */
     autoLocks:null,      /* cached copy of the admin's global section locks (synced from Firebase, read-only on the client) */
     entryChoice:"",      /* entrance screen result: google | guest | admin */
+    /* sync (README 4, "Sync safety"): migSyncV1 seeds these for old saves. schemaVersion is
+       deliberately NOT here: the defaults merge would mark old saves as migrated */
+    changedAt:0,         /* ms of the hero's last real change; sync compares this, never saveCount */
+    ownerUid:"",         /* the account this hero belongs to; "" = not linked yet */
+    syncBase:0,          /* changedAt of the copy last agreed with the cloud; 0 = never synced */
     lastBroadcastId:0,   /* last admin broadcast shown on this device */
     lastSeasonId:0,      /* last season event applied on this device */
     roadTemplateId:0,    /* last admin story-path template adopted on this device */
@@ -3192,11 +3197,23 @@ function defaultState(){
     }
   };
 }
+/* Did the hero really do something since the last save? Boot housekeeping,
+   the 1-second tick, reminders and daily penalties call save() too, and they
+   must never make an old phone opened after weeks look newer (README 4, "Sync safety"). */
+var heroActed = false;
+["pointerdown","touchstart","keydown"].forEach(function(ev){
+  /* a script-made event is not the hero; very old browsers lack the flag */
+  window.addEventListener(ev, function(e){ if(e.isTrusted !== false) heroActed = true; }, {passive:true, capture:true});
+});
+/* a real change with no tap behind it: import, restore, a timer that finishes */
+function markChanged(){ heroActed = true; }
 function save(){
   /* DELETE MY DATA is in progress: writing now would bring the record back */
   if(dataWiping) return;
   state.savedAt = new Date().toISOString();
-  state.saveCount = (state.saveCount || 0) + 1;
+  state.saveCount = (state.saveCount || 0) + 1; /* kept for tabs still running older code */
+  /* never backwards, even if the phone's clock was moved */
+  if(heroActed){ heroActed = false; state.changedAt = Math.max(Date.now(), (+state.changedAt || 0) + 1); }
   var t = todayStr();
   var takeSnap = !!idb && state.lastSnapshotDay !== t;
   if(takeSnap) state.lastSnapshotDay = t;
@@ -3343,6 +3360,52 @@ function cloudUpload(){
   try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){}
   toast("This device's data uploaded to the cloud.", "gold", "SYNCED");
   renderCloudStatus();
+}
+/* Which copy should this device keep? Pure: it reads its arguments and changes
+   nothing. local: this device's save. remote: the record at hunters/<uid>
+   ({json}), an already parsed save, a deletion marker {deleted, deletedAt}, or
+   null. uid: the signed-in account. Old copies are read as upgradeSave would
+   seed them. It never looks at saveCount: opening the app adds saves.
+   "local" keep this device, "remote" take the cloud copy, "same" nothing to do,
+   "ask" both changed (the hero chooses), "otherOwner" this device holds another
+   account's hero, "deleted" the account was deleted after this copy's last change. */
+function pickWinner(local, remote, uid){
+  var L = syncFields(local || {});
+  uid = uid || "";
+  /* first: with no cloud copy, "local" would silently move another account's
+     hero into this one (a shared phone) */
+  if(L.ownerUid && L.ownerUid !== uid) return "otherOwner";
+  if(remote && !remote.deleted && remote.json !== undefined){
+    try{ remote = JSON.parse(remote.json); }catch(e){ remote = null; }
+  }
+  if(!remote || typeof remote !== "object") return "local";
+  if(remote.deleted){
+    return (L.ownerUid && L.ownerUid === uid && L.changedAt <= (+remote.deletedAt || 0)) ? "deleted" : "local";
+  }
+  var R = syncFields(remote);
+  if(L.changedAt === R.changedAt) return "same";
+  if(L.syncBase){
+    /* a side "changed" if it moved away from the copy both last agreed on */
+    var lc = L.changedAt !== L.syncBase, rc = R.changedAt !== L.syncBase;
+    return (lc && rc) ? "ask" : (lc ? "local" : "remote");
+  }
+  /* never synced: an empty copy loses; the same hero keeps the newer change */
+  if(syncEmpty(local)) return "remote";
+  if(syncEmpty(remote)) return "local";
+  if(String(local.created) === String(remote.created) && String(local.hunterName) === String(remote.hunterName)){
+    return L.changedAt > R.changedAt ? "local" : "remote";
+  }
+  return "ask";
+}
+/* empty: no XP, nothing completed, nothing the hero planned or wrote */
+function syncEmpty(s){
+  if(!s) return true;
+  if((+s.totalXp || 0) > 0 || (+s.totalCompleted || 0) > 0 || (+s.level || 1) > 1) return false;
+  var qs = Array.isArray(s.quests) ? s.quests : [], i;
+  for(i=0;i<qs.length;i++) if(qs[i] && !qs[i].system) return false;
+  var lists = [s.todos, s.dreams, s.budget && s.budget.transactions];
+  for(i=0;i<lists.length;i++) if(Array.isArray(lists[i]) && lists[i].length) return false;
+  return !(s.journal && typeof s.journal === "object" && Object.keys(s.journal).length);
 }
 /* ---------------- heroes guild (leaderboard, respect, chat) ---------------- */
 var gMembers = {}, gChat = [], gInfo = null;
@@ -3826,6 +3889,8 @@ document.getElementById("acSaveUser").addEventListener("click", function(){
     st.xp = Math.max(0, parseInt(document.getElementById("acXp").value, 10) || 0);
     st.statPoints = Math.max(0, parseInt(document.getElementById("acSp").value, 10) || 0);
     st.saveCount = (st.saveCount || 0) + 1000; /* user devices adopt the higher count on next sync */
+    upgradeSave(st);
+    st.changedAt = Math.max(Date.now(), (+st.changedAt || 0) + 1); /* an admin edit is a real change */
     fbDb.ref("hunters/" + acSelectedUid).set({json: JSON.stringify(st), updatedAt: Date.now()})
       .then(function(){ toast(tr("User updated."), "gold", "ADMIN"); })
       .catch(function(err){ toast(tr("Save failed: ") + err.message, "err"); });
@@ -4143,8 +4208,15 @@ function setupAuthListener(){
 /* ---------------- IndexedDB vault (redundant storage + snapshots) ---------------- */
 var idb = null;
 var storagePersistent = null;
+/* Work that needs the vault while it is still opening at boot waits here and
+   is never dropped. null = the vault could not open, so there is nowhere to keep it. */
+var vaultQueue = [];
+function whenVault(cb){
+  if(idb){ cb(); return; }
+  if(vaultQueue) vaultQueue.push(cb);
+}
 function idbOpen(cb){
-  if(!window.indexedDB){ if(cb) cb(null); return; }
+  if(!window.indexedDB){ vaultQueue = null; if(cb) cb(null); return; }
   try{
     var req = indexedDB.open("leveluphunter_db", 1);
     req.onupgradeneeded = function(e){
@@ -4152,9 +4224,15 @@ function idbOpen(cb){
       if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
       if(!db.objectStoreNames.contains("snapshots")) db.createObjectStore("snapshots");
     };
-    req.onsuccess = function(e){ idb = e.target.result; if(cb) cb(idb); };
-    req.onerror = function(){ if(cb) cb(null); };
-  }catch(e){ if(cb) cb(null); }
+    req.onsuccess = function(e){
+      idb = e.target.result;
+      var q = vaultQueue || [];
+      vaultQueue = [];
+      for(var i=0;i<q.length;i++){ try{ q[i](); }catch(err){} }
+      if(cb) cb(idb);
+    };
+    req.onerror = function(){ vaultQueue = null; if(cb) cb(null); };
+  }catch(e){ vaultQueue = null; if(cb) cb(null); }
 }
 function idbPut(store, key, val){
   if(!idb) return;
@@ -4180,11 +4258,35 @@ function idbDel(store, key){
   if(!idb) return;
   try{ idb.transaction(store, "readwrite").objectStore(store).delete(key); }catch(e){}
 }
-function pruneSnapshots(){
+/* Two kinds share the snapshots store, and each is pruned on its own so they
+   never evict each other: daily ones keyed by date (14 kept, the value is the
+   save's JSON) and safety ones keyed "pre-<ISO time>" (5 kept, the value is
+   {label, json}), taken before anything overwrites this device's save. */
+var SNAP_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isPreSnap(k){ return String(k).indexOf("pre-") === 0; }
+function pruneSnapGroup(isMine, keep){
   idbAllKeys("snapshots", function(keys){
-    if(!keys || keys.length <= 14) return;
-    keys = keys.slice().sort();
-    for(var i=0;i<keys.length-14;i++) idbDel("snapshots", keys[i]);
+    var mine = [];
+    for(var i=0;i<(keys || []).length;i++) if(isMine(String(keys[i]))) mine.push(String(keys[i]));
+    if(mine.length <= keep) return;
+    mine.sort();
+    for(i=0;i<mine.length-keep;i++) idbDel("snapshots", mine[i]);
+  });
+}
+function pruneSnapshots(){ pruneSnapGroup(function(k){ return SNAP_DAY_RE.test(k); }, 14); }
+/* label: "cloud" | "import" | "restore" | "vault" (shown by renderSnapshots) */
+var lastPreSnapAt = 0;
+function vaultSnapshot(json, label){
+  if(dataWiping || !json) return;
+  if(typeof json !== "string"){ try{ json = JSON.stringify(json); }catch(e){ return; } }
+  /* a unique key even for two snapshots in the same millisecond */
+  lastPreSnapAt = Math.max(Date.now(), lastPreSnapAt + 1);
+  var key = "pre-" + new Date(lastPreSnapAt).toISOString();
+  var val = {label: String(label || ""), json: json};
+  whenVault(function(){
+    if(dataWiping) return;
+    idbPut("snapshots", key, val);
+    pruneSnapGroup(isPreSnap, 5);
   });
 }
 function load(){
@@ -4534,6 +4636,43 @@ function migrateState(){
       }
     }
   }
+  /* last: the numbered steps, so load() and adoptState() both get them */
+  upgradeSave(state);
+}
+/* Numbered save migrations (README 4, "Sync safety"). upgradeSave(s) runs, in
+   order, every step numbered above s.schemaVersion, then records the version.
+   It works on the live state and on a raw parsed cloud copy alike.
+   Add new steps at the end and never renumber; every step must be safe to run
+   twice. schemaVersion is NOT in defaultState(): the defaults merge runs first
+   and would mark an old save as already migrated (the roadSpV3 lesson). */
+var SAVE_MIGRATIONS = [{v:1, run: migSyncV1}];
+function upgradeSave(s){
+  if(!s || typeof s !== "object") return s;
+  var cur = +s.schemaVersion || 0; /* a save from a newer app keeps its higher number */
+  for(var i=0;i<SAVE_MIGRATIONS.length;i++){
+    var m = SAVE_MIGRATIONS[i];
+    if(m.v <= cur) continue;
+    /* a step that throws stays pending for the next load instead of stopping the app */
+    try{ m.run(s); }catch(e){ break; }
+    cur = m.v;
+  }
+  s.schemaVersion = cur;
+  return s;
+}
+function syncNum(v){ return (typeof v === "number" && isFinite(v) && v > 0) ? v : 0; }
+/* The sync fields of any copy, read without changing it. A copy from before
+   version 1 counts its last change from savedAt: load() migrates before any
+   boot save, so savedAt is still the last time that phone was really used. */
+function syncFields(s){
+  var ch = syncNum(s.changedAt);
+  if(!ch && !((+s.schemaVersion || 0) >= 1) && typeof s.savedAt === "string") ch = syncNum(Date.parse(s.savedAt));
+  return {changedAt: ch, ownerUid: typeof s.ownerUid === "string" ? s.ownerUid : "", syncBase: syncNum(s.syncBase)};
+}
+/* step 1 (Mission 1.2): a real change time, an owner tag ("" until a confirmed
+   sign-in sets it) and a sync base (0 = never agreed with the cloud) */
+function migSyncV1(s){
+  var f = syncFields(s);
+  s.changedAt = f.changedAt; s.ownerUid = f.ownerUid; s.syncBase = f.syncBase;
 }
 var ROAD_KINDS = ["roll-easy","roll-medium","roll-epic","roll-mythic","roll-legendary","sp","title","quest","slot-quest","slot-goal","note"];
 var ROAD_KIND_LABEL = {
@@ -5346,7 +5485,12 @@ var I18N_RU = {
   "The video needs an internet connection.":"Для видео нужен интернет.",
   "SKIP FOR NOW":"ПРОПУСТИТЬ ПОКА",
   "Skipped. You can swear the Oath any time: tap your hero on TODAY → THE OATH.":"Пропущено. Дать клятву можно в любой момент: нажмите на своего героя в СЕГОДНЯ → КЛЯТВА.",
-  "⚔ THE OATH":"⚔ КЛЯТВА"
+  "⚔ THE OATH":"⚔ КЛЯТВА",
+  /* safety snapshots in ADMIN → DATA VAULT (README 4, "Sync safety") */
+  "Daily snapshot":"Ежедневный снимок","Safety snapshot":"Страховочный снимок",
+  "Before cloud sync":"Перед синхронизацией с облаком","Before import":"Перед импортом",
+  "Before restore":"Перед восстановлением","Before vault recovery":"Перед восстановлением из хранилища",
+  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"В этом снимке герой другого аккаунта. Всё равно восстановить его на этом устройстве? Текущий прогресс будет заменён."
 };
 
 /* Uzbek (Latin script, oʻ/gʻ written with ʻ U+02BB). Same keys as I18N_RU;
@@ -5783,7 +5927,11 @@ var I18N_UZ = {
   "The video needs an internet connection.":"Video uchun internet kerak.",
   "SKIP FOR NOW":"HOZIRCHA OʻTKAZIB YUBORISH",
   "Skipped. You can swear the Oath any time: tap your hero on TODAY → THE OATH.":"Oʻtkazib yuborildi. Qasamni istalgan payt qabul qilishingiz mumkin: BUGUN da qahramoningizni bosing → QASAM.",
-  "⚔ THE OATH":"⚔ QASAM"
+  "⚔ THE OATH":"⚔ QASAM",
+  "Daily snapshot":"Kunlik nusxa","Safety snapshot":"Xavfsizlik nusxasi",
+  "Before cloud sync":"Bulut bilan sinxronlashdan oldin","Before import":"Importdan oldin",
+  "Before restore":"Tiklashdan oldin","Before vault recovery":"Ombordan tiklashdan oldin",
+  "This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced.":"Bu nusxada boshqa hisobning qahramoni bor. Baribir uni shu qurilmada tiklaysizmi? Joriy taraqqiyot almashtiriladi."
 };
 /* the dictionary for the chosen language; English has none (it is the source) */
 function i18nDict(){
@@ -7634,6 +7782,7 @@ function grindTick(){
     alarmDisarm();
     alarmPlay(0, Math.max(2, fo().alarmRepeat || 2));
     showNotify("✓ GRIND COMPLETE", laps + (laps === 1 ? " lap" : " laps") + " of " + tm.work + " minutes. " + tm.name);
+    markChanged(); /* the hero started it: the logged time is their change, not housekeeping */
     stopTimer(false);
     announce("✓ GRIND COMPLETE",
       laps + (laps === 1 ? " lap" : " laps") + " of " + tm.work + " minutes, finished.\n\n" + tm.name
@@ -11537,7 +11686,9 @@ document.getElementById("admImportFile").addEventListener("change", function(){
       toast("This file is not a Level Up backup.", "err"); return;
     }
     if(!confirm("Restore backup for hero \"" + (data.hunterName || "Hero") + "\" (LV." + data.level + ", " + (data.totalCompleted || 0) + " quests done)? Current progress will be replaced.")) return;
+    vaultSnapshot(JSON.stringify(state), "import"); /* the replaced progress stays one tap away */
     adoptState(data);
+    markChanged(); /* a restored backup is the newest change, wherever it came from */
     save(); renderAll();
     announce("SYSTEM RESTORED", "Backup imported successfully.\n\nWelcome back, " + state.hunterName + ".\nAll records have been re-synchronized.", "💾", "CONTINUE");
   };
@@ -11547,14 +11698,26 @@ document.getElementById("admImportFile").addEventListener("change", function(){
 document.getElementById("admSnapshots").addEventListener("click", function(e){
   var b = e.target.closest("button[data-snap]"); if(!b) return;
   var key = b.getAttribute("data-snap");
-  idbGet("snapshots", key, function(raw){
+  idbGet("snapshots", key, function(v){
+    /* daily snapshots hold the JSON itself; safety ones hold {label, json} */
+    var raw = (v && typeof v === "object") ? v.json : v;
+    var name = snapName(key, v && v.label);
     if(!raw){ toast("Snapshot could not be read.", "err"); return; }
     var data = null;
     try{ data = JSON.parse(raw); }catch(err){ toast("Snapshot is corrupted.", "err"); return; }
-    if(!confirm("Restore snapshot from " + key + "? Current progress will be replaced.")) return;
+    if(!data || typeof data !== "object"){ toast("Snapshot is corrupted.", "err"); return; }
+    /* a shared phone: another account's hero never lands here without a question */
+    var snapOwner = typeof data.ownerUid === "string" ? data.ownerUid : "";
+    var mine = state.ownerUid || (cloudUser && cloudUser.uid) || "";
+    var ok = (snapOwner && snapOwner !== mine)
+      ? confirm(tr("This snapshot holds a hero from another account. Restore it on this device anyway? Current progress will be replaced."))
+      : confirm("Restore snapshot from " + name + "? Current progress will be replaced.");
+    if(!ok) return;
+    vaultSnapshot(JSON.stringify(state), "restore");
     adoptState(data);
+    markChanged();
     save(); renderAll();
-    announce("SYSTEM RESTORED", "Snapshot from " + key + " has been restored.\n\nWelcome back, " + state.hunterName + ".", "💾", "CONTINUE");
+    announce("SYSTEM RESTORED", "Snapshot from " + name + " has been restored.\n\nWelcome back, " + state.hunterName + ".", "💾", "CONTINUE");
   });
 });
 function renderStorageStatus(){
@@ -11579,15 +11742,32 @@ function renderSnapshots(){
       el.innerHTML = '<span class="empty-note">No snapshots yet. One is stored automatically on the first save of each day.</span>';
       return;
     }
-    keys = keys.slice().sort().reverse();
-    var h = "";
-    for(var i=0;i<keys.length;i++){
-      var k = String(keys[i]);
-      h += '<div class="adm-list-item"><span class="ali-name">💾 Daily snapshot — ' + esc(k) + '</span>'
-        + '<button class="btn" style="padding:6px 14px" data-snap="' + esc(k) + '">RESTORE</button></div>';
+    /* "pre-…" sorts after the dates, so safety snapshots come first, newest first */
+    keys = keys.map(String).sort().reverse();
+    var labels = {}, left = keys.filter(isPreSnap).length;
+    function draw(){
+      var h = "";
+      for(var i=0;i<keys.length;i++){
+        var k = keys[i];
+        h += '<div class="adm-list-item"><span class="ali-name">💾 '
+          + (isPreSnap(k) ? "" : esc(tr("Daily snapshot")) + ' — ') + esc(snapName(k, labels[k])) + '</span>'
+          + '<button class="btn" style="padding:6px 14px" data-snap="' + esc(k) + '">RESTORE</button></div>';
+      }
+      el.innerHTML = h;
     }
-    el.innerHTML = h;
+    if(!left){ draw(); return; }
+    keys.filter(isPreSnap).forEach(function(k){
+      idbGet("snapshots", k, function(v){ labels[k] = v && v.label; if(--left === 0) draw(); });
+    });
   });
+}
+var SNAP_LABELS = {"cloud":"Before cloud sync", "import":"Before import", "restore":"Before restore", "vault":"Before vault recovery"};
+/* daily: its date; safety: what it was taken before, and when (local time) */
+function snapName(k, label){
+  if(!isPreSnap(k)) return k;
+  var d = new Date(k.slice(4));
+  var known = Object.prototype.hasOwnProperty.call(SNAP_LABELS, label);
+  return tr(known ? SNAP_LABELS[label] : "Safety snapshot") + " — " + (isNaN(d.getTime()) ? k.slice(4) : d.toLocaleString());
 }
 document.getElementById("admWipe").addEventListener("click", function(){
   if(!confirm("FULL RESET: erase ALL progress permanently?")) return;
@@ -15128,6 +15308,7 @@ idbOpen(function(){
       try{
         var other = JSON.parse(raw);
         if(other && (other.saveCount || 0) > (state.saveCount || 0)){
+          vaultSnapshot(JSON.stringify(state), "vault");
           adoptState(other);
           adopted = true;
         }
