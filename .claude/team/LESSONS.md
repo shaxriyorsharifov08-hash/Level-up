@@ -1,0 +1,72 @@
+# Lessons the team has learned
+
+Short, concrete rules learned from real work on this project. Every role reads the sections for its area before starting. **After every task, the lead adds what went wrong or what was slow, as one line: the rule, then why (what happened).** Merge duplicates and keep the file under about 80 lines; a lesson that a tool or test now enforces can be removed.
+
+## Code (index.html)
+- `\b` does not work next to Cyrillic in JavaScript regexes: it only knows A–Z, 0–9 and _. Use `(?=\s|$)` or a lookbehind instead. (The Mentor's Russian keywords needed this; rules-check now warns.)
+- Uzbek puts the verb last ("kitob oʻqishni qanday odat **qilaman**") and asks mid-sentence. A command parser must accept only the imperative ("qoʻsh", "qoʻshing", "och") and treat question words (qanday, nega, qachon) as questions. (A question became an "add quest" command until a test caught it.)
+- `\W` counts Cyrillic letters as non-word in JavaScript, so `\W*$` after a Russian word matches any Russian text that follows ("Я больше не выдержу эту жару" became crisis). End a Russian pattern with `[^а-я]*$`. (Found in the Mission 1.1 fix round.)
+- `mNorm()` lowers case and turns every apostrophe kind into `'`. Match on the normalised text, but cut names from the original so capitals survive (both have the same length).
+- The ASK box is a single-line `<input>`: newlines never reach the code. Several commands in one line are separated with `;`.
+- Escape every user or AI text with `esc()` before it goes into HTML, including text that "only comes from our own Worker".
+- `startTimer()` may ask "a timer is already running, replace it?" with `confirm()`. Code that changes the new session afterwards must check that a new timer really started (`state.activeTimer !== before`).
+- Never change the hero's default settings to serve one request (e.g. `fo().goalMin`). Change the running session instead.
+- A preset for `openQuestModal()` only fills the window; SAVE still runs `questCreationBlock()`. That is how suggestions respect the slot rules.
+
+## AI and the Worker
+- Models break JSON: they wrap it in a code fence, add text around it, or stop halfway. Parse the first `{` to the last `}`, accept a fence, and treat a cut-off object as "busy". Never show raw JSON to the hero. (The Worker's tests now cover all three.)
+- Check AI output twice, on the Worker and in the app, against an allowed list with clamped fields. The app never trusts the network.
+- Health words are blocked before the AI (on the device and in the Worker) and after it (in proposed actions).
+
+## Tests
+- Copy expected strings from the code: the message said "{placeholders} differ", and a test looked for "placeholders differ". Read the failure before blaming the app.
+- `toEqual` on an object compares every key. If the test reads extra values into the object, the expected object needs them too (a to-do test failed only because `tomorrow` was missing from the expectation).
+- `page.clock.setSystemTime` fixes "today"; a test that builds dates must use the app's own `todayStr()` / `addDays()` inside `page.evaluate`, not Node's clock.
+- When a full-suite run fails in an unrelated spec, rerun that one spec alone before calling it flaky; if it fails alone, it is real.
+
+## Translation
+- The Uzbek menu name for MORE is "KOʻPROQ", not "YANA". Search the dictionaries for the app's own term before translating.
+- Uzbek uses `ʻ` (U+02BB). An apostrophe or a backtick is wrong, even in a dictionary value.
+
+## Decks and documents (python-pptx)
+- When the owner asks only for a check: list the problems with slide numbers. Do not remake the deck.
+- Retargeting a relationship: `rel._target` is not enough, because `target_part` is cached; also `rel.__dict__.pop("target_part", None)`. (Zoom links pointed to removed slides.)
+- Imported slides with SVG pictures need a `Default` content type for `svg` in `[Content_Types].xml`, or PowerPoint calls the file damaged.
+- After reordering slides, re-sort the section lists (`p14:sectionLst`) to match, or sections show the wrong slides.
+- "Shrink text on overflow" (normAutofit) made text tiny. Set no autofit and make the box taller or the insets smaller.
+- Charts: set `noFill` on the chart and plot area so the slide background shows through. Put labels above or below points so they never overlap the lines. Use `ch.value_axis` only after the chart exists.
+- To copy a paragraph's style, use the last paragraph that has runs; an empty last paragraph has no style to copy.
+- Every number must agree across sales, finance, payback and the speaker notes. Find the source of truth (the model or the owner's latest figure) before changing any of them.
+
+## Working with the owner
+- Before a change, say what will change and why; after it, say what changed. Ask one clear question only when the answer changes what gets built.
+- The owner compares versions themselves. When asked for two files, make File A (checked, nothing existing touched) and File B (improved), and say what differs.
+
+## The team's own tools
+- Run `rules-check` on the team's own changes too: its first run found two false alarms of its own (a role file that mentions the storage key; a test fixture shaped like a real key). Rules about code apply to code files only, and test fixtures that look like keys are built from halves.
+- Chain a check and a commit with `&&`, never `;`, or the commit goes through even when the check fails.
+
+## Drills
+- review-1 (reviewer, Nov 2026): 3/3 found, no false alarm, about 8 minutes. What worked: it ran the affected specs to prove each finding (the tests failed on the crash) and compared each removed condition with its replacement. It also found an extra real problem (a counter counting windows opened, not quests saved, and saving when the hero only looked) and a real test gap in the app (card titles escaped but no test proving it), now closed in `tests/agent.spec.js`.
+
+## Packaging the team (portable ai-team)
+- The reviewer caught a header that was not valid YAML (an unquoted ": " in the description) and a rule letting a project's files outrank the owner's stop-and-ask list. Both slipped past my own validator and tests, which only checked what I thought of; `build-portable.py` now parses headers strictly, and tests pin the owner's rules. Run the reviewer on packaging work too, not only on app code.
+
+## Safety testing
+- Held-out crisis and eating-distress test phrases must come from people (the owner, native speakers, a counsellor), not from an agent: an AI safety system stopped a health-safety agent writing them. Agents can write the benign half (diet, tricky normals, safe commands). Never route around such a stop. (Blind round 2, Mission 1.1.)
+- A corpus the patterns were tuned on measures nothing new: the first blind round scored 75% while the corpus scored 100%. Keep a held-out set the code authors never see, hashed before any fix.
+
+- Every phrase a reviewer or tester reports goes into the corpus in the same change, in the group it should be in. A pattern tightened for one phrase made new false alarms elsewhere three times in Mission 1.1; only the corpus caught them.
+- For "X again / ever / anymore" in a crisis pattern, anchor at the end of the message (`again\W*$`), not with `\b`: "I hope I don't wake up again at night" is a sleep question.
+- Two long agents at once hit the 5-hour usage limit together, and the mission stalled for hours. Stagger heavy agents, and when a reviewer gives exact small fixes, the lead applies them instead of starting another coder round.
+
+- A sync change must be tested against devices still running the OLD app: their writes lack the new fields. Mission 1.2 round B read such a write as "same" and overwrote it (found by the reviewer with a probe that writes a legacy record straight to the fake cloud).
+- "Did the hero change something?" cannot be a one-shot flag cleared by the next save: a reward saved 3 s after the tap was lost, and a stray scroll counted hours later. Use the time of the last trusted gesture.
+
+## Whole-app review (8 Nov 2026)
+- Keyword safety lists catch only exact phrases: ~15% of realistic crisis/eating wording was caught. Safety lists need a phrase corpus test in every language (slang, misspellings, Cyrillic Uzbek, no apostrophes), and food/body words must route to "diet" before any library tip.
+- A new default in `defaultState()` hides a flag-based migration: the defaults merge runs before `migrateState()`, so `if(!state.flag)` never fires for old saves (roadSpV3). Test migrations through `load()` with an old-save fixture, never by calling `migrateState()` directly.
+- A save count is not a clock: opening the app adds saves, so "higher count wins" lets a stale device overwrite newer work. Compare real change times and keep a snapshot before any overwrite.
+- Undo must restore exactly what the action gave (recorded at the time), or it becomes a farm and punishes honest players.
+- Seven read-only roles in parallel took about 9 minutes; the lead re-checked every headline claim (screenshots, probes, rerunning a role's script) before reporting. Every claim held.
+- When another role is editing the same file at the same time, stage only your own changes (`git add -p`, or check `git diff <file>` first). Committing the whole README once carried the mission coder's unfinished notes along with the lead's section.

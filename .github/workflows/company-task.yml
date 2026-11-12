@@ -1,0 +1,130 @@
+name: Company task
+
+# AGENT COMPANY, INDEPENDENT MODE (README 6d, company/README.md). One task goes
+# in; the lead plans, the roles work in turn, the reviewer checks, and the lead
+# writes a report, using GitHub's free model allowance (GitHub Models) through
+# company/runner/run.mjs. No AI account and no secret but the workflow's own
+# GITHUB_TOKEN.
+#
+# Two ways to start it:
+#   - Actions tab -> "Company task" -> Run workflow: type the task, and
+#     optionally a project file in this repository (for example CLAUDE.md) whose
+#     text the company reads. The report is in the run's summary.
+#   - Label an issue "company-task": the issue's title and text are the task,
+#     and the report comes back as a comment on the issue. Only people who may
+#     label issues (triage access or more) can start it, so strangers cannot
+#     spend the free allowance. The repository variable COMPANY_PROJECT_FILE
+#     names a project file for issue tasks (optional).
+# GitHub runs issue-triggered workflows from the DEFAULT branch's copy of this
+# file only, so the label starts working once this file is merged there.
+# "Run workflow" works from any branch that has it.
+#
+# Safe by design: the runner only reads files and writes report.md. It never
+# runs the model's answer, never changes the repository, never pushes or
+# deploys; the only thing posted is the comment on the labelled issue. The
+# issue text reaches the shell only through environment variables, never
+# pasted into a script. Free-tier limits apply (a few requests a minute, a
+# daily cap, about 8,000 input tokens a request): one run makes at most
+# AI_MAX_CALLS calls (default 8, at most 20). The repository variables AI_MODEL
+# and AI_MAX_CALLS change the model and the budget.
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "The task for the company, in plain words"
+        required: true
+        type: string
+      project_file:
+        description: "Optional: a file in this repository with the project's rules (for example CLAUDE.md)"
+        required: false
+        type: string
+        default: ""
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  models: read
+  issues: write   # only to post the report as a comment on the labelled issue
+
+concurrency:
+  group: company-task-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'company-task'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run the company
+        env:
+          AI_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          AI_MODEL: ${{ vars.AI_MODEL }}
+          AI_MAX_CALLS: ${{ vars.AI_MAX_CALLS }}
+          INPUT_TASK: ${{ inputs.task }}
+          INPUT_PROJECT: ${{ inputs.project_file || vars.COMPANY_PROJECT_FILE }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "issues" ]; then
+            TASK="$(printf '%s\n\n%s' "$ISSUE_TITLE" "$ISSUE_BODY")"
+          else
+            TASK="$INPUT_TASK"
+          fi
+          args=(--out report.md)
+          if [ -n "$INPUT_PROJECT" ]; then
+            case "$INPUT_PROJECT" in
+              /*|*..*) echo "The project file must be a path inside this repository."; exit 1 ;;
+            esac
+            args+=(--project "$INPUT_PROJECT")
+          fi
+          set +e
+          # the task goes in on standard input ("-"), so a long issue never hits the command-line limit
+          printf '%s' "$TASK" | node company/runner/run.mjs - "${args[@]}"
+          code=$?
+          set -e
+          if [ -f report.md ]; then cat report.md >> "$GITHUB_STEP_SUMMARY"; fi
+          exit $code
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-report-${{ github.run_id }}
+          path: report.md
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Post the report on the issue
+        if: always() && github.event_name == 'issues'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        # plain Node and fetch, so no extra action is needed. An @name in the
+        # model's text would notify that person, so a zero-width space breaks it.
+        run: |
+          node -e '
+          const fs = require("fs");
+          let body = fs.existsSync("report.md") ? fs.readFileSync("report.md", "utf8") : "The company could not write a report this time. The run log says why.";
+          if (body.length > 60000) body = body.slice(0, 60000) + "\n\n[... cut here: the whole report is in the artifact of this run]";
+          body = body.replace(/(^|[^\w])@(?=\w)/g, "$1@​");
+          body += "\n\n---\n_Written by the company runner (independent mode, GitHub Models). Run: " + process.env.RUN_URL + "_";
+          fetch(process.env.GITHUB_API_URL + "/repos/" + process.env.GITHUB_REPOSITORY + "/issues/" + process.env.ISSUE_NUMBER + "/comments", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + process.env.GITHUB_TOKEN, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "agent-company-runner" },
+            body: JSON.stringify({ body })
+          }).then((r) => {
+            if (!r.ok) { console.log("Could not comment on the issue: HTTP " + r.status); process.exit(1); }
+            console.log("The report is on issue #" + process.env.ISSUE_NUMBER);
+          }).catch((e) => { console.log("Could not comment on the issue: " + e.message); process.exit(1); });
+          '

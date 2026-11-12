@@ -1,0 +1,70 @@
+name: Nightly system check
+
+# THE SYSTEM AGENT (README 4aa). Once a night it runs the whole test suite and
+# checks that the live site answers. If anything is broken it opens ONE issue
+# (label "nightly-tests") with the failing tests and their errors, keeps that
+# issue up to date on the following nights, and closes it itself when all is
+# well again. With GitHub's free model tier it adds a short AI summary of the
+# likely cause (only test names and error messages are sent; set the
+# repository variable NIGHTLY_AI to "off" to skip it).
+#
+# No secrets: it uses only the workflow's own GITHUB_TOKEN. GitHub runs
+# scheduled workflows from the default branch only, so this starts working
+# once it is merged there. "Run workflow" on the Actions tab starts it by hand.
+on:
+  schedule:
+    - cron: "23 1 * * *"   # 01:23 UTC = 06:23 in Tashkent
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+concurrency:
+  group: nightly-system-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install test dependencies
+        run: npm ci || npm install
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the whole test suite
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: nightly-results.json
+          PLAYWRIGHT_HTML_OPEN: never
+        run: npx playwright test --reporter=list,json,html
+
+      - name: Report (open, update or close the nightly issue)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULTS: nightly-results.json
+          LIVE_URL: ${{ vars.LIVE_URL || 'https://shaxriyorsharifov08-hash.github.io/Level-up/' }}
+          NIGHTLY_AI: ${{ vars.NIGHTLY_AI }}
+        run: node scripts/nightly-report.mjs
+
+      - name: Keep the report when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            nightly-results.json
+          retention-days: 14

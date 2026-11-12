@@ -1,0 +1,69 @@
+{
+  "rules": {
+    "hunters": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())"
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      },
+      ".write": false
+    },
+    "broadcast": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "season": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "systemLocks": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "roadTemplate": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "codes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.isString()"
+      }
+    },
+    "guilds": {
+      "$gid": {
+        "info": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.child('createdBy').val() === auth.uid) || (data.exists() && data.child('createdBy').val() === auth.uid))"
+        },
+        "members": {
+          ".read": "auth != null && data.child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('level').isNumber() && newData.child('rank').isString() && newData.child('rank').val().length <= 3"
+          }
+        },
+        "chat": {
+          ".read": "auth != null && root.child('guilds').child($gid).child('members').child(auth.uid).exists()",
+          "$msg": {
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && root.child('guilds').child($gid).child('members').child(auth.uid).exists()",
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 300 && newData.child('name').isString() && newData.child('at').isNumber()"
+          }
+        },
+        "cheers": {
+          "$to": {
+            ".read": "auth != null && auth.uid === $to",
+            "$c": {
+              ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('guilds').child($gid).child('members').child(auth.uid).exists()) || (!newData.exists() && auth.uid === $to))"
+            }
+          }
+        }
+      }
+    }
+  }
+}

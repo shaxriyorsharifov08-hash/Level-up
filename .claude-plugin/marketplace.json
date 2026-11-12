@@ -1,0 +1,14 @@
+{
+  "name": "ai-team",
+  "owner": {
+    "name": "shaxriyorsharifov08-hash"
+  },
+  "plugins": [
+    {
+      "name": "ai-team",
+      "source": "./plugins/ai-team",
+      "description": "The owner's AI dev team. Say \"/ai-team\" or \"ai team\" with a task. A lead plans it, picks roles (planner, coder, tester, reviewer, designer, analyst, deck editor), runs them, checks, reports.",
+      "version": "1.0.0"
+    }
+  ]
+}
